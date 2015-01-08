@@ -87,7 +87,7 @@ glquake.glx : $(GLQUAKE_OBJS) $(GLX_OBJS)
 	gcc $(CFLAGS) -o $@ $(GLQUAKE_OBJS) $(GLX_OBJS) $(GLLDFLAGS) $(LDFLAGS)
 
 %.o : %.c
-    gcc -c $(CFLAGS) $< -o $@
+	gcc -c $(CFLAGS) $< -o $@
 
 #############################################################################
 # MISC
