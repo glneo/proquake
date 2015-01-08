@@ -413,7 +413,11 @@ void Con_CheckResize (void)
 	con_current = con_totallines - 1;
 }
 
+#ifdef _WIN32
 #include <io.h> //Baker: Removes a warning ... write, open, close
+#else
+#include <sys/io.h> // glneo: New Linux location
+#endif
 
 /*
 ================
