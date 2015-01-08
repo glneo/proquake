@@ -705,7 +705,7 @@ void Mod_LoadTexinfo (lump_t *l)
 {
 	texinfo_t *in;
 	mtexinfo_t *out;
-	int 	i, j, count, miptex;
+	int 	i, j, k, count, miptex;
 	float	len1, len2;
 
 	in = (void *)(mod_base + l->fileofs);
@@ -720,8 +720,9 @@ void Mod_LoadTexinfo (lump_t *l)
 
 	for ( i=0 ; i<count ; i++, in++, out++)
 	{
-		for (j=0 ; j<8 ; j++)
-			out->vecs[0][j] = LittleFloat (in->vecs[0][j]);
+		for (k = 0; k < 2; k++ )
+			for (j=0 ; j<4 ; j++)
+				out->vecs[k][j] = LittleFloat (in->vecs[k][j]);
 		len1 = VectorLength (out->vecs[0]);
 		len2 = VectorLength (out->vecs[1]);
 		len1 = (len1 + len2)/2;
@@ -1316,7 +1317,7 @@ mtriangle_t	triangles[MAXALIASTRIS];
 trivertx_t	*poseverts[MAXALIASFRAMES];
 
 static int	posenum; // a pose is a single set of vertexes. a frame may be an animating sequence of poses
-static byte	aliasbboxmins[3], aliasbboxmaxs[3];
+static int	aliasbboxmins[3], aliasbboxmaxs[3];
 
 /*
 =================
