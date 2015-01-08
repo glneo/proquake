@@ -32,11 +32,10 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include <GL/glu.h>
 #endif
 #else
-#include 	<OpenGL/gl.h>
-#include 	<OpenGL/glu.h>
-#include	<OpenGL/glext.h>
+#include 	<GL/gl.h>
+#include 	<GL/glu.h>
+#include	<GL/glext.h>
 #include	<math.h>
-#define APIENTRY
 #endif
 
 #define TEX_NOFLAGS			0 // Baker: I use this to mark the absense of any flags

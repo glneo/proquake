@@ -97,7 +97,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 
 # define WINDOWS_SCROLLWHEEL_PEEK				// CAPTURES MOUSEWHEEL WHEN keydest != game
-# define HTTP_DOWNLOAD
+
 //# define BUILD_MP3_VERSION
 
 
@@ -116,6 +116,8 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #endif
 
+
+# define HTTP_DOWNLOAD
 
 
 // Define Specific Rendering Capabilities

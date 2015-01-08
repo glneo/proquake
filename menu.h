@@ -46,7 +46,7 @@ enum {
 	m_namemaker
 } m_state;
 
-extern int m_state;
+//extern int m_state;
 
 
 // menus
