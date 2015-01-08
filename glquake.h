@@ -31,17 +31,13 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include <GL/gl.h>
 #include <GL/glu.h>
 #endif
-
-#endif
-#ifdef MACOSX
+#else
 #include 	<OpenGL/gl.h>
 #include 	<OpenGL/glu.h>
 #include	<OpenGL/glext.h>
 #include	<math.h>
-
 #define APIENTRY
-#endif // MACOSX
-
+#endif
 
 #define TEX_NOFLAGS			0 // Baker: I use this to mark the absense of any flags
 #define TEX_MIPMAP			2
