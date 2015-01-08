@@ -1080,10 +1080,12 @@ void M_NameMaker_Key (int key, int ascii)
 			}
 //			Con_Printf("Mouse click x/y %d/%d\n", extmousex, extmousey);
 //			Con_Printf("Match is %d = %d\n", match, namemaker_cursor_y * 16 + namemaker_cursor_x);
+#ifdef _WIN32
 			{
 				extern HWND mainwindow;
 				SetWindowText(mainwindow, va("Mouse click %d %d", extmousex, extmousey));
 			}
+#endif
 			if (!match) {
 				// Baker: nothing was hit
 				return;
