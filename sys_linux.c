@@ -196,9 +196,6 @@ void Sys_Quit (void)
 
 void Sys_Init(void)
 {
-#if !defined(NO_ASSEMBLY) // Formerly #ifndef NO_ASSEMBLY // Formerly #if id386
-	Sys_SetFPCW();
-#endif
 }
 
 void Sys_Error (char *error, ...)
@@ -399,7 +396,6 @@ char *Sys_ConsoleInput(void)
 	return NULL;
 }
 
-#ifdef NO_ASSEMBLY // Formerly:  !id386
 void Sys_HighFPPrecision (void)
 {
 }
@@ -407,7 +403,6 @@ void Sys_HighFPPrecision (void)
 void Sys_LowFPPrecision (void)
 {
 }
-#endif
 
 char **argv;	// JPG 3.00 - need this for exe filename
 

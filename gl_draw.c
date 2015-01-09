@@ -1002,7 +1002,6 @@ void VID_Consize_f(void)
 #else
 	startwidth = vid.width = gGLDisplayWidth;
 	startheight = vid.height = gGLDisplayHeight;
-
 #endif
 
 //	Con_Printf("Entering ...\n");

@@ -1083,27 +1083,25 @@ void Key_Event (int key, int ascii, qboolean down)
 		return; // Get outta here
 	}
 
+#ifdef SUPPORTS_GLVIDEO_MODESWITCH
+        if (alt_down && key == K_ENTER && !down && cl_key_altenter.value) {
+                // Alt-Enter detected
+                // swallow it and process
 
+                if (VID_WindowedSwapAvailable()) { // We can switch to/from Windowed mode?
+                        if (VID_isFullscreen())
+                                VID_Windowed();
+                        else
+                                VID_Fullscreen();
+                } else {
+                        // Let someone know this isn't available
 
-	if (alt_down && key == K_ENTER && !down && cl_key_altenter.value) 
-	{
-		// Alt-Enter detected
-		// swallow it and process
+                        Con_Printf("Switching between windowed/fullscreen mode is locked\n");
+                }
+                return; // Get out of here and don't process the key
+        }
+#endif
 
-		if (VID_WindowedSwapAvailable()) { // We can switch to/from Windowed mode?
-			if (VID_isFullscreen())
-				VID_Windowed();
-			else
-				VID_Fullscreen();
-		}
-		else 
-		{
-			// Let someone know this isn't available
-
-			Con_Printf("Switching between windowed/fullscreen mode is locked\n");
-		}
-		return; // Get out of here and don't process the key
-	}
 
 
 	if (!key_international) 

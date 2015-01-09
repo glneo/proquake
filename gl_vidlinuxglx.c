@@ -47,7 +47,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include <X11/keysym.h>
 #include <X11/cursorfont.h>
 
-# include <X11/extensions/xf86dga.h>
+# include <X11/extensions/Xxf86dga.h>
 # include <X11/extensions/xf86vmode.h>
 
 #ifdef XMESA
@@ -85,7 +85,7 @@ static float	old_mouse_x, old_mouse_y;
 static int	mouse_grabbed = 0;
 #define	mouse_shouldgrab ((int)vid_glx_fullscreen.value ||(int)_windowed_mouse.value)
 
-static int	nummodes;
+int	nummodes;
 static XF86VidModeModeInfo **vidmodes;
 static int	hasdgavideo = 0, hasvidmode = 0;
 static int	dgamouse = 0;
@@ -585,7 +585,7 @@ void VID_Init8bitPalette(void)
 #endif
 
 // CSR
-static void Check_GammaOld (unsigned char *pal)
+void Check_GammaOld (unsigned char *pal)
 {
 	float   f, inf;
 	unsigned char   palette[768];
@@ -638,11 +638,11 @@ void VID_Init(unsigned char *palette)
 
 	//S_Init();
 
-	Cvar_RegisterVariable(&vid_mode);
-	Cvar_RegisterVariable(&gl_ztrick);
-	Cvar_RegisterVariable(&_windowed_mouse);
-        Cvar_RegisterVariable(&vid_glx_fullscreen);
-	Cvar_RegisterVariable(&vid_dga_mouseaccel);
+	Cvar_RegisterVariable(&vid_mode, NULL);
+	Cvar_RegisterVariable(&gl_ztrick, NULL);
+	Cvar_RegisterVariable(&_windowed_mouse, NULL);
+        Cvar_RegisterVariable(&vid_glx_fullscreen, NULL);
+	Cvar_RegisterVariable(&vid_dga_mouseaccel, NULL);
 
 	vid.maxwarpwidth = WARP_WIDTH;
 	vid.maxwarpheight = WARP_HEIGHT;
@@ -928,7 +928,7 @@ GetEvent(void)
 	switch (x_event.type) {
 	case KeyPress:
 	case KeyRelease:
-		Key_Event(XLateKey(&x_event.xkey), x_event.type == KeyPress);
+		Key_Event(XLateKey(&x_event.xkey), 0, x_event.type == KeyPress);
 		break;
 
 	case ButtonPress:
@@ -939,7 +939,7 @@ GetEvent(void)
 		case 1:
 		case 2:
 		case 3:
-			Key_Event(K_MOUSE1 + but - 1, true);
+			Key_Event(K_MOUSE1 + but - 1, 0, true);
 		}
 		break;
 
@@ -951,7 +951,7 @@ GetEvent(void)
 		case 1:
 		case 2:
 		case 3:
-			Key_Event(K_MOUSE1 + but - 1, false);
+			Key_Event(K_MOUSE1 + but - 1, 0, false);
 		}
 		break;
 
@@ -1102,11 +1102,11 @@ IN_MouseMove(usercmd_t *cmd)
 				cl.viewangles[PITCH] = -70;
 		}
 	} else {
-		if ((in_strafe.state & 1) && noclip_anglehack) {
-			cmd->upmove -= m_forward.value * mouse_y;
-		} else {
+		//if ((in_strafe.state & 1) && noclip_anglehack) {
+		//	cmd->upmove -= m_forward.value * mouse_y;
+		//} else {
 			cmd->forwardmove -= m_forward.value * mouse_y;
-		}
+		//}
 	}
 	mouse_x = mouse_y = 0.0;
 }

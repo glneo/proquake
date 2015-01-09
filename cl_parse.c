@@ -225,6 +225,8 @@ void CL_NewMap (void)
 
 }
 
+#ifdef HTTP_DOWNLOAD
+
 qboolean Download_Attempt (const char* file_to_download)
 {	
 	extern cvar_t cl_web_download;
@@ -286,6 +288,15 @@ qboolean Download_Attempt (const char* file_to_download)
 	}
 
 }
+
+#else
+
+qboolean Download_Attempt (const char* file_to_download)
+{
+	return false;
+}
+
+#endif
 
 /*
 ==================

@@ -21,7 +21,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #include "quakedef.h"
 #ifdef HTTP_DOWNLOAD
-#include "curl.h"
+#include "curl/curl.h"
 #endif
 
 // we need to declare some mouse variables here, because the menu system
@@ -839,6 +839,8 @@ int CL_ReadFromServer (void)
 			float remaining_time = 0;
 			int minutes, seconds;
 			char tempstring[256];
+			
+			#ifdef _WIN32
 			extern int vid_default;
 			extern char movie_codec[12];
 
@@ -857,6 +859,7 @@ int CL_ReadFromServer (void)
 			sprintf (tempstring, "Demo: %s (%3.1f%% elapsed: %4.1f secs) - Estimated Remaining %d:%02d (Capturing: %s)", cls.demoname, completed_amount * 100, cls.demo_hosttime_elapsed, (int)minutes, (int)seconds, movie_codec);
 
 			Sys_SetWindowCaption (tempstring);
+			#endif // Windows locked for now
 			break;
 		}
 

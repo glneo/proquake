@@ -75,6 +75,7 @@ GLQUAKE_OBJS= \
 	snd_mem.o \
 	snd_mix.o \
 	snd_linux.o \
+	security.o
 
 GLSVGA_OBJS=gl_vidlinux.o
 
