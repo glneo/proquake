@@ -399,7 +399,6 @@ char *PR_UglyValueString (etype_t type, eval_t *val)
 PR_GlobalString
 
 Returns a string with a description and the contents of a global,
-padded to 20 field width
 ============
 */
 char *PR_GlobalString (int ofs)
@@ -413,7 +412,7 @@ char *PR_GlobalString (int ofs)
 	val = (void *)&pr_globals[ofs];
 	if (!(def = ED_GlobalAtOfs(ofs)))
 	{
-		SNPrintf(line, sizeof(line),"%i(???)", ofs);
+		SNPrintf(line, sizeof(line),"%i(\?\?\?)", ofs);
 	}
 	else
 	{
@@ -436,7 +435,7 @@ char *PR_GlobalStringNoContents (int ofs)
 	static char	line[128];
 
 	if (!(def = ED_GlobalAtOfs(ofs)))
-		SNPrintf(line, sizeof(line),"%i(???)", ofs);
+		SNPrintf(line, sizeof(line),"%i(\?\?\?)", ofs);
 	else
 		SNPrintf(line, sizeof(line),"%i(%s)", ofs, pr_strings + def->s_name);
 

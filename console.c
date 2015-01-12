@@ -23,8 +23,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include <unistd.h>
 #endif
 
-
-
 #include <fcntl.h>
 #include <errno.h>
 #include "quakedef.h"
@@ -700,7 +698,8 @@ void Con_DebugLog( /* char *file, */ char *fmt, ...)
     VSNPrintf(data, sizeof(data), fmt, argptr);
     va_end(argptr);
     fd = open(va("%s/%s", com_gamedir, logfilename), O_WRONLY | O_CREAT | O_APPEND, 0666);
-    write(fd, data, strlen(data));
+    if( write(fd, data, strlen(data)) < strlen(data) )
+		Con_Printf ("Could not write debug message to log file %s/%s\n", com_gamedir, logfilename);
     close(fd);
 }
 

@@ -214,7 +214,7 @@ void VID_SetPaletteOld (unsigned char *palette)
 	//d_8to24table[255] &= 0xffffff;	// 255 is transparent
 }
 
-BOOL	gammaworks;
+qboolean	gammaworks;
 void	VID_ShiftPaletteOld (unsigned char *palette)
 {
 	extern	byte rampsold[3][256];

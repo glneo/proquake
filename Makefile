@@ -69,13 +69,13 @@ GLQUAKE_OBJS= \
 	view.o	\
 	wad.o \
 	world.o \
-	cd_linux.o \
 	sys_linux.o \
 	snd_dma.o \
 	snd_mem.o \
 	snd_mix.o \
 	snd_linux.o \
-	security.o
+	security.o \
+	vid_common_gl.o
 
 GLSVGA_OBJS=gl_vidlinux.o
 

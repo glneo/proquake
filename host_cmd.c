@@ -1074,23 +1074,29 @@ void Host_Loadgame_f (void)
 		return;
 	}
 
-	fscanf (f, "%i\n", &version);
+	if( fscanf (f, "%i\n", &version) < 1 )
+		Con_Printf ("ERROR: couldn't read from file.\n");
 	if (version != SAVEGAME_VERSION)
 	{
 		fclose (f);
 		Con_Printf ("Savegame is version %i, not %i\n", version, SAVEGAME_VERSION);
 		return;
 	}
-	fscanf (f, "%s\n", str);
+	if( fscanf (f, "%s\n", str) < 1 )
+		Con_Printf ("ERROR: couldn't read from file.\n");
 	for (i=0 ; i<NUM_SPAWN_PARMS ; i++)
-		fscanf (f, "%f\n", &spawn_parms[i]);
+		if( fscanf (f, "%f\n", &spawn_parms[i]) < 1 )
+			Con_Printf ("ERROR: couldn't read from file.\n");
 // this silliness is so we can load 1.06 save files, which have float skill values
-	fscanf (f, "%f\n", &tfloat);
+	if( fscanf (f, "%f\n", &tfloat) < 1 )
+		Con_Printf ("ERROR: couldn't read from file.\n");
 	current_skill = (int)(tfloat + 0.1);
 	Cvar_SetValue ("skill", (float)current_skill);
 
-	fscanf (f, "%s\n",mapname);
-	fscanf (f, "%f\n",&time);
+	if( fscanf (f, "%s\n",mapname) < 1 )
+		Con_Printf ("ERROR: couldn't read from file.\n");
+	if( fscanf (f, "%f\n",&time) < 1 )
+		Con_Printf ("ERROR: couldn't read from file.\n");
 
 	CL_Disconnect_f ();
 
@@ -1108,7 +1114,8 @@ void Host_Loadgame_f (void)
 
 	for (i=0 ; i<MAX_LIGHTSTYLES ; i++)
 	{
-		fscanf (f, "%s\n", str);
+		if( fscanf (f, "%s\n", str) < 1 )
+			Con_Printf ("ERROR: couldn't read from file.\n");
 		sv.lightstyles[i] = Hunk_Alloc (strlen(str)+1);
 		strcpy (sv.lightstyles[i], str);
 	}

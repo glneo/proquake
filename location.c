@@ -55,7 +55,8 @@ qboolean LOC_LoadLocations (char* loc_file_name)
 			}
 			l->a[2] -= 32.0;
 			l->b[2] += 32.0;
-			fgets(buff, 256, f);
+			if( fgets(buff, 256, f) == NULL )
+				Con_Printf ("ERROR: couldn't read from file.\n");
 
 			ch = strrchr(buff, '\n');
 			if (ch)
@@ -68,7 +69,8 @@ qboolean LOC_LoadLocations (char* loc_file_name)
 			l = &locations[++numlocations];
 		}
 		else
-			fgets(buff, 256, f);
+			if( fgets(buff, 256, f) == NULL )
+				Con_Printf ("ERROR: couldn't read from file.\n");
 	}
 
 	fclose(f);

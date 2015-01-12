@@ -113,7 +113,7 @@ qboolean	m_recursiveDraw;
 
 int			m_return_state;
 qboolean	m_return_onerror;
-char		m_return_reason [32];
+char		m_return_reason [64];
 
 #define StartingGame	(m_multiplayer_cursor == 1)
 #define JoiningGame		(m_multiplayer_cursor == 0)
@@ -487,8 +487,10 @@ void M_ScanSaves (void)
 		f = fopen (name, "r");
 		if (!f)
 			continue;
-		fscanf (f, "%i\n", &version);
-		fscanf (f, "%79s\n", name);
+		if( fscanf (f, "%i\n", &version) < 1 )
+			Con_Printf ("ERROR: couldn't read from file.\n");
+		if( fscanf (f, "%79s\n", name) < 1 )
+			Con_Printf ("ERROR: couldn't read from file.\n");
 		strncpy (m_filenames[i], name, sizeof(m_filenames[i])-1);
 
 	// change _ back to space
