@@ -623,7 +623,6 @@ V_UpdatePaletteNew
 =============
 */
 
-
 // Baker hw gamma support
 // This v_updatepalette should not get called
 // except if hwgamma is being used
@@ -714,7 +713,8 @@ qboolean V_UpdatePalette_Hardware (void)
 		}
 	}
 
-	VID_SetDeviceGammaRamp ((unsigned short *)ramps);
+	//FIXME: Not portable
+	//VID_SetDeviceGammaRamp ((unsigned short *)ramps);
 
 	return hardware_blend_set_off;
 }

@@ -868,8 +868,8 @@ void COM_CheckRegistered (void)
 	Sys_Error ("This dedicated server requires a full registered copy of Quake");
 #endif
 		Con_Printf ("Playing shareware version.\n");
-		if (com_modified)
-			Sys_Error ("You must have the registered version to use modified games");
+		//if (com_modified)
+		//	Sys_Error ("You must have the registered version to use modified games");
 		return;
 	}
 
@@ -1756,7 +1756,7 @@ size_t VSNPrintf (char *buffer, const size_t count, const char *format, va_list 
 	size_t result;
 
 	// For _vSNPrintf, if the number of bytes to write exceeds buffer, then count bytes are written
-	// and ñ1 is returned.
+	// and ï¿½1 is returned.
 
 	result = _vsnprintf (buffer, count, format, args);
 

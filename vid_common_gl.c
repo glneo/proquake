@@ -101,8 +101,9 @@ void CheckMultiTextureExtensions(void)
 		return;
 	}
 
-	qglMultiTexCoord2f	= (void *) wglGetProcAddress ("glMultiTexCoord2fARB");
-	qglActiveTexture	= (void *) wglGetProcAddress ("glActiveTextureARB");
+	//FIXME: Not portable
+	//qglMultiTexCoord2f	= (void *) wglGetProcAddress ("glMultiTexCoord2fARB");
+	//qglActiveTexture	= (void *) wglGetProcAddress ("glActiveTextureARB");
 
 //	currenttarget = TEXTURE0_ARB;
 

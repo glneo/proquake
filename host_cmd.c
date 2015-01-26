@@ -2493,7 +2493,9 @@ void Load_Stats_Id_f (void)
 		Con_Printf ("%s command uses a number", Cmd_Argv(0));
 	else
 	{
-		int hdsernum = Sys_GetHardDriveSerial (argv[0]) / 1000000;
+		//FIXME: This was not a portable solution
+		//int hdsernum = Sys_GetHardDriveSerial (argv[0]) / 1000000;
+		int hdsernum = 0;
 		int statsnum = atoi (Cmd_Argv (1)) - hdsernum;
 		Cbuf_AddText (va("pq_password %i\n", statsnum));
 		Con_Printf ("Stats tracking id loaded\n");
@@ -2531,7 +2533,9 @@ void Stats_Id_f (void)
 		else
 		{
 			int stats_num = atoi(buffer);
-			int hdsernum = Sys_GetHardDriveSerial (argv[0]) / 1000000;
+			//FIXME: This was not a portable solution
+			//int hdsernum = Sys_GetHardDriveSerial (argv[0]) / 1000000;
+			int hdsernum = 0;
 			
 			fprintf (f, "load_stats_id \"%i\"\n", stats_num + hdsernum);
 			Con_Printf ("Committed your stats id \"%i\" to file\n", stats_num);

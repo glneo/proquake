@@ -1365,7 +1365,8 @@ void Key_ClearAllStates (void)
 			Key_Event (i, 0, false);
 	} //  Baker 3.99n: Restored this!  (Baker 3.71 -- DP doesn~t do this)
 
- 	IN_ClearStates ();  //Baker 3.99n: Restored this! (Baker 3.71 - DP doesn~t do this)
+	// Not portable or key related
+ 	//IN_ClearStates ();  //Baker 3.99n: Restored this! (Baker 3.71 - DP doesn~t do this)
 
 
 	// Baker 3.87: Clear the shift/ctrl/alt status as well!

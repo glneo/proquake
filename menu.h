@@ -38,9 +38,9 @@ enum {
 	m_lanconfig,
 	m_gameoptions,
 	m_search,
-#ifdef SUPPORTS_SERVER_BROWSER // Baker change +
+//#ifdef SUPPORTS_SERVER_BROWSER // Baker change +
 	m_serverbrowser,
-#endif // Baker change + SUPPORTS_SERVER_BROWSER
+//#endif // Baker change + SUPPORTS_SERVER_BROWSER
 	m_slist,
 	m_preferences,
 	m_namemaker

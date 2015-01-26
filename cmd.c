@@ -161,7 +161,7 @@ void Cbuf_Execute (void)
 				break;
 		}
 
-		memcpy (line, text, i);
+		memmove (line, text, i);
 		line[i] = 0;
 
 // delete the text from the command buffer and move remaining commands down
@@ -174,7 +174,7 @@ void Cbuf_Execute (void)
 		{
 			i++;
 			cmd_text.cursize -= i;
-			memcpy (text, text+i, cmd_text.cursize);
+			memmove (text, text+i, cmd_text.cursize);
 		}
 
 // execute the command line

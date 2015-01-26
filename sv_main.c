@@ -238,7 +238,7 @@ void SV_SendServerinfo (client_t *client)
 	else
 		MSG_WriteByte (&client->message, GAME_COOP);
 
-	SNPrintf(message, sizeof(message), pr_strings+sv.edicts->v.message);
+	strncpy(message, pr_strings+sv.edicts->v.message, sizeof(message));
 
 	MSG_WriteString (&client->message,message);
 
@@ -1416,7 +1416,7 @@ void SV_SpawnServer (char *server)
 	if (!sv.worldmodel && sv_defaultmap.string[0])
 	{
 		strcpy (sv.name, sv_defaultmap.string);
-		VSNPrintf (sv.modelname, sizeof(sv.modelname), "maps/%s.bsp", sv_defaultmap.string);
+		SNPrintf (sv.modelname, sizeof(sv.modelname), "maps/%s.bsp", sv_defaultmap.string);
 		sv.worldmodel = Mod_ForName (sv.modelname, false);
 	}
 	// Baker 3.99b: end mod

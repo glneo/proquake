@@ -42,6 +42,9 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 qboolean			isDedicated=false;
 
+int 		extmousex, extmousey;
+cvar_t	cl_keypad = {"cl_keypad","0", true};
+
 int nostdout = 0;
 
 char *basedir = ".";
@@ -309,7 +312,8 @@ void Sys_DebugLog(char *file, char *fmt, ...)
     va_end(argptr);
 //    fd = open(file, O_WRONLY | O_BINARY | O_CREAT | O_APPEND, 0666);
     fd = open(file, O_WRONLY | O_CREAT | O_APPEND, 0666);
-    write(fd, data, strlen(data));
+    if( write(fd, data, strlen(data)) < 0 )
+    	Con_Printf ("debug log file write failed\n");
     close(fd);
 }
 
@@ -347,6 +351,24 @@ double Sys_FloatTime (void)
     }
 
     return (tp.tv_sec - secbase) + tp.tv_usec/1000000.0;
+}
+
+void Sys_OpenFolder_f (void)
+{
+	Con_Printf ("folder command not implemented in linux yet\n");
+	return;
+}
+
+//FIXME: Not implemented
+char *Sys_GetClipboardData (void) 
+{
+	return "";
+}
+
+//FIXME: Not implemented
+// copies given text to clipboard
+void Sys_CopyToClipboard(char *text) 
+{
 }
 
 // =======================================================================
@@ -448,7 +470,7 @@ int main (int c, char **v)
 		nostdout = 1;
 	else {
 		fcntl(0, F_SETFL, fcntl (0, F_GETFL, 0) | FNDELAY);
-		printf("Linux Quake -- Version %0.3f\n", ENGINE_VERSION);
+		printf("Linux Quake -- Version %s\n", ENGINE_VERSION);
 	}
 
     oldtime = Sys_FloatTime () - 0.1;

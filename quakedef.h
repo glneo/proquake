@@ -29,8 +29,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #define PROQUAKE_SERIES_VERSION		4.93
 #include "version.h"
 
-
-#define SUPPORTS_SERVER_BROWSER		// Server browser implementation
+//#define SUPPORTS_SERVER_BROWSER		// Server browser implementation
 #define SUPPORTS_PLAYER_ID			// Player ID
 
 //define	PARANOID				// speed sapping error checking
@@ -256,6 +255,8 @@ extern	double		realtime;			// not bounded in any way, changed at
 							// start of every frame, never reset
 
 extern	char		host_worldname[MAX_QPATH];
+
+extern	byte		*host_colormap;
 
 #ifdef SUPPORTS_DEMO_AUTOPLAY
 extern	qboolean	nostartdemos; // Baker 3.76 - for demo autoplay support

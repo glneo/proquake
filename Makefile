@@ -41,6 +41,7 @@ GLQUAKE_OBJS= \
 	gl_screen.o \
 	gl_test.o \
 	gl_warp.o \
+	gl_fullbright.o \
 	\
 	host.o \
 	host_cmd.o \
