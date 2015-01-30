@@ -33,7 +33,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "vgamouse.h"
 
 #include "quakedef.h"
-//#include "fxmesa.h"
+#include "glide.h"
 
 #define WARP_WIDTH              320
 #define WARP_HEIGHT             200
@@ -170,7 +170,7 @@ void keyhandler(int scancode, int state)
 
 	sc = scancode & 0x7f;
 
-	Key_Event(scantokey[sc], state == KEY_EVENTPRESS);
+	Key_Event(scantokey[sc], 0, state == KEY_EVENTPRESS);
 
 }
 
@@ -576,7 +576,7 @@ void VID_Init8bitPalette(void)
 	dlclose(prjobj);
 }
 
-static void Check_GammaOld (unsigned char *pal)
+void Check_GammaOld (unsigned char *pal)
 {
 	float	f, inf;
 	unsigned char	palette[768];
@@ -589,7 +589,7 @@ static void Check_GammaOld (unsigned char *pal)
 		else
 			vid_gamma = 0.7; // default to 0.7 on non-3dfx hardware
 	} else {
-		vid_gamma = atof(com_argv[i+1];
+		vid_gamma = atof(com_argv[i+1]);
 		if (vid_gamma == 0) {
 			// Baker: Then someone used -gamma parameter incorrectly so use the default
 			vid_gamma = 0.7;
@@ -623,10 +623,10 @@ void VID_Init(unsigned char *palette)
 
 	Init_KBD();
 
-	Cvar_RegisterVariable (&vid_mode);
-	Cvar_RegisterVariable (&vid_redrawfull);
-	Cvar_RegisterVariable (&vid_waitforrefresh);
-	Cvar_RegisterVariable (&gl_ztrick);
+	Cvar_RegisterVariable (&vid_mode, NULL);
+	Cvar_RegisterVariable (&vid_redrawfull, NULL);
+	Cvar_RegisterVariable (&vid_waitforrefresh, NULL);
+	Cvar_RegisterVariable (&gl_ztrick, NULL);
 
 	vid.maxwarpwidth = WARP_WIDTH;
 	vid.maxwarpheight = WARP_HEIGHT;
@@ -733,10 +733,10 @@ void IN_Init(void)
 
 	if (UseMouse)
 	{
-		Cvar_RegisterVariable (&m_filter);	// JPG 3.0 from JC
-		Cvar_RegisterVariable (&mouse_button_commands[0]);
-		Cvar_RegisterVariable (&mouse_button_commands[1]);
-		Cvar_RegisterVariable (&mouse_button_commands[2]);
+		Cvar_RegisterVariable (&m_filter, NULL);	// JPG 3.0 from JC
+		Cvar_RegisterVariable (&mouse_button_commands[0], NULL);
+		Cvar_RegisterVariable (&mouse_button_commands[1], NULL);
+		Cvar_RegisterVariable (&mouse_button_commands[2], NULL);
 		Cmd_AddCommand ("force_centerview", Force_CenterView_f);
 
 		mouse_buttons = 3;
@@ -787,24 +787,24 @@ void IN_Commands (void)
 		// perform button actions
 		if ((mouse_buttonstate & MOUSE_LEFTBUTTON) &&
 			!(mouse_oldbuttonstate & MOUSE_LEFTBUTTON))
-			Key_Event (K_MOUSE1, true);
+			Key_Event (K_MOUSE1, 0, true);
 		else if (!(mouse_buttonstate & MOUSE_LEFTBUTTON) &&
 			(mouse_oldbuttonstate & MOUSE_LEFTBUTTON))
-			Key_Event (K_MOUSE1, false);
+			Key_Event (K_MOUSE1, 0, false);
 
 		if ((mouse_buttonstate & MOUSE_RIGHTBUTTON) &&
 			!(mouse_oldbuttonstate & MOUSE_RIGHTBUTTON))
-			Key_Event (K_MOUSE2, true);
+			Key_Event (K_MOUSE2, 0, true);
 		else if (!(mouse_buttonstate & MOUSE_RIGHTBUTTON) &&
 			(mouse_oldbuttonstate & MOUSE_RIGHTBUTTON))
-			Key_Event (K_MOUSE2, false);
+			Key_Event (K_MOUSE2, 0, false);
 
 		if ((mouse_buttonstate & MOUSE_MIDDLEBUTTON) &&
 			!(mouse_oldbuttonstate & MOUSE_MIDDLEBUTTON))
-			Key_Event (K_MOUSE3, true);
+			Key_Event (K_MOUSE3, 0, true);
 		else if (!(mouse_buttonstate & MOUSE_MIDDLEBUTTON) &&
 			(mouse_oldbuttonstate & MOUSE_MIDDLEBUTTON))
-			Key_Event (K_MOUSE3, false);
+			Key_Event (K_MOUSE3, 0, false);
 
 		mouse_oldbuttonstate = mouse_buttonstate;
 	}

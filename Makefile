@@ -1,11 +1,9 @@
-CFLAGS=-O3 -ffast-math -funroll-loops -fexpensive-optimizations
+CFLAGS=-O3 -g -ffast-math -funroll-loops -fexpensive-optimizations
 LDFLAGS=-lm
 SVGALDFLAGS=-lvga
-XCFLAGS=-DX11
 
 MESAGLLDFLAGS=-lMesaGL -lglide2x -lX11 -lXext -ldl
-GLLDFLAGS=-lGL -lX11 -lXext -ldl -lXxf86dga -lXxf86vm -lm
-GLCFLAGS=-DGLQUAKE
+GLLDFLAGS=-lGL -lX11 -lXext -ldl -lXxf86dga -lXxf86vm
 
 #############################################################################
 # SETUP AND BUILD
