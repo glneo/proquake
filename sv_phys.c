@@ -1,5 +1,7 @@
 /*
-Copyright (C) 1996-1997 Id Software, Inc.
+Copyright (C) 1996-2001 Id Software, Inc.
+Copyright (C) 2002-2009 John Fitzgibbons and others
+Copyright (C) 2010-2014 QuakeSpasm developers
 
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License
@@ -8,7 +10,7 @@ of the License, or (at your option) any later version.
 
 This program is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
 See the GNU General Public License for more details.
 
@@ -93,12 +95,12 @@ void SV_CheckVelocity (edict_t *ent)
 	{
 		if (IS_NAN(ent->v.velocity[i]))
 		{
-			Con_Printf ("Got a NaN velocity on %s\n", pr_strings + ent->v.classname);
+			Con_Printf ("Got a NaN velocity on %s\n", PR_GetString(ent->v.classname));
 			ent->v.velocity[i] = 0;
 		}
 		if (IS_NAN(ent->v.origin[i]))
 		{
-			Con_Printf ("Got a NaN origin on %s\n", pr_strings + ent->v.classname);
+			Con_Printf ("Got a NaN origin on %s\n", PR_GetString(ent->v.classname));
 			ent->v.origin[i] = 0;
 		}
 		if (ent->v.velocity[i] > sv_maxvelocity.value)
@@ -351,14 +353,14 @@ SV_AddGravity
 void SV_AddGravity (edict_t *ent)
 {
 	float	ent_gravity;
-
 	eval_t	*val;
 
-	val = GETEDICTFIELDVALUE(ent, eval_gravity);
+	val = GetEdictFieldValue(ent, "gravity");
 	if (val && val->_float)
 		ent_gravity = val->_float;
 	else
 		ent_gravity = 1.0;
+
 	ent->v.velocity[2] -= ent_gravity * sv_gravity.value * host_frametime;
 }
 

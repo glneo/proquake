@@ -391,7 +391,7 @@ InitSig(void)
 	signal(SIGIOT, signal_handler);
 	signal(SIGBUS, signal_handler);
 /*	signal(SIGFPE, signal_handler); */
-	signal(SIGSEGV, signal_handler);
+//	signal(SIGSEGV, signal_handler);
 	signal(SIGTERM, signal_handler);
 }
 
