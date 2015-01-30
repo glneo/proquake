@@ -332,7 +332,8 @@ void Sys_EditFile(char *filename)
 		if (!editor)
 			editor = "vi";
 		sprintf(cmd, "xterm -e %s %s", editor, filename);
-		system(cmd);
+		if( system(cmd) < 0 )
+			Con_Printf("Failed to start editor\n");
 	}
 }
 
