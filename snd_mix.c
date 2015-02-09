@@ -26,7 +26,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #endif
 
 #ifdef _WIN32
-#include "winquake.h"
+#include "windows/winquake.h"
 #else
 #define DWORD	unsigned long
 #endif
