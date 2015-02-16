@@ -21,7 +21,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #include "quakedef.h"
 #ifdef HTTP_DOWNLOAD
-#include "curl/curl.h"
+#include "curl.h"
 #endif
 
 // we need to declare some mouse variables here, because the menu system
