@@ -146,33 +146,33 @@ static void PR_PrintStatement (dstatement_t *s)
 
 	if ((unsigned int)s->op < sizeof(pr_opnames)/sizeof(pr_opnames[0]))
 	{
-		Con_Printf("%s ", pr_opnames[s->op]);
+		Sys_Printf("%s ", pr_opnames[s->op]);
 		i = strlen(pr_opnames[s->op]);
 		for ( ; i < 10; i++)
-			Con_Printf(" ");
+			Sys_Printf(" ");
 	}
 
 	if (s->op == OP_IF || s->op == OP_IFNOT)
-		Con_Printf("%sbranch %i", PR_GlobalString(s->a), s->b);
+		Sys_Printf("%sbranch %i", PR_GlobalString(s->a), s->b);
 	else if (s->op == OP_GOTO)
 	{
-		Con_Printf("branch %i", s->a);
+		Sys_Printf("branch %i", s->a);
 	}
 	else if ((unsigned int)(s->op-OP_STORE_F) < 6)
 	{
-		Con_Printf("%s", PR_GlobalString(s->a));
-		Con_Printf("%s", PR_GlobalStringNoContents(s->b));
+		Sys_Printf("%s", PR_GlobalString(s->a));
+		Sys_Printf("%s", PR_GlobalStringNoContents(s->b));
 	}
 	else
 	{
 		if (s->a)
-			Con_Printf("%s", PR_GlobalString(s->a));
+			Sys_Printf("%s", PR_GlobalString(s->a));
 		if (s->b)
-			Con_Printf("%s", PR_GlobalString(s->b));
+			Sys_Printf("%s", PR_GlobalString(s->b));
 		if (s->c)
-			Con_Printf("%s", PR_GlobalStringNoContents(s->c));
+			Sys_Printf("%s", PR_GlobalStringNoContents(s->c));
 	}
-	Con_Printf("\n");
+	Sys_Printf("\n");
 }
 
 /*
