@@ -1,7 +1,5 @@
 /*
-Copyright (C) 1996-2001 Id Software, Inc.
-Copyright (C) 2002-2009 John Fitzgibbons and others
-Copyright (C) 2010-2014 QuakeSpasm developers
+Copyright (C) 1996-1997 Id Software, Inc.
 
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License
@@ -24,7 +22,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "quakedef.h"
 
 cvar_t	*cvar_vars;
-static char	cvar_null_string[] = "";
+char	*cvar_null_string = "";
 
 //==============================================================================
 //
@@ -32,7 +30,7 @@ static char	cvar_null_string[] = "";
 //
 //==============================================================================
 
-void Cvar_Reset (const char *name); //johnfitz
+void Cvar_Reset (char *name); //johnfitz
 
 /*
 ============
@@ -41,8 +39,8 @@ Cvar_List_f -- johnfitz
 */
 void Cvar_List_f (void)
 {
-	cvar_t	*cvar;
-	const char 	*partial;
+	cvar_t		*cvar;
+	char 		*partial;
 	int		len, count;
 
 	if (Cmd_Argc() > 1)
@@ -56,18 +54,18 @@ void Cvar_List_f (void)
 		len = 0;
 	}
 
-	count = 0;
-	for (cvar = cvar_vars ; cvar ; cvar = cvar->next)
+	Con_Printf ("\n");
+
+	count=0;
+	for (cvar=cvar_vars ; cvar ; cvar=cvar->next)
 	{
 		if (partial && strncmp (partial,cvar->name, len))
 		{
 			continue;
 		}
-		Con_SafePrintf ("%s%s %s \"%s\"\n",
-			(cvar->flags & CVAR_ARCHIVE) ? "*" : " ",
-			(cvar->flags & CVAR_NOTIFY)  ? "s" : " ",
-			cvar->name,
-			cvar->string);
+
+		Con_Printf ("%s is [%s]\n", cvar->name, cvar->string);
+
 		count++;
 
 	}
@@ -204,19 +202,6 @@ void Cvar_ResetAll_f (void)
 		Cvar_Reset (var->name);
 }
 
-/*
-============
-Cvar_ResetCfg_f -- QuakeSpasm
-============
-*/
-void Cvar_ResetCfg_f (void)
-{
-	cvar_t	*var;
-
-	for (var = cvar_vars ; var ; var = var->next)
-		if (var->flags & CVAR_ARCHIVE) Cvar_Reset (var->name);
-}
-
 //==============================================================================
 //
 //  INIT
@@ -234,10 +219,8 @@ void Cvar_Init (void)
 	Cmd_AddCommand ("cvarlist", Cvar_List_f);
 	Cmd_AddCommand ("toggle", Cvar_Toggle_f);
 	Cmd_AddCommand ("cycle", Cvar_Cycle_f);
-	Cmd_AddCommand ("inc", Cvar_Inc_f);
-	Cmd_AddCommand ("reset", Cvar_Reset_f);
+	Cmd_AddCommand ("resetcvar", Cvar_Reset_f);
 	Cmd_AddCommand ("resetall", Cvar_ResetAll_f);
-	Cmd_AddCommand ("resetcfg", Cvar_ResetCfg_f);
 }
 
 //==============================================================================
@@ -251,7 +234,7 @@ void Cvar_Init (void)
 Cvar_FindVar
 ============
 */
-cvar_t *Cvar_FindVar (const char *var_name)
+cvar_t *Cvar_FindVar (char *var_name)
 {
 	cvar_t	*var;
 
@@ -262,65 +245,12 @@ cvar_t *Cvar_FindVar (const char *var_name)
 	return NULL;
 }
 
-cvar_t *Cvar_FindVarAfter (const char *prev_name, unsigned int with_flags)
-{
-	cvar_t	*var;
-
-	if (*prev_name)
-	{
-		var = Cvar_FindVar (prev_name);
-		if (!var)
-			return NULL;
-		var = var->next;
-	}
-	else
-		var = cvar_vars;
-
-	// search for the next cvar matching the needed flags
-	while (var)
-	{
-		if ((var->flags & with_flags) || !with_flags)
-			break;
-		var = var->next;
-	}
-	return var;
-}
-
-/*
-============
-Cvar_LockVar
-============
-*/
-void Cvar_LockVar (const char *var_name)
-{
-	cvar_t	*var = Cvar_FindVar (var_name);
-	if (var)
-		var->flags |= CVAR_LOCKED;
-}
-
-void Cvar_UnlockVar (const char *var_name)
-{
-	cvar_t	*var = Cvar_FindVar (var_name);
-	if (var)
-		var->flags &= ~CVAR_LOCKED;
-}
-
-void Cvar_UnlockAll (void)
-{
-	cvar_t	*var;
-
-	for (var = cvar_vars ; var ; var = var->next)
-	{
-		var->flags &= ~CVAR_LOCKED;
-	}
-}
-
 /*
 ============
 Cvar_VariableValue
 ============
 */
-float	Cvar_VariableValue (const char *var_name)
+float	Cvar_VariableValue (char *var_name)
 {
 	cvar_t	*var;
 
@@ -336,7 +266,7 @@ float	Cvar_VariableValue (const char *var_name)
 Cvar_VariableString
 ============
 */
-const char *Cvar_VariableString (const char *var_name)
+char *Cvar_VariableString (char *var_name)
 {
 	cvar_t *var;
 
@@ -352,7 +282,7 @@ const char *Cvar_VariableString (const char *var_name)
 Cvar_CompleteVariable
 ============
 */
-const char *Cvar_CompleteVariable (const char *partial)
+char *Cvar_CompleteVariable (char *partial)
 {
 	cvar_t		*cvar;
 	int			len;
@@ -375,7 +305,7 @@ const char *Cvar_CompleteVariable (const char *partial)
 Cvar_Reset -- johnfitz
 ============
 */
-void Cvar_Reset (const char *name)
+void Cvar_Reset (char *name)
 {
 	cvar_t	*var;
 
@@ -391,7 +321,7 @@ void Cvar_Reset (const char *name)
 Cvar_Set
 ============
 */
-void Cvar_Set (const char *var_name, const char *value)
+void Cvar_Set (char *var_name, char *value)
 {
 	cvar_t	*var;
 	qboolean changed;
@@ -428,7 +358,7 @@ void Cvar_Set (const char *var_name, const char *value)
 
 	//johnfitz
 	if(var->callback && changed)
-		var->callback(var);
+		var->callback();
 	//johnfitz
 
 
@@ -467,7 +397,7 @@ void Cvar_Set (const char *var_name, const char *value)
 Cvar_SetValue
 ============
 */
-void Cvar_SetValue (const char *var_name, const float value)
+void Cvar_SetValue (char *var_name, float value)
 {
 	Cvar_Set (var_name, COM_NiceFloatString(value));
 }
@@ -577,9 +507,7 @@ void Cvar_WriteVariables (FILE *f)
 
 	fprintf (f, "\n// Variables\n\n");
 	for (var = cvar_vars ; var ; var = var->next)
-	{
-		if (var->flags & CVAR_ARCHIVE)
+		if (var->archive)
 			fprintf (f, "%s \"%s\"\n", var->name, var->string);
-	}
 }
 

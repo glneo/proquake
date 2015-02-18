@@ -1,4 +1,4 @@
-CFLAGS=-O3 -g -ffast-math -funroll-loops -fexpensive-optimizations
+CFLAGS=-O3 -g -m32 -ffast-math -funroll-loops -fexpensive-optimizations
 LDFLAGS=-lm
 SVGALDFLAGS=-lvga
 

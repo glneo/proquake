@@ -860,7 +860,7 @@ GetEvent(void)
 		do_grabs(mouse_shouldgrab);
 	}
 	if (vid_glx_fullscreen.value != fullscreen) {
-		//do_fullscreen(vid_glx_fullscreen.value);
+		do_fullscreen(vid_glx_fullscreen.value);
 	}
 }
 

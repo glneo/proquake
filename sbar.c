@@ -551,16 +551,16 @@ void Sbar_SoloScoreboard (void)
 		switch (current_skill)
 		{
 		case 0:
-			SNPrintf (str, sizeof(str), "skill: εασω", current_skill);
+			SNPrintf (str, sizeof(str), "skill: %i", current_skill);
 			break;
 		case 1:
-			SNPrintf (str, sizeof(str), "skill: ξοςναμ", current_skill);
+			SNPrintf (str, sizeof(str), "skill: %i", current_skill);
 			break;
 		case 2:
-			SNPrintf (str, sizeof(str), "skill: θαςδ", current_skill);
+			SNPrintf (str, sizeof(str), "skill: %i", current_skill);
 			break;
 		case 3:
-			SNPrintf (str, sizeof(str), "skill: ξιηθτναςε", current_skill);
+			SNPrintf (str, sizeof(str), "skill: %i", current_skill);
 			break;
 		}
 

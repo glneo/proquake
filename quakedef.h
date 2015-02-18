@@ -29,7 +29,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #define PROQUAKE_SERIES_VERSION		4.93
 #include "version.h"
 
-#define SUPPORTS_SERVER_BROWSER		// Server browser implementation
+// #define SUPPORTS_SERVER_BROWSER		// Server browser implementation
 #define SUPPORTS_PLAYER_ID			// Player ID
 
 //define	PARANOID				// speed sapping error checking

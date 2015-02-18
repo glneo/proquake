@@ -1227,7 +1227,7 @@ void Host_Name_f (void)
 		if (strcmp(host_client->name, newName) != 0)
 			Con_Printf ("%s renamed to %s\n", host_client->name, newName);
 	strlcpy (host_client->name, newName, sizeof(host_client->name) );
-	host_client->edict->v.netname = PR_SetEngineString(host_client->name);
+	host_client->edict->v.netname = host_client->name - pr_strings;
 
 	// JPG 1.05 - log the IP address
 	if (sscanf(host_client->netconnection->address, "%d.%d.%d", &a, &b, &c) == 3)
@@ -1570,11 +1570,11 @@ void Host_Pause_f (void)
 
 		if (sv.paused)
 		{
-			SV_BroadcastPrintf ("%s paused the game\n", PR_GetString(sv_player->v.netname));
+			SV_BroadcastPrintf ("%s paused the game\n", pr_strings + sv_player->v.netname);
 		}
 		else
 		{
-			SV_BroadcastPrintf ("%s unpaused the game\n",PR_GetString(sv_player->v.netname));
+			SV_BroadcastPrintf ("%s unpaused the game\n",pr_strings + sv_player->v.netname);
 		}
 
 	// send notification to all clients
@@ -1696,7 +1696,7 @@ void Host_Spawn_f (void)
 		memset (&ent->v, 0, progs->entityfields * 4);
 		ent->v.colormap = NUM_FOR_EDICT(ent);
 		ent->v.team = (host_client->colors & 15) + 1;
-		ent->v.netname = PR_SetEngineString(host_client->name);
+		ent->v.netname = host_client->name - pr_strings;
 
 		// copy spawn parms out of the client_t
 		for (i=0 ; i< NUM_SPAWN_PARMS ; i++)
@@ -1969,172 +1969,124 @@ void Host_Give_f (void)
     case 's':
 		if (rogue)
 		{
-		    val = GetEdictFieldValue(sv_player, "ammo_shells1");
-		    if (val)
-			val->_float = v;
+		    if ((val = GETEDICTFIELDVALUE(sv_player, eval_ammo_shells1)))
+			    val->_float = v;
 		}
-		sv_player->v.ammo_shells = v;
-		break;
 
-	case 'n':
+        sv_player->v.ammo_shells = v;
+        break;
+
+    case 'n':
 		if (rogue)
 		{
-		    val = GetEdictFieldValue(sv_player, "ammo_nails1");
-		    if (val)
-		    {
-			val->_float = v;
-			if (sv_player->v.weapon <= IT_LIGHTNING)
-			    sv_player->v.ammo_nails = v;
-		    }
+			if ((val = GETEDICTFIELDVALUE(sv_player, eval_ammo_nails1)))
+			{
+				val->_float = v;
+				if (sv_player->v.weapon <= IT_LIGHTNING)
+					sv_player->v.ammo_nails = v;
+			}
 		}
 		else
 		{
-		    sv_player->v.ammo_nails = v;
+			sv_player->v.ammo_nails = v;
 		}
-		break;
+        break;
 
-	case 'l':
+    case 'l':
 		if (rogue)
 		{
-		    val = GetEdictFieldValue(sv_player, "ammo_lava_nails");
-		    if (val)
-		    {
-			val->_float = v;
-			if (sv_player->v.weapon > IT_LIGHTNING)
-			    sv_player->v.ammo_nails = v;
-		    }
+			if ((val = GETEDICTFIELDVALUE(sv_player, eval_ammo_lava_nails)))
+			{
+				val->_float = v;
+				if (sv_player->v.weapon > IT_LIGHTNING)
+					sv_player->v.ammo_nails = v;
+			}
 		}
-		break;
+        break;
 
-	case 'r':
+    case 'r':
 		if (rogue)
 		{
-		    val = GetEdictFieldValue(sv_player, "ammo_rockets1");
-		    if (val)
-		    {
-			val->_float = v;
-			if (sv_player->v.weapon <= IT_LIGHTNING)
-			    sv_player->v.ammo_rockets = v;
-		    }
+			if ((val = GETEDICTFIELDVALUE(sv_player, eval_ammo_rockets1)))
+			{
+				val->_float = v;
+				if (sv_player->v.weapon <= IT_LIGHTNING)
+					sv_player->v.ammo_rockets = v;
+			}
 		}
 		else
 		{
-		    sv_player->v.ammo_rockets = v;
+			sv_player->v.ammo_rockets = v;
 		}
-		break;
+        break;
 
-	case 'm':
+    case 'm':
 		if (rogue)
 		{
-		    val = GetEdictFieldValue(sv_player, "ammo_multi_rockets");
-		    if (val)
-		    {
-			val->_float = v;
-			if (sv_player->v.weapon > IT_LIGHTNING)
-			    sv_player->v.ammo_rockets = v;
-		    }
+			if ((val = GETEDICTFIELDVALUE(sv_player, eval_ammo_multi_rockets)))
+			{
+				val->_float = v;
+				if (sv_player->v.weapon > IT_LIGHTNING)
+					sv_player->v.ammo_rockets = v;
+			}
 		}
-		break;
+        break;
 
-	case 'h':
-		sv_player->v.health = v;
-		break;
+    case 'h':
+        sv_player->v.health = v;
+        break;
 
-	case 'c':
+    case 'c':
 		if (rogue)
 		{
-		    val = GetEdictFieldValue(sv_player, "ammo_cells1");
-		    if (val)
-		    {
-			val->_float = v;
-			if (sv_player->v.weapon <= IT_LIGHTNING)
-			    sv_player->v.ammo_cells = v;
-		    }
+			if ((val = GETEDICTFIELDVALUE(sv_player, eval_ammo_cells1)))
+			{
+				val->_float = v;
+				if (sv_player->v.weapon <= IT_LIGHTNING)
+					sv_player->v.ammo_cells = v;
+			}
 		}
 		else
 		{
-		    sv_player->v.ammo_cells = v;
+			sv_player->v.ammo_cells = v;
 		}
-		break;
+        break;
 
-	case 'p':
+    case 'p':
 		if (rogue)
 		{
-		    val = GetEdictFieldValue(sv_player, "ammo_plasma");
-		    if (val)
-		    {
-			val->_float = v;
-			if (sv_player->v.weapon > IT_LIGHTNING)
-			    sv_player->v.ammo_cells = v;
-		    }
+			if ((val = GETEDICTFIELDVALUE(sv_player, eval_ammo_plasma)))
+			{
+				val->_float = v;
+				if (sv_player->v.weapon > IT_LIGHTNING)
+					sv_player->v.ammo_cells = v;
+			}
 		}
-		break;
-
+        break;
+	// Baker 3.60 - give "a" for armor from FitzQuake
 	//johnfitz -- give armour
-	case 'a':
-		if (v > 150)
+    case 'a':
+		if (v >= 0 && v <= 100)
 		{
-		    sv_player->v.armortype = 0.8;
-		    sv_player->v.armorvalue = v;
-		    sv_player->v.items = sv_player->v.items -
-					((int)(sv_player->v.items) & (int)(IT_ARMOR1 | IT_ARMOR2 | IT_ARMOR3)) +
-					IT_ARMOR3;
+			sv_player->v.armortype = 0.3;
+	        sv_player->v.armorvalue = v;
+			sv_player->v.items = sv_player->v.items - ((int)(sv_player->v.items) & (int)(IT_ARMOR1 | IT_ARMOR2 | IT_ARMOR3)) + IT_ARMOR1;
 		}
-		else if (v > 100)
+		if (v > 100 && v <= 150)
 		{
-		    sv_player->v.armortype = 0.6;
-		    sv_player->v.armorvalue = v;
-		    sv_player->v.items = sv_player->v.items -
-					((int)(sv_player->v.items) & (int)(IT_ARMOR1 | IT_ARMOR2 | IT_ARMOR3)) +
-					IT_ARMOR2;
+			sv_player->v.armortype = 0.6;
+	        sv_player->v.armorvalue = v;
+			sv_player->v.items = sv_player->v.items - ((int)(sv_player->v.items) & (int)(IT_ARMOR1 | IT_ARMOR2 | IT_ARMOR3)) + IT_ARMOR2;
 		}
-		else if (v >= 0)
+		if (v > 150 && v <= 200)
 		{
-		    sv_player->v.armortype = 0.3;
-		    sv_player->v.armorvalue = v;
-		    sv_player->v.items = sv_player->v.items -
-					((int)(sv_player->v.items) & (int)(IT_ARMOR1 | IT_ARMOR2 | IT_ARMOR3)) +
-					IT_ARMOR1;
+			sv_player->v.armortype = 0.8;
+	        sv_player->v.armorvalue = v;
+			sv_player->v.items = sv_player->v.items - ((int)(sv_player->v.items) & (int)(IT_ARMOR1 | IT_ARMOR2 | IT_ARMOR3)) + IT_ARMOR3;
 		}
 		break;
-		//johnfitz
-	}
-
-	//johnfitz -- update currentammo to match new ammo (so statusbar updates correctly)
-	switch ((int)(sv_player->v.weapon))
-	{
-	case IT_SHOTGUN:
-	case IT_SUPER_SHOTGUN:
-		sv_player->v.currentammo = sv_player->v.ammo_shells;
-		break;
-	case IT_NAILGUN:
-	case IT_SUPER_NAILGUN:
-	case RIT_LAVA_SUPER_NAILGUN:
-		sv_player->v.currentammo = sv_player->v.ammo_nails;
-		break;
-	case IT_GRENADE_LAUNCHER:
-	case IT_ROCKET_LAUNCHER:
-	case RIT_MULTI_GRENADE:
-	case RIT_MULTI_ROCKET:
-		sv_player->v.currentammo = sv_player->v.ammo_rockets;
-		break;
-	case IT_LIGHTNING:
-	case HIT_LASER_CANNON:
-	case HIT_MJOLNIR:
-		sv_player->v.currentammo = sv_player->v.ammo_cells;
-		break;
-	case RIT_LAVA_NAILGUN: //same as IT_AXE
-		if (rogue)
-			sv_player->v.currentammo = sv_player->v.ammo_nails;
-		break;
-	case RIT_PLASMA_GUN: //same as HIT_PROXIMITY_GUN
-		if (rogue)
-			sv_player->v.currentammo = sv_player->v.ammo_cells;
-		if (hipnotic)
-			sv_player->v.currentammo = sv_player->v.ammo_rockets;
-		break;
-	}
 	//johnfitz
+    }
 }
 
 edict_t	*FindViewthing (void)
@@ -2145,7 +2097,7 @@ edict_t	*FindViewthing (void)
 	for (i=0 ; i<sv.num_edicts ; i++)
 	{
 		e = EDICT_NUM(i);
-		if ( !strcmp (PR_GetString(e->v.classname), "viewthing") )
+		if ( !strcmp (pr_strings + e->v.classname, "viewthing") )
 			return e;
 	}
 	Con_Printf ("No viewthing on map\n");
