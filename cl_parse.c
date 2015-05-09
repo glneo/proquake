@@ -606,9 +606,7 @@ static void CL_ParseUpdate (int bits)
 	model_t		*model;
 	qboolean	forcelink;
 	entity_t	*ent;
-//#ifdef GL_QUAKE_SKIN_METHOD
 	int			skin;
-//#endif
 
 	if (cls.signon == SIGNONS - 1)
 	{	// first update is the final signon stage
@@ -661,11 +659,8 @@ if (bits&(1<<i))
 		if (!(bits & U_FRAME)) ent->frame = 0;
 		if (!(bits & U_SKIN)) ent->skinnum = 0;
 #endif
-
-//#ifdef GL_QUAKE_SKIN_METHOD
 		if (num > 0 && num <= cl.maxclients)
 			R_TranslatePlayerSkin (num - 1);
-//#endif
 	}
 
 	ent->frame = (bits & U_FRAME) ? MSG_ReadByte() : ent->baseline.frame;

@@ -232,8 +232,8 @@ size_t VSNPrintf	(char *buffer, const size_t count, const char *format, va_list 
 
 // MSVC has a different name for several standard functions
 
-#define strcasecmp stricmp
-#define strncasecmp strnicmp
+#define strcasecmp _stricmp
+#define strncasecmp _strnicmp
 
 #else
 

@@ -163,19 +163,14 @@ void Mod_ClearAll (void)
 {
 	int		i;
 	model_t	*mod;
-//#ifdef SUPPORTS_GL_DELETETEXTURES
 	static qboolean NoFree, Done;
 	extern	void GL_FreeTextures (void);
-//#endif
-
 
 	for (i=0 , mod=mod_known ; i<mod_numknown ; i++, mod++) 
 	{
 		if (mod->type != mod_alias)
 			mod->needload = true;
 	}
-
-//#ifdef SUPPORTS_GL_DELETETEXTURES
 
 	if (!Done)
 	{
@@ -186,8 +181,6 @@ void Mod_ClearAll (void)
 
 	if (!NoFree)
 		GL_FreeTextures ();
-//#endif
-
 }
 
 /*

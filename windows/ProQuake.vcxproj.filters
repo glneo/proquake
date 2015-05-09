@@ -19,9 +19,6 @@
     <ClInclude Include="..\bspfile.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\cl_server_browser.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\client.h">
       <Filter>Source Files</Filter>
     </ClInclude>
@@ -184,9 +181,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\cl_parse.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\cl_server_browser.c">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\cl_tent.c">

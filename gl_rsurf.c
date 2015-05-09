@@ -1283,7 +1283,6 @@ void R_MarkLeaves (void)
 	int		i;
 	byte	*vis, solid[4096];
 	mnode_t	*node;
-//#ifdef SUPPORTS_GLHOMFIX_NEARWATER
 	extern	cvar_t gl_nearwater_fix;
 	msurface_t **mark;
 	qboolean   nearwaterportal = false;
@@ -1299,7 +1298,6 @@ void R_MarkLeaves (void)
 				break;
 			}
 		}
-//#endif
 
 	if (r_oldviewleaf == r_viewleaf && ((!r_novis.value && !nearwaterportal) || pq_cheatfree))	// JPG 3.20 - cheat protection
 		return;
@@ -1314,13 +1312,11 @@ void R_MarkLeaves (void)
 	{
 		vis = solid;
 		memset (solid, 0xff, (cl.worldmodel->numleafs+7)>>3);
-//#ifdef SUPPORTS_GLHOMFIX_NEARWATER
 	}
 	else if (nearwaterportal)
 	{
 		extern byte *SV_FatPVS (vec3_t org, model_t *worldmodel);
 		vis = SV_FatPVS (r_origin, cl.worldmodel);
-//#endif
 	}
 	else
 	{

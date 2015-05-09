@@ -94,12 +94,13 @@
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <AdditionalIncludeDirectories>.\dxsdk\sdk\inc;.\curl\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_DEBUG;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AssemblerListingLocation>.\Debug_MSVC6\</AssemblerListingLocation>
       <BrowseInformation>true</BrowseInformation>
       <PrecompiledHeaderOutputFile>.\Debug_MSVC6\ProQuake.pch</PrecompiledHeaderOutputFile>
       <ObjectFileName>.\Debug_MSVC6\</ObjectFileName>
       <ProgramDataBaseFileName>.\Debug_MSVC6\</ProgramDataBaseFileName>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Midl>
       <SuppressStartupBanner>true</SuppressStartupBanner>
@@ -246,7 +247,6 @@
     <ClInclude Include="..\anorm_dots.h" />
     <ClInclude Include="..\bspfile.h" />
     <ClInclude Include="..\client.h" />
-    <ClInclude Include="..\cl_server_browser.h" />
     <ClInclude Include="..\cmd.h" />
     <ClInclude Include="..\common.h" />
     <ClInclude Include="..\conproc.h" />
@@ -302,7 +302,6 @@
     <ClCompile Include="..\cl_input.c" />
     <ClCompile Include="..\cl_main.c" />
     <ClCompile Include="..\cl_parse.c" />
-    <ClCompile Include="..\cl_server_browser.c" />
     <ClCompile Include="..\cl_tent.c" />
     <ClCompile Include="..\cmd.c" />
     <ClCompile Include="..\common.c" />

@@ -2124,7 +2124,6 @@ void M_Pref_AdjustSliders (int dir)
 
 		case 16:
 
-//#ifdef SUPPORTS_CONSOLE_SIZING
 			// 72 ON | 120 OFF | 200 OFF | 250 OFF
 			newval = CLAMP(-2, vid_consize.value + (dir <0 ? -1 : 1), 3);
 			if (newval == 3) // We won't allow 320 selection except from console
@@ -2133,7 +2132,6 @@ void M_Pref_AdjustSliders (int dir)
 				newval = 2;
 
 			Cvar_SetValue("vid_consize", newval);
-//#endif
 			break;
 
 		case 18:
@@ -2192,12 +2190,7 @@ void M_Pref_Options_Draw (void)
 #endif
 	M_Print     (16, i, "     max frames/sec "); M_Print (220, i, pq_maxfps.value == 72 ? "72 fps" : (pq_maxfps.value == 120 ? "120 fps" : (pq_maxfps.value == 200 ? "200 fps" : (pq_maxfps.value == 250 ? "250 fps" : "custom"))) ); i += 8; 	  // 14
 	M_Print     (16, i, "     show framerate "); M_Print (220, i, pq_drawfps.value ? "on" : "off" );  i += 8;	  // 14
-//#ifdef SUPPORTS_CONSOLE_SIZING // GLQuake + D3DQuake can resize the console;  WinQuake can't
 	M_Print     (16, i, "     console width  "); M_Print (220, i, vid_consize.value == 0 ? "100%" : (vid_consize.value == 1 ? "50%" : (vid_consize.value == 2 ? "640 width" : (vid_consize.value == -1 ? "auto" : "custom"))) ); i += 16; 	  // 15
-//#else
-//	M_Print     (16, i, "     console width  "); M_Print (220, i, "n/a"); i += 16; 	  // 13
-//#endif
-
 	M_Print     (16, i, "     directinput mouse ");
 
 #ifdef SUPPORTS_DIRECTINPUT

@@ -217,7 +217,6 @@ typedef struct
 
 #include "location.h"	// JPG - for %l formatting speficier
 #include "iplog.h"		// JPG 1.05 - ip address logging
-#include "cl_server_browser.h"
 
 //=============================================================================
 
