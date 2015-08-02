@@ -19,6 +19,7 @@
    Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
 
+#ifdef HTTP_DOWNLOAD
 
 #include "webdownload.h"
 #include "quakedef.h"
@@ -265,3 +266,5 @@ new_file:
 	Web_Cleanup();
 	return 1;
 }
+
+#endif

@@ -81,7 +81,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 	#define SUPPORTS_TRANSPARENT_SBAR           // Not implemented in OSX?
 
 	#define RELEASE_MOUSE_FULLSCREEN            // D3DQUAKE gets an error if it loses focus in fullscreen, so that'd be stupid
-	#define HTTP_DOWNLOAD
+//	#define HTTP_DOWNLOAD
 
 	#define OLD_SGIS                            // Old multitexture ... for now.
 	#define INTEL_OPENGL_DRIVER_WORKAROUND		// Windows only issue?  Or is Linux affected too?  OS X is not affected
