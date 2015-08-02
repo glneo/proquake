@@ -1,14 +1,11 @@
 CFLAGS=-O3 -g -m32 -ffast-math -funroll-loops -fexpensive-optimizations
-LDFLAGS=-lm
-
-SVGALDFLAGS=-lvga -lMesaGL -lglide2x -lX11 -lXext -ldl
-GLXLDFLAGS=-lGL -lX11 -lXext -ldl -lXxf86dga -lXxf86vm
+LDFLAGS=-lm -lGL -lX11 -lXext -ldl -lXxf86dga -lXxf86vm
 
 #############################################################################
 # SETUP AND BUILD
 #############################################################################
 
-all: glquake glquake.glx
+all: glquake
 
 #############################################################################
 # GLQuake
@@ -75,15 +72,10 @@ GLQUAKE_OBJS= \
 	security.o \
 	vid_common_gl.o
 
-GLSVGA_OBJS=gl_vidlinux.o
-
 GLX_OBJS=gl_vidlinuxglx.o
 
-glquake : $(GLQUAKE_OBJS) $(GLSVGA_OBJS)
-	gcc $(CFLAGS) -o $@ $(GLQUAKE_OBJS) $(GLSVGA_OBJS) $(SVGALDFLAGS) $(LDFLAGS)
-
-glquake.glx : $(GLQUAKE_OBJS) $(GLX_OBJS)
-	gcc $(CFLAGS) -o $@ $(GLQUAKE_OBJS) $(GLX_OBJS) $(GLXLDFLAGS) $(LDFLAGS)
+glquake : $(GLQUAKE_OBJS) $(GLX_OBJS)
+	gcc $(CFLAGS) -o $@ $(GLQUAKE_OBJS) $(GLX_OBJS) $(LDFLAGS)
 
 %.o : %.c
 	gcc -c $(CFLAGS) $< -o $@
@@ -93,5 +85,5 @@ glquake.glx : $(GLQUAKE_OBJS) $(GLX_OBJS)
 #############################################################################
 
 clean:
-	-rm -f glquake.spec $(GLQUAKE_OBJS) $(GLSVGA_OBJS) $(GLX_OBJS)
+	-rm -f glquake.spec glquake $(GLQUAKE_OBJS) $(GLX_OBJS)
 
