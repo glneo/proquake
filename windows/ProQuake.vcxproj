@@ -121,7 +121,7 @@
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
-      <AdditionalDependencies>dsound.lib;dxguid.lib;opengl32.lib;winmm.lib;wsock32.lib;curl/lib/libcurl.lib;zlib/lib/zlib.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>dsound.lib;dxguid.lib;opengl32.lib;winmm.lib;wsock32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='DX8 Debug|Win32'">
