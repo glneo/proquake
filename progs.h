@@ -78,7 +78,7 @@ void PR_ExecuteProgram (func_t fnum);
 void PR_LoadProgs (char *progsname);
 
 char *PR_GetString (int num);
-int PR_SetEngineString (const char *s);
+int PR_SetEngineString (char *s);
 int PR_AllocString (int bufferlength, char **ptr);
 
 void PR_Profile_f (void);
@@ -86,7 +86,7 @@ void PR_Profile_f (void);
 edict_t *ED_Alloc (void);
 void ED_Free (edict_t *ed);
 
-char	*ED_NewString (char *string);
+int ED_NewString (char *string);
 // returns a copy of the string allocated from the server's string heap
 
 void ED_Print (edict_t *ed);

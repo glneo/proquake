@@ -26,7 +26,7 @@ dfunction_t		*pr_functions;
 
 char		*pr_strings;
 static	int		pr_stringssize;
-static	const char	**pr_knownstrings;
+static	char	**pr_knownstrings;
 static	int		pr_maxknownstrings;
 static	int		pr_numknownstrings;
 ddef_t		*pr_fielddefs;
@@ -708,10 +708,10 @@ void ED_ParseGlobals (char *data)
 ED_NewString
 =============
 */
-char *ED_NewString (char *string)
+int ED_NewString (char *string)
 {
-	char	*new, *new_p;
-	int		i,l;
+	char	*new_p;
+	int		i,l,new;
 
 	l = strlen(string) + 1;
 	new = PR_AllocString (l, &new_p);
@@ -1135,13 +1135,14 @@ int NUM_FOR_EDICT(edict_t *e)
 //===========================================================================
 
 
-#define	PR_STRING_ALLOCSLOTS	256
+#define	PR_STRING_ALLOCSLOTS	1024
 
 static void PR_AllocStringSlots (void)
 {
 	pr_maxknownstrings += PR_STRING_ALLOCSLOTS;
 	//Con_DPrintf2("PR_AllocStringSlots: realloc'ing for %d slots\n", pr_maxknownstrings);
-	pr_knownstrings = (const char **) Z_Realloc ((void *)pr_knownstrings, pr_maxknownstrings * sizeof(char *));
+	//pr_knownstrings = (const char **) Z_Realloc ((void *)pr_knownstrings, pr_maxknownstrings * sizeof(char *));
+	pr_knownstrings = (char **) malloc (pr_maxknownstrings * sizeof(char *));
 }
 
 char *PR_GetString (int num)
@@ -1164,7 +1165,7 @@ char *PR_GetString (int num)
 	}
 }
 
-int PR_SetEngineString (const char *s)
+int PR_SetEngineString (char *s)
 {
 	int		i;
 
