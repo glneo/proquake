@@ -25,12 +25,33 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #define WARP_WIDTH		320
 #define WARP_HEIGHT		200
 
-GLFWwindow* window;
+static GLFWwindow* window;
 
 void window_close_callback(GLFWwindow* window)
 {
 	Sys_Quit();
 	exit(0);
+}
+
+void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
+{
+	int press, q_key;
+
+	if (action == GLFW_PRESS)
+		press = true;
+	else if (action == GLFW_RELEASE)
+		press = false;
+	else
+		return;
+
+	switch (button)
+	{
+	case GLFW_MOUSE_BUTTON_LEFT: q_key = K_MOUSE1; break;
+	case GLFW_MOUSE_BUTTON_RIGHT: q_key = K_MOUSE2; break;
+	default: q_key = 0; break;
+	}
+
+	Key_Event(q_key, 0, press);
 }
 
 static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
@@ -152,11 +173,14 @@ void VID_Init(unsigned char *palette)
 		exit(EXIT_FAILURE);
 	}
 
+	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
+
 	glfwMakeContextCurrent(window);
 
 	GL_Init();
 
 	glfwSetKeyCallback(window, key_callback);
+	glfwSetMouseButtonCallback(window, mouse_button_callback);
 	glfwSetWindowCloseCallback(window, window_close_callback);
 
 	snprintf(gldir, sizeof(gldir), "%s/OpenGL", com_gamedir);
@@ -216,7 +240,53 @@ void Sys_SendKeyEvents(void)
  */
 void IN_Move(usercmd_t *cmd)
 {
-	return;
+	double mouse_x, mouse_y;
+	glfwGetCursorPos(window, &mouse_x, &mouse_y);
+	glfwSetCursorPos(window, vid.width/2, vid.height/2);
+
+	mouse_x -= (vid.width/2);
+	mouse_y -= (vid.height/2);
+
+	mouse_x *= sensitivity.value;
+	mouse_y *= sensitivity.value;
+
+	/* add mouse X/Y movement to cmd */
+	if ((in_strafe.state & 1) || (lookstrafe.value && mlook_active))    // Baker 3.60 - Freelook cvar support
+	{
+		cmd->sidemove += m_side.value * mouse_x;
+	} else {
+		cl.viewangles[YAW] -= m_yaw.value * mouse_x;
+	}
+
+	if (mlook_active)	V_StopPitchDrift();    // Baker 3.60 - Freelook cvar support
+
+	if (mlook_active && !(in_strafe.state & 1))     // Baker 3.60 - Freelook cvar support
+	{
+		cl.viewangles[PITCH] += m_pitch.value * mouse_y;
+
+		// JPG 1.05 - added pq_fullpitch
+		if (pq_fullpitch.value)
+		{
+			if (cl.viewangles[PITCH] > 90)
+				cl.viewangles[PITCH] = 90;
+			if (cl.viewangles[PITCH] < -90)
+				cl.viewangles[PITCH] = -90;
+		}
+		else
+		{
+			if (cl.viewangles[PITCH] > 80)
+				cl.viewangles[PITCH] = 80;
+			if (cl.viewangles[PITCH] < -70)
+				cl.viewangles[PITCH] = -70;
+		}
+	} else {
+		//if ((in_strafe.state & 1) && noclip_anglehack) {
+		//	cmd->upmove -= m_forward.value * mouse_y;
+		//} else {
+			cmd->forwardmove -= m_forward.value * mouse_y;
+		//}
+	}
+	mouse_x = mouse_y = 0.0;
 }
 
 /*
