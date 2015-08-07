@@ -46,9 +46,9 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #define SUPPORTS_TRANSFORM_INTERPOLATION // We are switching to r_interpolate_transform
 
 // Define Support For Cheat-Free Mode
-#if defined(_WIN32) || defined(Linux)
-	#define SUPPORTS_CHEATFREE_MODE // Only Windows and Linux have security modules.
-#endif
+//#if defined(_WIN32) || defined(Linux)
+//	#define SUPPORTS_CHEATFREE_MODE // Only Windows and Linux have security modules.
+//#endif
 
 // Define Renderer Name
 #define RENDERER_NAME "GL"

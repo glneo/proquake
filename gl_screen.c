@@ -1065,9 +1065,6 @@ void SCR_UpdateScreen (void)
 // added by joe - IMPORTANT: this _must_ be here so that
 //			     palette flashes take effect in windowed mode too.
 
-	if (using_hwgamma && vid_hwgamma_enabled && gl_hwblend.value) // Baker begin hwgamma support
-		R_PolyBlend (); // Baker end hwgamma support
-
 
 	// draw any areas not covered by the refresh
 
@@ -1135,32 +1132,9 @@ void SCR_UpdateScreen (void)
 
 
 
-	// Baker hwgamma support
-
-	if (using_hwgamma)
-	{
-		static qboolean hwblend_already_off=false;
-		R_BrightenScreen ();
-
-		if (gl_hwblend.value !=0 || hwblend_already_off==false)  // We must do hardware palette once to turn it off!
-		{
-			if(V_UpdatePalette_Hardware ())
-				V_UpdatePalette_Static (true);
-		}
-		else
-		{
-//			Con_DPrintf("Doing static ...\n");
-			V_UpdatePalette_Static (false);
-		}
-
-		hwblend_already_off = (!gl_hwblend.value && !hwblend_already_off);
-	} else
-
-	{
+	
 //		R_BrightenScreen2 ();
 		V_UpdatePalette_Static (false);
-	}
-	// Baker end hwgamma support
 
 #ifdef SUPPORTS_AVI_CAPTURE
 	Movie_UpdateScreen ();

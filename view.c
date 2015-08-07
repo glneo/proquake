@@ -246,16 +246,6 @@ cshift_t	cshift_lava = { {255,80,0}, 150 };
 
 cvar_t		vold_gamma = {"gamma", "1", true};
 
-// Baker hwgamma support
-
-
-cvar_t		gl_hwblend			= {"gl_hwblend", "0"};
-cvar_t		v_gamma				= {"gamma", "0.7", true};
-cvar_t		v_contrast			= {"contrast", "1", true};
-unsigned short	ramps[3][256];
-
-// Baker end hwgamma support
-
 byte		gammatable[256];	// palette is sent through this
 
 
@@ -425,18 +415,6 @@ void V_SetContentsColor (int contents)
 	//        d3dpro
 	//        wqpro
 
-	// Baker: I'm thinking this should 
-	if (using_hwgamma /*&& vid_hwgamma_enabled && gl_hwblend.value*/) {
-		// Baker begin hwgamma support
-		if (!pq_waterblend.value)
-		{
-			cl.cshifts[CSHIFT_CONTENTS] = cshift_empty;
-	
-			cl.cshifts[CSHIFT_CONTENTS].percent *= 100;
-	
-			return;
-		}
-	}
 	switch (contents)
 	{
 	case CONTENTS_EMPTY:
@@ -454,29 +432,7 @@ void V_SetContentsColor (int contents)
 	}
 
 
-	if (using_hwgamma /* && vid_hwgamma_enabled && gl_hwblend.value*/) 
-		// Baker begin hwgamma support
-		if (pq_waterblend.value > 0 && pq_waterblend.value < 1 && contents != CONTENTS_EMPTY)
-
-			cl.cshifts[CSHIFT_CONTENTS].percent *= pq_waterblend.value;
-
-
 	
-	if (using_hwgamma /*&& vid_hwgamma_enabled && gl_hwblend.value*/) 
-	{
-		// Baker begin hwgamma support
-		if (contents != CONTENTS_EMPTY)
-		{
-			if (!gl_polyblend.value)
-				cl.cshifts[CSHIFT_CONTENTS].percent = 0;
-			else
-				cl.cshifts[CSHIFT_CONTENTS].percent *= gl_cshiftpercent.value;
-		}
-		else
-		{
-			cl.cshifts[CSHIFT_CONTENTS].percent *= 100;
-		}
-	}
 
 }
 
@@ -525,9 +481,6 @@ V_CalcBlend
 =============
 */
 
-extern		qboolean  using_hwgamma;
-
-
 void V_CalcBlend (void)
 {
 	float	r, g, b, a, a2;
@@ -535,58 +488,7 @@ void V_CalcBlend (void)
 
 	r = g = b = a = 0;
 
-	// Baker hwgamma support
-
-	if (using_hwgamma) {
-	if (cls.state != ca_connected)
-	{
-		cl.cshifts[CSHIFT_CONTENTS] = cshift_empty;
-		cl.cshifts[CSHIFT_POWERUP].percent = 0;
-	}
-	else
-	{
-		V_CalcPowerupCshift ();
-	}
-
-	// drop the damage value
-	cl.cshifts[CSHIFT_DAMAGE].percent -= host_frametime * 150;
-	if (cl.cshifts[CSHIFT_DAMAGE].percent <= 0)
-		cl.cshifts[CSHIFT_DAMAGE].percent = 0;
-
-	// drop the bonus value
-	cl.cshifts[CSHIFT_BONUS].percent -= host_frametime * 100;
-	if (cl.cshifts[CSHIFT_BONUS].percent <= 0)
-		cl.cshifts[CSHIFT_BONUS].percent = 0;
-
-	for (j=0 ; j<NUM_CSHIFTS ; j++)
-	{
-		if ((!gl_cshiftpercent.value || !gl_polyblend.value) && j != CSHIFT_CONTENTS)
-			continue;
-
-		if (j == CSHIFT_CONTENTS)
-			a2 = cl.cshifts[j].percent / 100.0 / 255.0;
-		else
-		a2 = ((cl.cshifts[j].percent * gl_cshiftpercent.value) / 100.0) / 255.0;
-
-		if (!a2)
-			continue;
-		a = a + a2*(1-a);
-
-		a2 /= a;
-		r = r*(1-a2) + cl.cshifts[j].destcolor[0]*a2;
-		g = g*(1-a2) + cl.cshifts[j].destcolor[1]*a2;
-		b = b*(1-a2) + cl.cshifts[j].destcolor[2]*a2;
-	}
-
-	v_blend[0] = r/255.0;
-	v_blend[1] = g/255.0;
-	v_blend[2] = b/255.0;
-	v_blend[3] = CLAMP (0, a, 1);
-}
-	else
-
-
-	{  // Baker end hwgamma support
+	
 		for (j=0 ; j<NUM_CSHIFTS ; j++)	
 		{
 			if (!gl_cshiftpercent.value)
@@ -613,7 +515,6 @@ void V_CalcBlend (void)
 			v_blend[3] = 1;
 		if (v_blend[3] < 0)
 			v_blend[3] = 0;
-	}
 }
 
 
@@ -648,6 +549,7 @@ qboolean V_UpdatePalette_Hardware (void)
 		}
 	}
 
+/*
 	gamma = CLAMP (0.3, v_gamma.value, 3);
 	if (v_gamma.value != old_gamma || !old_gamma) 
 	{
@@ -677,13 +579,13 @@ qboolean V_UpdatePalette_Hardware (void)
 
 		old_hwblend = gl_hwblend.value;
 	}
-
+*/
 	if (!new)
 		return false;
 
 	a = v_blend[3];
 
-	if (!vid_hwgamma_enabled || !gl_hwblend.value)
+	//if (!vid_hwgamma_enabled || !gl_hwblend.value)
 		a = 0;
 
 	rgb[0] = 255 * v_blend[0] * a;
@@ -697,24 +599,6 @@ qboolean V_UpdatePalette_Hardware (void)
 		contrast = pow (contrast, vid_gamma);
 		gamma /= vid_gamma;
 	}
-
-	for (i=0 ; i<256 ; i++)
-	{
-		for (j=0 ; j<3 ; j++)
-		{
-			// apply blend and contrast
-			c = (i*a + rgb[j]) * contrast;
-			if (c > 255)
-				c = 255;
-			// apply gamma
-			c = 255 * pow((c + 0.5)/255.5, gamma) + 0.5;
-			c = CLAMP (0, c, 255);
-			ramps[j][i] = c << 8;
-		}
-	}
-
-	//FIXME: Not portable
-	//VID_SetDeviceGammaRamp ((unsigned short *)ramps);
 
 	return hardware_blend_set_off;
 }
@@ -1240,13 +1124,6 @@ extern vrect_t	scr_vrect;
 
 void V_RenderView (void)
 {
-	// Baker hwgamma support
-	if (using_hwgamma) {
-		if (cls.state != ca_connected) {
-			V_CalcBlend ();
-			return;
-		}
-	}
 
 	if (con_forcedup)
 		return;
@@ -1319,12 +1196,6 @@ void V_Init (void)
 
 	Cvar_RegisterVariable (&lcd_x, NULL);
 	Cvar_RegisterVariable (&lcd_yaw, NULL);
-
-	// Baker hwgamma support
-	Cvar_RegisterVariable (&gl_hwblend, NULL);
-	Cvar_RegisterVariable (&v_gamma, NULL);
-	Cvar_RegisterVariable (&v_contrast, NULL);
-	// Baker end hwgamma support
 
 
 	Cvar_RegisterVariable (&v_centermove, NULL);

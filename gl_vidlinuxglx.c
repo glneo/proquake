@@ -138,15 +138,6 @@ static float vid_gamma = 1.0;
 qboolean is8bit = false;
 qboolean isPermedia = false;
 
-/*-----------------------------------------------------------------------*/
-void D_BeginDirectRect (int x, int y, byte *pbitmap, int width, int height)
-{
-}
-
-void D_EndDirectRect (int x, int y, int width, int height)
-{
-}
-
 /*
   VID_CheckDGA
 

@@ -1031,7 +1031,7 @@ void PR_LoadProgs (char *progsname)
 	pr_maxknownstrings = 0;
 	pr_stringssize = progs->numstrings;
 	if (pr_knownstrings)
-		Z_Free ((void *)pr_knownstrings);
+		free ((void *)pr_knownstrings);
 	pr_knownstrings = NULL;
 	PR_SetEngineString("");
 

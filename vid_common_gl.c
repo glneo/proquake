@@ -107,7 +107,7 @@ void CheckMultiTextureExtensions(void)
 
 //	currenttarget = TEXTURE0_ARB;
 
-	Con_Printf ("GL_%s_multitexture extensions found: ARB\n");
+	Con_Printf ("GL_multitexture extensions found: ARB\n");
 	gl_mtexable = true;
 }
 

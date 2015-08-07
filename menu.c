@@ -1362,25 +1362,14 @@ void M_AdjustSliders (int dir)
 		Cvar_SetValue ("fov", scr_fov.value);
 		break;
 	case 5:	// gamma
-		// Baker hwgamma support
 
-		// D3DQUAKE should use hardware gamma
-		// at least for here!
-		if (using_hwgamma) 
-		{
-			v_gamma.value -= dir * 0.05;
-			if (v_gamma.value < 0.5)
-				v_gamma.value = 0.5;
-			if (v_gamma.value > 1)
-				v_gamma.value = 1;
-			Cvar_SetValue ("gamma", v_gamma.value);
-		}
-		else 
-		{
-			SCR_ModalMessage("Brightness adjustment cannot\nbe done in-game if using the\n-gamma command line parameter.\n\n\nRemove -gamma from your command\nline to use in-game brightness.\n\nPress Y or N to continue.",0.0f);
-		}
 
-		// Baker end hwgamma support
+			SCR_ModalMessage("Brightness adjustment cannot\n" \
+					"be done in-game if using the\n" \
+					"-gamma command line parameter.\n\n\n" \
+					"Remove -gamma from your command\n" \
+					"line to use in-game brightness.\n\n" \
+					"Press Y or N to continue.",0.0f);
 		break;
 	case 6:	// mouse speed
 		sensitivity.value += dir * 1;
@@ -1522,12 +1511,7 @@ void M_Options_Draw (void)
 
 	M_Print (16, 72, "            Brightness");
 
-	// Baker hwgamma support
-
-	if (using_hwgamma)
-		r = (1.0 - v_gamma.value) / 0.5;
-	else
-		r = (1.0 - vold_gamma.value) / 0.5;
+	r = (1.0 - vold_gamma.value) / 0.5;
 
 	M_DrawSlider (220, 72, r);
 
@@ -1562,7 +1546,7 @@ void M_Options_Draw (void)
 
 	{
 
-		if (video_options_disabled)
+//		if (video_options_disabled)
 			M_Print (220, 152, "[locked]");
 	}
 
@@ -1621,9 +1605,9 @@ void M_Options_Key (int key, int ascii)
 			break;
 		case 15:
 
-			if (video_options_disabled)
+/*			if (video_options_disabled)
 				SCR_ModalMessage("Video options are disabled when\nusing the -window command\nline parameter.\n\nRemove -window from your command\nline to enable in-game\nresolution changing.\n\nPress Y or N to continue.",0.0f);
-			else
+			else */
 				M_Menu_Video_f ();
 
 			break;

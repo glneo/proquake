@@ -108,11 +108,6 @@ cvar_t  gl_overbright = {"gl_overbright","0", true};
 #endif
 
 
-
-extern	cvar_t	gl_ztrick;
-
-
-
 /*
 =================
 R_CullBox
@@ -1000,18 +995,9 @@ void R_DrawEntitiesOnList (void)
 
 				// Get rid of Z-fighting for textures by offsetting the
 				// drawing of entity models compared to normal polygons.
-				// (Only works if gl_ztrick is turned off)
-				if(!gl_ztrick.value)
-				{
-					glEnable(GL_POLYGON_OFFSET_FILL);
-				}
-
+				glEnable(GL_POLYGON_OFFSET_FILL);
 				R_DrawBrushModel (currententity);
-
-				if(!gl_ztrick.value)
-				{
-					glDisable(GL_POLYGON_OFFSET_FILL);
-				}
+				glDisable(GL_POLYGON_OFFSET_FILL);
 
 			break;
 
@@ -1128,45 +1114,10 @@ void R_PolyBlend (void)
 	if (!v_blend[3])	// No blends ... get outta here
 		return;
 
+	if (!gl_polyblend.value)
+		return;
 
-	// Baker hwgamma support
-	if (using_hwgamma && vid_hwgamma_enabled && gl_hwblend.value) {
-//		Con_Printf("gl_hwblend.value is %f\n",gl_hwblend.value);
-
-		if (!vid_hwgamma_enabled) {// Hardware gamma unavailable
-			return;
-		}
-
-		if (!gl_hwblend.value) {
-			return;
-		}
-
-		glDisable (GL_ALPHA_TEST);
-		glDisable (GL_TEXTURE_2D);
-		glEnable (GL_BLEND);
-
-//		Con_Printf("our blends are %i, %i, %i, %i\n", v_blend[0], v_blend[1], v_blend[2], v_blend[3]);
-		glColor4fv (v_blend);
-
-		glBegin (GL_QUADS);
-		glVertex2f (r_refdef.vrect.x, r_refdef.vrect.y);
-		glVertex2f (r_refdef.vrect.x + r_refdef.vrect.width, r_refdef.vrect.y);
-		glVertex2f (r_refdef.vrect.x + r_refdef.vrect.width, r_refdef.vrect.y + r_refdef.vrect.height);
-		glVertex2f (r_refdef.vrect.x, r_refdef.vrect.y + r_refdef.vrect.height);
-		glEnd ();
-
-		glDisable (GL_BLEND);
-		glEnable (GL_TEXTURE_2D);
-		glEnable (GL_ALPHA_TEST);
-
-		glColor3ubv (color_white);
-	} else
-
-	{ // Baker end hwgamma support
-		if (!gl_polyblend.value)
-			return;
-
-		GL_DisableMultitexture();
+	GL_DisableMultitexture();
 
 		glDisable (GL_ALPHA_TEST);
 		glEnable (GL_BLEND);
@@ -1191,58 +1142,8 @@ void R_PolyBlend (void)
 		glDisable (GL_BLEND);
 		glEnable (GL_TEXTURE_2D);
 		glEnable (GL_ALPHA_TEST);
-	}
 
 }
-
-/*
-================
-R_BrightenScreen
-================
-*/
-
-// baker hwgamma support - if disabled, this should not be called
-void R_BrightenScreen (void)
-{
-	extern float vid_gamma;
-	float		f;
-
-	if (vid_hwgamma_enabled || v_contrast.value <= 1.0)
-		return;
-
-	f = min(v_contrast.value, 3);
-	f = pow(f, v_gamma.value);
-
-// inf = 255 * pow((i + 0.5) / 255.5 * c, g) + 0.5;
-
-	glDisable (GL_TEXTURE_2D);
-	glEnable (GL_BLEND);
-	glBlendFunc (GL_DST_COLOR, GL_ONE);
-
-	glBegin (GL_QUADS);
-	while (f > 1)
-	{
-		if (f >= 2)
-			glColor3ubv (color_white);
-		else
-			glColor3f (f - 1, f - 1, f - 1);
-		glVertex2f (0, 0);
-		glVertex2f (vid.width, 0);
-		glVertex2f (vid.width, vid.height);
-		glVertex2f (0, vid.height);
-		f *= 0.5;
-	}
-	glEnd ();
-
-	glEnable (GL_TEXTURE_2D);
-	glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	glDisable (GL_BLEND);
-
-	glColor3ubv (color_white);
-}
-
-// Baker end hwgamma support
-
 
 int SignbitsForPlane (mplane_t *out)
 {
@@ -1579,10 +1480,8 @@ void R_Clear (void)
 
 
 	// If gl_clear is 1, we always clear the color buffer
-	// Or if hardware gamma isn't enabled and contrast is greater than 1
-	if (using_hwgamma) // Baker hwgamma
-		if (gl_clear.value || (!vid_hwgamma_enabled && v_contrast.value > 1))
-			clearbits |= GL_COLOR_BUFFER_BIT;
+	if (gl_clear.value)
+		clearbits |= GL_COLOR_BUFFER_BIT;
 
 
 	if (r_mirroralpha.value < 1.0) // Baker 3.99: was != 1.0, changed in event gets set to # higher than 1.0
@@ -1595,46 +1494,12 @@ void R_Clear (void)
 		gldepthmax = 0.5;
 		glDepthFunc (GL_LEQUAL);
 	}
-#ifndef DX8QUAKE_NO_GL_ZTRICK // MH says "ztrick doesn't play nice with D3D (it shouldn't be used in GL either)"
-	else if (gl_ztrick.value)
-	{
-		static int trickframe;
-
-		if (gl_clear.value)
-			glClear (GL_COLOR_BUFFER_BIT);
-
-		trickframe++;
-		if (trickframe & 1)
-		{
-			gldepthmin = 0;
-			gldepthmax = 0.49999;
-			glDepthFunc (GL_LEQUAL);
-		}
-		else
-		{
-			gldepthmin = 1;
-			gldepthmax = 0.5;
-			glDepthFunc (GL_GEQUAL);
-		}
-	}
-#endif
 	else
 	{
-		// Baker hwgamma support
-
-		if (using_hwgamma) 
-		{
-			clearbits |= GL_DEPTH_BUFFER_BIT;
-			glClear (clearbits);
-		} else
-
-		{
-			if (gl_clear.value)
-				glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-			else
-				glClear (GL_DEPTH_BUFFER_BIT);
-		}
-		// Baker end hwgamma support
+		if (gl_clear.value)
+			glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		else
+			glClear (GL_DEPTH_BUFFER_BIT);
 
 		gldepthmin = 0;
 		gldepthmax = 1;

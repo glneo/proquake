@@ -1,5 +1,7 @@
 CFLAGS=-O3 -g -ffast-math -funroll-loops -fexpensive-optimizations
-LDFLAGS=-lm -lGL -lX11 -lXext -ldl -lXxf86dga -lXxf86vm
+LDFLAGS=-lm -lGL -lX11 -lXext -lXxf86dga -ldl -lXxf86vm
+
+FWLDFLAGS=-lm -lGL -lglfw
 
 #############################################################################
 # SETUP AND BUILD
@@ -72,9 +74,14 @@ GLQUAKE_OBJS= \
 	security.o \
 	vid_common_gl.o
 
+FW_OBJS=gl_vidfw.o
+
 GLX_OBJS=gl_vidlinuxglx.o
 
-glquake : $(GLQUAKE_OBJS) $(GLX_OBJS)
+glquake : $(GLQUAKE_OBJS) $(FW_OBJS)
+	gcc $(CFLAGS) -o $@ $(GLQUAKE_OBJS) $(FW_OBJS) $(FWLDFLAGS)
+
+glquake.glx : $(GLQUAKE_OBJS) $(GLX_OBJS)
 	gcc $(CFLAGS) -o $@ $(GLQUAKE_OBJS) $(GLX_OBJS) $(LDFLAGS)
 
 %.o : %.c
