@@ -121,6 +121,7 @@ void VID_Init(unsigned char *palette)
 	int i;
 	char gldir[MAX_OSPATH];
 	int width = 640, height = 480;
+
 	vid.maxwarpwidth = WARP_WIDTH;
 	vid.maxwarpheight = WARP_HEIGHT;
 	vid.colormap = host_colormap;
@@ -158,13 +159,16 @@ void VID_Init(unsigned char *palette)
 		vid.conheight = atoi(com_argv[i+1]);
 	if (vid.conheight < 200)
 		vid.conheight = 200;
+	if (vid.conheight > height)
+		vid.conheight = height;
 
-	vid.width = width;
-	vid.height = height;
-	vid.aspect = ((float)vid.height / (float)vid.width) * (320.0 / 240.0);
+	vid.width = vid.conwidth;
+	vid.height = vid.conheight;
+
+	vid.aspect = ((float)vid.height / (float)vid.width) * (320.0 / 200.0);
 	vid.numpages = 2;
 
-	window = glfwCreateWindow(width, height, "QleanQuake", glfwGetPrimaryMonitor(), NULL);
+	window = glfwCreateWindow(width, height, "QleanQuake", NULL, NULL);
 
 	if (!window)
 	{
@@ -252,13 +256,12 @@ void IN_Move(usercmd_t *cmd)
 
 	/* add mouse X/Y movement to cmd */
 	if ((in_strafe.state & 1) || (lookstrafe.value && mlook_active))    // Baker 3.60 - Freelook cvar support
-	{
 		cmd->sidemove += m_side.value * mouse_x;
-	} else {
+	else
 		cl.viewangles[YAW] -= m_yaw.value * mouse_x;
-	}
 
-	if (mlook_active)	V_StopPitchDrift();    // Baker 3.60 - Freelook cvar support
+	if (mlook_active)
+		V_StopPitchDrift();    // Baker 3.60 - Freelook cvar support
 
 	if (mlook_active && !(in_strafe.state & 1))     // Baker 3.60 - Freelook cvar support
 	{
@@ -279,14 +282,11 @@ void IN_Move(usercmd_t *cmd)
 			if (cl.viewangles[PITCH] < -70)
 				cl.viewangles[PITCH] = -70;
 		}
-	} else {
-		//if ((in_strafe.state & 1) && noclip_anglehack) {
-		//	cmd->upmove -= m_forward.value * mouse_y;
-		//} else {
-			cmd->forwardmove -= m_forward.value * mouse_y;
-		//}
 	}
-	mouse_x = mouse_y = 0.0;
+	else
+	{
+		cmd->forwardmove -= m_forward.value * mouse_y;
+	}
 }
 
 /*
