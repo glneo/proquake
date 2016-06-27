@@ -24,7 +24,6 @@ set(PROQUAKE_SOURCES
 	gl_rmisc.c
 	gl_rsurf.c
 	gl_screen.c
-	gl_test.c
 	gl_warp.c
 	gl_fullbright.c
 	gl_vidfw.c
@@ -33,7 +32,6 @@ set(PROQUAKE_SOURCES
 	iplog.c
 	keys.c
 	location.c
-	matrix.c
 	menu.c
 	mathlib.c
 # Net

@@ -58,7 +58,6 @@
 
 // Define Specific General Capabilities
 #ifdef _WIN32
-	#define SUPPORTS_AVI_CAPTURE                // Hopelessly Windows locked
 	#define SUPPORTS_INTERNATIONAL_KEYBOARD     // I only know how to detect and address on Windows
 
 	#define SUPPORTS_DEMO_AUTOPLAY              // Windows only.  Uses file association
@@ -76,7 +75,6 @@
 	#define RELEASE_MOUSE_FULLSCREEN            // D3DQUAKE gets an error if it loses focus in fullscreen, so that'd be stupid
 
 	#define OLD_SGIS                            // Old multitexture ... for now.
-	#define INTEL_OPENGL_DRIVER_WORKAROUND		// Windows only issue?  Or is Linux affected too?  OS X is not affected
 #endif
 
 

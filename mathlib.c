@@ -17,20 +17,20 @@
 #include <math.h>
 #include "quakedef.h"
 
-void Sys_Error (char *error, ...);
+void Sys_Error(char *error, ...);
 
-vec3_t vec3_origin = {0,0,0};
-int nanmask = 255<<23;
+vec3_t vec3_origin = { 0, 0, 0 };
+int nanmask = 255 << 23;
 
 /*-----------------------------------------------------------------*/
 
-void ProjectPointOnPlane( vec3_t dst, const vec3_t p, const vec3_t normal )
+void ProjectPointOnPlane(vec3_t dst, const vec3_t p, const vec3_t normal)
 {
 	float d;
 	vec3_t n;
 	float inv_denom;
 
-	inv_denom = 1.0F / DotProduct( normal, normal );
+	inv_denom = 1.0F / DotProduct(normal, normal);
 
 	d = DotProduct( normal, p ) * inv_denom;
 
@@ -44,41 +44,41 @@ void ProjectPointOnPlane( vec3_t dst, const vec3_t p, const vec3_t normal )
 }
 
 /*
-** assumes "src" is normalized
-*/
-void PerpendicularVector( vec3_t dst, const vec3_t src )
+ ** assumes "src" is normalized
+ */
+void PerpendicularVector(vec3_t dst, const vec3_t src)
 {
-	int	pos;
+	int pos;
 	int i;
 	float minelem = 1.0F;
 	vec3_t tempvec;
 
 	/*
-	** find the smallest magnitude axially aligned vector
-	*/
-	for ( pos = 0, i = 0; i < 3; i++ )
+	 ** find the smallest magnitude axially aligned vector
+	 */
+	for (pos = 0, i = 0; i < 3; i++)
 	{
-		if ( fabsf( src[i] ) < minelem )
+		if ( fabsf( src[i] ) < minelem)
 		{
 			pos = i;
-			minelem = fabsf( src[i] );
+			minelem = fabsf(src[i]);
 		}
 	}
 	tempvec[0] = tempvec[1] = tempvec[2] = 0.0F;
 	tempvec[pos] = 1.0F;
 
 	/*
-	** project the point onto the plane defined by src
-	*/
-	ProjectPointOnPlane( dst, tempvec, src );
+	 ** project the point onto the plane defined by src
+	 */
+	ProjectPointOnPlane(dst, tempvec, src);
 
 	/*
-	** normalize the result
-	*/
-	VectorNormalize( dst );
+	 ** normalize the result
+	 */
+	VectorNormalize(dst);
 }
 
-void LerpVector (const vec3_t from, const vec3_t to, float frac, vec3_t out)
+void LerpVector(const vec3_t from, const vec3_t to, float frac, vec3_t out)
 {
 	out[0] = from[0] + frac * (to[0] - from[0]);
 	out[1] = from[1] + frac * (to[1] - from[1]);
@@ -89,30 +89,29 @@ float VecLength2(vec3_t v1, vec3_t v2)
 {
 	vec3_t k;
 	VectorSubtract(v1, v2, k);
-	return sqrt(k[0]*k[0] + k[1]*k[1] + k[2]*k[2]);
-} 
+	return sqrt(k[0] * k[0] + k[1] * k[1] + k[2] * k[2]);
+}
 
 #ifdef _WIN32
 #pragma optimize( "", off )
 #endif
 
-
-void RotatePointAroundVector( vec3_t dst, const vec3_t dir, const vec3_t point, float degrees )
+void RotatePointAroundVector(vec3_t dst, const vec3_t dir, const vec3_t point, float degrees)
 {
-	float	m[3][3];
-	float	im[3][3];
-	float	zrot[3][3];
-	float	tmpmat[3][3];
-	float	rot[3][3];
-	int	i;
+	float m[3][3];
+	float im[3][3];
+	float zrot[3][3];
+	float tmpmat[3][3];
+	float rot[3][3];
+	int i;
 	vec3_t vr, vup, vf;
 
 	vf[0] = dir[0];
 	vf[1] = dir[1];
 	vf[2] = dir[2];
 
-	PerpendicularVector( vr, dir );
-	CrossProduct( vr, vf, vup );
+	PerpendicularVector(vr, dir);
+	CrossProduct(vr, vf, vup);
 
 	m[0][0] = vr[0];
 	m[1][0] = vr[1];
@@ -126,7 +125,7 @@ void RotatePointAroundVector( vec3_t dst, const vec3_t dir, const vec3_t point, 
 	m[1][2] = vf[1];
 	m[2][2] = vf[2];
 
-	memcpy( im, m, sizeof( im ) );
+	memcpy(im, m, sizeof(im));
 
 	im[0][1] = m[1][0];
 	im[0][2] = m[2][0];
@@ -135,18 +134,18 @@ void RotatePointAroundVector( vec3_t dst, const vec3_t dir, const vec3_t point, 
 	im[2][0] = m[0][2];
 	im[2][1] = m[1][2];
 
-	memset( zrot, 0, sizeof( zrot ) );
+	memset(zrot, 0, sizeof(zrot));
 	zrot[0][0] = zrot[1][1] = zrot[2][2] = 1.0F;
 
-	zrot[0][0] = cosf( DEG2RAD( degrees ) );
-	zrot[0][1] = sinf( DEG2RAD( degrees ) );
-	zrot[1][0] = -sinf( DEG2RAD( degrees ) );
-	zrot[1][1] = cosf( DEG2RAD( degrees ) );
+	zrot[0][0] = cosf(DEG2RAD( degrees ));
+	zrot[0][1] = sinf(DEG2RAD( degrees ));
+	zrot[1][0] = -sinf(DEG2RAD( degrees ));
+	zrot[1][1] = cosf(DEG2RAD( degrees ));
 
-	R_ConcatRotations( m, zrot, tmpmat );
-	R_ConcatRotations( tmpmat, im, rot );
+	R_ConcatRotations(m, zrot, tmpmat);
+	R_ConcatRotations(tmpmat, im, rot);
 
-	for ( i = 0; i < 3; i++ )
+	for (i = 0; i < 3; i++)
 	{
 		dst[i] = rot[i][0] * point[0] + rot[i][1] * point[1] + rot[i][2] * point[2];
 	}
@@ -158,54 +157,53 @@ void RotatePointAroundVector( vec3_t dst, const vec3_t dir, const vec3_t point, 
 
 /*-----------------------------------------------------------------*/
 
-
-float	anglemod(float a)
+float anglemod(float a)
 {
 #if 0
 	if (a >= 0)
-		a -= 360*(int)(a/360);
+	a -= 360*(int)(a/360);
 	else
-		a += 360*( 1 + (int)(-a/360) );
+	a += 360*( 1 + (int)(-a/360) );
 #endif
-	a = (360.0/65536) * ((int)(a*(65536/360.0)) & 65535);
+	a = (360.0 / 65536) * ((int) (a * (65536 / 360.0)) & 65535);
 	return a;
 }
 
 /*
-==================
-BOPS_Error
+ ==================
+ BOPS_Error
 
-Split out like this for ASM to call.
-==================
-*/
-void BOPS_Error (void)
+ Split out like this for ASM to call.
+ ==================
+ */
+void BOPS_Error(void)
 {
-	Sys_Error ("BoxOnPlaneSide:  Bad signbits");
+	Sys_Error("BoxOnPlaneSide:  Bad signbits");
 }
 
 #if	!id386
 
 /*
-==================
-BoxOnPlaneSide
+ ==================
+ BoxOnPlaneSide
 
-Returns 1, 2, or 1 + 2
-==================
-*/
-int BoxOnPlaneSide (vec3_t emins, vec3_t emaxs, mplane_t *p)
+ Returns 1, 2, or 1 + 2
+ ==================
+ */
+int BoxOnPlaneSide(vec3_t emins, vec3_t emaxs, mplane_t *p)
 {
-	float	dist1, dist2;
-	int		sides;
+	float dist1, dist2;
+	int sides;
 
 #if 0	// this is done by the BOX_ON_PLANE_SIDE macro before calling this
-		// function
+	// function
 // fast axial cases
 	if (p->type < 3)
 	{
 		if (p->dist <= emins[p->type])
-			return 1;
+		return 1;
 		if (p->dist >= emaxs[p->type])
-			return 2;
+		return 2;
 		return 3;
 	}
 #endif
@@ -214,48 +212,48 @@ int BoxOnPlaneSide (vec3_t emins, vec3_t emaxs, mplane_t *p)
 	switch (p->signbits)
 	{
 	case 0:
-dist1 = p->normal[0]*emaxs[0] + p->normal[1]*emaxs[1] + p->normal[2]*emaxs[2];
-dist2 = p->normal[0]*emins[0] + p->normal[1]*emins[1] + p->normal[2]*emins[2];
+		dist1 = p->normal[0] * emaxs[0] + p->normal[1] * emaxs[1] + p->normal[2] * emaxs[2];
+		dist2 = p->normal[0] * emins[0] + p->normal[1] * emins[1] + p->normal[2] * emins[2];
 		break;
 	case 1:
-dist1 = p->normal[0]*emins[0] + p->normal[1]*emaxs[1] + p->normal[2]*emaxs[2];
-dist2 = p->normal[0]*emaxs[0] + p->normal[1]*emins[1] + p->normal[2]*emins[2];
+		dist1 = p->normal[0] * emins[0] + p->normal[1] * emaxs[1] + p->normal[2] * emaxs[2];
+		dist2 = p->normal[0] * emaxs[0] + p->normal[1] * emins[1] + p->normal[2] * emins[2];
 		break;
 	case 2:
-dist1 = p->normal[0]*emaxs[0] + p->normal[1]*emins[1] + p->normal[2]*emaxs[2];
-dist2 = p->normal[0]*emins[0] + p->normal[1]*emaxs[1] + p->normal[2]*emins[2];
+		dist1 = p->normal[0] * emaxs[0] + p->normal[1] * emins[1] + p->normal[2] * emaxs[2];
+		dist2 = p->normal[0] * emins[0] + p->normal[1] * emaxs[1] + p->normal[2] * emins[2];
 		break;
 	case 3:
-dist1 = p->normal[0]*emins[0] + p->normal[1]*emins[1] + p->normal[2]*emaxs[2];
-dist2 = p->normal[0]*emaxs[0] + p->normal[1]*emaxs[1] + p->normal[2]*emins[2];
+		dist1 = p->normal[0] * emins[0] + p->normal[1] * emins[1] + p->normal[2] * emaxs[2];
+		dist2 = p->normal[0] * emaxs[0] + p->normal[1] * emaxs[1] + p->normal[2] * emins[2];
 		break;
 	case 4:
-dist1 = p->normal[0]*emaxs[0] + p->normal[1]*emaxs[1] + p->normal[2]*emins[2];
-dist2 = p->normal[0]*emins[0] + p->normal[1]*emins[1] + p->normal[2]*emaxs[2];
+		dist1 = p->normal[0] * emaxs[0] + p->normal[1] * emaxs[1] + p->normal[2] * emins[2];
+		dist2 = p->normal[0] * emins[0] + p->normal[1] * emins[1] + p->normal[2] * emaxs[2];
 		break;
 	case 5:
-dist1 = p->normal[0]*emins[0] + p->normal[1]*emaxs[1] + p->normal[2]*emins[2];
-dist2 = p->normal[0]*emaxs[0] + p->normal[1]*emins[1] + p->normal[2]*emaxs[2];
+		dist1 = p->normal[0] * emins[0] + p->normal[1] * emaxs[1] + p->normal[2] * emins[2];
+		dist2 = p->normal[0] * emaxs[0] + p->normal[1] * emins[1] + p->normal[2] * emaxs[2];
 		break;
 	case 6:
-dist1 = p->normal[0]*emaxs[0] + p->normal[1]*emins[1] + p->normal[2]*emins[2];
-dist2 = p->normal[0]*emins[0] + p->normal[1]*emaxs[1] + p->normal[2]*emaxs[2];
+		dist1 = p->normal[0] * emaxs[0] + p->normal[1] * emins[1] + p->normal[2] * emins[2];
+		dist2 = p->normal[0] * emins[0] + p->normal[1] * emaxs[1] + p->normal[2] * emaxs[2];
 		break;
 	case 7:
-dist1 = p->normal[0]*emins[0] + p->normal[1]*emins[1] + p->normal[2]*emins[2];
-dist2 = p->normal[0]*emaxs[0] + p->normal[1]*emaxs[1] + p->normal[2]*emaxs[2];
+		dist1 = p->normal[0] * emins[0] + p->normal[1] * emins[1] + p->normal[2] * emins[2];
+		dist2 = p->normal[0] * emaxs[0] + p->normal[1] * emaxs[1] + p->normal[2] * emaxs[2];
 		break;
 	default:
 		dist1 = dist2 = 0;		// shut up compiler
-		BOPS_Error ();
+		BOPS_Error();
 		break;
 	}
 
 #if 0
-	int		i;
-	vec3_t	corners[2];
+	int i;
+	vec3_t corners[2];
 
-	for (i=0 ; i<3 ; i++)
+	for (i=0; i<3; i++)
 	{
 		if (plane->normal[i] < 0)
 		{
@@ -272,9 +270,9 @@ dist2 = p->normal[0]*emaxs[0] + p->normal[1]*emaxs[1] + p->normal[2]*emaxs[2];
 	dist2 = DotProduct (plane->normal, corners[1]) - plane->dist;
 	sides = 0;
 	if (dist1 >= 0)
-		sides = 1;
+	sides = 1;
 	if (dist2 < 0)
-		sides |= 2;
+	sides |= 2;
 
 #endif
 
@@ -285,7 +283,7 @@ dist2 = p->normal[0]*emaxs[0] + p->normal[1]*emaxs[1] + p->normal[2]*emaxs[2];
 		sides |= 2;
 
 #ifdef PARANOID
-if (sides == 0)
+	if (sides == 0)
 	Sys_Error ("BoxOnPlaneSide: sides==0");
 #endif
 
@@ -294,83 +292,81 @@ if (sides == 0)
 
 #endif
 
-
-void AngleVectors (vec3_t angles, vec3_t forward, vec3_t right, vec3_t up)
+void AngleVectors(vec3_t angles, vec3_t forward, vec3_t right, vec3_t up)
 {
-	float		angle;
-	float		sr, sp, sy, cr, cp, cy;
+	float angle;
+	float sr, sp, sy, cr, cp, cy;
 
-	angle = angles[YAW] * (M_PI*2 / 360);
+	angle = angles[YAW] * (M_PI * 2 / 360);
 	sy = sinf(angle);
 	cy = cosf(angle);
-	angle = angles[PITCH] * (M_PI*2 / 360);
+	angle = angles[PITCH] * (M_PI * 2 / 360);
 	sp = sinf(angle);
 	cp = cosf(angle);
-	angle = angles[ROLL] * (M_PI*2 / 360);
+	angle = angles[ROLL] * (M_PI * 2 / 360);
 	sr = sinf(angle);
 	cr = cosf(angle);
 
-	forward[0] = cp*cy;
-	forward[1] = cp*sy;
+	forward[0] = cp * cy;
+	forward[1] = cp * sy;
 	forward[2] = -sp;
-	right[0] = (-1*sr*sp*cy+-1*cr*-sy);
-	right[1] = (-1*sr*sp*sy+-1*cr*cy);
-	right[2] = -1*sr*cp;
-	up[0] = (cr*sp*cy+-sr*-sy);
-	up[1] = (cr*sp*sy+-sr*cy);
-	up[2] = cr*cp;
+	right[0] = (-1 * sr * sp * cy + -1 * cr * -sy);
+	right[1] = (-1 * sr * sp * sy + -1 * cr * cy);
+	right[2] = -1 * sr * cp;
+	up[0] = (cr * sp * cy + -sr * -sy);
+	up[1] = (cr * sp * sy + -sr * cy);
+	up[2] = cr * cp;
 }
 
-int VectorCompare (vec3_t v1, vec3_t v2)
+int VectorCompare(vec3_t v1, vec3_t v2)
 {
-	int		i;
+	int i;
 
-	for (i=0 ; i<3 ; i++)
+	for (i = 0; i < 3; i++)
 		if (v1[i] != v2[i])
 			return 0;
 
 	return 1;
 }
 
-void VectorMA (vec3_t veca, float scale, vec3_t vecb, vec3_t vecc)
+void VectorMA(vec3_t veca, float scale, vec3_t vecb, vec3_t vecc)
 {
-	vecc[0] = veca[0] + scale*vecb[0];
-	vecc[1] = veca[1] + scale*vecb[1];
-	vecc[2] = veca[2] + scale*vecb[2];
+	vecc[0] = veca[0] + scale * vecb[0];
+	vecc[1] = veca[1] + scale * vecb[1];
+	vecc[2] = veca[2] + scale * vecb[2];
 }
 
-
-vec_t _DotProduct (vec3_t v1, vec3_t v2)
+vec_t _DotProduct(vec3_t v1, vec3_t v2)
 {
-	return v1[0]*v2[0] + v1[1]*v2[1] + v1[2]*v2[2];
+	return v1[0] * v2[0] + v1[1] * v2[1] + v1[2] * v2[2];
 }
 
-void _VectorSubtract (vec3_t veca, vec3_t vecb, vec3_t out)
+void _VectorSubtract(vec3_t veca, vec3_t vecb, vec3_t out)
 {
-	out[0] = veca[0]-vecb[0];
-	out[1] = veca[1]-vecb[1];
-	out[2] = veca[2]-vecb[2];
+	out[0] = veca[0] - vecb[0];
+	out[1] = veca[1] - vecb[1];
+	out[2] = veca[2] - vecb[2];
 }
 
-void _VectorAdd (vec3_t veca, vec3_t vecb, vec3_t out)
+void _VectorAdd(vec3_t veca, vec3_t vecb, vec3_t out)
 {
-	out[0] = veca[0]+vecb[0];
-	out[1] = veca[1]+vecb[1];
-	out[2] = veca[2]+vecb[2];
+	out[0] = veca[0] + vecb[0];
+	out[1] = veca[1] + vecb[1];
+	out[2] = veca[2] + vecb[2];
 }
 
-void _VectorCopy (vec3_t in, vec3_t out)
+void _VectorCopy(vec3_t in, vec3_t out)
 {
 	out[0] = in[0];
 	out[1] = in[1];
 	out[2] = in[2];
 }
 
-void CrossProduct (vec3_t v1, vec3_t v2, vec3_t cross)
+void CrossProduct(vec3_t v1, vec3_t v2, vec3_t cross)
 {
-	cross[0] = v1[1]*v2[2] - v1[2]*v2[1];
-	cross[1] = v1[2]*v2[0] - v1[0]*v2[2];
-	cross[2] = v1[0]*v2[1] - v1[1]*v2[0];
+	cross[0] = v1[1] * v2[2] - v1[2] * v2[1];
+	cross[1] = v1[2] * v2[0] - v1[0] * v2[2];
+	cross[2] = v1[0] * v2[1] - v1[1] * v2[0];
 }
 
 double sqrt(double x);
@@ -380,7 +376,7 @@ vec_t VectorLength(vec3_t v)
 	return sqrtf(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]);
 }
 
-float VectorNormalize (vec3_t v)
+float VectorNormalize(vec3_t v)
 {
 	float length = sqrtf(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]);
 	if (length)
@@ -395,111 +391,85 @@ float VectorNormalize (vec3_t v)
 
 }
 
-void VectorInverse (vec3_t v)
+void VectorInverse(vec3_t v)
 {
 	v[0] = -v[0];
 	v[1] = -v[1];
 	v[2] = -v[2];
 }
 
-void VectorScale (vec3_t in, vec_t scale, vec3_t out)
+void VectorScale(vec3_t in, vec_t scale, vec3_t out)
 {
-	out[0] = in[0]*scale;
-	out[1] = in[1]*scale;
-	out[2] = in[2]*scale;
+	out[0] = in[0] * scale;
+	out[1] = in[1] * scale;
+	out[2] = in[2] * scale;
 }
-
 
 int Q_log2(int val)
 {
-	int answer=0;
-	while (val>>=1)
+	int answer = 0;
+	while (val >>= 1)
 		answer++;
 	return answer;
 }
 
-
 /*
-================
-R_ConcatRotations
-================
-*/
-void R_ConcatRotations (float in1[3][3], float in2[3][3], float out[3][3])
+ ================
+ R_ConcatRotations
+ ================
+ */
+void R_ConcatRotations(float in1[3][3], float in2[3][3], float out[3][3])
 {
-	out[0][0] = in1[0][0] * in2[0][0] + in1[0][1] * in2[1][0] +
-				in1[0][2] * in2[2][0];
-	out[0][1] = in1[0][0] * in2[0][1] + in1[0][1] * in2[1][1] +
-				in1[0][2] * in2[2][1];
-	out[0][2] = in1[0][0] * in2[0][2] + in1[0][1] * in2[1][2] +
-				in1[0][2] * in2[2][2];
-	out[1][0] = in1[1][0] * in2[0][0] + in1[1][1] * in2[1][0] +
-				in1[1][2] * in2[2][0];
-	out[1][1] = in1[1][0] * in2[0][1] + in1[1][1] * in2[1][1] +
-				in1[1][2] * in2[2][1];
-	out[1][2] = in1[1][0] * in2[0][2] + in1[1][1] * in2[1][2] +
-				in1[1][2] * in2[2][2];
-	out[2][0] = in1[2][0] * in2[0][0] + in1[2][1] * in2[1][0] +
-				in1[2][2] * in2[2][0];
-	out[2][1] = in1[2][0] * in2[0][1] + in1[2][1] * in2[1][1] +
-				in1[2][2] * in2[2][1];
-	out[2][2] = in1[2][0] * in2[0][2] + in1[2][1] * in2[1][2] +
-				in1[2][2] * in2[2][2];
+	out[0][0] = in1[0][0] * in2[0][0] + in1[0][1] * in2[1][0] + in1[0][2] * in2[2][0];
+	out[0][1] = in1[0][0] * in2[0][1] + in1[0][1] * in2[1][1] + in1[0][2] * in2[2][1];
+	out[0][2] = in1[0][0] * in2[0][2] + in1[0][1] * in2[1][2] + in1[0][2] * in2[2][2];
+	out[1][0] = in1[1][0] * in2[0][0] + in1[1][1] * in2[1][0] + in1[1][2] * in2[2][0];
+	out[1][1] = in1[1][0] * in2[0][1] + in1[1][1] * in2[1][1] + in1[1][2] * in2[2][1];
+	out[1][2] = in1[1][0] * in2[0][2] + in1[1][1] * in2[1][2] + in1[1][2] * in2[2][2];
+	out[2][0] = in1[2][0] * in2[0][0] + in1[2][1] * in2[1][0] + in1[2][2] * in2[2][0];
+	out[2][1] = in1[2][0] * in2[0][1] + in1[2][1] * in2[1][1] + in1[2][2] * in2[2][1];
+	out[2][2] = in1[2][0] * in2[0][2] + in1[2][1] * in2[1][2] + in1[2][2] * in2[2][2];
 }
 
-
 /*
-================
-R_ConcatTransforms
-================
-*/
-void R_ConcatTransforms (float in1[3][4], float in2[3][4], float out[3][4])
+ ================
+ R_ConcatTransforms
+ ================
+ */
+void R_ConcatTransforms(float in1[3][4], float in2[3][4], float out[3][4])
 {
-	out[0][0] = in1[0][0] * in2[0][0] + in1[0][1] * in2[1][0] +
-				in1[0][2] * in2[2][0];
-	out[0][1] = in1[0][0] * in2[0][1] + in1[0][1] * in2[1][1] +
-				in1[0][2] * in2[2][1];
-	out[0][2] = in1[0][0] * in2[0][2] + in1[0][1] * in2[1][2] +
-				in1[0][2] * in2[2][2];
-	out[0][3] = in1[0][0] * in2[0][3] + in1[0][1] * in2[1][3] +
-				in1[0][2] * in2[2][3] + in1[0][3];
-	out[1][0] = in1[1][0] * in2[0][0] + in1[1][1] * in2[1][0] +
-				in1[1][2] * in2[2][0];
-	out[1][1] = in1[1][0] * in2[0][1] + in1[1][1] * in2[1][1] +
-				in1[1][2] * in2[2][1];
-	out[1][2] = in1[1][0] * in2[0][2] + in1[1][1] * in2[1][2] +
-				in1[1][2] * in2[2][2];
-	out[1][3] = in1[1][0] * in2[0][3] + in1[1][1] * in2[1][3] +
-				in1[1][2] * in2[2][3] + in1[1][3];
-	out[2][0] = in1[2][0] * in2[0][0] + in1[2][1] * in2[1][0] +
-				in1[2][2] * in2[2][0];
-	out[2][1] = in1[2][0] * in2[0][1] + in1[2][1] * in2[1][1] +
-				in1[2][2] * in2[2][1];
-	out[2][2] = in1[2][0] * in2[0][2] + in1[2][1] * in2[1][2] +
-				in1[2][2] * in2[2][2];
-	out[2][3] = in1[2][0] * in2[0][3] + in1[2][1] * in2[1][3] +
-				in1[2][2] * in2[2][3] + in1[2][3];
+	out[0][0] = in1[0][0] * in2[0][0] + in1[0][1] * in2[1][0] + in1[0][2] * in2[2][0];
+	out[0][1] = in1[0][0] * in2[0][1] + in1[0][1] * in2[1][1] + in1[0][2] * in2[2][1];
+	out[0][2] = in1[0][0] * in2[0][2] + in1[0][1] * in2[1][2] + in1[0][2] * in2[2][2];
+	out[0][3] = in1[0][0] * in2[0][3] + in1[0][1] * in2[1][3] + in1[0][2] * in2[2][3] + in1[0][3];
+	out[1][0] = in1[1][0] * in2[0][0] + in1[1][1] * in2[1][0] + in1[1][2] * in2[2][0];
+	out[1][1] = in1[1][0] * in2[0][1] + in1[1][1] * in2[1][1] + in1[1][2] * in2[2][1];
+	out[1][2] = in1[1][0] * in2[0][2] + in1[1][1] * in2[1][2] + in1[1][2] * in2[2][2];
+	out[1][3] = in1[1][0] * in2[0][3] + in1[1][1] * in2[1][3] + in1[1][2] * in2[2][3] + in1[1][3];
+	out[2][0] = in1[2][0] * in2[0][0] + in1[2][1] * in2[1][0] + in1[2][2] * in2[2][0];
+	out[2][1] = in1[2][0] * in2[0][1] + in1[2][1] * in2[1][1] + in1[2][2] * in2[2][1];
+	out[2][2] = in1[2][0] * in2[0][2] + in1[2][1] * in2[1][2] + in1[2][2] * in2[2][2];
+	out[2][3] = in1[2][0] * in2[0][3] + in1[2][1] * in2[1][3] + in1[2][2] * in2[2][3] + in1[2][3];
 }
 
-
 /*
-===================
-FloorDivMod
+ ===================
+ FloorDivMod
 
-Returns mathematically correct (floor-based) quotient and remainder for
-numer and denom, both of which should contain no fractional part. The
-quotient must fit in 32 bits.
-====================
-*/
+ Returns mathematically correct (floor-based) quotient and remainder for
+ numer and denom, both of which should contain no fractional part. The
+ quotient must fit in 32 bits.
+ ====================
+ */
 
-void FloorDivMod (double numer, double denom, int *quotient,
-		int *rem)
+void FloorDivMod(double numer, double denom, int *quotient, int *rem)
 {
-	int		q, r;
-	double	x;
+	int q, r;
+	double x;
 
 #ifndef PARANOID
 	if (denom <= 0.0)
-		Sys_Error ("FloorDivMod: bad denominator %d\n", denom);
+		Sys_Error("FloorDivMod: bad denominator %d\n", denom);
 
 //	if ((floor(numer) != numer) || (floor(denom) != denom))
 //		Sys_Error ("FloorDivMod: non-integer numer or denom %f %f\n",
@@ -510,21 +480,21 @@ void FloorDivMod (double numer, double denom, int *quotient,
 	{
 
 		x = floor(numer / denom);
-		q = (int)x;
-		r = (int)floor(numer - (x * denom));
+		q = (int) x;
+		r = (int) floor(numer - (x * denom));
 	}
 	else
 	{
-	//
-	// perform operations with positive values, and fix mod to make floor-based
-	//
+		//
+		// perform operations with positive values, and fix mod to make floor-based
+		//
 		x = floor(-numer / denom);
-		q = -(int)x;
-		r = (int)floor(-numer - (x * denom));
+		q = -(int) x;
+		r = (int) floor(-numer - (x * denom));
 		if (r != 0)
 		{
 			q--;
-			r = (int)denom - r;
+			r = (int) denom - r;
 		}
 	}
 
@@ -532,71 +502,69 @@ void FloorDivMod (double numer, double denom, int *quotient,
 	*rem = r;
 }
 
-
 /*
-===================
-GreatestCommonDivisor
-====================
-*/
-int GreatestCommonDivisor (int i1, int i2)
+ ===================
+ GreatestCommonDivisor
+ ====================
+ */
+int GreatestCommonDivisor(int i1, int i2)
 {
 	if (i1 > i2)
 	{
 		if (i2 == 0)
 			return (i1);
-		return GreatestCommonDivisor (i2, i1 % i2);
+		return GreatestCommonDivisor(i2, i1 % i2);
 	}
 	else
 	{
 		if (i1 == 0)
 			return (i2);
-		return GreatestCommonDivisor (i1, i2 % i1);
+		return GreatestCommonDivisor(i1, i2 % i1);
 	}
 }
-
 
 #if	!id386
 
 // TODO: move to nonintel.c
 
 /*
-===================
-Invert24To16
+ ===================
+ Invert24To16
 
-Inverts an 8.24 value to a 16.16 value
-====================
-*/
+ Inverts an 8.24 value to a 16.16 value
+ ====================
+ */
 
 fixed16_t Invert24To16(fixed16_t val)
 {
 	if (val < 256)
 		return (0xFFFFFFFF);
 
-	return (fixed16_t)
-			(((double)0x10000 * (double)0x1000000 / (double)val) + 0.5);
+	return (fixed16_t) (((double) 0x10000 * (double) 0x1000000 / (double) val) + 0.5);
 }
 
 #endif
 
-int ParseFloats(char *s, float *f, int *f_size) {
-   int i, argc;
+int ParseFloats(char *s, float *f, int *f_size)
+{
+	int i, argc;
 
-   if (!s || !f || !f_size)
-      Sys_Error("ParseFloats() wrong params");
+	if (!s || !f || !f_size)
+		Sys_Error("ParseFloats() wrong params");
 
-   if (f_size[0] <= 0)
-      return (f_size[0] = 0); // array have no size, unusual but no crime
+	if (f_size[0] <= 0)
+		return (f_size[0] = 0); // array have no size, unusual but no crime
 
-   Cmd_TokenizeString(s);
-   argc = min(Cmd_Argc(), f_size[0]);
+	Cmd_TokenizeString(s);
+	argc = min(Cmd_Argc(), f_size[0]);
 
-   for(i = 0; i < argc; i++)
-      f[i] = atof (Cmd_Argv(i));
+	for (i = 0; i < argc; i++)
+		f[i] = atof(Cmd_Argv(i));
 
-   for( ; i < f_size[0]; i++)
-      f[i] = 0; // zeroing unused elements
+	for (; i < f_size[0]; i++)
+		f[i] = 0; // zeroing unused elements
 
-   return (f_size[0] = argc);
+	return (f_size[0] = argc);
 }
 
 #ifdef SUPPORTS_AUTOID_SOFTWARE
@@ -613,7 +581,7 @@ float *Matrix4_NewRotation(float a, float x, float y, float z)
 	ret[12] = 0;
 
 	ret[1] = y*x*(1-c)+z*s;
-    ret[5] = y*y*(1-c)+c;
+	ret[5] = y*y*(1-c)+c;
 	ret[9] = y*z*(1-c)-x*s;
 	ret[13] = 0;
 
@@ -639,7 +607,7 @@ float *Matrix4_NewTranslation(float x, float y, float z)
 	ret[12] = x;
 
 	ret[1] = 0;
-    ret[5] = 1;
+	ret[5] = 1;
 	ret[9] = 0;
 	ret[13] = y;
 
@@ -658,18 +626,18 @@ float *Matrix4_NewTranslation(float x, float y, float z)
 //be aware that this generates two sorts of matricies depending on order of a+b
 void Matrix4_Multiply(float *a, float *b, float *out)
 {
-	out[0]  = a[0] * b[0] + a[4] * b[1] + a[8] * b[2] + a[12] * b[3];
-	out[1]  = a[1] * b[0] + a[5] * b[1] + a[9] * b[2] + a[13] * b[3];
-	out[2]  = a[2] * b[0] + a[6] * b[1] + a[10] * b[2] + a[14] * b[3];
-	out[3]  = a[3] * b[0] + a[7] * b[1] + a[11] * b[2] + a[15] * b[3];
+	out[0] = a[0] * b[0] + a[4] * b[1] + a[8] * b[2] + a[12] * b[3];
+	out[1] = a[1] * b[0] + a[5] * b[1] + a[9] * b[2] + a[13] * b[3];
+	out[2] = a[2] * b[0] + a[6] * b[1] + a[10] * b[2] + a[14] * b[3];
+	out[3] = a[3] * b[0] + a[7] * b[1] + a[11] * b[2] + a[15] * b[3];
 
-	out[4]  = a[0] * b[4] + a[4] * b[5] + a[8] * b[6] + a[12] * b[7];
-	out[5]  = a[1] * b[4] + a[5] * b[5] + a[9] * b[6] + a[13] * b[7];
-	out[6]  = a[2] * b[4] + a[6] * b[5] + a[10] * b[6] + a[14] * b[7];
-	out[7]  = a[3] * b[4] + a[7] * b[5] + a[11] * b[6] + a[15] * b[7];
+	out[4] = a[0] * b[4] + a[4] * b[5] + a[8] * b[6] + a[12] * b[7];
+	out[5] = a[1] * b[4] + a[5] * b[5] + a[9] * b[6] + a[13] * b[7];
+	out[6] = a[2] * b[4] + a[6] * b[5] + a[10] * b[6] + a[14] * b[7];
+	out[7] = a[3] * b[4] + a[7] * b[5] + a[11] * b[6] + a[15] * b[7];
 
-	out[8]  = a[0] * b[8] + a[4] * b[9] + a[8] * b[10] + a[12] * b[11];
-	out[9]  = a[1] * b[8] + a[5] * b[9] + a[9] * b[10] + a[13] * b[11];
+	out[8] = a[0] * b[8] + a[4] * b[9] + a[8] * b[10] + a[12] * b[11];
+	out[9] = a[1] * b[8] + a[5] * b[9] + a[9] * b[10] + a[13] * b[11];
 	out[10] = a[2] * b[8] + a[6] * b[9] + a[10] * b[10] + a[14] * b[11];
 	out[11] = a[3] * b[8] + a[7] * b[9] + a[11] * b[10] + a[15] * b[11];
 
@@ -712,7 +680,7 @@ void ML_ProjectionMatrix(float *proj, float wdivh, float fovy)
 
 	proj[2] = 0;
 	proj[6] = 0;
-	proj[10] = -1  * nudge;
+	proj[10] = -1 * nudge;
 	proj[14] = -2*4 * nudge;
 
 	proj[3] = 0;
@@ -732,8 +700,8 @@ void ML_ModelViewMatrix(float *modelview, vec3_t viewangles, vec3_t vieworg)
 	modelview[10] = 1;
 	modelview[15] = 1;
 
-	Matrix4_Multiply(modelview, Matrix4_NewRotation(-90,  1, 0, 0), tempmat);	    // put Z going up
-	Matrix4_Multiply(tempmat, Matrix4_NewRotation(90,  0, 0, 1), modelview);	    // put Z going up
+	Matrix4_Multiply(modelview, Matrix4_NewRotation(-90, 1, 0, 0), tempmat);	    // put Z going up
+	Matrix4_Multiply(tempmat, Matrix4_NewRotation(90, 0, 0, 1), modelview);// put Z going up
 #else
 	//use this lame wierd and crazy identity matrix..
 	modelview[2] = -1;
@@ -744,14 +712,12 @@ void ML_ModelViewMatrix(float *modelview, vec3_t viewangles, vec3_t vieworg)
 	//figure out the current modelview matrix
 
 	//I would if some of these, but then I'd still need a couple of copys
-	Matrix4_Multiply(modelview, Matrix4_NewRotation(-viewangles[2],  1, 0, 0), tempmat);
-	Matrix4_Multiply(tempmat, Matrix4_NewRotation(-viewangles[0],  0, 1, 0), modelview);
-	Matrix4_Multiply(modelview, Matrix4_NewRotation(-viewangles[1],  0, 0, 1), tempmat);
+	Matrix4_Multiply(modelview, Matrix4_NewRotation(-viewangles[2], 1, 0, 0), tempmat);
+	Matrix4_Multiply(tempmat, Matrix4_NewRotation(-viewangles[0], 0, 1, 0), modelview);
+	Matrix4_Multiply(modelview, Matrix4_NewRotation(-viewangles[1], 0, 0, 1), tempmat);
 
-	Matrix4_Multiply(tempmat, Matrix4_NewTranslation(-vieworg[0],  -vieworg[1],  -vieworg[2]), modelview);	    // put Z going up
+	Matrix4_Multiply(tempmat, Matrix4_NewTranslation(-vieworg[0], -vieworg[1], -vieworg[2]), modelview);// put Z going up
 }
-
-
 
 //returns fractions of screen.
 //uses GL style rotations and translations and stuff.
