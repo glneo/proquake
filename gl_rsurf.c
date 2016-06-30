@@ -473,7 +473,7 @@ void R_DrawWaterSurfaces(void)
 	texture_t *t;
 
 	// JPG 3.20 - cheat protection, Baker 3.99: changed in event set higher than max value of 1	
-	if ((r_wateralpha.value >= 1.0 || pq_cheatfree)
+	if (r_wateralpha.value >= 1.0
 #if !defined(DX8QUAKE_NO_GL_TEXSORT_ZERO)
 			&& gl_texsort.value
 #endif 
@@ -484,7 +484,7 @@ void R_DrawWaterSurfaces(void)
 
 	glLoadMatrixf(r_world_matrix);
 
-	if (r_wateralpha.value < 1.0 && !pq_cheatfree)
+	if (r_wateralpha.value < 1.0)
 	{	 // JPG 3.20 - cheat protection
 		glEnable(GL_BLEND);
 		glColor4f(1, 1, 1, r_wateralpha.value);
@@ -532,8 +532,8 @@ void R_DrawWaterSurfaces(void)
 
 	}
 
-	if (r_wateralpha.value < 1.0 && !pq_cheatfree)
-	{	// JPG 3.20 - cheat protection
+	if (r_wateralpha.value < 1.0)
+	{
 		glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
 
 		glColor4f(1, 1, 1, 1);
@@ -584,7 +584,7 @@ void DrawTextureChains(void)
 		}
 		else
 		{
-			if ((s->flags & SURF_DRAWTURB) && r_wateralpha.value < 1.0 && !pq_cheatfree)// JPG 3.20 - cheat protection, Baker 3.99: changed in event r_wateralpha is above max value of 1
+			if ((s->flags & SURF_DRAWTURB) && r_wateralpha.value < 1.0) // Baker 3.99: changed in event r_wateralpha is above max value of 1
 				continue;	// draw translucent water later
 			for (; s; s = s->texturechain)
 				R_RenderBrushPoly(s);
@@ -1273,7 +1273,7 @@ void R_MarkLeaves(void)
 			}
 		}
 
-	if (r_oldviewleaf == r_viewleaf && ((!r_novis.value && !nearwaterportal) || pq_cheatfree))	// JPG 3.20 - cheat protection
+	if (r_oldviewleaf == r_viewleaf && (!r_novis.value && !nearwaterportal))
 		return;
 
 	if (mirror)
@@ -1282,7 +1282,7 @@ void R_MarkLeaves(void)
 	r_visframecount++;
 	r_oldviewleaf = r_viewleaf;
 
-	if (r_novis.value && !pq_cheatfree)		// JPG 3.20 - cheat protection
+	if (r_novis.value)
 	{
 		vis = solid;
 		memset(solid, 0xff, (cl.worldmodel->numleafs + 7) >> 3);

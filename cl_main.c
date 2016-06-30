@@ -220,14 +220,6 @@ void CL_EstablishConnection (char *host)
 
 	Con_DPrintf ("CL_EstablishConnection: connected to %s\n", host);
 
-		// JPG - proquake message
-	if (cls.netcon->mod == MOD_PROQUAKE)
-	{
-		if (pq_cheatfree)
-			Con_Printf("%c%cConnected to Cheat-Free server%c\n", 1, 29, 31);
-		else
-			Con_Printf("%c%cConnected to ProQuake server%c\n", 1, 29, 31);
-	}
 	cls.demonum = -1;			// not in the demo loop now
 	cls.state = ca_connected;
 	cls.signon = 0;				// need all the signon messages before playing
@@ -310,49 +302,6 @@ void CL_SignonReply (void)
 		MSG_WriteByte (&cls.message, clc_stringcmd);
 		SNPrintf (str, sizeof(str), "spawn %s", cls.spawnparms);
 		MSG_WriteString (&cls.message, str);
-
-		// JPG 3.20 - model and .exe checking
-		if (pq_cheatfree)
-		{
-			FILE *f;
-			unsigned crc;
-			char path[64];
-#ifdef SUPPORTS_CHEATFREE_MODE
-
-			strcpy (path, argv[0]);
-#endif // ^^ MACOSX can't support this code but Windows/Linux do
-#ifdef _WIN32
-			if (!strstr(path, ".exe") && !strstr(path, ".EXE"))
-				strlcat (path, ".exe", sizeof(path));
-#endif // ^^ This is Windows operating system specific; Linux does not need
-			f = fopen(path, "rb");
-			if (!f)
-				Host_Error("Could not open %s", path);
-			fclose(f);
-			crc = Security_CRC_File(path);
-			MSG_WriteLong(&cls.message, crc);
-			MSG_WriteLong(&cls.message, source_key1);
-
-			if (!cl.model_precache[1])
-				MSG_WriteLong(&cls.message, 0);
-			for (i = 1 ; cl.model_precache[i] ; i++)
-			{
-				if (cl.model_precache[i]->name[0] != '*')
-				{
-					byte *data;
-					int len;
-
-					data = COM_LoadFile(cl.model_precache[i]->name, 2);			// 2 = temp alloc on hunk
-					if (data)
-					{
-						len = (*(int *)(data - 12)) - 16;							// header before data contains size
-						MSG_WriteLong(&cls.message, Security_CRC(data, len));
-					}
-					else
-						Host_Error("Could not load %s", cl.model_precache[i]->name);
-				}
-			}
-		}
 
 		break;
 
@@ -748,7 +697,7 @@ void CL_RelinkEntities (void)
 
 		ent->forcelink = false;
 
-		if (i == cl.viewentity && (!chase_active.value || pq_cheatfree))	// JPG 3.20 - added pq_cheatfree
+		if (i == cl.viewentity && !chase_active.value)
 			continue;
 
 		if (cl_numvisedicts < MAX_VISEDICTS)

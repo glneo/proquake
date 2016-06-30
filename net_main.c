@@ -443,10 +443,6 @@ JustDoIt:
 		if (net_drivers[net_driverlevel].initialized == false)
 			continue;
 		ret = dfunc.Connect (host);
-#ifdef SUPPORTS_CHEATFREE_MODE
-		if (!sv.active && pq_cheatfree)
-			Security_SetSeed(_lrotr(net_seed, 17), argv[0]);
-#endif
 		if (ret)
 			return ret;
 		}
@@ -598,12 +594,6 @@ int	NET_GetMessage (qsocket_t *sock)
 
 	if (ret > 0)
 	{
-		// JPG 3.20 - cheat free
-		if (pq_cheatfree && sock->mod != MOD_QSMACK && (sock->mod_version < 35 || sock->encrypt))
-		{
-			// Con_Printf("NET_Decrypt\n");
-			Security_Decode(net_message.data, net_message.data, net_message.cursize, sock->client_port);
-		}
 
 		if (sock->driver)
 		{
@@ -680,23 +670,6 @@ int NET_SendMessage (qsocket_t *sock, sizebuf_t *data)
 		return -1;
 	}
 
-	// JPG 3.20 - cheat free
-	if (pq_cheatfree && sock->mod != MOD_QSMACK)
-	{
-		if (sock->mod_version < 35 || sock->encrypt == 1 || sock->encrypt == 2)	// JPG 3.50
-		{
-			// Con_Printf("NET_Encrypt\n");
-			Security_Encode(data->data, buff, data->cursize, sock->client_port);
-			newdata.data = buff;
-			newdata.cursize = data->cursize;
-			data = &newdata;
-		}
-		if (sock->encrypt == 1)
-			sock->encrypt = 0;
-		else if (sock->encrypt == 3)
-			sock->encrypt = 2;
-	}
-
 	SetNetTime();
 	r = sfunc.QSendMessage(sock, data);
 	if (r == 1 && sock->driver)
@@ -725,23 +698,6 @@ int NET_SendUnreliableMessage (qsocket_t *sock, sizebuf_t *data)
 	{
 		Con_Printf("NET_SendMessage: disconnected socket\n");
 		return -1;
-	}
-
-	// JPG 3.20 - cheat free
-	if (pq_cheatfree && sock->mod != MOD_QSMACK)
-	{
-		if (sock->mod_version < 35 || sock->encrypt == 1 || sock->encrypt == 2)	// JPG 3.50
-		{
-			// Con_Printf("NET_EncryptUnreliable\n");
-			Security_Encode(data->data, buff, data->cursize, sock->client_port);
-			newdata.data = buff;
-			newdata.cursize = data->cursize;
-			data = &newdata;
-		}
-		if (sock->encrypt == 1)
-			sock->encrypt = 0;
-		else if (sock->encrypt == 3)
-			sock->encrypt = 2;
 	}
 
 	SetNetTime();
@@ -954,20 +910,6 @@ void NET_Init (void)
 	if (*my_tcpip_address)
 		Con_DPrintf("TCP/IP address %s\n", my_tcpip_address);
 
-			// JPG 3.20 - cheat free
-	if (pq_cheatfreeEnabled)
-	{
-		net_seed = rand() ^ (rand() << 10) ^ (rand() << 20);
-		net_seed &= 0x7fffffff;
-		if (net_seed == 0x7fffffff)
-			net_seed = 0;
-		net_seed |= 1;
-		if (net_seed <= 1)
-			net_seed = 0x34719;
-#ifdef SUPPORTS_CHEATFREE_MODE
-		Security_SetSeed(net_seed, argv[0]);
-#endif
-	}
 }
 
 /*

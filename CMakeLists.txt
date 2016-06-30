@@ -29,7 +29,6 @@ set(PROQUAKE_SOURCES
 	gl_vidfw.c
 	host.c
 	host_cmd.c
-	iplog.c
 	keys.c
 	location.c
 	menu.c
@@ -62,7 +61,6 @@ set(PROQUAKE_SOURCES
 	snd_mem.c
 	snd_mix.c
 	snd_linux.c
-	security.c
 	vid_common_gl.c
 )
 

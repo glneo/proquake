@@ -1034,7 +1034,7 @@ void R_DrawViewModel(void)
 	if (!r_drawviewmodel.value)
 		return;
 
-	if (chase_active.value && !pq_cheatfree)	// JPG 3.20 - added pq_cheatfree
+	if (chase_active.value)
 		return;
 
 	if (envmap)

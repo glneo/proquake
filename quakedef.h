@@ -187,7 +187,6 @@ typedef struct
 #include "cvar.h"
 #include "screen.h"
 #include "net.h"
-#include "security.h"	// JPG 3.20
 #include "protocol.h"
 #include "cmd.h"
 #include "sbar.h"
@@ -210,7 +209,6 @@ typedef struct
 #include "glquake.h"
 
 #include "location.h"	// JPG - for %l formatting speficier
-#include "iplog.h"		// JPG 1.05 - ip address logging
 
 //=============================================================================
 

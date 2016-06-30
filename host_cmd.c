@@ -152,8 +152,6 @@ void Host_Game_f(void)
 			return;
 		}
 
-		Con_Printf("Cheatfree has been disabled\n");
-		pq_cheatfreeEnabled = false; // Baker: 3.94 -- disallow cheat-free if gamedir is switched (revisit this later, is not ideal at all).
 		com_modified = true;
 
 		//Kill the server
@@ -314,7 +312,7 @@ void Host_Status_f(void)
 		print = SV_ClientPrintf;
 
 	print("host:    %s (anti-wallhack %s)\n", Cvar_VariableString(hostname.name), sv_cullentities.value ? "on [mode: players]" : "off");
-	print("version: %s %4.2f %s\n", ENGINE_NAME, PROQUAKE_SERIES_VERSION, pq_cheatfree ? "cheat-free" : ""); // JPG - added ProQuake
+	print("version: %s %4.2f\n", ENGINE_NAME, PROQUAKE_SERIES_VERSION);
 	if (tcpipAvailable)
 		print("tcp/ip:  %s\n", my_tcpip_address);
 	if (ipxAvailable)
@@ -624,11 +622,6 @@ void Host_Map_f(void)
 	SV_SpawnServer(name);
 	if (!sv.active)
 		return;
-
-	// JPG 3.20 - cheat free
-	pq_cheatfree = (pq_cvar_cheatfree.value && pq_cheatfreeEnabled);
-	if (pq_cheatfree)
-		Con_Printf("Spawning cheat-free server\n");
 
 	if (cls.state != ca_dedicated) {
 		strcpy(cls.spawnparms, "");
@@ -1025,9 +1018,6 @@ void Host_Name_f(void)
 	strlcpy(host_client->name, newName, sizeof(host_client->name));
 	host_client->edict->v.netname = PR_SetEngineString(host_client->name);
 
-	// JPG 1.05 - log the IP address
-	if (sscanf(host_client->netconnection->address, "%d.%d.%d", &a, &b, &c) == 3)
-		IPLog_Add((a << 16) | (b << 8) | c, newName);
 
 	// JPG 3.00 - prevent messages right after a colour/name change
 	host_client->change_time = sv.time;
@@ -1039,11 +1029,6 @@ void Host_Name_f(void)
 	MSG_WriteString(&sv.reliable_datagram, host_client->name);
 }
 
-/*
- =======================
- VersionString
- ======================
- */
 char *VersionString(void)
 {
 	static char str[32];
@@ -1346,11 +1331,6 @@ void Host_PreSpawn_f(void)
 	host_client->netconnection->encrypt = 2; // JPG 3.50
 }
 
-/*
- ==================
- Host_Spawn_f
- ==================
- */
 void Host_Spawn_f(void)
 {
 	int i;
@@ -1363,51 +1343,11 @@ void Host_Spawn_f(void)
 	}
 
 	if (host_client->spawned) {
-		Con_Printf("Spawn not valid -- already spawned\n");	// JPG 3.02 allready->already
+		Con_Printf("Spawn not valid -- already spawned\n");
 		return;
 	}
 
-	// JPG 3.20 - model and exe checking
-	host_client->nomap = false;
-	if (pq_cheatfree && host_client->netconnection->mod != MOD_QSMACK) {
-		int i;
-		unsigned long crc;
-		unsigned a, b;
-
-		a = MSG_ReadLong();
-		b = MSG_ReadLong();
-
-		if (!Security_Verify(a, b)) {
-			MSG_WriteByte(&host_client->message, svc_print);
-			MSG_WriteString(&host_client->message, "Invalid executable\n");
-			Con_Printf("%s (%s) connected with an invalid executable\n", host_client->name, host_client->netconnection->address);
-			SV_DropClient(false);
-			return;
-		}
-
-		for (i = 1; sv.model_precache[i]; i++) {
-			if (sv.model_precache[i][0] != '*') {
-				crc = MSG_ReadLong();
-				if (crc != sv.model_crc[i]) {
-					if (i == 1 && crc == 0)	// allow clients to connect if they don't have the map
-							{
-						Con_Printf("%s does not have map %s\n", host_client->name, sv.model_precache[1]);
-						host_client->nomap = true;
-						break;
-					} else {
-						MSG_WriteByte(&host_client->message, svc_print);
-						MSG_WriteString(&host_client->message, va("%s is invalid\n", sv.model_precache[i]));
-						Con_Printf("%s (%s) connected with an invalid %s\n", host_client->name, host_client->netconnection->address,
-								sv.model_precache[i]);
-						SV_DropClient(false);
-						return;
-					}
-				}
-			}
-		}
-	}
-
-// run the entrance script
+	// run the entrance script
 	if (sv.loadgame) {	// loaded games are fully inited already
 				// if this is the last client to be connected, unpause
 		sv.paused = false;
@@ -1508,11 +1448,6 @@ void Host_Spawn_f(void)
 	host_client->spam_time = 0;
 }
 
-/*
- ==================
- Host_Begin_f
- ==================
- */
 void Host_Begin_f(void)
 {
 	if (cmd_source == src_command) {
@@ -1866,11 +1801,6 @@ void Host_Viewprev_f(void)
  ===============================================================================
  */
 
-/*
- ==================
- Host_Startdemos_f
- ==================
- */
 void Host_Startdemos_f(void)
 {
 	int i, c;

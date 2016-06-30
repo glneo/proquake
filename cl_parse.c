@@ -1122,58 +1122,6 @@ CL_ParseProQuakeString
 		}
 	}
 
-	// JPG 1.05 check for IP information
-	if (iplog_size)
-	{
-		if (!strncmp(string, "host:    ", 9))
-		{
-			begin_status = 1;
-			if (!cl.console_status)
-				remove_status = 1;
-		}
-		if (begin_status && !strncmp(string, "players: ", 9))
-		{
-			begin_status = 0;
-			remove_status = 0;
-			if (sscanf(string + 9, "%d", &playercount))
-			{
-				if (!cl.console_status)
-					*string = 0;
-			}
-			else
-				playercount = 0;
-		}
-		else if (playercount && string[0] == '#')
-		{
-			if (!sscanf(string, "#%d", &checkip) || --checkip < 0 || checkip >= cl.maxclients)
-				checkip = -1;
-			if (!cl.console_status)
-				*string = 0;
-			remove_status = 0;
-		}
-		else if (checkip != -1)
-		{
-			int a, b, c;
-			if (sscanf(string, "   %d.%d.%d", &a, &b, &c) == 3)
-			{
-				cl.scores[checkip].addr = (a << 16) | (b << 8) | c;
-				IPLog_Add(cl.scores[checkip].addr, cl.scores[checkip].name);
-			}
-			checkip = -1;
-			if (!cl.console_status)
-				*string = 0;
-			remove_status = 0;
-
-			if (!--playercount)
-				cl.console_status = 0;
-		}
-		else
-		{
-			playercount = 0;
-			if (remove_status)
-				*string = 0;
-		}
-	}
 	Q_Version(string);//R00k: look for "q_version" requests
 }
 

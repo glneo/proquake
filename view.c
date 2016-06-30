@@ -963,7 +963,7 @@ void V_CalcRefdef(void)
 	else
 		oldz = ent->origin[2];
 
-	if (chase_active.value && !pq_cheatfree)	// JPG 3.20 - added pq_cheatfree
+	if (chase_active.value)
 		Chase_Update();
 }
 

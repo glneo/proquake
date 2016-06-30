@@ -1065,7 +1065,6 @@ qsocket_t *Datagram_Reject (char *message, int acceptsock, struct qsockaddr *add
 }
 
 extern cvar_t pq_password;			// JPG 3.00 - password protection
-extern unsigned long qsmackAddr;	// JPG 3.02 - allow qsmack bots to connect to server
 
 static qsocket_t *_Datagram_CheckNewConnections (void)
 {
@@ -1108,8 +1107,6 @@ static qsocket_t *_Datagram_CheckNewConnections (void)
 		// JPG 3.50
 		char name[256];
 		strcpy(name, hostname.string);
-		if (pq_cheatfree)
-			strlcat (name, " (cheat-free)", sizeof(name));
 
 		if (strcmp(MSG_ReadString(), "QUAKE") != 0)
 			return NULL;
@@ -1310,8 +1307,6 @@ static qsocket_t *_Datagram_CheckNewConnections (void)
 	// JPG - support for mods
 	if (len > 12)
 		mod = MSG_ReadByte();
-	else if (!qsmackActive && clientaddr.sa_family == AF_INET && ((struct sockaddr_in *)&clientaddr)->sin_addr.s_addr == qsmackAddr)
-		mod = MOD_QSMACK;
 	else
 		mod = MOD_NONE;
 	if (len > 13)
@@ -1326,8 +1321,6 @@ static qsocket_t *_Datagram_CheckNewConnections (void)
 	{
 		if (pq_password.value && (len <= 18 || pq_password.value != MSG_ReadLong()))
 			return Datagram_Reject("You must use ProQuake v3.1 or above\n(http://www.quakeone.com/proquake) and set pq_password to the server password\n", acceptsock, &clientaddr);
-		if (pq_cheatfree && (mod != MOD_PROQUAKE || mod_version < 32))
-			return Datagram_Reject("You must use ProQuake v3.2 or above\n(http://www.quakeone.com/proquake)\n", acceptsock, &clientaddr);
 	}
 
 	// allocate a QSocket
@@ -1375,14 +1368,7 @@ static qsocket_t *_Datagram_CheckNewConnections (void)
 	MSG_WriteLong(&net_message, sock->client_port);
 	MSG_WriteByte(&net_message, MOD_PROQUAKE); // JPG - added this
 	MSG_WriteByte(&net_message, 10 * PROQUAKE_SERIES_VERSION);	// JPG 3.00
-#if defined(CHEATFREE_CAPABLE)
-	if (pq_cheatfree)
-	{
-		MSG_WriteByte(&net_message, PQF_CHEATFREE);
-		MSG_WriteLong(&net_message, _lrotl(net_seed, 17));
-	}
-	else
-#endif
+
 		MSG_WriteByte(&net_message, 0);
 	*((int *)net_message.data) = BigLong(NETFLAG_CTL | (net_message.cursize & NETFLAG_LENGTH_MASK));
 	dfunc.Write (acceptsock, net_message.data, net_message.cursize, &clientaddr);
@@ -1696,26 +1682,6 @@ static qsocket_t *_Datagram_Connect (char *host)
 			sock->mod_flags = MSG_ReadByte();
 		else
 			sock->mod_flags = 0;
-		if (sock->mod == MOD_PROQUAKE && (sock->mod_flags & PQF_CHEATFREE))
-		{
-			if (pq_cheatfreeEnabled)
-			{
-				pq_cheatfree = true;
-				net_seed = MSG_ReadLong();
-#ifdef SUPPORTS_CHEATFREE_MODE
-				Security_SetSeed(net_seed, argv[0]);
-#endif
-			}
-			else
-			{
-				reason = "Could not initialize security module";
-				Con_Printf("%s\n", reason);
-				strcpy(m_return_reason, reason);
-				goto ErrorReturn;
-			}
-		}
-		else
-			pq_cheatfree = false;
 	}
 	else
 	{

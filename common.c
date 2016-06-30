@@ -1651,34 +1651,6 @@ void COM_InitFilesystem() //johnfitz -- modified based on topaz's tutorial
 		proghack = true;
 }
 
-// JPG 3.20 - model checking
-/*
- ================
- COM_ModelCRC
- ================
- */
-void COM_ModelCRC(void)
-{
-	searchpath_t *search;
-	byte *data;
-	int len, i;
-
-	search = com_searchpaths;
-	com_searchpaths = com_verifypaths;
-	for (i = 1; sv.model_precache[i]; i++)
-	{
-		if (sv.model_precache[i][0] != '*')
-		{
-			data = COM_LoadFile(sv.model_precache[i], 2);			// 2 = temp alloc on hunk
-			if (!data)
-				Host_Error("COM_ModelCRC: Could not load %s", sv.model_precache[i]);
-			len = (*(int *) (data - 12)) - 16;			// header before data contains size
-			sv.model_crc[i] = Security_CRC(data, len);
-		}
-	}
-	com_searchpaths = search;
-}
-
 /*
  void COM_ToLowerString(char *in, char *out)
  {

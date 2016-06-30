@@ -84,22 +84,6 @@ int UDP_Init (void)
 		myAddr = INADDR_ANY;
 	}
 
-	// JPG 3.02 - support for a trusted qsmack bot
-	i = COM_CheckParm ("-qsmack");
-	if (i)
-	{
-		if (i < com_argc-1)
-		{
-			qsmackAddr = inet_addr(com_argv[i+1]);
-			if (qsmackAddr == INADDR_NONE)
-				Sys_Error ("%s is not a valid IP address", com_argv[i+1]);
-		}
-		else
-			Sys_Error ("NET_Init: you must specify an IP address after -qsmack");
-	}
-	else
-		qsmackAddr = INADDR_ANY;
-
 	// if the quake hostname isn't set, set it to the machine name
 	if (strcmp(hostname.string, "UNNAMED") == 0)
 	{

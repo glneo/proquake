@@ -1299,14 +1299,6 @@ void Sbar_DeathmatchOverlay (void)
 		cl.last_ping_time = cl.time;
 	}
 
-	// JPG 1.05 - check to see if we should update IP status
-	if (iplog_size && (cl.last_status_time < cl.time - 5))
-	{
-		MSG_WriteByte (&cls.message, clc_stringcmd);
-		SZ_Print (&cls.message, "status\n");
-		cl.last_status_time = cl.time;
-	}
-
 //	scr_copyeverything = 1;
 //	scr_fullupdate = 0;
 

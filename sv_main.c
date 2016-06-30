@@ -358,9 +358,6 @@ void SV_CheckForNewClients (void)
 		svs.clients[i].netconnection = ret;
 		SV_ConnectClient (i);
 
-		if (ret->mod == MOD_QSMACK)
-			qsmackActive = true;
-
 		net_activeconnections++;
 	}
 }
@@ -1478,7 +1475,4 @@ void SV_SpawnServer (char *server)
 			SV_SendServerinfo (host_client);
 
 	Con_DPrintf ("Server spawned.\n");
-
-	if (pq_cheatfreeEnabled)
-		COM_ModelCRC();
 }

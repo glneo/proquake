@@ -534,10 +534,6 @@ void SV_DropClient(qboolean crash)
 		Sys_Printf("Client %s removed\n", host_client->name);
 	}
 
-	// JPG 3.00 - check to see if it's a qsmack client
-	if (host_client->netconnection->mod == MOD_QSMACK)
-		qsmackActive = false;
-
 // break the net connection
 	NET_Close(host_client->netconnection);
 	host_client->netconnection = NULL;
@@ -1012,10 +1008,8 @@ void Host_Init(quakeparms_t *parms)
 	M_Init();
 	PR_Init();
 	Mod_Init();
-	Security_Init();	// JPG 3.20 - cheat free
 	NET_Init();
 	SV_Init();
-	IPLog_Init();	// JPG 1.05 - ip address logging
 
 	Con_Printf("Exe: "__TIME__" "__DATE__"\n");
 	Con_Printf("%4.1f megabyte heap\n", parms->memsize / (1024 * 1024.0));
@@ -1126,7 +1120,6 @@ void Host_Shutdown(void)
 	scr_disabled_for_loading = true;
 
 	Host_WriteConfiguration();
-	IPLog_WriteLog();	// JPG 1.05 - ip loggging
 
 	if (con_initialized)
 		History_Shutdown();
