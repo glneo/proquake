@@ -36,6 +36,8 @@ qboolean SNDDMA_Init(void)
 
 	snd_inited = 0;
 
+	shm = &sn;
+
 // open /dev/dsp, confirm capability to mmap, and get size of dma buffer
 
     audio_fd = open("/dev/dsp", O_RDWR);
@@ -78,7 +80,7 @@ qboolean SNDDMA_Init(void)
 		return 0;
     }
 
-	shm = &sn;
+
     shm->splitbuffer = 0;
 
 // set sample bits & speed

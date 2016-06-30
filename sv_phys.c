@@ -1285,38 +1285,3 @@ void SV_Physics (void)
 
 	sv.time += host_frametime;
 }
-
-
-#ifdef QUAKE2
-trace_t SV_Trace_Toss (edict_t *ent, edict_t *ignore)
-{
-	edict_t	tempent, *tent;
-	trace_t	trace;
-	vec3_t	move, end;
-	double	save_frametime;
-
-	save_frametime = host_frametime;
-	host_frametime = 0.05;
-
-	memcpy(&tempent, ent, sizeof(edict_t));
-	tent = &tempent;
-
-	while (1)
-	{
-		SV_CheckVelocity (tent);
-		SV_AddGravity (tent);
-		VectorMA (tent->v.angles, host_frametime, tent->v.avelocity, tent->v.angles);
-		VectorScale (tent->v.velocity, host_frametime, move);
-		VectorAdd (tent->v.origin, move, end);
-		trace = SV_Move (tent->v.origin, tent->v.mins, tent->v.maxs, end, MOVE_NORMAL, tent);	
-		VectorCopy (trace.endpos, tent->v.origin);
-
-		if (trace.ent)
-			if (trace.ent != ignore)
-				break;
-	}
-	host_frametime = save_frametime;
-
-	return trace;
-}
-#endif

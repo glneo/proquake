@@ -66,6 +66,9 @@ set(PROQUAKE_SOURCES
 	vid_common_gl.c
 )
 
+find_package(PkgConfig REQUIRED)
+pkg_search_module(GLFW REQUIRED glfw3)
+
 add_executable(proquake ${PROQUAKE_SOURCES})
 set_target_properties(proquake PROPERTIES COMPILE_FLAGS "-O3 -ffast-math -funroll-loops -fexpensive-optimizations")
-target_link_libraries(proquake m GL glfw)
+target_link_libraries(proquake m GL ${GLFW_STATIC_LIBRARIES})
