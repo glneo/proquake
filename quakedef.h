@@ -14,9 +14,7 @@
  * General Public License for more details.
  */
 
-//#define	GLTEST					// experimental stuff
-
-#define	QUAKE_GAME					// as opposed to utilities
+#define	QUAKE_GAME // as opposed to utilities
 
 #define ENGINE_NAME "ProQuake"
 #define ENGINE_VERSION 	"4.93 Beta"
@@ -24,12 +22,9 @@
 #define PROQUAKE_SERIES_VERSION		4.93
 #include "version.h"
 
-// #define SUPPORTS_SERVER_BROWSER		// Server browser implementation
-#define SUPPORTS_PLAYER_ID			// Player ID
+//define PARANOID // speed sapping error checking
 
-//define	PARANOID				// speed sapping error checking
-
-#define	GAMENAME		"id1"			// directory to look in by default
+#define	GAMENAME "id1" // directory to look in by default
 
 #include <math.h>
 #include <string.h>
@@ -38,7 +33,6 @@
 #include <stdlib.h>
 #include <setjmp.h>
 #include <ctype.h>
-
 
 #define	MINIMUM_MEMORY		0x550000
 #define	MINIMUM_MEMORY_LEVELPAK	(MINIMUM_MEMORY + 0x100000)

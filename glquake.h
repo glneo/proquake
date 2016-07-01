@@ -12,26 +12,10 @@
  * General Public License for more details.
  */
 
-// disable data conversion warnings
-
-//#pragma warning(disable : 4244)     // MIPS
-//#pragma warning(disable : 4136)     // X86
-//#pragma warning(disable : 4051)     // ALPHA
-
-#ifdef _WIN32
-#include <windows.h>
-#if defined(DX8QUAKE)
-#include "dx8_fakegl.h"
-#else
 #include <GL/gl.h>
 #include <GL/glu.h>
-#endif
-#else
-#include 	<GL/gl.h>
-#include 	<GL/glu.h>
-#include	<GL/glext.h>
-#include	<math.h>
-#endif
+#include <GL/glext.h>
+#include <math.h>
 
 #define TEX_NOFLAGS			0 // Baker: I use this to mark the absense of any flags
 #define TEX_MIPMAP			2
@@ -39,7 +23,6 @@
 #define	TEX_WORLD			128//R00k
 
 #include "gl_texture.h"
-
 
 void GL_BeginRendering (int *x, int *y, int *width, int *height);
 void GL_EndRendering (void);
@@ -156,11 +139,10 @@ extern	cvar_t	r_ringalpha;
 
 extern	float	r_world_matrix[16];
 
-extern	const char *gl_vendor;
-extern	const char *gl_renderer;
-extern	const char *gl_version;
-extern	const char *gl_extensions;
-
+extern const unsigned char *gl_vendor;
+extern const unsigned char *gl_renderer;
+extern const unsigned char *gl_version;
+extern const unsigned char *gl_extensions;
 
 
 

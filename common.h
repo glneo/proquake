@@ -14,8 +14,8 @@
  * General Public License for more details.
  */
 
-#ifndef __COMMON_H__
-#define __COMMON_H__
+#ifndef __COMMON_H
+#define __COMMON_H
 
 #if !defined BYTE_DEFINED
 typedef unsigned char 		byte;
@@ -192,11 +192,7 @@ byte *COM_LoadStackFile (char *path, void *buffer, int bufsize);
 byte *COM_LoadTempFile (char *path);
 byte *COM_LoadHunkFile (char *path);
 void COM_LoadCacheFile (char *path, struct cache_user_s *cu);
-#ifdef HTTP_DOWNLOAD
 
-void COM_GetFolder (char *in, char *out);//R00k
-
-#endif
 
 
 // Misc
@@ -268,4 +264,4 @@ size_t strlcpy(char *dst, const char *src, size_t siz);
 char *strltrim(char *s);
 //============================================================================
 
-#endif // __COMMON_H__
+#endif // __COMMON_H

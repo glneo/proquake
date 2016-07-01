@@ -188,25 +188,10 @@ void GL_SubdivideSurface(msurface_t *fa)
 
 // speed up sin calculations - Ed
 float turbsin[] = {
-#include "gl_warp_sin.h"
-		};
+	#include "gl_warp_sin.h"
+};
 #define	TURBSINSIZE	256
 #define TURBSCALE ((float) TURBSINSIZE / (2 * M_PI))
-
-static void EmitFlatPoly(msurface_t *fa)
-{
-	glpoly_t *p;
-	float *v;
-	int i;
-
-	for (p = fa->polys; p; p = p->next)
-	{
-		glBegin(GL_POLYGON);
-		for (i = 0, v = p->verts[0]; i < p->numverts; i++, v += VERTEXSIZE)
-			glVertex3fv(v);
-		glEnd();
-	}
-}
 
 /*
  =============

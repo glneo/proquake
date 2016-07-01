@@ -512,7 +512,7 @@ void Sbar_UpdateScoreboard (void)
 	{
 		k = fragsort[i];
 		s = &cl.scores[k];
-		SNPrintf (&scoreboardtext[i][1], sizeof(&scoreboardtext[i][1]), "%3i %s", s->frags, s->name);
+		SNPrintf (scoreboardtext[i], sizeof(scoreboardtext[i]), "%3i %s", s->frags, s->name);
 
 		top = s->colors & 0xf0;
 		bottom = (s->colors & 15) <<4;
@@ -1104,12 +1104,12 @@ Sbar_Draw
 */
 void Sbar_Draw (void)
 {
-	qboolean	headsup;	// joe
+//	qboolean	headsup;	// joe
 // Begin D3DQuake
 	if ( gNoStatusBar ) return;
 // End D3DQuake
 
-	headsup = (cl_sbar.value == 0 && scr_viewsize.value >= 100);
+//	headsup = (cl_sbar.value == 0 && scr_viewsize.value >= 100);
 //	if ((sb_updates >= vid.numpages) && !headsup)
 //		return;
 
@@ -1405,7 +1405,7 @@ Sbar_MiniDeathmatchOverlay
 */
 void Sbar_MiniDeathmatchOverlay (void)
 {
-	int		i, k, l, top, bottom, x, y, f, numlines;
+	int		i, k, top, bottom, x, y, f, numlines;
 	char			num[12];
 	scoreboard_t	*s;
 
@@ -1419,7 +1419,7 @@ void Sbar_MiniDeathmatchOverlay (void)
 	Sbar_SortFrags ();
 
 // draw the text
-	l = scoreboardlines;
+//	l = scoreboardlines;
 	y = vid.height - sb_lines;
 	numlines = sb_lines/8;
 	if (numlines < 3)

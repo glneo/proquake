@@ -15,9 +15,6 @@
  */
 
 #include "quakedef.h"
-#ifdef HTTP_DOWNLOAD
-#include "curl.h"
-#endif
 
 // we need to declare some mouse variables here, because the menu system
 // references them even when on a unix system.
@@ -59,10 +56,6 @@ cvar_t	pq_moveup = {"pq_moveup", "0", true};
 // JPG 3.00 - added this by request
 cvar_t	pq_smoothcam = {"pq_smoothcam", "1", true};
 
-#ifdef HTTP_DOWNLOAD
-cvar_t	cl_web_download		= {"cl_web_download", "1", true};
-cvar_t	cl_web_download_url	= {"cl_web_download_url", "http://downloads.quake-1.com/", true};
-#endif
 
 
 cvar_t	cl_bobbing		= {"cl_bobbing", "0"};
@@ -137,16 +130,6 @@ void CL_Disconnect (void)
 //	// This makes sure ambient sounds remain silent
 //	cl.worldmodel = NULL;
 
-#ifdef HTTP_DOWNLOAD
-	// We have to shut down webdownloading first
-	if( cls.download.web )
-	{
-		cls.download.disconnect = true;
-		return;
-	}
-
-#endif
-
 // if running a local server, shut it down
 	if (cls.demoplayback)
 		CL_StopPlayback ();
@@ -178,15 +161,6 @@ void CL_Disconnect_f (void)
 {
 	CL_Clear_Demos_Queue (); // disconnect is a very intentional action so clear out startdemos
 
-#ifdef HTTP_DOWNLOAD
-	// We have to shut down webdownloading first
-	if (cls.download.web)
-	{
-		cls.download.disconnect = true;
-		return;
-	}
-
-#endif
 	CL_Disconnect ();
 	if (sv.active)
 		Host_ShutdownServer (false);
@@ -263,7 +237,6 @@ unsigned source_data[1056] = {
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 };
 
-byte *COM_LoadFile (char *path, int usehunk);	// JPG 3.00 - model checking
 unsigned source_key1 = 0x36117cbd;
 unsigned source_key2 = 0x2e26857c;
 
@@ -277,7 +250,6 @@ An svc_signonnum has been received, perform a client side setup
 void CL_SignonReply (void)
 {
 	char 	str[8192];
-	int i;	// JPG 3.00
 
 	Con_DPrintf ("CL_SignonReply: %i\n", cls.signon);
 
@@ -488,19 +460,23 @@ float CL_LerpPoint (void)
 	if (frac < 0)
 	{
 		if (frac < -0.01)
+		{
 			if (bumper_on)
-			{
 				cl.ctime = cl.mtime[1];
-			}
-			else cl.time = cl.ctime = cl.mtime[1];
+			else
+				cl.time = cl.ctime = cl.mtime[1];
+		}
 		frac = 0;
 	}
 	else if (frac > 1)
 	{
 		if (frac > 1.01)
+		{
 			if (bumper_on)
 				cl.ctime = cl.mtime[0];
-			else cl.time = cl.ctime = cl.mtime[0]; // Here is where we get foobar'd
+			else
+				cl.time = cl.ctime = cl.mtime[0]; // Here is where we get foobar'd
+		}
 		frac = 1;
 	}
 
@@ -544,7 +520,7 @@ void CL_RelinkEntities (void)
 	for (i=0 ; i<3 ; i++)
 		cl.velocity[i] = cl.mvelocity[1][i] + frac * (cl.mvelocity[0][i] - cl.mvelocity[1][i]);
 	//PROQUAKE ADDITION --START
-	if (cls.demoplayback || (cl.last_angle_time > host_time && !(in_attack.state & 3)) && pq_smoothcam.value) // JPG - check for last_angle_time for smooth chasecam!
+	if (cls.demoplayback || ((cl.last_angle_time > host_time && !(in_attack.state & 3)) && pq_smoothcam.value)) // JPG - check for last_angle_time for smooth chasecam!
 	{
 	// interpolate the angles
 		for (j=0 ; j<3 ; j++)
@@ -748,66 +724,7 @@ int CL_ReadFromServer (void)
 
 	CL_RelinkEntities ();
 	CL_UpdateTEnts ();
-//
-// Demo progress
-//
-	if (cls.demoplayback && cls.capturedemo /*cls.demonum == -1 && !cls.timedemo && !cls.titledemo*/)
-	{
-		static float olddrealtime; // Yay.  Another timer.  Sheesh.
-		float timeslice = realtime - olddrealtime;
-		olddrealtime = realtime;
 
-		if (cl.paused & 2)
-			timeslice = 0;
-
-		// If we have no start cltime, fill it in now
-		if (!cls.demo_cltime_start)
-		{
-			cls.demo_cltime_start = cl.time;
-			cls.demo_cltime_elapsed = 0;
-		}
-		else cls.demo_cltime_elapsed += host_frametime;
-
-		// If we have no start hosttime, fill it in now
-		if (!cls.demo_hosttime_start)
-		{
-			cls.demo_hosttime_start = realtime;
-			cls.demo_hosttime_elapsed = 0;	
-		}
-		else cls.demo_hosttime_elapsed += timeslice; // Advance time only if we are not paused
-
-		while (1)
-		{
-			// This is the "percentage" (0 to 1) of the demoplay that has been completed.
-			float completed_amount = (cls.demo_offset_current - cls.demo_offset_start)/(float)cls.demo_file_length;
-			float remaining_time = 0;
-			int minutes, seconds;
-			char tempstring[256];
-			
-			#ifdef _WIN32
-			extern int vid_default;
-			extern char movie_codec[12];
-
-			if (vid_default != 0)
-				break; // Don't bother, we are in fullscreen mode.
-
-			if (timeslice = 0)
-				break; // Don't bother updating the caption if we are paused
-
-			if (cls.demo_hosttime_elapsed)
-				remaining_time = (cls.demo_hosttime_elapsed / completed_amount) - cls.demo_hosttime_elapsed;
-
-			minutes = COM_Minutes((int)remaining_time);
-			seconds = COM_Seconds((int)remaining_time);
-
-			sprintf (tempstring, "Demo: %s (%3.1f%% elapsed: %4.1f secs) - Estimated Remaining %d:%02d (Capturing: %s)", cls.demoname, completed_amount * 100, cls.demo_hosttime_elapsed, (int)minutes, (int)seconds, movie_codec);
-
-			Sys_SetWindowCaption (tempstring);
-			#endif // Windows locked for now
-			break;
-		}
-
-	}
 //
 // bring the links up to date
 //
@@ -1082,9 +999,4 @@ void CL_Init (void)
 
 	// JPG 3.02 - added this by request
 	Cvar_RegisterVariable (&pq_smoothcam, NULL);
-
-#ifdef HTTP_DOWNLOAD
-	Cvar_RegisterVariable (&cl_web_download, NULL);
-	Cvar_RegisterVariable (&cl_web_download_url, NULL);
-#endif
 }

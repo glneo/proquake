@@ -20,8 +20,7 @@ void Cmd_ForwardToServer_f(void);
 
 #define	MAX_ALIAS_NAME	32
 
-typedef struct cmdalias_s
-{
+typedef struct cmdalias_s {
 	struct cmdalias_s *next;
 	char name[MAX_ALIAS_NAME];
 	char *value;
@@ -83,8 +82,7 @@ void Cbuf_AddText(char *text)
 
 	l = strlen(text);
 
-	if (cmd_text.cursize + l >= cmd_text.maxsize)
-	{
+	if (cmd_text.cursize + l >= cmd_text.maxsize) {
 		Con_Printf("Cbuf_AddText: overflow\n");
 		return;
 	}
@@ -107,8 +105,7 @@ void Cbuf_InsertText(char *text)
 	int templen = cmd_text.cursize;
 
 // copy off any commands still remaining in the exec buffer
-	if (templen)
-	{
+	if (templen) {
 		temp = Z_Malloc(templen);
 		memcpy(temp, cmd_text.data, templen);
 		SZ_Clear(&cmd_text);
@@ -118,8 +115,7 @@ void Cbuf_InsertText(char *text)
 	Cbuf_AddText(text);
 
 // add the copied off data
-	if (templen)
-	{
+	if (templen) {
 		SZ_Write(&cmd_text, temp, templen);
 		Z_Free(temp);
 	}
@@ -138,15 +134,13 @@ void Cbuf_Execute(void)
 	int quotes;
 	int notcmd;	// JPG - so that the ENTIRE line can be forwarded
 
-	while (cmd_text.cursize)
-	{
+	while (cmd_text.cursize) {
 // find a \n or ; line break
 		text = (char *) cmd_text.data;
 
 		quotes = 0;
 		notcmd = strncmp(text, "cmd ", 4);  // JPG - so that the ENTIRE line can be forwarded
-		for (i = 0; i < cmd_text.cursize; i++)
-		{
+		for (i = 0; i < cmd_text.cursize; i++) {
 			if (text[i] == '"')
 				quotes++;
 			if (!(quotes & 1) && text[i] == ';' && notcmd) // JPG - added && cmd so that the ENTIRE line can be forwareded
@@ -164,8 +158,7 @@ void Cbuf_Execute(void)
 
 		if (i == cmd_text.cursize)
 			cmd_text.cursize = 0;
-		else
-		{
+		else {
 			i++;
 			cmd_text.cursize -= i;
 			memmove(text, text + i, cmd_text.cursize);
@@ -174,8 +167,7 @@ void Cbuf_Execute(void)
 // execute the command line
 		Cmd_ExecuteString(line, src_command);
 
-		if (cmd_wait)
-		{
+		if (cmd_wait) {
 			// skip out while text still remains in buffer, leaving it for next frame
 			cmd_wait = false;
 			break;
@@ -207,8 +199,7 @@ void Cbuf_Execute(void)
 void Cmd_Baker_Inject_Aliases()
 {
 
-	if (COM_CheckParm("-noinjectaliases") == 0)
-	{
+	if (COM_CheckParm("-noinjectaliases") == 0) {
 		// Baker 3.70 - Alias injection point
 		Cbuf_AddText("alias +quickgrenade \"-attack;wait;impulse 6;wait;+attack\"\n");
 		Cbuf_AddText("alias -quickgrenade \"-attack;wait;bestweapon 7 8 5 3 4 2 1\"\n");
@@ -220,29 +211,19 @@ void Cmd_Baker_Inject_Aliases()
 		Cbuf_AddText("alias -quickshot \"-attack;wait;bestweapon 7 8 5 3 4 2 1\"\n");
 		Cbuf_AddText("alias bestsafe \"bestweapon 8 5 3 4 2 1\"\n");
 		Cbuf_AddText("alias teamloc \"say_team I am at %l with %h health/%a armor\"\n");
-		if (COM_CheckParm("-nosoundkeys") == 0)
-		{
+		if (COM_CheckParm("-nosoundkeys") == 0) {
 			Cbuf_AddText("bind \"-\" \"volumedown\"\n");
 			Cbuf_AddText("bind \"=\" \"volumeup\"\n");
-		}
-		else
-		{
+		} else {
 			Con_Printf("Automatic sound keys disabled\n");
 		}
-		Cbuf_AddText(
-				"alias +zoom \"savefov; savesensitivity; fov 70; sensitivity 4; wait; fov 58; sensitivity 3.25; wait; fov 45; sensitivity 2.50; wait; fov 32; sensitivity 1.74; wait; fov 20; sensitivity 14.0\"\n");
-		Cbuf_AddText(
-				"alias -zoom \"fov 32; sensitivity 1.75; wait; fov 45; sensitivity 2.50; wait; fov 58; sensitivity 3.25; wait; sensitivity 4; wait; restoresensitivity; restorefov\"\n");
+		Cbuf_AddText("alias +zoom \"savefov; savesensitivity; fov 70; sensitivity 4; wait; fov 58; sensitivity 3.25; wait; fov 45; sensitivity 2.50; wait; fov 32; sensitivity 1.74; wait; fov 20; sensitivity 14.0\"\n");
+		Cbuf_AddText("alias -zoom \"fov 32; sensitivity 1.75; wait; fov 45; sensitivity 2.50; wait; fov 58; sensitivity 3.25; wait; sensitivity 4; wait; restoresensitivity; restorefov\"\n");
 		Con_Printf("Extended aliases initialized\n");
 		// Baker 3.70 - End Alias injection point
-	}
-	else
-	{
+	} else {
 		Con_Printf("Automatic aliases disabled\n");
 	}
-#ifdef SUPPORTS_PLAYER_ID // Baker change +
-	Cbuf_AddText("exec stats_id.cfg\n");
-#endif // Baker change + SUPPORTS_PLAYER_ID
 }
 
 /*
@@ -261,8 +242,7 @@ void Cmd_StuffCmds_f(void)
 	int s;
 	char *text, *build, c;
 
-	if (Cmd_Argc() != 1)
-	{
+	if (Cmd_Argc() != 1) {
 		Con_Printf("stuffcmds : execute command line parameters\n");
 		return;
 	}
@@ -273,8 +253,7 @@ void Cmd_StuffCmds_f(void)
 
 	// build the combined string to parse from
 	s = 0;
-	for (i = 1; i < com_argc; i++)
-	{
+	for (i = 1; i < com_argc; i++) {
 		if (!com_argv[i])
 			continue;		// NEXTSTEP nulls out -NXHost
 		s += strlen(com_argv[i]) + 1;
@@ -284,8 +263,7 @@ void Cmd_StuffCmds_f(void)
 
 	text = Z_Malloc(s + 1);
 	text[0] = 0;
-	for (i = 1; i < com_argc; i++)
-	{
+	for (i = 1; i < com_argc; i++) {
 		if (!com_argv[i])
 			continue;		// NEXTSTEP nulls out -NXHost
 		strcat(text, com_argv[i]);  // Dynamic string: no strlcat required
@@ -297,10 +275,8 @@ void Cmd_StuffCmds_f(void)
 	build = Z_Malloc(s + 1);
 	build[0] = 0;
 
-	for (i = 0; i < (s - 1); i++)
-	{
-		if (text[i] == '+')
-		{
+	for (i = 0; i < (s - 1); i++) {
+		if (text[i] == '+') {
 			i++;
 
 			for (j = i; (text[j] != '+') && (text[j] != '-') && (text[j] != 0); j++)
@@ -334,8 +310,7 @@ void Cmd_Exec_f(void)
 	int mark;
 	char name[MAX_OSPATH];
 
-	if (Cmd_Argc() != 2)
-	{
+	if (Cmd_Argc() != 2) {
 		Con_Printf("exec <filename> : execute a script file\n");
 		return;
 	}
@@ -343,19 +318,16 @@ void Cmd_Exec_f(void)
 	strlcpy(name, Cmd_Argv(1), sizeof(name));
 	mark = Hunk_LowMark();
 	f = (char *) COM_LoadHunkFile(name);
-	if (!f)
-	{
+	if (!f) {
 		char *p;
 
 		p = COM_SkipPath(name);
-		if (!strchr(p, '.'))
-		{	// no extension, so try the default (.cfg)
+		if (!strchr(p, '.')) {	// no extension, so try the default (.cfg)
 			strlcat(name, ".cfg", sizeof(name));
 			f = (char *) COM_LoadHunkFile(name);
 		}
 
-		if (!f)
-		{
+		if (!f) {
 			Con_Printf("couldn't exec %s\n", name);
 			return;
 		}
@@ -410,8 +382,7 @@ void Cmd_Alias_f(void)
 	int i, c;
 	char *s;
 
-	switch (Cmd_Argc())
-	{
+	switch (Cmd_Argc()) {
 	case 1: //list all aliases
 		for (a = cmd_alias, i = 0; a; a = a->next, i++)
 			Con_SafePrintf("   %s: %s", a->name, a->value);
@@ -429,24 +400,20 @@ void Cmd_Alias_f(void)
 	default: //set alias string
 
 		s = Cmd_Argv(1);
-		if (strlen(s) >= MAX_ALIAS_NAME)
-		{
+		if (strlen(s) >= MAX_ALIAS_NAME) {
 			Con_Printf("Alias name is too long\n");
 			return;
 		}
 
 		// if the alias allready exists, reuse it
-		for (a = cmd_alias; a; a = a->next)
-		{
-			if (!strcmp(s, a->name))
-			{
+		for (a = cmd_alias; a; a = a->next) {
+			if (!strcmp(s, a->name)) {
 				Z_Free(a->value);
 				break;
 			}
 		}
 
-		if (!a)
-		{
+		if (!a) {
 			a = Z_Malloc(sizeof(cmdalias_t));
 			a->next = cmd_alias;
 			cmd_alias = a;
@@ -456,8 +423,7 @@ void Cmd_Alias_f(void)
 // copy the rest of the command line
 		cmd[0] = 0;		// start out with a null string
 		c = Cmd_Argc();
-		for (i = 2; i < c; i++)
-		{
+		for (i = 2; i < c; i++) {
 			strlcat(cmd, Cmd_Argv(i), sizeof(cmd));
 			if (i != c)
 				strlcat(cmd, " ", sizeof(cmd));
@@ -478,17 +444,14 @@ void Cmd_Unalias_f(void)
 {
 	cmdalias_t *a, *prev;
 
-	switch (Cmd_Argc())
-	{
+	switch (Cmd_Argc()) {
 	default:
 	case 1:
 		Con_Printf("unalias <name> : delete alias\n");
 		break;
 	case 2:
-		for (prev = a = cmd_alias; a; a = a->next)
-		{
-			if (!strcmp(Cmd_Argv(1), a->name))
-			{
+		for (prev = a = cmd_alias; a; a = a->next) {
+			if (!strcmp(Cmd_Argv(1), a->name)) {
 				prev->next = a->next;
 				Z_Free(a->value);
 				Z_Free(a);
@@ -510,8 +473,7 @@ void Cmd_Unaliasall_f(void)
 {
 	cmdalias_t *blah;
 
-	while (cmd_alias)
-	{
+	while (cmd_alias) {
 		blah = cmd_alias->next;
 		Z_Free(cmd_alias->value);
 		Z_Free(cmd_alias);
@@ -527,8 +489,7 @@ void Cmd_Unaliasall_f(void)
  =============================================================================
  */
 
-typedef struct cmd_function_s
-{
+typedef struct cmd_function_s {
 	struct cmd_function_s *next;
 	char *name;
 	xcommand_t function;
@@ -597,16 +558,13 @@ void Cmd_TokenizeString(char *text)
 	cmd_argc = 0;
 	cmd_args = NULL;
 
-	while (1)
-	{
+	while (1) {
 // skip whitespace up to a /n
-		while (*text && *text <= ' ' && *text != '\n')
-		{
+		while (*text && *text <= ' ' && *text != '\n') {
 			text++;
 		}
 
-		if (*text == '\n')
-		{	// a newline seperates commands in the buffer
+		if (*text == '\n') {	// a newline seperates commands in the buffer
 			text++;
 			break;
 		}
@@ -621,8 +579,7 @@ void Cmd_TokenizeString(char *text)
 		if (!text)
 			return;
 
-		if (cmd_argc < MAX_ARGS)
-		{
+		if (cmd_argc < MAX_ARGS) {
 			cmd_argv[cmd_argc] = Z_Malloc(strlen(com_token) + 1);
 			strcpy(cmd_argv[cmd_argc], com_token);
 			cmd_argc++;
@@ -644,17 +601,14 @@ void Cmd_AddCommand(char *cmd_name, xcommand_t function)
 		Sys_Error("Cmd_AddCommand after host_initialized");
 
 // fail if the command is a variable name
-	if (Cvar_VariableString(cmd_name)[0])
-	{
+	if (Cvar_VariableString(cmd_name)[0]) {
 		Con_Printf("Cmd_AddCommand: %s already defined as a var\n", cmd_name);
 		return;
 	}
 
 // fail if the command already exists
-	for (cmd = cmd_functions; cmd; cmd = cmd->next)
-	{
-		if (!strcmp(cmd_name, cmd->name))
-		{
+	for (cmd = cmd_functions; cmd; cmd = cmd->next) {
+		if (!strcmp(cmd_name, cmd->name)) {
 			Con_Printf("Cmd_AddCommand: %s already defined\n", cmd_name);
 			return;
 		}
@@ -666,16 +620,14 @@ void Cmd_AddCommand(char *cmd_name, xcommand_t function)
 
 	//johnfitz -- insert each entry in alphabetical order
 	if (cmd_functions == NULL || strcmp(cmd->name, cmd_functions->name) < 0) //insert at front
-	{
+			{
 		cmd->next = cmd_functions;
 		cmd_functions = cmd;
-	}
-	else //insert later
+	} else //insert later
 	{
 		prev = cmd_functions;
 		cursor = cmd_functions->next;
-		while ((cursor != NULL) && (strcmp(cmd->name, cursor->name) > 0))
-		{
+		while ((cursor != NULL) && (strcmp(cmd->name, cursor->name) > 0)) {
 			prev = cursor;
 			cursor = cursor->next;
 		}
@@ -694,8 +646,7 @@ qboolean Cmd_Exists(char *cmd_name)
 {
 	cmd_function_t *cmd;
 
-	for (cmd = cmd_functions; cmd; cmd = cmd->next)
-	{
+	for (cmd = cmd_functions; cmd; cmd = cmd->next) {
 		if (!strcmp(cmd_name, cmd->name))
 			return true;
 	}
@@ -716,15 +667,13 @@ char *Cmd_CompleteCommand(char *partial)
 	char *least = "~";
 	cmdalias_t *alias;
 
-	for (cmd = cmd_functions; cmd; cmd = cmd->next)
-	{
+	for (cmd = cmd_functions; cmd; cmd = cmd->next) {
 		if (strcmp(cmd->name, partial) >= 0 && strcmp(best, cmd->name) > 0)
 			best = cmd->name;
 		if (strcmp(cmd->name, least) < 0)
 			least = cmd->name;
 	}
-	for (alias = cmd_alias; alias; alias = alias->next)
-	{
+	for (alias = cmd_alias; alias; alias = alias->next) {
 		if (strcmp(alias->name, partial) >= 0 && strcmp(best, alias->name) > 0)
 			best = alias->name;
 		if (strcmp(alias->name, least) < 0)
@@ -757,20 +706,16 @@ void Cmd_ExecuteString(char *text, cmd_source_t src)
 		return;		// no tokens
 
 // check functions
-	for (cmd = cmd_functions; cmd; cmd = cmd->next)
-	{
-		if (!strcasecmp(cmd_argv[0], cmd->name))
-		{
+	for (cmd = cmd_functions; cmd; cmd = cmd->next) {
+		if (!strcasecmp(cmd_argv[0], cmd->name)) {
 			cmd->function();
 			return;
 		}
 	}
 
 // check alias
-	for (a = cmd_alias; a; a = a->next)
-	{
-		if (!strcasecmp(cmd_argv[0], a->name))
-		{
+	for (a = cmd_alias; a; a = a->next) {
+		if (!strcasecmp(cmd_argv[0], a->name)) {
 			Cbuf_InsertText(a->value);
 			return;
 		}
@@ -809,8 +754,7 @@ void Cmd_ForwardToServer_f(void)
 	int minutes, seconds, match_time;	// JPG - used for %t
 	//from ProQuake --end
 
-	if (cls.state != ca_connected)
-	{
+	if (cls.state != ca_connected) {
 		Con_Printf("Can't \"%s\", not connected\n", Cmd_Argv(0));
 		return;
 	}
@@ -822,19 +766,15 @@ void Cmd_ForwardToServer_f(void)
 
 	//----------------------------------------------------------------------
 	// JPG - handle say separately for formatting--start
-	if ((!strcasecmp(Cmd_Argv(0), "say") || !strcasecmp(Cmd_Argv(0), "say_team")) && Cmd_Argc() > 1)
-	{
+	if ((!strcasecmp(Cmd_Argv(0), "say") || !strcasecmp(Cmd_Argv(0), "say_team")) && Cmd_Argc() > 1) {
 		SZ_Print(&cls.message, Cmd_Argv(0));
 		SZ_Print(&cls.message, " ");
 
 		src = Cmd_Args();
 		dst = buff;
-		while (*src && dst - buff < 100)
-		{
-			if (*src == '%')
-			{
-				switch (*++src)
-				{
+		while (*src && dst - buff < 100) {
+			if (*src == '%') {
+				switch (*++src) {
 				case 'h':
 					dst += sprintf(dst, "%d", cl.stats[STAT_HEALTH]);
 					break;
@@ -844,14 +784,12 @@ void Cmd_ForwardToServer_f(void)
 					break;
 
 				case 'r':
-					if (cl.stats[STAT_HEALTH] > 0 && (cl.items & IT_ROCKET_LAUNCHER))
-					{
+					if (cl.stats[STAT_HEALTH] > 0 && (cl.items & IT_ROCKET_LAUNCHER)) {
 						if (cl.stats[STAT_ROCKETS] < 5)
 							dst += sprintf(dst, "%s", pq_needrox.string);
 						else
 							dst += sprintf(dst, "%s", pq_haverl.string);
-					}
-					else
+					} else
 						dst += sprintf(dst, "%s", pq_needrl.string);
 					break;
 
@@ -872,16 +810,13 @@ void Cmd_ForwardToServer_f(void)
 					break;
 
 				case 'p':
-					if (cl.stats[STAT_HEALTH] > 0)
-					{
-						if (cl.items & IT_QUAD)
-						{
+					if (cl.stats[STAT_HEALTH] > 0) {
+						if (cl.items & IT_QUAD) {
 							dst += sprintf(dst, "%s", pq_quad.string);
 							if (cl.items & (IT_INVULNERABILITY | IT_INVISIBILITY))
 								*dst++ = ',';
 						}
-						if (cl.items & IT_INVULNERABILITY)
-						{
+						if (cl.items & IT_INVULNERABILITY) {
 							dst += sprintf(dst, "%s", pq_pent.string);
 							if (cl.items & IT_INVISIBILITY)
 								*dst++ = ',';
@@ -896,12 +831,9 @@ void Cmd_ForwardToServer_f(void)
 					int first = 1;
 					int item;
 					char *ch = pq_weapons.string;
-					if (cl.stats[STAT_HEALTH] > 0)
-					{
-						for (item = IT_SUPER_SHOTGUN; item <= IT_LIGHTNING; item *= 2)
-						{
-							if (*ch != ':' && (cl.items & item))
-							{
+					if (cl.stats[STAT_HEALTH] > 0) {
+						for (item = IT_SUPER_SHOTGUN; item <= IT_LIGHTNING; item *= 2) {
+							if (*ch != ':' && (cl.items & item)) {
 								if (!first)
 									*dst++ = ',';
 								first = 0;
@@ -926,25 +858,14 @@ void Cmd_ForwardToServer_f(void)
 					break;
 
 				case 't':
-					if ((cl.minutes || cl.seconds) && cl.seconds < 128)
-					{
+					if ((cl.minutes || cl.seconds) && cl.seconds < 128) {
 						if (cl.match_pause_time)
-							match_time =
-									ceil(
-											60.0 * cl.minutes + cl.seconds
-													- (cl.match_pause_time
-															- cl.last_match_time));
+							match_time = ceil(60.0 * cl.minutes + cl.seconds - (cl.match_pause_time - cl.last_match_time));
 						else
-							match_time =
-									ceil(
-											60.0 * cl.minutes + cl.seconds
-													- (cl.time
-															- cl.last_match_time));
+							match_time = ceil(60.0 * cl.minutes + cl.seconds - (cl.time - cl.last_match_time));
 						minutes = match_time / 60;
 						seconds = match_time - 60 * minutes;
-					}
-					else
-					{
+					} else {
 						minutes = cl.time / 60;
 						seconds = cl.time - 60 * minutes;
 						minutes &= 511;
@@ -959,8 +880,7 @@ void Cmd_ForwardToServer_f(void)
 				}
 				if (*src)
 					src++;
-			}
-			else
+			} else
 				*dst++ = *src++;
 		}
 		*dst = 0;
@@ -971,8 +891,7 @@ void Cmd_ForwardToServer_f(void)
 	// JPG - handle say separately for formatting--end
 	//----------------------------------------------------------------------
 
-	if (strcasecmp(Cmd_Argv(0), "cmd"))
-	{
+	if (strcasecmp(Cmd_Argv(0), "cmd")) {
 		SZ_Print(&cls.message, Cmd_Argv(0));
 		SZ_Print(&cls.message, " ");
 	}
@@ -1018,13 +937,10 @@ void Cmd_CmdList_f(void)
 	char *partial;
 	int len, count;
 
-	if (Cmd_Argc() > 1)
-	{
+	if (Cmd_Argc() > 1) {
 		partial = Cmd_Argv(1);
 		len = strlen(partial);
-	}
-	else
-	{
+	} else {
 		partial = NULL;
 		len = 0;
 	}
@@ -1032,8 +948,7 @@ void Cmd_CmdList_f(void)
 	Con_Printf("\n");
 
 	count = 0;
-	for (cmd = cmd_functions; cmd; cmd = cmd->next)
-	{
+	for (cmd = cmd_functions; cmd; cmd = cmd->next) {
 
 		if (partial && strncmp(partial, cmd->name, len))
 			continue;
@@ -1045,8 +960,7 @@ void Cmd_CmdList_f(void)
 
 	Con_Printf("\n%i command(s)", count);
 
-	if (partial)
-	{
+	if (partial) {
 		Con_Printf(" beginning with \"%s\"", partial);
 	}
 

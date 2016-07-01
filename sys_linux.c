@@ -106,7 +106,7 @@ void Sys_Printf(char *fmt, ...)
 	if (pq_dequake.value)
 	{
 		unsigned char *ch;
-		for (ch = text; *ch; ch++)
+		for (ch = (unsigned char *)text; *ch; ch++)
 			*ch = dequake[*ch];
 	}
 

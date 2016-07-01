@@ -84,12 +84,12 @@ void SV_CheckVelocity (edict_t *ent)
 // bound velocity
 	for (i=0 ; i<3 ; i++)
 	{
-		if (IS_NAN(ent->v.velocity[i]))
+		if (isnan(ent->v.velocity[i]))
 		{
 			Con_Printf ("Got a NaN velocity on %s\n", PR_GetString(ent->v.classname));
 			ent->v.velocity[i] = 0;
 		}
-		if (IS_NAN(ent->v.origin[i]))
+		if (isnan(ent->v.origin[i]))
 		{
 			Con_Printf ("Got a NaN origin on %s\n", PR_GetString(ent->v.classname));
 			ent->v.origin[i] = 0;

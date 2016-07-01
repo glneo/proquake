@@ -64,13 +64,13 @@ float beamlength = 16;
 
 void R_EntityParticles(entity_t *ent)
 {
-	int i, j, count;
+	int i, j;
 	particle_t *p;
 	float angle, dist, sp, sy, cp, cy;
 	vec3_t forward;
 
 	dist = 64;
-	count = 50;
+//	count = 50;
 
 	if (!avelocities[0][0])
 		for (i = 0; i < NUMVERTEXNORMALS; i++)

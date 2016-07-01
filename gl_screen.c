@@ -518,36 +518,6 @@ void SCR_DrawFPS(void)
 	}
 }
 
-#ifdef HTTP_DOWNLOAD
-/*
- ==============
- SCR_DrawWebPercent
- ==============
- */
-void SCR_DrawWebPercent (void)
-{
-	int x;
-	char buff[20];
-	char *ch;
-
-	SNPrintf (buff, sizeof(buff), "download: %2.1f%%", (float)(cls.download.percent*100));
-	x = vid.width - (16*8); //64; // 16 x 3 = 48 ... we need 16 x 4 = 64
-
-	Draw_Fill (0, 20, vid.width, 2, 0);
-	Draw_Fill (0, 0, vid.width, 20, 98);
-	Draw_Fill (0, 8, (int)((vid.width - (18*8)) * cls.download.percent), 8, 8);
-
-	ch = buff;
-
-	while (*ch)
-	{
-		Draw_Character(x, 8, (*ch)+128);
-		x += 8;
-		ch++;
-	}
-}
-#endif
-
 /*
  ==============
  SCR_DrawSpeed - Baker 3.67 from JoeQuake

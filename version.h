@@ -38,10 +38,6 @@
 #define CHASE_CAM_FIX
 #define SUPPORTS_TRANSFORM_INTERPOLATION // We are switching to r_interpolate_transform
 
-// Define Support For Cheat-Free Mode
-//#if defined(_WIN32) || defined(Linux)
-//	#define SUPPORTS_CHEATFREE_MODE // Only Windows and Linux have security modules.
-//#endif
 
 // Define Renderer Name
 #define RENDERER_NAME "GL"
@@ -62,7 +58,6 @@
 
 	#define SUPPORTS_DEMO_AUTOPLAY              // Windows only.  Uses file association
 	#define SUPPORTS_DIRECTINPUT 
-	#define SUPPORTS_INTERNATIONAL_KEYBOARD     // Windows only implementation for now?; the extra key byte
 
 	#define WINDOWS_SCROLLWHEEL_PEEK            // CAPTURES MOUSEWHEEL WHEN keydest != game
 

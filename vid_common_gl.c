@@ -15,17 +15,13 @@
  */
 
 #include "quakedef.h"
-const char *gl_vendor;
-const char *gl_renderer;
-const char *gl_version;
-const char *gl_extensions;
+
+const unsigned char *gl_vendor;
+const unsigned char *gl_renderer;
+const unsigned char *gl_version;
+const unsigned char *gl_extensions;
 qboolean gl_mtexable = false;
 
-#ifdef MACOSX
-// Baker: in windows this is in gl_vidnt.c
-int	texture_mode = GL_LINEAR;
-#endif // Move to vid_glcommon.c  This does not belong here.
-//#endif // Commenting this out to generate compiler error if I do not fix location.
 
 float		gldepthmin, gldepthmax;
 
@@ -49,27 +45,7 @@ unsigned	d_8to24table2[256];
 
 byte		color_white[4] = {255, 255, 255, 0};
 byte		color_black[4] = {0, 0, 0, 0};
-extern qboolean	fullsbardraw;
-qboolean CheckExtension (const char *extension)
-{
-	char		*where, *terminator;
-	const	char	*start;
 
-	if (!gl_extensions && !(gl_extensions = glGetString(GL_EXTENSIONS)))
-		return false;
-
-	if (!extension || *extension == 0 || strchr(extension, ' '))
-		return false;
-
-	for (start = gl_extensions ; where = strstr(start, extension) ; start = terminator)
-	{
-		terminator = where + strlen(extension);
-		if ((where == start || *(where - 1) == ' ') && (*terminator == 0 || *terminator == ' '))
-			return true;
-	}
-
-	return false;
-}
 
 int		texture_mode = GL_LINEAR;
 int		texture_extension_number = 1;
@@ -88,7 +64,7 @@ void CheckMultiTextureExtensions(void)
 		return;
 	}
 
-	arb_mtex = strstr (gl_extensions, "GL_ARB_multitexture ") != NULL;
+	arb_mtex = strstr ((const char *)gl_extensions, "GL_ARB_multitexture ") != NULL;
 
 	if (!arb_mtex) 
 	{
@@ -162,7 +138,7 @@ void GL_Init (void)
 	Con_Printf ("GL_VERSION: %s\n", gl_version);
 	gl_extensions = glGetString (GL_EXTENSIONS);
 
-	if (strncasecmp(gl_renderer, "Intel", 5) == 0) 
+	if (strncasecmp((const char *)gl_renderer, "Intel", 5) == 0)
 	{
 		Con_Printf ("Intel Display Adapter detected\n");
 		IntelDisplayAdapter = true;
@@ -213,7 +189,7 @@ void VID_SetPaletteOld (unsigned char *palette)
 qboolean	gammaworks;
 void	VID_ShiftPaletteOld (unsigned char *palette)
 {
-	extern	byte rampsold[3][256];
+//	extern	byte rampsold[3][256];
 //	VID_SetPaletteOld (palette);
 //	gammaworks = SetDeviceGammaRamp (maindc, ramps);
 }

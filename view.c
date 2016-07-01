@@ -262,37 +262,6 @@ void BuildGammaTable(float g)
 }
 
 /*
- =================
- V_CheckGamma
- =================
- */
-
-static qboolean V_CheckGamma(void)
-{
-	static float oldgammavalue;
-	float gamma;
-
-	if (vold_gamma.value == oldgammavalue) // exit if gamma is unchanged
-		return false;
-
-	gamma = CLAMP(0.3, vold_gamma.value, 3);
-
-	if (vold_gamma.value != gamma)
-	{
-		// If cvar isn't within bounds, make it so
-		Cvar_SetValue("gamma", gamma);
-	}
-
-	oldgammavalue = gamma;
-
-	BuildGammaTable(gamma); // Baker 3.99 todo: update gamma cvar if bounded
-
-	vid.recalc_refdef = 1;				// force a surface cache flush
-
-	return true;
-}
-
-/*
  ===============
  V_ParseDamage
  ===============
@@ -505,84 +474,6 @@ void V_CalcBlend(void)
  =============
  */
 
-// Baker hw gamma support
-// This v_updatepalette should not get called
-// except if hwgamma is being used
-// classic gamma should use v_updatepaletteold
-qboolean V_UpdatePalette_Hardware(void)
-{
-	int i, j, c;
-	qboolean new;
-	float a, rgb[3], gamma, contrast;
-	static float prev_blend[4], old_gamma, old_contrast, old_hwblend;
-	extern float vid_gamma;
-	qboolean hardware_blend_set_off = false;
-
-	new = false;
-
-	// Determine
-	for (i = 0; i < 4; i++)
-	{
-		if (v_blend[i] != prev_blend[i])
-		{
-			new = true;
-			prev_blend[i] = v_blend[i];
-		}
-	}
-
-	/*
-	 gamma = CLAMP (0.3, v_gamma.value, 3);
-	 if (v_gamma.value != old_gamma || !old_gamma)
-	 {
-	 if (v_gamma.value != gamma)
-	 Cvar_SetValue("gamma", gamma); // Baker 3.99: Set the cvar to what it should be if out of range
-	 old_gamma = gamma;
-	 new = true;
-	 }
-
-	 contrast = CLAMP (1, v_contrast.value, 3);
-	 if (v_contrast.value != old_contrast || !old_contrast)
-	 {
-
-	 if (v_contrast.value != contrast) {
-	 Cvar_SetValue("contrast", contrast); // Baker 3.99: Set the cvar to what it should be if out of range
-	 }
-	 old_contrast = contrast;
-	 new = true;
-	 }
-
-	 if (gl_hwblend.value != old_hwblend)
-	 {
-	 new = true;
-
-	 if (!gl_hwblend.value)
-	 hardware_blend_set_off = true;
-
-	 old_hwblend = gl_hwblend.value;
-	 }
-	 */
-	if (!new)
-		return false;
-
-	a = v_blend[3];
-
-	//if (!vid_hwgamma_enabled || !gl_hwblend.value)
-	a = 0;
-
-	rgb[0] = 255 * v_blend[0] * a;
-	rgb[1] = 255 * v_blend[1] * a;
-	rgb[2] = 255 * v_blend[2] * a;
-
-	a = 1 - a;
-
-	if (vid_gamma < 1.0) //Baker 3.99: was vid_gamma != 1.0; 1.0 is maximum value, changed in event someone sets to 2.0 or something above 1.0
-	{
-		contrast = pow(contrast, vid_gamma);
-		gamma /= vid_gamma;
-	}
-
-	return hardware_blend_set_off;
-}
 
 void V_UpdatePalette_Static(qboolean forced)
 {
