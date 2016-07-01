@@ -43,7 +43,6 @@ int			edit_line=0;
 int			history_line=0;
 
 keydest_t	key_dest;
-int			key_special_dest = false;
 
 int			key_count;			// incremented every key event
 
@@ -1047,7 +1046,6 @@ Should NOT be called during an interrupt!
 ===================
 */
 extern qboolean	cl_inconsole; // Baker 3.76 - from Qrack
-extern int key_special_dest;
 void Key_Event (int key, int ascii, qboolean down)
 {
 	char	*kb;
@@ -1058,23 +1056,6 @@ void Key_Event (int key, int ascii, qboolean down)
 	// Baker: special ... K_MOUSECLICK
 	if (key >= K_MOUSECLICK_BUTTON1 && key <= K_MOUSECLICK_BUTTON5) 
 	{
-		if (key_special_dest == 1) // Name maker
-		{
-			M_Keydown (K_MOUSECLICK_BUTTON1, 0, down);  // down will = true
-		}
-		else if (key_special_dest == 2) // Customize Controls
-		{
-			if (key == K_MOUSECLICK_BUTTON1) 
-				M_Keydown (K_MOUSE1, 0, down);
-			else if (key == K_MOUSECLICK_BUTTON2)
-				M_Keydown (K_MOUSE2, 0, down);
-			else if (key == K_MOUSECLICK_BUTTON3)
-				M_Keydown (K_MOUSE3, 0, down);
-			else if  (key == K_MOUSECLICK_BUTTON4)
-				M_Keydown (K_MOUSE4, 0, down);
-			else if  (key == K_MOUSECLICK_BUTTON5)
-				M_Keydown (K_MOUSE5, 0, down);
-		}
 		return; // Get outta here
 	}
 
@@ -1151,10 +1132,7 @@ void Key_Event (int key, int ascii, qboolean down)
 		
 		if ((key_repeats[key] > 1) && ((key != K_BACKSPACE && key != K_PAUSE && key != K_PGUP && key != K_PGDN && key != K_TAB) || ((key_dest == key_game) && !con_forcedup)))  // JPG 1.05 - added K_PGUP, K_PGDN, K_TAB and check to make sure that key_dest isn't key_game  // JPG 3.02 - added con_forcedup check
 		{
-			if (key_dest == key_menu && m_state == m_serverbrowser && (key == K_UPARROW || key == K_DOWNARROW) )
-			{
-				// Let the server browser having repeating up/down arrow action
-			} else return; // ignore most autorepeats
+			return; // ignore most autorepeats
 		}
 
 		if (key >= K_MOUSE5 && key<= K_MOUSE8 && !keybindings[key])

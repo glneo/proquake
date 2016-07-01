@@ -13,44 +13,28 @@
  */
 
 enum {
-	m_none,
+	m_none = 0,
 	m_main,
 	m_singleplayer,
 	m_load,
 	m_save,
 	m_multiplayer,
 	m_setup,
-	m_net,
 	m_options,
 	m_video,
 	m_keys,
 	m_help,
 	m_quit,
-//	m_serialconfig,
-//	m_modemconfig,
 	m_lanconfig,
 	m_gameoptions,
 	m_search,
-//#ifdef SUPPORTS_SERVER_BROWSER // Baker change +
-	m_serverbrowser,
-//#endif // Baker change + SUPPORTS_SERVER_BROWSER
 	m_slist,
 	m_preferences,
-	m_namemaker
 } m_state;
-
-//extern int m_state;
-
 
 // menus
 void M_Init (void);
-
-#if defined(MACOSX) || defined(PSP)
-void M_Keydown (int key);
-#else
 void M_Keydown (int key, int ascii, qboolean down);
-#endif
-
 void M_Draw (void);
 void M_ToggleMenu_f (void);
 

@@ -33,8 +33,6 @@ void M_Menu_Load_f(void);
 void M_Menu_Save_f(void);
 void M_Menu_MultiPlayer_f(void);
 void M_Menu_Setup_f(void);
-void M_Menu_NameMaker_f(void); //JQ1.5dev
-void M_Menu_Net_f(void);
 void M_Menu_Options_f(void);
 void M_Menu_Keys_f(void);
 void M_Menu_Preferences_f(void);
@@ -52,8 +50,6 @@ void M_Load_Draw(void);
 void M_Save_Draw(void);
 void M_MultiPlayer_Draw(void);
 void M_Setup_Draw(void);
-void M_NameMaker_Draw(void); //JQ1.5Dev
-void M_Net_Draw(void);
 void M_Options_Draw(void);
 void M_Keys_Draw(void);
 //void M_VideoModes_Draw (void);
@@ -65,24 +61,6 @@ void M_GameOptions_Draw(void);
 void M_Search_Draw(void);
 void M_ServerList_Draw(void);
 
-void M_Main_Key(int key, int ascii);
-void M_SinglePlayer_Key(int key, int ascii);
-void M_Load_Key(int key, int ascii);
-void M_Save_Key(int key, int ascii);
-void M_MultiPlayer_Key(int key, int ascii);
-void M_Setup_Key(int key, int ascii);
-void M_Net_Key(int key, int ascii);
-void M_Options_Key(int key, int ascii);
-void M_Keys_Key(int key, int ascii, qboolean down);
-void M_Video_Key(int key, int ascii);
-void M_Help_Key(int key, int ascii);
-void M_Quit_Key(int key, int ascii);
-void M_NameMaker_Key(int key, int ascii);
-void M_LanConfig_Key(int key, int ascii);
-void M_GameOptions_Key(int key, int ascii);
-void M_Search_Key(int key, int ascii);
-void M_ServerList_Key(int key, int ascii);
-
 qboolean m_entersound; // play after drawing a frame, so caching
 // won't disrupt the sound
 qboolean m_recursiveDraw;
@@ -91,12 +69,8 @@ int m_return_state;
 qboolean m_return_onerror;
 char m_return_reason[64];
 
-#define StartingGame	(m_multiplayer_cursor == 1)
-#define JoiningGame		(m_multiplayer_cursor == 0)
-#define SerialConfig	(m_net_cursor == 0)
-#define DirectConfig	(m_net_cursor == 1)
-#define	IPXConfig		(m_net_cursor == 2)
-#define	TCPIPConfig		(m_net_cursor == 3)
+#define StartingGame (m_multiplayer_cursor == 1)
+#define JoiningGame (m_multiplayer_cursor == 0)
 
 void M_ConfigureNetSubsystem(void);
 
@@ -233,11 +207,6 @@ void M_DrawTextBox(int x, int y, int width, int lines)
 
 int m_save_demonum;
 
-/*
- ================
- M_ToggleMenu_f
- ================
- */
 void M_ToggleMenu_f(void)
 {
 	m_entersound = true;
@@ -253,14 +222,11 @@ void M_ToggleMenu_f(void)
 		m_state = m_none;
 		return;
 	}
+
 	if (key_dest == key_console)
-	{
 		Con_ToggleConsole_f();
-	}
 	else
-	{
 		M_Menu_Main_f();
-	}
 }
 
 //=============================================================================
@@ -271,13 +237,11 @@ int m_main_cursor;
 
 void M_Menu_Main_f(void)
 {
-
-// Baker: This prevents start demos from advancing when in the menu
-//	if (key_dest != key_menu)
-//	{
-//		m_save_demonum = cls.demonum;
-//		cls.demonum = -1;
-//	}
+	if (key_dest != key_menu)
+	{
+		m_save_demonum = cls.demonum;
+		cls.demonum = -1;
+	}
 	key_dest = key_menu;
 	m_state = m_main;
 	m_entersound = true;
@@ -293,7 +257,7 @@ void M_Main_Draw(void)
 	M_DrawPic((320 - p->width) / 2, 4, p);
 	M_DrawTransPic(72, 32, Draw_CachePic("gfx/mainmenu.lmp"));
 
-	f = (int) (realtime * 10) % 6;  //johnfitz -- was host_time
+	f = (int)(realtime * 10) % 6;
 
 	M_DrawTransPic(54, 32 + m_main_cursor * 20, Draw_CachePic(va("gfx/menudot%i.lmp", f + 1)));
 }
@@ -303,13 +267,8 @@ void M_Main_Key(int key, int ascii)
 	switch (key)
 	{
 	case K_ESCAPE:
-
 		key_dest = key_game;
 		m_state = m_none;
-// Baker: This prevents startdemos from advancing when in the menu
-//		cls.demonum = m_save_demonum;
-//		if (cls.demonum != -1 && !cls.demoplayback && cls.state != ca_connected)
-//			CL_NextDemo ();
 		break;
 
 	case K_DOWNARROW:
@@ -325,8 +284,8 @@ void M_Main_Key(int key, int ascii)
 		break;
 
 	case K_ENTER:
+	case KP_ENTER:
 		m_entersound = true;
-
 		switch (m_main_cursor)
 		{
 		case 0:
@@ -375,7 +334,7 @@ void M_SinglePlayer_Draw(void)
 	M_DrawPic((320 - p->width) / 2, 4, p);
 	M_DrawTransPic(72, 32, Draw_CachePic("gfx/sp_menu.lmp"));
 
-	f = (int) (realtime * 10) % 6;  //johnfitz -- was host_time
+	f = (int) (realtime * 10) % 6;
 
 	M_DrawTransPic(54, 32 + m_singleplayer_cursor * 20, Draw_CachePic(va("gfx/menudot%i.lmp", f + 1)));
 }
@@ -430,7 +389,7 @@ void M_SinglePlayer_Key(int key, int ascii)
 //=============================================================================
 /* LOAD/SAVE MENU */
 
-int load_cursor;		// 0 < load_cursor < MAX_SAVEGAMES
+int m_load_cursor;		// 0 < load_cursor < MAX_SAVEGAMES
 
 #define	MAX_SAVEGAMES		12
 char m_filenames[MAX_SAVEGAMES][SAVEGAME_COMMENT_LENGTH + 1];
@@ -501,7 +460,7 @@ void M_Load_Draw(void)
 		M_Print(16, 32 + 8 * i, m_filenames[i]);
 
 // line cursor
-	M_DrawCharacter(8, 32 + load_cursor * 8, 12 + ((int) (realtime * 4) & 1));
+	M_DrawCharacter(8, 32 + m_load_cursor * 8, 12 + ((int) (realtime * 4) & 1));
 }
 
 void M_Save_Draw(void)
@@ -516,7 +475,7 @@ void M_Save_Draw(void)
 		M_Print(16, 32 + 8 * i, m_filenames[i]);
 
 // line cursor
-	M_DrawCharacter(8, 32 + load_cursor * 8, 12 + ((int) (realtime * 4) & 1));
+	M_DrawCharacter(8, 32 + m_load_cursor * 8, 12 + ((int) (realtime * 4) & 1));
 }
 
 void M_Load_Key(int key, int ascii)
@@ -529,7 +488,7 @@ void M_Load_Key(int key, int ascii)
 
 	case K_ENTER:
 		S_LocalSound("misc/menu2.wav");
-		if (!loadable[load_cursor])
+		if (!loadable[m_load_cursor])
 			return;
 		m_state = m_none;
 		key_dest = key_game;
@@ -539,24 +498,24 @@ void M_Load_Key(int key, int ascii)
 		SCR_BeginLoadingPlaque();
 
 		// issue the load command
-		Cbuf_AddText(va("load s%i\n", load_cursor));
+		Cbuf_AddText(va("load s%i\n", m_load_cursor));
 
 		return;
 
 	case K_UPARROW:
 	case K_LEFTARROW:
 		S_LocalSound("misc/menu1.wav");
-		load_cursor--;
-		if (load_cursor < 0)
-			load_cursor = MAX_SAVEGAMES - 1;
+		m_load_cursor--;
+		if (m_load_cursor < 0)
+			m_load_cursor = MAX_SAVEGAMES - 1;
 		break;
 
 	case K_DOWNARROW:
 	case K_RIGHTARROW:
 		S_LocalSound("misc/menu1.wav");
-		load_cursor++;
-		if (load_cursor >= MAX_SAVEGAMES)
-			load_cursor = 0;
+		m_load_cursor++;
+		if (m_load_cursor >= MAX_SAVEGAMES)
+			m_load_cursor = 0;
 		break;
 	}
 }
@@ -572,23 +531,23 @@ void M_Save_Key(int key, int ascii)
 	case K_ENTER:
 		m_state = m_none;
 		key_dest = key_game;
-		Cbuf_AddText(va("save s%i\n", load_cursor));
+		Cbuf_AddText(va("save s%i\n", m_load_cursor));
 		return;
 
 	case K_UPARROW:
 	case K_LEFTARROW:
 		S_LocalSound("misc/menu1.wav");
-		load_cursor--;
-		if (load_cursor < 0)
-			load_cursor = MAX_SAVEGAMES - 1;
+		m_load_cursor--;
+		if (m_load_cursor < 0)
+			m_load_cursor = MAX_SAVEGAMES - 1;
 		break;
 
 	case K_DOWNARROW:
 	case K_RIGHTARROW:
 		S_LocalSound("misc/menu1.wav");
-		load_cursor++;
-		if (load_cursor >= MAX_SAVEGAMES)
-			load_cursor = 0;
+		m_load_cursor++;
+		if (m_load_cursor >= MAX_SAVEGAMES)
+			m_load_cursor = 0;
 		break;
 	}
 }
@@ -618,13 +577,12 @@ void M_MultiPlayer_Draw(void)
 
 	M_DrawTransPic(72, 32, Draw_CachePic("gfx/mp_menu.lmp"));
 
-	f = (int) (realtime * 10) % 6;  //johnfitz -- was host_time
+	f = (int) (realtime * 10) % 6;
 
 	M_DrawTransPic(54, 32 + m_multiplayer_cursor * 20, Draw_CachePic(va("gfx/menudot%i.lmp", f + 1)));
 
-	if (/*serialAvailable ||*/ipxAvailable || tcpipAvailable)
-		return;
-	M_PrintWhite((320 / 2) - ((27 * 8) / 2), 148, "No Communications Available");
+	if (!tcpipAvailable)
+		M_PrintWhite((320 / 2) - ((27 * 8) / 2), 148, "No Communications Available");
 }
 
 void M_MultiPlayer_Key(int key, int ascii)
@@ -652,18 +610,13 @@ void M_MultiPlayer_Key(int key, int ascii)
 		switch (m_multiplayer_cursor)
 		{
 		case 0:
-#ifdef SUPPORTS_SERVER_BROWSER // Baker change +
-			M_Menu_ServerBrowser_f ();
-#else // Old ...
-			// Else traditional menu
-			if (/*serialAvailable ||*/ipxAvailable || tcpipAvailable)
-				M_Menu_Net_f();
-#endif // Baker change + SUPPORTS_SERVER_BROWSER
+			if (tcpipAvailable)
+				M_Menu_LanConfig_f();
 			break;
 
 		case 1:
-			if (/*serialAvailable || */ipxAvailable || tcpipAvailable)
-				M_Menu_Net_f();
+			if (tcpipAvailable)
+				M_Menu_LanConfig_f();
 			break;
 
 		case 2:
@@ -677,10 +630,7 @@ void M_MultiPlayer_Key(int key, int ascii)
 /* SETUP MENU */
 
 int setup_cursor = 5;
-int setup_cursor_table[] =
-{ 40, 56, 80, 104, 128, 152 };
-char namemaker_name[16]; // Baker 3.83: Name maker
-qboolean namemaker_shortcut = false; //Support for namemaker command
+int setup_cursor_table[] = { 40, 56, 80, 104, 128, 152 };
 char setup_hostname[16], setup_myname[16];
 int setup_oldtop, setup_oldbottom, setup_top, setup_bottom;
 
@@ -807,7 +757,6 @@ void M_Setup_Key(int key, int ascii)
 		if (setup_cursor == 2)
 		{
 			m_entersound = true;
-			M_Menu_NameMaker_f();
 			break;
 		}
 
@@ -870,396 +819,6 @@ void M_Setup_Key(int key, int ascii)
 }
 
 //=============================================================================
-/* NAME MAKER MENU *///From: JoeQuake 1.5Dev!!
-//=============================================================================
-int namemaker_cursor_x, namemaker_cursor_y;
-#define	NAMEMAKER_TABLE_SIZE	16
-extern int key_special_dest;
-
-void M_Menu_NameMaker_f(void)
-{
-	key_dest = key_menu;
-	key_special_dest = 1;
-	m_state = m_namemaker;
-	m_entersound = true;
-	strlcpy(namemaker_name, setup_myname, sizeof(namemaker_name));
-}
-
-void M_Shortcut_NameMaker_f(void)
-{
-// Baker: our little shortcut into the name maker
-	namemaker_shortcut = true;
-	strlcpy(setup_myname, cl_name.string, sizeof(setup_myname)); //R00k
-	namemaker_cursor_x = 0;
-	namemaker_cursor_y = 0;
-	M_Menu_NameMaker_f();
-}
-
-void M_NameMaker_Draw(void)
-{
-	int x, y;
-
-	M_Print(48, 16, "Your name");
-	M_DrawTextBox(120, 8, 16, 1);
-	M_PrintWhite(128, 16, namemaker_name);
-
-	for (y = 0; y < NAMEMAKER_TABLE_SIZE; y++)
-		for (x = 0; x < NAMEMAKER_TABLE_SIZE; x++)
-			M_DrawCharacter(32 + (16 * x), 40 + (8 * y), NAMEMAKER_TABLE_SIZE * y + x);
-
-	if (namemaker_cursor_y == NAMEMAKER_TABLE_SIZE)
-		M_DrawCharacter(128, 184, 12 + ((int) (realtime * 4) & 1));
-	else
-		M_DrawCharacter(24 + 16 * namemaker_cursor_x, 40 + 8 * namemaker_cursor_y,
-				12 + ((int) (realtime * 4) & 1));
-
-//	M_DrawTextBox (136, 176, 2, 1);
-	M_Print(144, 184, "Press ESC to exit");
-}
-
-void Key_Extra(int *key);
-void M_NameMaker_Key(int key, int ascii)
-{
-	int l;
-
-	switch (key)
-	{
-	case K_ESCAPE:
-		key_special_dest = false;
-
-		if (namemaker_shortcut)
-		{ // Allow quick exit for namemaker command
-			key_dest = key_game;
-			m_state = m_none;
-
-			//Save the name
-			Cbuf_AddText(va("name \"%s\"\n", namemaker_name));
-			//Cvar_Set(&hostname, namemaker_name);
-			// Clear the state
-			namemaker_shortcut = false;
-		}
-		else
-		{
-			strlcpy(setup_myname, namemaker_name, sizeof(setup_myname));			//R00k
-			M_Menu_Setup_f();
-		}
-
-		break;
-
-	case K_UPARROW:
-		S_LocalSound("misc/menu1.wav");
-		namemaker_cursor_y--;
-		if (namemaker_cursor_y < 0)
-			namemaker_cursor_y = NAMEMAKER_TABLE_SIZE - 1;
-		break;
-
-	case K_DOWNARROW:
-		S_LocalSound("misc/menu1.wav");
-		namemaker_cursor_y++;
-		if (namemaker_cursor_y > NAMEMAKER_TABLE_SIZE - 1)
-			namemaker_cursor_y = 0;
-		break;
-
-	case K_PGUP:
-		S_LocalSound("misc/menu1.wav");
-		namemaker_cursor_y = 0;
-		break;
-
-	case K_PGDN:
-		S_LocalSound("misc/menu1.wav");
-		namemaker_cursor_y = NAMEMAKER_TABLE_SIZE - 1;
-		break;
-
-	case K_LEFTARROW:
-		S_LocalSound("misc/menu1.wav");
-		namemaker_cursor_x--;
-		if (namemaker_cursor_x < 0)
-			namemaker_cursor_x = NAMEMAKER_TABLE_SIZE - 1;
-		break;
-
-	case K_RIGHTARROW:
-		S_LocalSound("misc/menu1.wav");
-		namemaker_cursor_x++;
-		if (namemaker_cursor_x >= NAMEMAKER_TABLE_SIZE - 1)
-			namemaker_cursor_x = 0;
-		break;
-
-	case K_HOME:
-		S_LocalSound("misc/menu1.wav");
-		namemaker_cursor_x = 0;
-		break;
-
-	case K_END:
-		S_LocalSound("misc/menu1.wav");
-		namemaker_cursor_x = NAMEMAKER_TABLE_SIZE - 1;
-		break;
-
-	case K_BACKSPACE:
-		if ((l = strlen(namemaker_name)))
-			namemaker_name[l - 1] = 0;
-		break;
-
-	case K_MOUSECLICK_BUTTON1:
-
-	{
-		extern int extmousex, extmousey;
-		extern int newmousex, newmousey;
-		int x, y, rectx, recty;
-		qboolean match = false;
-
-		/*			Never used in ProQuake
-		 if (scr_scalemenu.value) { // This is the default
-		 // we need to adjust the extmousex/y for menu effective size!
-		 extmousex = (float)extmousex*((float)menuwidth/(float)vid.width);
-		 extmousey = (float)extmousey*((float)menuheight/(float)vid.height);
-		 }*/
-
-		for (y = 0; y < NAMEMAKER_TABLE_SIZE; y++)
-		{
-			for (x = 0; x < NAMEMAKER_TABLE_SIZE; x++)
-			{
-				//Draw_Character (cx + ((menuwidth - 320) >> 1), line + m_yofs, num);
-//					rectx = (32 + (16 * x)) + ((menuwidth - 320) >> 1);
-//					recty = 40 + (8 * y) + scr_centermenu.value ? (menuheight - 200) / 2 : 0;
-				rectx = (32 + (16 * x)); //+ ((menuwidth - 320) >> 1);
-				recty = 40 + (8 * y); // + (scr_centermenu.value ? (menuheight - 200) / 2 : 0);
-				rectx = rectx + ((vid.width - 320) >> 1); // the adjustment
-				//recty = recty + m_yofs;
-				//M_DrawCharacter (32 + (16 * x), 40 + (8 * y), NAMEMAKER_TABLE_SIZE * y + x);
-				//Draw_Fill(rectx, recty, 8,8, NAMEMAKER_TABLE_SIZE * y + x); // Draw our hotspots
-
-				//Draw_Fill(rectx, recty, 8,8, 0); // Draw our hotspots
-				if (extmousex >= rectx && extmousey >= recty)
-				{
-					if (extmousex <= rectx + 7 && extmousey <= recty + 7)
-					{
-						namemaker_cursor_x = x;
-						namemaker_cursor_y = y;
-						match = true;
-					}
-				}
-				if (match)
-					break;
-			}
-			if (match)
-				break;
-		}
-//			Con_Printf("Mouse click x/y %d/%d\n", extmousex, extmousey);
-//			Con_Printf("Match is %d = %d\n", match, namemaker_cursor_y * 16 + namemaker_cursor_x);
-#ifdef _WIN32
-		{
-			extern HWND mainwindow;
-			SetWindowText(mainwindow, va("Mouse click %d %d", extmousex, extmousey));
-		}
-#endif
-		if (!match)
-		{
-			// Baker: nothing was hit
-			return;
-		}
-	}
-
-		// If we reached this point, we are simulating ENTER
-
-	case K_SPACE:
-	case K_ENTER:
-		if (namemaker_cursor_y == NAMEMAKER_TABLE_SIZE)
-		{
-			strlcpy(setup_myname, namemaker_name, sizeof(setup_myname));
-			M_Menu_Setup_f();
-		}
-		else
-		{
-			l = strlen(namemaker_name);
-			if (l < 15)
-			{
-				namemaker_name[l] = NAMEMAKER_TABLE_SIZE * namemaker_cursor_y + namemaker_cursor_x;
-				namemaker_name[l + 1] = 0;
-			}
-		}
-		break;
-
-	default:
-		if (ascii < 32 || ascii > 127)
-			break;
-
-		l = strlen(namemaker_name);
-		if (l < 15)
-		{
-			namemaker_name[l] = ascii;
-			namemaker_name[l + 1] = 0;
-		}
-		break;
-	}
-}
-
-//=============================================================================
-/* NET MENU */
-
-int m_net_cursor;
-int m_net_items;
-int m_net_saveHeight;
-
-char *net_helpMessage[] =
-{
-/* .........1.........2.... */
-"                        ", " Two computers connected", "   through two modems.  ", "                        ",
-
-"                        ", " Two computers connected", " by a null-modem cable. ", "                        ",
-
-" Novell network LANs    ", " or Windows 95 DOS-box. ", "                        ", "(LAN=Local Area Network)",
-
-" Commonly used to play  ", " over the Internet, but ", " also used on a Local   ", " Area Network.          " };
-
-void M_Menu_Net_f(void)
-{
-	key_dest = key_menu;
-	m_state = m_net;
-	m_entersound = true;
-	m_net_items = 4;
-
-	if (m_net_cursor >= m_net_items)
-		m_net_cursor = 0;
-	m_net_cursor--;
-	M_Net_Key(K_DOWNARROW, 0);
-}
-
-void M_Net_Draw(void)
-{
-	int f;
-	qpic_t *p;
-
-	M_DrawTransPic(16, 4, Draw_CachePic("gfx/qplaque.lmp"));
-	p = Draw_CachePic("gfx/p_multi.lmp");
-	M_DrawPic((320 - p->width) / 2, 4, p);
-
-	f = 32;
-
-//	if (serialAvailable)
-//	{
-//		p = Draw_CachePic ("gfx/netmen1.lmp");
-//	}
-//	else
-//	{
-//#ifdef _WIN32
-	p = NULL;
-//#else
-//		p = Draw_CachePic ("gfx/dim_modm.lmp");
-//#endif
-//	}
-
-	if (p)
-		M_DrawTransPic(72, f, p);
-
-	f += 19;
-
-//	if (serialAvailable)
-//	{
-//		p = Draw_CachePic ("gfx/netmen2.lmp");
-//	}
-//	else
-//	{
-//#ifdef _WIN32
-	p = NULL;
-//#else
-//		p = Draw_CachePic ("gfx/dim_drct.lmp");
-//#endif
-//	}
-
-	if (p)
-		M_DrawTransPic(72, f, p);
-
-	f += 19;
-	if (ipxAvailable)
-		p = Draw_CachePic("gfx/netmen3.lmp");
-	else
-		p = Draw_CachePic("gfx/dim_ipx.lmp");
-	M_DrawTransPic(72, f, p);
-
-	f += 19;
-	if (tcpipAvailable)
-		p = Draw_CachePic("gfx/netmen4.lmp");
-	else
-		p = Draw_CachePic("gfx/dim_tcp.lmp");
-	M_DrawTransPic(72, f, p);
-
-	if (m_net_items == 5)	// JDC, could just be removed
-	{
-		f += 19;
-		p = Draw_CachePic("gfx/netmen5.lmp");
-		M_DrawTransPic(72, f, p);
-	}
-
-	f = (320 - 26 * 8) / 2;
-	M_DrawTextBox(f, 134, 24, 4);
-	f += 8;
-	M_Print(f, 142, net_helpMessage[m_net_cursor * 4 + 0]);
-	M_Print(f, 150, net_helpMessage[m_net_cursor * 4 + 1]);
-	M_Print(f, 158, net_helpMessage[m_net_cursor * 4 + 2]);
-	M_Print(f, 166, net_helpMessage[m_net_cursor * 4 + 3]);
-
-	f = (int) (realtime * 10) % 6;  //johnfitz -- was host_time
-	M_DrawTransPic(54, 32 + m_net_cursor * 20, Draw_CachePic(va("gfx/menudot%i.lmp", f + 1)));
-}
-
-void M_Net_Key(int key, int ascii)
-{
-	again: switch (key)
-	{
-	case K_ESCAPE:
-		M_Menu_MultiPlayer_f();
-		break;
-
-	case K_DOWNARROW:
-		S_LocalSound("misc/menu1.wav");
-		if (++m_net_cursor >= m_net_items)
-			m_net_cursor = 0;
-		break;
-
-	case K_UPARROW:
-		S_LocalSound("misc/menu1.wav");
-		if (--m_net_cursor < 0)
-			m_net_cursor = m_net_items - 1;
-		break;
-
-	case K_ENTER:
-		m_entersound = true;
-
-		switch (m_net_cursor)
-		{
-		case 0:
-//			M_Menu_SerialConfig_f ();
-			break;
-
-		case 1:
-//			M_Menu_SerialConfig_f ();
-			break;
-
-		case 2:
-			M_Menu_LanConfig_f();
-			break;
-
-		case 3:
-			M_Menu_LanConfig_f();
-			break;
-
-		case 4:
-// multiprotocol
-			break;
-		}
-	}
-
-	if (m_net_cursor == 0 /*&& !serialAvailable*/)
-		goto again;
-	if (m_net_cursor == 1 /*&& !serialAvailable*/)
-		goto again;
-	if (m_net_cursor == 2 && !ipxAvailable)
-		goto again;
-	if (m_net_cursor == 3 && !tcpipAvailable)
-		goto again;
-}
-
-//=============================================================================
 /* OPTIONS MENU */
 
 // JPG 1.05 - changed from #ifdef _WIND32 by CSR
@@ -1278,13 +837,6 @@ void M_Menu_Options_f(void)
 	key_dest = key_menu;
 	m_state = m_options;
 	m_entersound = true;
-
-#ifdef _WIN32
-	if ((options_cursor == 16) && (modestate != MODE_WINDOWED)) // Baker 3.60 - New menu items
-	{
-		options_cursor = 0;
-	}
-#endif
 }
 
 void M_AdjustSliders(int dir)
@@ -1420,12 +972,6 @@ void M_DrawSlider(int x, int y, float range)
 
 void M_DrawCheckbox(int x, int y, int on)
 {
-#if 0
-	if (on)
-	M_DrawCharacter (x, y, 131);
-	else
-	M_DrawCharacter (x, y, 129);
-#endif
 	if (on)
 		M_Print(x, y, "on");
 	else
@@ -1606,8 +1152,8 @@ void M_Options_Key(int key, int ascii)
 //=============================================================================
 /* KEYS MENU */
 
-char *bindnames[][2] = // Baker 3.60 - more sensible customize controls, same options just organized better
-		{
+// Baker 3.60 - more sensible customize controls, same options just organized better
+char *bindnames[][2] = {
 		{ "+attack", "attack" },
 		{ "+jump", "jump" },
 		{ "+forward", "move forward" },
@@ -1625,7 +1171,9 @@ char *bindnames[][2] = // Baker 3.60 - more sensible customize controls, same op
 		{ "+mlook", "mouse look" },
 		{ "+klook", "keyboard look" },
 		{ "+strafe", "sidestep" },
-		{ "centerview", "center view" } };
+		{ "centerview", "center view" }
+};
+
 /* Baker 3.60 -- Old menu
  {
  {"+attack", 		"attack"},
@@ -1656,7 +1204,6 @@ int bind_grab;
 void M_Menu_Keys_f(void)
 {
 	key_dest = key_menu;
-	key_special_dest = 2;
 	m_state = m_keys;
 	m_entersound = true;
 }
@@ -1755,7 +1302,7 @@ void M_Keys_Draw(void)
 		M_DrawCharacter(130, 48 + keys_cursor * 8, 12 + ((int) (realtime * 4) & 1));
 }
 
-void M_Keys_Key(int key, int ascii, qboolean down)
+void M_Keys_Key(int key, int ascii)
 {
 	char cmd[80];
 	int keys[2];
@@ -1783,7 +1330,6 @@ void M_Keys_Key(int key, int ascii, qboolean down)
 	switch (key)
 	{
 	case K_ESCAPE:
-		key_special_dest = false;
 		M_Menu_Options_f();
 		break;
 
@@ -2073,8 +1619,6 @@ void M_Pref_AdjustSliders(int dir)
 	}
 }
 
-qboolean IN_DirectInputON(void);
-
 void M_Pref_Options_Draw(void)
 {
 	int i = 32;
@@ -2152,14 +1696,9 @@ void M_Pref_Options_Draw(void)
 	i += 16; 	  // 15
 	M_Print(16, i, "     directinput mouse ");
 
-#ifdef SUPPORTS_DIRECTINPUT
-	if (COM_CheckParm("-dinput"))
-	M_Print (220, i, IN_DirectInputON() ? "[locked: on]" : "[locked: err]");
-	else
-	M_Print (220, i, IN_DirectInputON() ? "on" : "off" );
-#else
+
 	M_Print(220, i, "n/a");
-#endif
+
 	i += 8;
 
 #ifdef SUPPORTS_INTERNATIONAL_KEYBOARD
@@ -2287,7 +1826,7 @@ void M_Help_Draw(void)
 	{
 		M_DrawTextBox(16, 16, 34, 16);
 		M_PrintWhite(32, 48, va("     %s version %s", ENGINE_NAME, ENGINE_VERSION));
-// Baker: fixme this isn't going to line up properly ^^^^^
+		// Baker: fixme this isn't going to line up properly ^^^^^
 		M_Print(32, 72, "          New Updates By Baker");
 		M_PrintWhite(32, 80, "       http://www.quakeone.com");
 
@@ -2334,26 +1873,16 @@ int msgNumber;
 int m_quit_prevstate;
 qboolean wasInMenus;
 
-#ifndef	_WIN32
-char *quitMessage[] =
-{
-/* .........1.........2.... */
-"  Are you gonna quit    ", "  this game just like   ", "   everything else?     ", "                        ",
-
-" Milord, methinks that  ", "   thou art a lowly     ", " quitter. Is this true? ", "                        ",
-
-" Do I need to bust your ", "  face open for trying  ", "        to quit?        ", "                        ",
-
-" Man, I oughta smack you", "   for trying to quit!  ", "     Press Y to get     ", "      smacked out.      ",
-
-" Press Y to quit like a ", "   big loser in life.   ", "  Press N to stay proud ", "    and successful!     ",
-
-"   If you press Y to    ", "  quit, I will summon   ", "  Satan all over your   ", "      hard drive!       ",
-
-"  Um, Asmodeus dislikes ", " his children trying to ", " quit. Press Y to return", "   to your Tinkertoys.  ",
-
-"  If you quit now, I'll ", "  throw a blanket-party ", "   for you next time!   ", "                        " };
-#endif
+char *quitMessage[] = {
+	"  Are you gonna quit    ", "  this game just like   ", "   everything else?     ", "                        ",
+	" Milord, methinks that  ", "   thou art a lowly     ", " quitter. Is this true? ", "                        ",
+	" Do I need to bust your ", "  face open for trying  ", "        to quit?        ", "                        ",
+	" Man, I oughta smack you", "   for trying to quit!  ", "     Press Y to get     ", "      smacked out.      ",
+	" Press Y to quit like a ", "   big loser in life.   ", "  Press N to stay proud ", "    and successful!     ",
+	"   If you press Y to    ", "  quit, I will summon   ", "  Satan all over your   ", "      hard drive!       ",
+	"  Um, Asmodeus dislikes ", " his children trying to ", " quit. Press Y to return", "   to your Tinkertoys.  ",
+	"  If you quit now, I'll ", "  throw a blanket-party ", "   for you next time!   ", "                        "
+};
 
 void M_Menu_Quit_f(void)
 {
@@ -2408,36 +1937,11 @@ void M_Quit_Draw(void)
 		m_state = m_quit;
 	}
 
-#ifdef _WIN32
-	M_DrawTextBox (0, 0, 38, 23);
-	M_PrintWhite (16, 12, "  Quake version 1.09 by id Software\n\n");
-	M_PrintWhite (16, 28, "Programming        Art \n");
-	M_Print (16, 36, " John Carmack       Adrian Carmack\n");
-	M_Print (16, 44, " Michael Abrash     Kevin Cloud\n");
-	M_Print (16, 52, " John Cash          Paul Steed\n");
-	M_Print (16, 60, " Dave 'Zoid' Kirsch\n");
-	M_PrintWhite (16, 68, "Design             Biz\n");
-	M_Print (16, 76, " John Romero        Jay Wilbur\n");
-	M_Print (16, 84, " Sandy Petersen     Mike Wilson\n");
-	M_Print (16, 92, " American McGee     Donna Jackson\n");
-	M_Print (16, 100, " Tim Willits        Todd Hollenshead\n");
-	M_PrintWhite (16, 108, "Support            Projects\n");
-	M_Print (16, 116, " Barrett Alexander  Shawn Green\n");
-	M_PrintWhite (16, 124, "Sound Effects\n");
-	M_Print (16, 132, " Trent Reznor and Nine Inch Nails\n\n");
-	M_PrintWhite (16, 140, "Quake is a trademark of Id Software,\n");
-	M_PrintWhite (16, 148, "inc., (c)1996 Id Software, inc. All\n");
-	M_PrintWhite (16, 156, "rights reserved. NIN logo is a\n");
-	M_PrintWhite (16, 164, "registered trademark licensed to\n");
-	M_PrintWhite (16, 172, "Nothing Interactive, Inc. All rights\n");
-	M_PrintWhite (16, 180, "reserved. Press y to exit\n");
-#else
 	M_DrawTextBox(56, 76, 24, 4);
 	M_Print(64, 84, quitMessage[msgNumber * 4 + 0]);
 	M_Print(64, 92, quitMessage[msgNumber * 4 + 1]);
 	M_Print(64, 100, quitMessage[msgNumber * 4 + 2]);
 	M_Print(64, 108, quitMessage[msgNumber * 4 + 3]);
-#endif
 }
 
 //=============================================================================
@@ -2459,7 +1963,7 @@ void M_Menu_LanConfig_f(void)
 	m_entersound = true;
 	if (lanConfig_cursor == -1)
 	{
-		if (JoiningGame && TCPIPConfig)
+		if (JoiningGame)
 			lanConfig_cursor = 2;
 		else
 			lanConfig_cursor = 1;
@@ -2489,18 +1993,13 @@ void M_LanConfig_Draw(void)
 		startJoin = "New Game";
 	else
 		startJoin = "Join Game";
-	if (IPXConfig)
-		protocol = "IPX";
-	else
-		protocol = "TCP/IP";
+
+	protocol = "TCP/IP";
 	M_Print(basex, 32, va("%s - %s", startJoin, protocol));
 	basex += 8;
 
 	M_Print(basex, 52, "Address:");
-	if (IPXConfig)
-		M_Print(basex + 9 * 8, 52, my_ipx_address);
-	else
-		M_Print(basex + 9 * 8, 52, my_tcpip_address);
+	M_Print(basex + 9 * 8, 52, my_tcpip_address);
 
 	M_Print(basex, lanConfig_cursor_table[0], "Port");
 	M_DrawTextBox(basex + 8 * 8, lanConfig_cursor_table[0] - 8, 6, 1);
@@ -2540,7 +2039,7 @@ void M_LanConfig_Key(int key, int ascii)
 	switch (key)
 	{
 	case K_ESCAPE:
-		M_Menu_Net_f();
+		M_Menu_MultiPlayer_f();
 		break;
 
 	case K_UPARROW:
@@ -2652,102 +2151,101 @@ typedef struct
 	char *description;
 } level_t;
 
-level_t levels[] =
-{
-{ "start", "Entrance" },	// 0
+level_t levels[] = {
+	{ "start", "Entrance" },	// 0
 
-		{ "e1m1", "Slipgate Complex" },				// 1
-		{ "e1m2", "Castle of the Damned" },
-		{ "e1m3", "The Necropolis" },
-		{ "e1m4", "The Grisly Grotto" },
-		{ "e1m5", "Gloom Keep" },
-		{ "e1m6", "The Door To Chthon" },
-		{ "e1m7", "The House of Chthon" },
-		{ "e1m8", "Ziggurat Vertigo" },
+	{ "e1m1", "Slipgate Complex" },				// 1
+	{ "e1m2", "Castle of the Damned" },
+	{ "e1m3", "The Necropolis" },
+	{ "e1m4", "The Grisly Grotto" },
+	{ "e1m5", "Gloom Keep" },
+	{ "e1m6", "The Door To Chthon" },
+	{ "e1m7", "The House of Chthon" },
+	{ "e1m8", "Ziggurat Vertigo" },
 
-		{ "e2m1", "The Installation" },				// 9
-		{ "e2m2", "Ogre Citadel" },
-		{ "e2m3", "Crypt of Decay" },
-		{ "e2m4", "The Ebon Fortress" },
-		{ "e2m5", "The Wizard's Manse" },
-		{ "e2m6", "The Dismal Oubliette" },
-		{ "e2m7", "Underearth" },
+	{ "e2m1", "The Installation" },				// 9
+	{ "e2m2", "Ogre Citadel" },
+	{ "e2m3", "Crypt of Decay" },
+	{ "e2m4", "The Ebon Fortress" },
+	{ "e2m5", "The Wizard's Manse" },
+	{ "e2m6", "The Dismal Oubliette" },
+	{ "e2m7", "Underearth" },
 
-		{ "e3m1", "Termination Central" },			// 16
-		{ "e3m2", "The Vaults of Zin" },
-		{ "e3m3", "The Tomb of Terror" },
-		{ "e3m4", "Satan's Dark Delight" },
-		{ "e3m5", "Wind Tunnels" },
-		{ "e3m6", "Chambers of Torment" },
-		{ "e3m7", "The Haunted Halls" },
+	{ "e3m1", "Termination Central" },			// 16
+	{ "e3m2", "The Vaults of Zin" },
+	{ "e3m3", "The Tomb of Terror" },
+	{ "e3m4", "Satan's Dark Delight" },
+	{ "e3m5", "Wind Tunnels" },
+	{ "e3m6", "Chambers of Torment" },
+	{ "e3m7", "The Haunted Halls" },
 
-		{ "e4m1", "The Sewage System" },				// 23
-		{ "e4m2", "The Tower of Despair" },
-		{ "e4m3", "The Elder God Shrine" },
-		{ "e4m4", "The Palace of Hate" },
-		{ "e4m5", "Hell's Atrium" },
-		{ "e4m6", "The Pain Maze" },
-		{ "e4m7", "Azure Agony" },
-		{ "e4m8", "The Nameless City" },
+	{ "e4m1", "The Sewage System" },				// 23
+	{ "e4m2", "The Tower of Despair" },
+	{ "e4m3", "The Elder God Shrine" },
+	{ "e4m4", "The Palace of Hate" },
+	{ "e4m5", "Hell's Atrium" },
+	{ "e4m6", "The Pain Maze" },
+	{ "e4m7", "Azure Agony" },
+	{ "e4m8", "The Nameless City" },
 
-		{ "end", "Shub-Niggurath's Pit" },			// 31
+	{ "end", "Shub-Niggurath's Pit" },			// 31
 
-		{ "dm1", "Place of Two Deaths" },				// 32
-		{ "dm2", "Claustrophobopolis" },
-		{ "dm3", "The Abandoned Base" },
-		{ "dm4", "The Bad Place" },
-		{ "dm5", "The Cistern" },
-		{ "dm6", "The Dark Zone" } };
+	{ "dm1", "Place of Two Deaths" },				// 32
+	{ "dm2", "Claustrophobopolis" },
+	{ "dm3", "The Abandoned Base" },
+	{ "dm4", "The Bad Place" },
+	{ "dm5", "The Cistern" },
+	{ "dm6", "The Dark Zone" }
+};
 
 //MED 01/06/97 added hipnotic levels
-level_t hipnoticlevels[] =
-{
-{ "start", "Command HQ" },  // 0
+level_t hipnoticlevels[] = {
+	{ "start", "Command HQ" },  // 0
 
-		{ "hip1m1", "The Pumping Station" },          // 1
-		{ "hip1m2", "Storage Facility" },
-		{ "hip1m3", "The Lost Mine" },
-		{ "hip1m4", "Research Facility" },
-		{ "hip1m5", "Military Complex" },
+	{ "hip1m1", "The Pumping Station" },          // 1
+	{ "hip1m2", "Storage Facility" },
+	{ "hip1m3", "The Lost Mine" },
+	{ "hip1m4", "Research Facility" },
+	{ "hip1m5", "Military Complex" },
 
-		{ "hip2m1", "Ancient Realms" },          // 6
-		{ "hip2m2", "The Black Cathedral" },
-		{ "hip2m3", "The Catacombs" },
-		{ "hip2m4", "The Crypt" },
-		{ "hip2m5", "Mortum's Keep" },
-		{ "hip2m6", "The Gremlin's Domain" },
+	{ "hip2m1", "Ancient Realms" },          // 6
+	{ "hip2m2", "The Black Cathedral" },
+	{ "hip2m3", "The Catacombs" },
+	{ "hip2m4", "The Crypt" },
+	{ "hip2m5", "Mortum's Keep" },
+	{ "hip2m6", "The Gremlin's Domain" },
 
-		{ "hip3m1", "Tur Torment" },       // 12
-		{ "hip3m2", "Pandemonium" },
-		{ "hip3m3", "Limbo" },
-		{ "hip3m4", "The Gauntlet" },
+	{ "hip3m1", "Tur Torment" },       // 12
+	{ "hip3m2", "Pandemonium" },
+	{ "hip3m3", "Limbo" },
+	{ "hip3m4", "The Gauntlet" },
 
-		{ "hipend", "Armagon's Lair" },       // 16
+	{ "hipend", "Armagon's Lair" },       // 16
 
-		{ "hipdm1", "The Edge of Oblivion" }           // 17
+	{ "hipdm1", "The Edge of Oblivion" }           // 17
 };
 
 //PGM 01/07/97 added rogue levels
 //PGM 03/02/97 added dmatch level
-level_t roguelevels[] =
-{
-{ "start", "Split Decision" },
-{ "r1m1", "Deviant's Domain" },
-{ "r1m2", "Dread Portal" },
-{ "r1m3", "Judgement Call" },
-{ "r1m4", "Cave of Death" },
-{ "r1m5", "Towers of Wrath" },
-{ "r1m6", "Temple of Pain" },
-{ "r1m7", "Tomb of the Overlord" },
-{ "r2m1", "Tempus Fugit" },
-{ "r2m2", "Elemental Fury I" },
-{ "r2m3", "Elemental Fury II" },
-{ "r2m4", "Curse of Osiris" },
-{ "r2m5", "Wizard's Keep" },
-{ "r2m6", "Blood Sacrifice" },
-{ "r2m7", "Last Bastion" },
-{ "r2m8", "Source of Evil" },
-{ "ctf1", "Division of Change" } };
+level_t roguelevels[] ={
+	{ "start", "Split Decision" },
+	{ "r1m1", "Deviant's Domain" },
+	{ "r1m2", "Dread Portal" },
+	{ "r1m3", "Judgement Call" },
+	{ "r1m4", "Cave of Death" },
+	{ "r1m5", "Towers of Wrath" },
+	{ "r1m6", "Temple of Pain" },
+	{ "r1m7", "Tomb of the Overlord" },
+	{ "r2m1", "Tempus Fugit" },
+	{ "r2m2", "Elemental Fury I" },
+	{ "r2m3", "Elemental Fury II" },
+	{ "r2m4", "Curse of Osiris" },
+	{ "r2m5", "Wizard's Keep" },
+	{ "r2m6", "Blood Sacrifice" },
+	{ "r2m7", "Last Bastion" },
+	{ "r2m8", "Source of Evil" },
+	{ "ctf1", "Division of Change" }
+};
 
 typedef struct
 {
@@ -2756,34 +2254,34 @@ typedef struct
 	int levels;
 } episode_t;
 
-episode_t episodes[] =
-{
-{ "Welcome to Quake", 0, 1 },
-{ "Doomed Dimension", 1, 8 },
-{ "Realm of Black Magic", 9, 7 },
-{ "Netherworld", 16, 7 },
-{ "The Elder World", 23, 8 },
-{ "Final Level", 31, 1 },
-{ "Deathmatch Arena", 32, 6 } };
+episode_t episodes[] = {
+	{ "Welcome to Quake", 0, 1 },
+	{ "Doomed Dimension", 1, 8 },
+	{ "Realm of Black Magic", 9, 7 },
+	{ "Netherworld", 16, 7 },
+	{ "The Elder World", 23, 8 },
+	{ "Final Level", 31, 1 },
+	{ "Deathmatch Arena", 32, 6 }
+};
 
 //MED 01/06/97  added hipnotic episodes
-episode_t hipnoticepisodes[] =
-{
-{ "Scourge of Armagon", 0, 1 },
-{ "Fortress of the Dead", 1, 5 },
-{ "Dominion of Darkness", 6, 6 },
-{ "The Rift", 12, 4 },
-{ "Final Level", 16, 1 },
-{ "Deathmatch Arena", 17, 1 } };
+episode_t hipnoticepisodes[] = {
+	{ "Scourge of Armagon", 0, 1 },
+	{ "Fortress of the Dead", 1, 5 },
+	{ "Dominion of Darkness", 6, 6 },
+	{ "The Rift", 12, 4 },
+	{ "Final Level", 16, 1 },
+	{ "Deathmatch Arena", 17, 1 }
+};
 
 //PGM 01/07/97 added rogue episodes
 //PGM 03/02/97 added dmatch episode
-episode_t rogueepisodes[] =
-{
-{ "Introduction", 0, 1 },
-{ "Hell's Fortress", 1, 7 },
-{ "Corridors of Time", 8, 8 },
-{ "Deathmatch Arena", 16, 1 } };
+episode_t rogueepisodes[] = {
+	{ "Introduction", 0, 1 },
+	{ "Hell's Fortress", 1, 7 },
+	{ "Corridors of Time", 8, 8 },
+	{ "Deathmatch Arena", 16, 1 }
+};
 
 int startepisode;
 int startlevel;
@@ -3058,7 +2556,7 @@ void M_GameOptions_Key(int key, int ascii)
 	switch (key)
 	{
 	case K_ESCAPE:
-		M_Menu_Net_f();
+		M_Menu_LanConfig_f();
 		break;
 
 	case K_UPARROW:
@@ -3100,19 +2598,11 @@ void M_GameOptions_Key(int key, int ascii)
 			SCR_BeginLoadingPlaque();
 
 			if (hipnotic)
-				Cbuf_AddText(
-						va("map %s\n",
-								hipnoticlevels[hipnoticepisodes[startepisode].firstLevel
-										+ startlevel].name));
+				Cbuf_AddText(va("map %s\n", hipnoticlevels[hipnoticepisodes[startepisode].firstLevel + startlevel].name));
 			else if (rogue)
-				Cbuf_AddText(
-						va("map %s\n",
-								roguelevels[rogueepisodes[startepisode].firstLevel
-										+ startlevel].name));
+				Cbuf_AddText(va("map %s\n", roguelevels[rogueepisodes[startepisode].firstLevel + startlevel].name));
 			else
-				Cbuf_AddText(
-						va("map %s\n",
-								levels[episodes[startepisode].firstLevel + startlevel].name));
+				Cbuf_AddText(va("map %s\n", levels[episodes[startepisode].firstLevel + startlevel].name));
 
 			return;
 		}
@@ -3282,174 +2772,6 @@ void M_ServerList_Key(int key, int ascii)
 	}
 }
 
-#ifdef SUPPORTS_SERVER_BROWSER // Baker change +
-//=============================================================================
-/* SERVER LIST MENU */
-
-int serverbrowser_top = 32;
-int serverbrowser_bottom = 160;
-
-int serverbrowser_cursor = 0;
-int serverbrowser_mins = 0;// First server # showing
-int serverbrowser_range = 15;// Number of servers displayed on-screen (like 14 in 320 resolution)
-int serverbrowser_maxs = 14;// Last server # showing
-int serverbrowser_state;
-
-void M_Menu_ServerBrowser_f (void)
-{
-	// Baker: we need to determine whether or not to refresh the server list
-	// Rules: never refresh the server list if we are in the menu
-
-	// This is the entry point so ....
-
-	// If there is a server browser query in progress, just move on and leave that alone
-
-	// We will run an update if
-	// 1. An update isn't running
-	// 2. AND ... we either don't have a last update time or the current on is over 80 seconds old
-	if (!cls.serverbrowser)
-	{
-		// 2. If we don't have a last success time or the current one is over 80 seconds old
-		if (!cls.serverbrowser_lastsuccesstime || (Sys_FloatTime() - cls.serverbrowser_lastsuccesstime) > 80.0f)
-		{
-			HTTP_ServerBrowser_Begin_Query();
-		}
-	}
-
-	key_dest = key_menu;
-	m_state = m_serverbrowser;
-	m_entersound = true;
-
-	serverbrowser_state = 0;
-	serverbrowser_range = (vid.conheight / 8) - 16; // Recalc size here
-	serverbrowser_maxs = serverbrowser_mins + serverbrowser_range - 1;
-	serverbrowser_bottom = (serverbrowser_range + 5) * 8;//160
-//	serverbrowser_mins = serverbrowser_cursor > serverbrowser_maxs)
-//		serverbrowser_mins = 0;
-
-}
-
-void M_ServerBrowser_Draw (void)
-{
-	int serv, line;
-
-	M_Print (0, 8, va(" QuakeOne.com Server List  (%i servers)", ServerBrowser_Length()));
-	M_Print (0, 24, " Geo Server Name         Plyrs Map   Mod");
-
-	M_Print (8, serverbrowser_top, COM_Quakebar(39));
-	M_Print (8, serverbrowser_bottom, COM_Quakebar(39));
-
-	ServerBrowser_Load ();
-
-	if (cls.serverbrowser)
-	{
-		int elapsed_bar = ((int)((Sys_FloatTime() - cls.serverbrowser_starttime)*3) & 7) + 1;
-		// Download is in progress
-		// Baker: give serverlist download a "think" here
-		HTTP_ServerBrowser_Check_Query_Completion ();
-
-		// An update is in progress ... display status
-		M_PrintWhite (64, serverbrowser_top + 40, va("Status: %s", COM_Quakebar(elapsed_bar)) );
-
-		return;
-	}
-
-	if (!server_browser_list[0].server)
-	{
-		M_PrintWhite (48, serverbrowser_top + 24, "No servers found");
-		M_PrintWhite (48, serverbrowser_top + 32, "Is Internet on?");
-		M_PrintWhite (48, serverbrowser_top + 40, "Firewall issue?");
-		M_PrintWhite (48, serverbrowser_top + 48, "Quake permitted internet?");
-		M_PrintWhite (48, serverbrowser_top + 64, "Visit QuakeOne.com for help");
-		return;
-	}
-
-	// Draw cursor
-	M_DrawCharacter (0, (serverbrowser_cursor - serverbrowser_mins + 1) * 8 + serverbrowser_top, 12+((int)(realtime*4)&1));
-
-	// List servers
-	for (serv = serverbrowser_mins, line = 1; serv <= serverbrowser_maxs && serv < MAX_SERVER_LIST && server_browser_list[serv].server; serv++, line++)
-	M_PrintWhite (vid.width <= 320 ? 8 : 16, line * 8 + serverbrowser_top, va("%1.38s", server_browser_list[serv].description));
-
-	M_Print (16, serverbrowser_bottom + 8, va("Address: %1.35s", server_browser_list[serverbrowser_cursor].server));
-	M_PrintWhite (16, serverbrowser_bottom + 24, "Press F5 = quick access to this page");
-
-}
-
-void M_ServerBrowser_Key (int key, int ascii)
-{
-	// If no servers and key isn't escape
-	if (!server_browser_list[0].server && key != K_ESCAPE)
-	return;
-
-	switch (key)
-	{
-		case K_ESCAPE:
-		M_Menu_MultiPlayer_f ();
-		break;
-
-		case K_UPARROW:
-		S_LocalSound ("misc/menu1.wav");
-		if (serverbrowser_cursor > 0)
-		{
-			serverbrowser_cursor--;
-		}
-		break;
-
-		case K_DOWNARROW:
-		S_LocalSound ("misc/menu1.wav");
-
-		if (serverbrowser_cursor < MAX_SERVER_LIST - 1 && server_browser_list[serverbrowser_cursor+1].server)
-		serverbrowser_cursor++;
-		break;
-
-		case K_HOME:
-		S_LocalSound ("misc/menu1.wav");
-		serverbrowser_cursor = 0;
-		break;
-
-		case K_END:
-		S_LocalSound ("misc/menu1.wav");
-		serverbrowser_cursor = ServerBrowser_Length() - 1;
-		break;
-
-		case K_PGUP:
-		S_LocalSound ("misc/menu1.wav");
-		serverbrowser_cursor -= (serverbrowser_maxs - serverbrowser_mins);
-		if (serverbrowser_cursor < 0)
-		serverbrowser_cursor = 0;
-		break;
-
-		case K_PGDN:
-		S_LocalSound ("misc/menu1.wav");
-		serverbrowser_cursor += (serverbrowser_maxs - serverbrowser_mins);
-		if (serverbrowser_cursor >= MAX_SERVER_LIST)
-		serverbrowser_cursor = MAX_SERVER_LIST - 1;
-		while (!server_browser_list[serverbrowser_cursor].server)
-		serverbrowser_cursor--;
-		break;
-
-		case K_ENTER:
-		m_state = m_main;
-		M_ToggleMenu_f ();
-		Cbuf_AddText (va("connect \"%s\"\n", server_browser_list[serverbrowser_cursor].server));
-		break;
-
-	}
-
-	if (serverbrowser_cursor < serverbrowser_mins)
-	{
-		serverbrowser_maxs -= (serverbrowser_mins - serverbrowser_cursor);
-		serverbrowser_mins = serverbrowser_cursor;
-	}
-	if (serverbrowser_cursor > serverbrowser_maxs)
-	{
-		serverbrowser_mins += (serverbrowser_cursor - serverbrowser_maxs);
-		serverbrowser_maxs = serverbrowser_cursor;
-	}
-}
-#endif // Baker change + SUPPORTS_SERVER_BROWSER
-
 //=============================================================================
 /* Menu Subsystem */
 
@@ -3461,15 +2783,8 @@ void M_Init(void)
 	Cmd_AddCommand("menu_singleplayer", M_Menu_SinglePlayer_f);
 	Cmd_AddCommand("menu_load", M_Menu_Load_f);
 	Cmd_AddCommand("menu_save", M_Menu_Save_f);
-#ifdef SUPPORTS_SERVER_BROWSER // Baker change +
-	Cmd_AddCommand ("menu_multiplayer", M_Menu_ServerBrowser_f);
-	Cmd_AddCommand ("servers", M_Menu_ServerBrowser_f);
-#else
 	Cmd_AddCommand("menu_multiplayer", M_Menu_MultiPlayer_f);
-#endif // Baker change + SUPPORTS_SERVER_BROWSER
 	Cmd_AddCommand("menu_setup", M_Menu_Setup_f);
-	Cmd_AddCommand("menu_namemaker", M_Menu_NameMaker_f);
-	Cmd_AddCommand("namemaker", M_Shortcut_NameMaker_f);
 	Cmd_AddCommand("menu_options", M_Menu_Options_f);
 	Cmd_AddCommand("menu_keys", M_Menu_Keys_f);
 	Cmd_AddCommand("menu_preferences", M_Menu_Preferences_f);
@@ -3478,6 +2793,25 @@ void M_Init(void)
 	Cmd_AddCommand("menu_quit", M_Menu_Quit_f);
 }
 
+void (*m_draw_callbacks[])() = {
+	[m_main] = M_Main_Draw,
+	[m_singleplayer] = M_SinglePlayer_Draw,
+	[m_load] = M_Load_Draw,
+	[m_save] = M_Save_Draw,
+	[m_multiplayer] = M_MultiPlayer_Draw,
+	[m_setup] = M_Setup_Draw,
+	[m_options] = M_Options_Draw,
+	[m_keys] = M_Keys_Draw,
+	[m_video] = M_Video_Draw,
+	[m_help] = M_Help_Draw,
+	[m_quit] = M_Quit_Draw,
+	[m_lanconfig] = M_LanConfig_Draw,
+	[m_gameoptions] = M_GameOptions_Draw,
+	[m_search] = M_Search_Draw,
+	[m_slist] = M_ServerList_Draw,
+	[m_preferences] = M_Pref_Options_Draw,
+};
+
 void M_Draw(void)
 {
 	if (m_state == m_none || key_dest != key_menu)
@@ -3485,120 +2819,23 @@ void M_Draw(void)
 
 	if (!m_recursiveDraw)
 	{
-//		scr_copyeverything = 1;
-
 		if (scr_con_current)
 		{
-//			Draw_String (1,1, "M_Draw\n");
-			//if (mod_conhide==false || (key_dest == key_console || key_dest == key_message))
 			if (key_dest == key_console || key_dest == key_message)
 				Draw_ConsoleBackground(vid.height);
 
 			S_ExtraUpdate();
-
 		}
 		else
 			Draw_FadeScreen();
-
-//		scr_fullupdate = 0;
 	}
 	else
 	{
 		m_recursiveDraw = false;
 	}
 
-	switch (m_state)
-	{
-	case m_none:
-		break;
-
-	case m_main:
-		M_Main_Draw();
-		break;
-
-	case m_singleplayer:
-		M_SinglePlayer_Draw();
-		break;
-
-	case m_load:
-		M_Load_Draw();
-		break;
-
-	case m_save:
-		M_Save_Draw();
-		break;
-
-	case m_multiplayer:
-		M_MultiPlayer_Draw();
-		break;
-
-	case m_setup:
-		M_Setup_Draw();
-		break;
-
-	case m_namemaker:
-		M_NameMaker_Draw();
-		break;
-
-	case m_net:
-		M_Net_Draw();
-		break;
-
-	case m_options:
-		M_Options_Draw();
-		break;
-
-	case m_keys:
-		M_Keys_Draw();
-		break;
-
-	case m_video:
-		M_Video_Draw();
-		break;
-
-	case m_help:
-		M_Help_Draw();
-		break;
-
-	case m_quit:
-		M_Quit_Draw();
-		break;
-
-//	case m_serialconfig:
-//		M_SerialConfig_Draw ();
-//		break;
-
-//	case m_modemconfig:
-//		M_ModemConfig_Draw ();
-//		break;
-
-	case m_lanconfig:
-		M_LanConfig_Draw();
-		break;
-
-	case m_gameoptions:
-		M_GameOptions_Draw();
-		break;
-
-	case m_search:
-		M_Search_Draw();
-		break;
-
-#ifdef SUPPORTS_SERVER_BROWSER // Baker change +
-		case m_serverbrowser:
-		M_ServerBrowser_Draw ();
-		break;
-#endif // Baker change + SUPPORTS_SERVER_BROWSER
-
-	case m_slist:
-		M_ServerList_Draw();
-		break;
-
-	case m_preferences:
-		M_Pref_Options_Draw();
-		break;
-
-	}
+	if (m_state > m_none && m_state <= m_preferences)
+		m_draw_callbacks[m_state]();
 
 	if (m_entersound)
 	{
@@ -3607,119 +2844,35 @@ void M_Draw(void)
 	}
 
 	S_ExtraUpdate();
-
 }
+
+void (*m_key_callbacks[])(int key, int ascii) = {
+	[m_main] = M_Main_Key,
+	[m_singleplayer] = M_SinglePlayer_Key,
+	[m_load] = M_Load_Key,
+	[m_save] = M_Save_Key,
+	[m_multiplayer] = M_MultiPlayer_Key,
+	[m_setup] = M_Setup_Key,
+	[m_options] = M_Options_Key,
+	[m_keys] = M_Keys_Key,
+	[m_video] = M_Video_Key,
+	[m_help] = M_Help_Key,
+	[m_quit] = M_Quit_Key,
+	[m_lanconfig] = M_LanConfig_Key,
+	[m_gameoptions] = M_GameOptions_Key,
+	[m_search] = M_Search_Key,
+	[m_slist] = M_ServerList_Key,
+	[m_preferences] = M_Pref_Options_Key,
+};
 
 void M_Keydown(int key, int ascii, qboolean down)
 {
-	if (key == K_MOUSECLICK_BUTTON1)
-		if (m_state != m_namemaker) // K_MOUSECLICK is only valid for namemaker
-			return;
-
-	switch (m_state)
-	{
-	case m_none:
-		return;
-
-	case m_main:
-		M_Main_Key(key, ascii);
-		return;
-
-	case m_singleplayer:
-		M_SinglePlayer_Key(key, ascii);
-		return;
-
-	case m_load:
-		M_Load_Key(key, ascii);
-		return;
-
-	case m_save:
-		M_Save_Key(key, ascii);
-		return;
-
-	case m_multiplayer:
-		M_MultiPlayer_Key(key, ascii);
-		return;
-
-	case m_setup:
-		M_Setup_Key(key, ascii);
-		return;
-
-	case m_namemaker:
-		M_NameMaker_Key(key, ascii);
-		return;
-
-	case m_net:
-		M_Net_Key(key, ascii);
-		return;
-
-	case m_options:
-		M_Options_Key(key, ascii);
-		return;
-
-	case m_keys:
-		M_Keys_Key(key, ascii, down);
-		return;
-
-	case m_video:
-		M_Video_Key(key, ascii);
-		return;
-
-	case m_help:
-		M_Help_Key(key, ascii);
-		return;
-
-	case m_quit:
-		M_Quit_Key(key, ascii);
-		return;
-
-//	case m_serialconfig:
-//		M_SerialConfig_Key (key, ascii);
-//		return;
-
-//	case m_modemconfig:
-//		M_ModemConfig_Key (key, ascii);
-//		return;
-
-	case m_lanconfig:
-		M_LanConfig_Key(key, ascii);
-		return;
-
-	case m_gameoptions:
-		M_GameOptions_Key(key, ascii);
-		return;
-
-	case m_search:
-		M_Search_Key(key, ascii);
-		break;
-
-#ifdef SUPPORTS_SERVER_BROWSER // Baker change +
-		case m_serverbrowser:
-		M_ServerBrowser_Key (key, ascii);
-		break;
-#endif // Baker change + SUPPORTS_SERVER_BROWSER
-
-	case m_slist:
-		M_ServerList_Key(key, ascii);
-		return;
-
-	case m_preferences:
-		M_Pref_Options_Key(key, ascii);
-		return;
-
-	}
+	if (m_state > m_none && m_state <= m_preferences)
+		m_key_callbacks[m_state](key, ascii);
 }
 
 void M_ConfigureNetSubsystem(void)
 {
-// enable/disable net systems to match desired config
-
 	Cbuf_AddText("stopdemo\n");
-	if (SerialConfig || DirectConfig)
-	{
-		Cbuf_AddText("com1 enable\n");
-	}
-
-	if (IPXConfig || TCPIPConfig)
-		net_hostport = lanConfig_port;
+	net_hostport = lanConfig_port;
 }

@@ -19,8 +19,6 @@ qsocket_t	*net_activeSockets = NULL;
 qsocket_t	*net_freeSockets = NULL;
 int			net_numsockets = 0;
 
-//qboolean	serialAvailable = false;
-qboolean	ipxAvailable = false;
 qboolean	tcpipAvailable = false;
 
 int			net_hostport;
