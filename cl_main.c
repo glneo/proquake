@@ -56,7 +56,8 @@ cvar_t	pq_moveup = {"pq_moveup", "0", true};
 // JPG 3.00 - added this by request
 cvar_t	pq_smoothcam = {"pq_smoothcam", "1", true};
 
-
+cvar_t	cl_maxpitch = {"cl_maxpitch", "90", true}; //johnfitz -- variable pitch clamping
+cvar_t	cl_minpitch = {"cl_minpitch", "-90", true}; //johnfitz -- variable pitch clamping
 
 cvar_t	cl_bobbing		= {"cl_bobbing", "0"};
 

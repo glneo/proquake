@@ -15,7 +15,6 @@ set(PROQUAKE_SOURCES
 	view.c
 	wad.c
 	world.c
-	vid_common_gl.c
 # Client
 	cl_demo.c
 	cl_input.c
@@ -25,6 +24,7 @@ set(PROQUAKE_SOURCES
 	chase.c
 	cmd.c
 	console.c
+	in_sdl.c
 # Graphics
 	gl_draw.c
 	gl_mesh.c
@@ -37,7 +37,7 @@ set(PROQUAKE_SOURCES
 	gl_screen.c
 	gl_warp.c
 	gl_fullbright.c
-	gl_vidfw.c
+	gl_vidsdl.c
 	sbar.c
 # Net
 	net_dgrm.c
@@ -79,9 +79,9 @@ endif()
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake")
 
 find_package(OpenGL REQUIRED)
-find_package(GLFW REQUIRED glfw3)
+find_package(SDL2 REQUIRED)
 
 add_executable(proquake ${PROQUAKE_SOURCES})
-set_target_properties(proquake PROPERTIES COMPILE_FLAGS "-O3 -ffast-math -funroll-loops -fexpensive-optimizations -Wall")
-target_include_directories(proquake PUBLIC ${OPENGL_INCLUDE_DIRS} ${GLFW_INCLUDE_DIR})
-target_link_libraries(proquake ${OPENGL_LIBRARIES} ${GLFW_LIBRARIES})
+target_compile_options(proquake PRIVATE -O3;-ffast-math;-funroll-loops;-fexpensive-optimizations)
+target_include_directories(proquake PUBLIC ${OPENGL_INCLUDE_DIRS} ${SDL2_INCLUDE_DIR})
+target_link_libraries(proquake m ${OPENGL_LIBRARIES} ${SDL2_LIBRARY})

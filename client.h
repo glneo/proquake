@@ -278,7 +278,6 @@ extern cvar_t cl_sbar;
 
 extern cvar_t scr_fov;
 extern cvar_t pq_maxfps;
-extern cvar_t vid_vsync;
 
 extern cvar_t crosshair;
 extern cvar_t cl_crosshaircentered;

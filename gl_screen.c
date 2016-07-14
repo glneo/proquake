@@ -16,10 +16,6 @@
 
 #include "quakedef.h"
 
-#ifdef SUPPORTS_AVI_CAPTURE
-#include "movie.h"
-#endif
-
 /*
 
  background clear

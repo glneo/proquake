@@ -1,5 +1,5 @@
 /*
- * Video driver defs
+ * Video driver definitions
  *
  * Copyright (C) 1996-1997 Id Software, Inc.
  *
@@ -14,113 +14,64 @@
  * General Public License for more details.
  */
 
-#define MAX_MODE_LIST	600
+#define MAX_MODE_LIST 600
 
-typedef struct vrect_s
-{
-	int			x,y,width,height;
-	struct vrect_s	*pnext;
+typedef struct vrect_s {
+	int x, y, width, height;
+	struct vrect_s *pnext;
 } vrect_t;
 
-typedef enum {NO_MODE = -1, MODE_WINDOWED = 0, MODE_FULLSCREEN = 1} modestate_t;
+typedef enum {
+	MODE_NONE = -1,
+	MODE_WINDOWED = 0,
+	MODE_FULLSCREEN = 1
+} modestate_t;
 
-
-typedef struct 
-{
-	int			modenum;
-	modestate_t	type;
-	int			width;
-	int			height;
-	int			bpp;
-	int			refreshrate; //johnfitz
-	char		modedesc[17];
+typedef struct {
+	int modenum;
+	modestate_t type;
+	int width;
+	int height;
+	int bpp;
+	int refreshrate;
+	char modedesc[17];
 } vmode_t;
-
-extern vmode_t	modelist[MAX_MODE_LIST];
-extern int		nummodes;
 
 // a pixel can be one, two, or four bytes
 typedef byte pixel_t;
 
-typedef struct
-{
-	modestate_t		dispmode;
-	unsigned		width;
-	unsigned		height;
-	int				bpp;
-	int				dispfreq;
-
-	float			aspect;			// width / height -- < 0 is taller than wide
-	int				numpages;
-	int				recalc_refdef;		// if true, recalc vid-based stuff
-	unsigned		conwidth;
-	unsigned		conheight;
-	int			maxwarpwidth;
-	int			maxwarpheight;
-	pixel_t			*colormap;		// 256 * VID_GRADES size
-	unsigned short		*colormap16;		// 256 * VID_GRADES size
-	int			fullbright;		// index of first fullbright color
-
-	int				desktop_width;
-	int				desktop_height;
-	int				desktop_bpp;
-	int				desktop_dispfreq;
-
-   	int				desktop_areawidth;
-   	int				desktop_areaheight;
-
+typedef struct {
+	pixel_t *colormap;              // 256 * VID_GRADES size
+	unsigned short *colormap16;     // 256 * VID_GRADES size
+	int fullbright;                 // index of first fullbright color
+	unsigned width;
+	unsigned height;
+	float aspect;                   // width / height -- < 0 is taller than wide
+	int numpages;
+	int recalc_refdef;              // if true, recalc vid-based stuff
+	unsigned conwidth;
+	unsigned conheight;
+	modestate_t dispmode;
+	int bpp;
+	int dispfreq;
+	int maxwarpwidth;
+	int maxwarpheight;
+	int desktop_width;
+	int desktop_height;
+	int desktop_bpp;
+	int desktop_dispfreq;
+	int desktop_areawidth;
+	int desktop_areaheight;
 } viddef_t;
 
-extern	viddef_t	vid;				// global video state
-extern	unsigned	d_8to24table[256];
+extern viddef_t vid;				// global video state
+extern unsigned d_8to24table[256];
+
 extern void (*vid_menudrawfn)(void);
 extern void (*vid_menukeyfn)(int key);
 extern void (*vid_menucmdfn)(void); //johnfitz
-void VID_SyncCvars (void);
+
+void VID_Init(unsigned char *palette);
+void VID_Shutdown(void);
 
 
-void	VID_SetPaletteOld (unsigned char *palette);
-// called at startup and after any gamma correction
-
-void	VID_ShiftPaletteOld (unsigned char *palette);
-// called for bonus and pain flashes, and for underwater color changes
-
-void	VID_Init (unsigned char *palette);
-// Called at startup to set up translation tables, takes 256 8 bit RGB values
-// the palette data will go away after the call, so it must be copied off if
-// the video driver will need it again
-
-void	VID_Shutdown (void);
-// Called at shutdown
-
-void	VID_Update (vrect_t *rects);
-// flushes the given rectangles from the view buffer to the screen
-
-int VID_SetMode (int modenum, unsigned char *palette);
-// sets the mode; only used by the Quake engine for resetting to mode 0 (the
-// base mode) on memory allocation failures
-
-
-
-// by joe - gamma stuff
-void VID_SetDeviceGammaRamp (unsigned short *ramps);
-extern	qboolean vid_hwgamma_enabled;
-
-
-#ifdef RELEASE_MOUSE_FULLSCREEN
-// We will release the mouse if fullscreen under several circumstances
-// but specifically NOT if connected to a server that isn't us
-// In multiplayer you wouldn't want to release the mouse by going to console
-// But we'll say it's ok if you went to the menu
-
-//|| cls.demoplayback || key_dest == key_menu || sv.active)
-#endif
-
-qboolean VID_WindowedSwapAvailable(void);
-qboolean VID_isFullscreen(void);
-void VID_Windowed(void);
-void VID_Fullscreen(void);
-
-#ifdef MACOSX
-extern qboolean qMinimized;
-#endif

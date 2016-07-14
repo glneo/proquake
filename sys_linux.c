@@ -53,6 +53,11 @@ char *cachedir = "/tmp";
 
 int hlock;
 
+double Sys_DoubleTime (void)
+{
+	return SDL_GetTicks() / 1000.0;
+}
+
 /*
  ================
  Sys_GetLock

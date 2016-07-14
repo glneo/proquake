@@ -139,13 +139,6 @@ extern	cvar_t	r_ringalpha;
 
 extern	float	r_world_matrix[16];
 
-extern const unsigned char *gl_vendor;
-extern const unsigned char *gl_renderer;
-extern const unsigned char *gl_version;
-extern const unsigned char *gl_extensions;
-
-
-
 
 // gl_warp.c
 void GL_SubdivideSurface (msurface_t *);
@@ -222,14 +215,8 @@ void R_PolyBlend (void);
 // matrix.c - move it
 void Mat_Update (void);
 
-
-//vid_common_gl.c
-#if !defined(MACOSX)
-void GL_Init (void);
-#endif
-
 void GL_CheckTextureRAM (GLenum theTarget, GLint theLevel, GLint theInternalFormat, GLsizei theWidth, GLsizei theHeight, GLsizei theDepth , GLint theBorder, GLenum theFormat, GLenum theType);
-void GL_SetupState (void);
+
 
 void Check_GammaOld (unsigned char *pal);
 //vid_wgl.c :( and may osx ... needs moved to ^^

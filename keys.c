@@ -1039,6 +1039,32 @@ void Key_Init (void)
 
 /*
 ===================
+Key_TextEntry
+===================
+*/
+qboolean Key_TextEntry (void)
+{
+//	if (key_inputgrab.active)
+//		return true;
+
+	switch (key_dest)
+	{
+	case key_message:
+		return true;
+	case key_game:
+		if (!con_forcedup)
+			return false;
+		/* fallthrough */
+	case key_console:
+		return true;
+	default:
+		return false;
+	}
+}
+
+
+/*
+===================
 Key_Event
 
 Called by the system between frames for both key up and key down events

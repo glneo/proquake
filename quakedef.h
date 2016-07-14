@@ -200,6 +200,8 @@ typedef struct
 #include "menu.h"
 #include "crc.h"
 
+extern double Sys_DoubleTime (void);
+
 #include "glquake.h"
 
 #include "location.h"	// JPG - for %l formatting speficier
