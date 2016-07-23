@@ -12,11 +12,11 @@
  * General Public License for more details.
  */
 
-#ifndef __MODEL__
-#define __MODEL__
+#ifndef __GL_MODEL_H
+#define __GL_MODEL_H
 
 #include "modelgen.h"
-#include "spritegn.h"
+#include "spritegen.h"
 
 /*
  * d*_t structures are on-disk representations
@@ -412,4 +412,4 @@ void Mod_TouchModel(char *name);
 mleaf_t *Mod_PointInLeaf(float *p, model_t *model);
 byte *Mod_LeafPVS(mleaf_t *leaf, model_t *model);
 
-#endif	// __MODEL__
+#endif	/* __GL_MODEL_H */

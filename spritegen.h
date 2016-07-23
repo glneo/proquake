@@ -35,69 +35,63 @@
 // <endrepeat>
 //-------------------------------------------------------
 
-#ifdef INCLUDELIBS
+#ifndef __SPRITEGEN_H
+#define __SPRITEGEN_H
 
-#include <stdlib.h>
-#include <stdio.h>
-#include <math.h>
-#include <string.h>
-
-#include "cmdlib.h"
-#include "scriplib.h"
-#include "dictlib.h"
-#include "trilib.h"
-#include "lbmlib.h"
-#include "mathlib.h"
-
-#endif
-
-#define SPRITE_VERSION	1
-#define SPRITE32_VERSION        32 // Baker: ProQuake doesn't use this; JoeQuake does
+#define SPRITE_VERSION 1
+#define SPRITE32_VERSION 32 // Baker: ProQuake doesn't use this; JoeQuake does
 
 // must match definition in modelgen.h
 #ifndef SYNCTYPE_T
 #define SYNCTYPE_T
-typedef enum {ST_SYNC=0, ST_RAND } synctype_t;
+typedef enum {
+	ST_SYNC = 0,
+	ST_RAND
+} synctype_t;
 #endif
 
 // TODO: shorten these?
 typedef struct {
-	int			ident;
-	int			version;
-	int			type;
-	float		boundingradius;
-	int			width;
-	int			height;
-	int			numframes;
-	float		beamlength;
-	synctype_t	synctype;
+	int ident;
+	int version;
+	int type;
+	float boundingradius;
+	int width;
+	int height;
+	int numframes;
+	float beamlength;
+	synctype_t synctype;
 } dsprite_t;
 
-#define SPR_VP_PARALLEL_UPRIGHT		0
-#define SPR_FACING_UPRIGHT			1
-#define SPR_VP_PARALLEL				2
-#define SPR_ORIENTED				3
-#define SPR_VP_PARALLEL_ORIENTED	4
+#define SPR_VP_PARALLEL_UPRIGHT         0
+#define SPR_FACING_UPRIGHT              1
+#define SPR_VP_PARALLEL                 2
+#define SPR_ORIENTED                    3
+#define SPR_VP_PARALLEL_ORIENTED        4
 
 typedef struct {
-	int			origin[2];
-	int			width;
-	int			height;
+	int origin[2];
+	int width;
+	int height;
 } dspriteframe_t;
 
 typedef struct {
-	int			numframes;
+	int numframes;
 } dspritegroup_t;
 
 typedef struct {
-	float	interval;
+	float interval;
 } dspriteinterval_t;
 
-typedef enum { SPR_SINGLE=0, SPR_GROUP } spriteframetype_t;
+typedef enum {
+	SPR_SINGLE = 0,
+	SPR_GROUP
+} spriteframetype_t;
 
 typedef struct {
-	spriteframetype_t	type;
+	spriteframetype_t type;
 } dspriteframetype_t;
 
-#define IDSPRITEHEADER	(('P'<<24)+('S'<<16)+('D'<<8)+'I') // little-endian "IDSP"
+#define IDSPRITEHEADER (('P'<<24)+('S'<<16)+('D'<<8)+'I') // little-endian "IDSP"
 
+#endif /* __SPRITEGEN_H */
