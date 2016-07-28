@@ -14,29 +14,26 @@
  * General Public License for more details.
  */
 
-void IN_Init (void);
+#ifndef __INPUT_H
+#define __INPUT_H
 
-void IN_Shutdown (void);
+extern cvar_t freelook;
+extern cvar_t m_accel;
 
-void IN_Commands (void);
-// oportunity for devices to stick commands on the script buffer
+#define mlook_active (freelook.value || (in_mlook.state & 1))
 
-void IN_Accumulate (void);
+void IN_Init(void);
+void IN_Shutdown(void);
 
-void IN_Move (usercmd_t *cmd);
-// add additional movement on top of the keyboard move cmd
+void IN_Commands(void); // oportunity for devices to stick commands on the script buffer
 
-void IN_ClearStates (void);
-// restores all button and position states to defaults
+void IN_Accumulate(void);
 
-#ifdef _WIN32
-void IN_MouseWheel (void);
-#endif
+void IN_Move(usercmd_t *cmd); // add additional movement on top of the keyboard move cmd
 
-extern	cvar_t	freelook;   // Baker 3.60 - Freelook cvar support
-extern cvar_t	m_accel;
+void IN_ClearStates(void); // restores all button and position states to defaults
 
-void IN_Keyboard_Acquire (void);
-void IN_Keyboard_Unacquire (void);
+void IN_Keyboard_Acquire(void);
+void IN_Keyboard_Unacquire(void);
 
-#define mlook_active	(freelook.value || (in_mlook.state & 1))   // Baker 3.60 - Freelook cvar support from JoeQuake
+#endif /* __INPUT_H */

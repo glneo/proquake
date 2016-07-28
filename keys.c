@@ -14,18 +14,7 @@
 
 #include "quakedef.h"
 
-// JPG - added FrikaC's code for pasting from clipboard
-// 01-22-2000 FrikaC Begin PASTE
-#ifdef _WIN32
-#include <windows.h>
-#endif
-// 01-22-2000 FrikaC End PASTE
-
-/*
-
-key up events are sent even if in console mode
-
-*/
+/* key up events are sent even if in console mode */
 
 #define		HISTORY_FILE_NAME	"quake_history.txt"
 
@@ -58,44 +47,10 @@ qboolean	keygamedown[256];  // Baker: to prevent -aliases from triggering
 cvar_t		cl_key_altenter = {"cl_key_altenter", "1", true}; // Baker 3.99q: allows user to disable new ALT-ENTER behavior
 
 
-#ifdef SUPPORTS_INTERNATIONAL_KEYBOARD
-static qboolean key_international = true;
-cvar_t		in_keymap = {"in_keymap", "1", true};
-#else
-static qboolean key_international = false;
-#endif
-
 cvar_t	    cl_bindprotect = {"cl_bindprotect","2", true};
 
 
 void Key_ClearAllStates (void);
-
-#ifdef SUPPORTS_INTERNATIONAL_KEYBOARD
-void KEY_Keymap_f (void) 
-{
-	// called when in_keymap changes
-	Key_ClearAllStates();
-
-	if (in_keymap.value) 
-	{
-		key_international = true;
-		Con_Printf("International Keyboard is ON\n");
-	}
-	else 
-	{
-		key_international = false;
-		Con_Printf("International Keyboard is OFF\n");
-	}
-}
-#endif
-
-qboolean Key_InternationalON(void) 
-{
-	if (key_international)
-		return true;
-	else
-		return false;
-}
 
 
 typedef struct
@@ -330,8 +285,7 @@ void Key_Console (int key, int ascii)
 		break;
 	}
 
-	if (!key_international)
-		ascii = key; // Baker 3.88: Fix for if international keyboard mapping is off?
+	ascii = key; // Baker 3.88: Fix for if international keyboard mapping is off?
 
 	if (key == K_ENTER || key == KP_ENTER) // Baker 3.60 - keypad enter
 	{
@@ -463,32 +417,6 @@ void Key_Console (int key, int ascii)
 		return;
 	}
 
-	// JPG - modified FrikaC's code for pasting from clipboard
-#ifdef _WIN32
-	if ((key=='V' || key=='v') && GetKeyState(VK_CONTROL) < 0)
-	{
-		if (OpenClipboard(NULL))
-		{
-			HANDLE	th;
-			char	*clipText;
-			th = GetClipboardData(CF_TEXT);
-			if (th)
-			{
-				clipText = GlobalLock(th);
-				if (clipText)
-				{
-					while (*clipText && *clipText != '\n' && *clipText != '\r' && *clipText != '\b' && key_linepos < MAXCMDLINE - 1)
-						key_lines[edit_line][key_linepos++] = *clipText++;
-					key_lines[edit_line][key_linepos] = 0;
-				}
-				GlobalUnlock(th);
-			}
-			CloseClipboard();
-			return;
-		}
-	}
-#endif
-	// end mod
 
 	if (ascii >= 32 && ascii <= 127)
 		passed = true;
@@ -556,12 +484,7 @@ qboolean team_message = false;
 void Key_Message (int key, int ascii)
 {
 	static int chat_bufferlen = 0;
-	// JPG - modified FrikaC's code for pasting from clipboard
-#ifdef _WIN32
-	HANDLE  th;
-	char	*s;
-#endif
-	// end mod
+
 
 	if (key == K_ENTER)
 	{
@@ -586,30 +509,6 @@ void Key_Message (int key, int ascii)
 		return;
 	}
 
-	// JPG - modified FrikaC's code for pasting from clipboard
-#ifdef _WIN32
-	if ((key=='V' || key=='v') && GetKeyState(VK_CONTROL) < 0)
-	{
-		if (OpenClipboard(NULL))
-		{
-			th = GetClipboardData(CF_TEXT);
-			if (th)
-			{
-				s = GlobalLock(th);
-				if (s)
-				{
-					while (*s && *s != '\n' && *s != '\r' && *s != '\b' && chat_bufferlen < MAX_CHAT_SIZE - (team_message ? 3 : 1))
-						chat_buffer[chat_bufferlen++] = *s++;
-					chat_buffer[chat_bufferlen] = 0;
-				}
-				GlobalUnlock(th);
-			}
-			CloseClipboard();
-			return;
-		}
-	}
-#endif
-	// end mod
 
 
 	if (key == K_BACKSPACE)
@@ -1106,17 +1005,17 @@ void Key_Event (int key, int ascii, qboolean down)
 
 
 
-	if (!key_international) 
+//	if (!key_international)
 	{
 		flex_ascii = (key & 255);
 		if (flex_ascii > 127)
 			flex_ascii = 0;
 		//Con_Printf("Default keyboard translation k %d a %d k_shift %d \n", key, flex_ascii, K_SHIFT);
 	}
-	else 
-	{
-		flex_ascii = ascii;
-	}
+//	else
+//	{
+//		flex_ascii = ascii;
+//	}
 
 	keydown[key] = down;
 
@@ -1313,16 +1212,16 @@ void Key_Event (int key, int ascii, qboolean down)
 	{
 		key = keyshift[key];
 
-		if (!key_international) {
+//		if (!key_international) {
 			flex_ascii = (key & 255);
 			if (flex_ascii > 127)
 				flex_ascii = 0;
 			//Con_Printf("Default keyboard translation k %d a %d k_shift %d \n", key, flex_ascii, K_SHIFT);
-		}
-		else
-		{
-			flex_ascii = ascii;
-		}
+//		}
+//		else
+//		{
+//			flex_ascii = ascii;
+//		}
 	}
 
 	switch (key_dest)

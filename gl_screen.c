@@ -413,10 +413,6 @@ void SCR_Init(void)
 	scr_net = Draw_PicFromWad("net");
 	scr_turtle = Draw_PicFromWad("turtle");
 
-#ifdef SUPPORTS_AVI_CAPTURE
-	Movie_Init ();
-#endif
-
 	scr_initialized = true;
 }
 

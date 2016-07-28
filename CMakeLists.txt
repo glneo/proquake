@@ -82,6 +82,7 @@ find_package(OpenGL REQUIRED)
 find_package(SDL2 REQUIRED)
 
 add_executable(proquake ${PROQUAKE_SOURCES})
-target_compile_options(proquake PRIVATE -O3;-ffast-math;-funroll-loops;-fexpensive-optimizations)
+target_compile_options(proquake PRIVATE -O3;-ffast-math;-funroll-loops;-fexpensive-optimizations;-Wall)
+#target_compile_options(proquake PRIVATE -g)
 target_include_directories(proquake PUBLIC ${OPENGL_INCLUDE_DIRS} ${SDL2_INCLUDE_DIR})
 target_link_libraries(proquake m ${OPENGL_LIBRARIES} ${SDL2_LIBRARY})

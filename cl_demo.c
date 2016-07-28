@@ -15,10 +15,6 @@
 #include "quakedef.h"
 #include <time.h> // easyrecord stats
 
-#ifdef SUPPORTS_AVI_CAPTURE
-#include "movie.h"
-#endif
-
 void CL_FinishTimeDemo(void);
 
 typedef struct framepos_s {

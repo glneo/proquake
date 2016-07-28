@@ -670,12 +670,6 @@ qboolean Host_FilterTime(double time)
 		return false;		// framerate is too high
 	}
 
-#ifdef SUPPORTS_AVI_CAPTURE
-	if (Movie_IsActive())
-	host_frametime = Movie_FrameTime ();
-	else
-#endif
-
 	host_frametime = realtime - oldrealtime;
 	if (cls.demoplayback && cls.demospeed)
 		host_frametime *= CLAMP(0, cls.demospeed, 20);

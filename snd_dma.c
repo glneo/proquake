@@ -16,18 +16,6 @@
 
 #include "quakedef.h"
 
-#ifdef _WIN32
-#include "windows/winquake.h"
-#endif
-
-#ifdef SUPPORTS_AVI_CAPTURE
-#include "movie.h"
-#endif
-
-
-
-
-
 void S_Play_f(void);
 void S_PlayVol_f(void);
 void S_SoundList_f(void);
@@ -812,13 +800,6 @@ void GetSoundtime(void)
 	static	int		oldsamplepos;
 	int		fullsamples;
 
-#ifdef SUPPORTS_AVI_CAPTURE
-	if (Movie_GetSoundtime())
-		return;
-#endif
-
-
-
 	fullsamples = shm->samples / shm->channels;
 
 // it is possible to miscount buffers if it has wrapped twice between
@@ -846,14 +827,7 @@ void GetSoundtime(void)
 void S_ExtraUpdate (void)
 {
 
-#ifdef SUPPORTS_AVI_CAPTURE
-
-	if (Movie_IsActive())
-		return;
-
-
-	IN_Accumulate ();
-#endif
+//	IN_Accumulate ();
 
 	if (snd_noextraupdate.value)
 		return;		// don't pollute timings
