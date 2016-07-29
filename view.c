@@ -894,18 +894,18 @@ void SCR_DrawVolume(void)
 		return;
 	}
 
-	if (volume_changed)
-	{
-		volume_time = realtime + 2.0;
-		volume_changed = false;
-	}
-	else if (realtime > volume_time)
-	{
-		return;
-	}
+//	if (volume_changed)
+//	{
+//		volume_time = realtime + 2.0;
+//		volume_changed = false;
+//	}
+//	else if (realtime > volume_time)
+//	{
+//		return;
+//	}
 
-	for (i = 1, j = 0.1; i <= 10; i++, j += 0.1)
-		bar[i - 1] = ((volume.value + 0.05) >= j) ? 139 : 11; // Baker 3.60 + 0.0.5 hack for now
+//	for (i = 1, j = 0.1; i <= 10; i++, j += 0.1)
+//		bar[i - 1] = ((volume.value + 0.05) >= j) ? 139 : 11; // Baker 3.60 + 0.0.5 hack for now
 
 	bar[10] = 0;
 

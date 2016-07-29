@@ -298,13 +298,13 @@ void CL_ParseServerInfo(void)
 	S_BeginPrecaching();
 	for (i = 1; i < numsounds; i++) {
 		qboolean precached_worked = true;
-		cl.sound_precache[i] = S_PrecacheSound(sound_precache[i], &precached_worked);
+		cl.sound_precache[i] = S_PrecacheSound(sound_precache[i]);
 		if (precached_worked == false) {
 // download start
 			qboolean download_try_worked = cls.demoplayback || sv.active ? false : Download_Attempt(va("sound/%s", sound_precache[i]));
 
-			if (download_try_worked)
-				S_PrecacheSound_Again(cl.sound_precache[i]);
+//			if (download_try_worked)
+//				S_PrecacheSound_Again(cl.sound_precache[i]);
 
 		}
 		CL_KeepaliveMessage();

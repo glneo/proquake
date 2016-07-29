@@ -20,9 +20,6 @@
 #include <errno.h>
 #include "quakedef.h"
 
-#ifdef _WIN32
-#include <windows.h>
-#endif
 
 #include <time.h> // JPG - needed for console log
 
@@ -404,11 +401,7 @@ void Con_CheckResize (void)
 	con_current = con_totallines - 1;
 }
 
-#ifdef _WIN32
-#include <io.h> //Baker: Removes a warning ... write, open, close
-#else
-#include <sys/io.h> // glneo: New Linux location
-#endif
+#include <sys/io.h>
 
 /*
 ================

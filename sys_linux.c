@@ -263,26 +263,6 @@ void Sys_DebugLog(char *file, char *fmt, ...)
 	close(fd);
 }
 
-void Sys_EditFile(char *filename)
-{
-	char cmd[256], *term, *editor;
-
-	term = getenv("TERM");
-	if (term && !strcmp(term, "xterm"))
-	{
-		editor = getenv("VISUAL");
-		if (!editor)
-			editor = getenv("EDITOR");
-		if (!editor)
-			editor = getenv("EDIT");
-		if (!editor)
-			editor = "vi";
-		sprintf(cmd, "xterm -e %s %s", editor, filename);
-		if (system(cmd) < 0)
-			Con_Printf("Failed to start editor\n");
-	}
-}
-
 double Sys_FloatTime(void)
 {
 	struct timeval tp;
@@ -309,12 +289,13 @@ void Sys_OpenFolder_f(void)
 //TODO: gets text from clipboard
 char *Sys_GetClipboardData(void)
 {
-	return "";
+	return SDL_GetClipboardText();
 }
 
 //TODO: copies given text to clipboard
 void Sys_CopyToClipboard(char *text)
 {
+	SDL_SetClipboardText(text);
 }
 
 char *Sys_ConsoleInput(void)

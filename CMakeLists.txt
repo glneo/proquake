@@ -58,20 +58,19 @@ set(PROQUAKE_SOURCES
 	snd_dma.c
 	snd_mem.c
 	snd_mix.c
+	snd_sdl.c
 )
 
 if(WIN32)
 	set(PROQUAKE_SOURCES ${PROQUAKE_SOURCES}
 		windows/net_win.c
 		windows/net_wins.c
-		windows/snd_win.c
 		windows/sys_win.c
 	)
 else()
 	set(PROQUAKE_SOURCES ${PROQUAKE_SOURCES}
 		net_udp.c
 		net_bsd.c
-		snd_linux.c
 		sys_linux.c
 	)
 endif()

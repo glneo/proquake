@@ -132,10 +132,10 @@ void SV_StartParticle(vec3_t org, vec3_t dir, int color, int count)
  weapon, feet, etc.
 
  Channel 0 is an auto-allocate channel, the others override anything
- allready running on that entity/channel pair.
+ already running on that entity/channel pair.
 
  An attenuation of 0 will play full volume everywhere in the level.
- Larger attenuations will drop off.  (max 4 attenuation)
+ Larger attenuation will drop off.  (max 4 attenuation)
  ==================
  */
 void SV_StartSound(edict_t *entity, int channel, char *sample, int volume, float attenuation)
@@ -154,7 +154,7 @@ void SV_StartSound(edict_t *entity, int channel, char *sample, int volume, float
 	if (sv.datagram.cursize > MAX_DATAGRAM - 16)
 		return;
 
-// find precache number for sound
+	// find precache number for sound
 	for (sound_num = 1; sound_num < MAX_SOUNDS && sv.sound_precache[sound_num]; sound_num++)
 		if (!strcmp(sample, sv.sound_precache[sound_num]))
 			break;
