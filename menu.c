@@ -61,12 +61,12 @@ void M_GameOptions_Draw(void);
 void M_Search_Draw(void);
 void M_ServerList_Draw(void);
 
-qboolean m_entersound; // play after drawing a frame, so caching
+bool m_entersound; // play after drawing a frame, so caching
 // won't disrupt the sound
-qboolean m_recursiveDraw;
+bool m_recursiveDraw;
 
 int m_return_state;
-qboolean m_return_onerror;
+bool m_return_onerror;
 char m_return_reason[64];
 
 #define StartingGame (m_multiplayer_cursor == 1)
@@ -406,7 +406,7 @@ void M_ScanSaves(void)
 	{
 		strcpy(m_filenames[i], "--- UNUSED SLOT ---");
 		loadable[i] = false;
-		SNPrintf(name, sizeof(name), "%s/s%i.sav", com_gamedir, i);
+		snprintf(name, sizeof(name), "%s/s%i.sav", com_gamedir, i);
 
 		f = fopen(name, "r");
 		if (!f)
@@ -978,7 +978,7 @@ void M_DrawCheckbox(int x, int y, int on)
 		M_Print(x, y, "off");
 }
 
-extern qboolean video_options_disabled;
+extern bool video_options_disabled;
 
 void M_Options_Draw(void)
 {
@@ -1318,7 +1318,7 @@ void M_Keys_Key(int key, int ascii)
 		{
 			//Con_Printf("Trying to bind %d",key);
 			//Con_Printf("name is  %s",Key_KeynumToString (key));
-			SNPrintf(cmd, sizeof(cmd), "bind \"%s\" \"%s\"\n", Key_KeynumToString(key),
+			snprintf(cmd, sizeof(cmd), "bind \"%s\" \"%s\"\n", Key_KeynumToString(key),
 					bindnames[keys_cursor][0]);
 			Cbuf_InsertText(cmd);
 		}
@@ -1381,7 +1381,7 @@ void M_Menu_Preferences_f(void)
 	m_entersound = true;
 }
 #ifdef SUPPORTS_DIRECTINPUT
-extern qboolean commandline_dinput; // Baker 3.85 to support dinput switching
+extern bool commandline_dinput; // Baker 3.85 to support dinput switching
 #endif
 
 void M_Pref_AdjustSliders(int dir)
@@ -1871,7 +1871,7 @@ void M_Help_Key(int key, int ascii)
 
 int msgNumber;
 int m_quit_prevstate;
-qboolean wasInMenus;
+bool wasInMenus;
 
 char *quitMessage[] = {
 	"  Are you gonna quit    ", "  this game just like   ", "   everything else?     ", "                        ",
@@ -1971,7 +1971,7 @@ void M_Menu_LanConfig_f(void)
 	if (StartingGame && lanConfig_cursor == 2)
 		lanConfig_cursor = 1;
 	lanConfig_port = DEFAULTnet_hostport;
-	SNPrintf(lanConfig_portname, sizeof(lanConfig_portname), "%u", lanConfig_port);
+	snprintf(lanConfig_portname, sizeof(lanConfig_portname), "%u", lanConfig_port);
 
 	m_return_onerror = false;
 	m_return_reason[0] = 0;
@@ -2129,17 +2129,19 @@ void M_LanConfig_Key(int key, int ascii)
 	}
 
 	if (StartingGame && lanConfig_cursor == 2)
+	{
 		if (key == K_UPARROW)
 			lanConfig_cursor = 1;
 		else
 			lanConfig_cursor = 0;
+	}
 
 	l = atoi(lanConfig_portname);
 	if (l > 65535)
 		l = lanConfig_port;
 	else
 		lanConfig_port = l;
-	SNPrintf(lanConfig_portname, sizeof(lanConfig_portname), "%u", lanConfig_port);
+	snprintf(lanConfig_portname, sizeof(lanConfig_portname), "%u", lanConfig_port);
 }
 
 //=============================================================================
@@ -2286,7 +2288,7 @@ episode_t rogueepisodes[] = {
 int startepisode;
 int startlevel;
 int maxplayers;
-qboolean m_serverInfoMessage = false;
+bool m_serverInfoMessage = false;
 double m_serverInfoMessageTime;
 
 void M_Menu_GameOptions_f(void)
@@ -2615,7 +2617,7 @@ void M_GameOptions_Key(int key, int ascii)
 //=============================================================================
 /* SEARCH MENU */
 
-qboolean searchComplete = false;
+bool searchComplete = false;
 double searchCompleteTime;
 
 void M_Menu_Search_f(void)
@@ -2674,7 +2676,7 @@ void M_Search_Key(int key, int ascii)
 /* SLIST MENU */
 
 int slist_cursor;
-qboolean slist_sorted;
+bool slist_sorted;
 
 void M_Menu_ServerList_f(void)
 {
@@ -2717,10 +2719,10 @@ void M_ServerList_Draw(void)
 	for (n = 0; n < hostCacheCount; n++)
 	{
 		if (hostcache[n].maxusers)
-			SNPrintf(string, sizeof(string), "%-15.15s %-15.15s %2u/%2u\n", hostcache[n].name,
+			snprintf(string, sizeof(string), "%-15.15s %-15.15s %2u/%2u\n", hostcache[n].name,
 					hostcache[n].map, hostcache[n].users, hostcache[n].maxusers);
 		else
-			SNPrintf(string, sizeof(string), "%-15.15s %-15.15s\n", hostcache[n].name, hostcache[n].map);
+			snprintf(string, sizeof(string), "%-15.15s %-15.15s\n", hostcache[n].name, hostcache[n].map);
 		M_Print(16, 32 + 8 * n, string);
 	}
 	M_DrawCharacter(0, 32 + slist_cursor * 8, 12 + ((int) (realtime * 4) & 1));
@@ -2865,7 +2867,7 @@ void (*m_key_callbacks[])(int key, int ascii) = {
 	[m_preferences] = M_Pref_Options_Key,
 };
 
-void M_Keydown(int key, int ascii, qboolean down)
+void M_Keydown(int key, int ascii, bool down)
 {
 	if (m_state > m_none && m_state <= m_preferences)
 		m_key_callbacks[m_state](key, ascii);

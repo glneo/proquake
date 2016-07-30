@@ -16,50 +16,36 @@
 
 #include "quakedef.h"
 
-char *svc_strings[] = {
-	"svc_bad",
-	"svc_nop",
-	"svc_disconnect",
-	"svc_updatestat",
-	"svc_version",		// [long] server version
-	"svc_setview",		// [short] entity number
-	"svc_sound",			// <see code>
-	"svc_time",			// [float] server time
-	"svc_print",			// [string] null terminated string
-	"svc_stufftext",		// [string] stuffed into client's console buffer
-					// the string should be \n terminated
-	"svc_setangle",		// [vec3] set the view angle to this absolute value
+char *svc_strings[] = { "svc_bad", "svc_nop", "svc_disconnect", "svc_updatestat",
+		"svc_version",		// [long] server version
+		"svc_setview",		// [short] entity number
+		"svc_sound",			// <see code>
+		"svc_time",			// [float] server time
+		"svc_print",			// [string] null terminated string
+		"svc_stufftext",		// [string] stuffed into client's console buffer
+						// the string should be \n terminated
+		"svc_setangle",		// [vec3] set the view angle to this absolute value
 
-	"svc_serverinfo",		// [long] version
-					// [string] signon string
-					// [string]..[0]model cache [string]...[0]sounds cache
-					// [string]..[0]item cache
-	"svc_lightstyle",		// [byte] [string]
-	"svc_updatename",		// [byte] [string]
-	"svc_updatefrags",	// [byte] [short]
-	"svc_clientdata",		// <shortbits + data>
-	"svc_stopsound",		// <see code>
-	"svc_updatecolors",	// [byte] [byte]
-	"svc_particle",		// [vec3] <variable>
-	"svc_damage",			// [byte] impact [byte] blood [vec3] from
+		"svc_serverinfo",		// [long] version
+						// [string] signon string
+						// [string]..[0]model cache [string]...[0]sounds cache
+						// [string]..[0]item cache
+		"svc_lightstyle",		// [byte] [string]
+		"svc_updatename",		// [byte] [string]
+		"svc_updatefrags",	// [byte] [short]
+		"svc_clientdata",		// <shortbits + data>
+		"svc_stopsound",		// <see code>
+		"svc_updatecolors",	// [byte] [byte]
+		"svc_particle",		// [vec3] <variable>
+		"svc_damage",			// [byte] impact [byte] blood [vec3] from
 
-	"svc_spawnstatic",
-	"OBSOLETE svc_spawnbinary",
-	"svc_spawnbaseline",
+		"svc_spawnstatic", "OBSOLETE svc_spawnbinary", "svc_spawnbaseline",
 
-	"svc_temp_entity",		// <variable>
-	"svc_setpause",
-	"svc_signonnum",
-	"svc_centerprint",
-	"svc_killedmonster",
-	"svc_foundsecret",
-	"svc_spawnstaticsound",
-	"svc_intermission",
-	"svc_finale",			// [string] music [string] text
-	"svc_cdtrack",			// [byte] track [byte] looptrack
-	"svc_sellscreen",
-	"svc_cutscene",
-};
+		"svc_temp_entity",		// <variable>
+		"svc_setpause", "svc_signonnum", "svc_centerprint", "svc_killedmonster", "svc_foundsecret", "svc_spawnstaticsound", "svc_intermission",
+		"svc_finale",			// [string] music [string] text
+		"svc_cdtrack",			// [byte] track [byte] looptrack
+		"svc_sellscreen", "svc_cutscene", };
 
 /*
  ===============
@@ -70,11 +56,13 @@ char *svc_strings[] = {
  */
 entity_t *CL_EntityNum(int num)
 {
-	if (num >= cl.num_entities) {
+	if (num >= cl.num_entities)
+	{
 		if (num >= MAX_EDICTS)
 			Host_Error("CL_EntityNum: %i is an invalid number", num);
 
-		while (cl.num_entities <= num) {
+		while (cl.num_entities <= num)
+		{
 			cl_entities[cl.num_entities].colormap = 0;
 			cl.num_entities++;
 		}
@@ -143,9 +131,11 @@ void CL_KeepaliveMessage(void)
 	old = net_message;
 	memcpy(olddata, net_message.data, net_message.cursize);
 
-	do {
+	do
+	{
 		ret = CL_GetMessage();
-		switch (ret) {
+		switch (ret)
+		{
 		default:
 			Host_Error("CL_KeepaliveMessage: CL_GetMessage failed");
 
@@ -185,11 +175,6 @@ void CL_NewMap(void)
 
 }
 
-qboolean Download_Attempt(const char* file_to_download)
-{
-	return false;
-}
-
 /*
  ==================
  CL_ParseServerInfo
@@ -212,14 +197,16 @@ void CL_ParseServerInfo(void)
 
 // parse protocol version number
 	i = MSG_ReadLong();
-	if (i != PROTOCOL_VERSION) {
+	if (i != PROTOCOL_VERSION)
+	{
 		Con_Printf("Server returned version %i, not %i", i, PROTOCOL_VERSION);
 		return;
 	}
 
 // parse maxclients
 	cl.maxclients = MSG_ReadByte();
-	if (cl.maxclients < 1 || cl.maxclients > MAX_SCOREBOARD) {
+	if (cl.maxclients < 1 || cl.maxclients > MAX_SCOREBOARD)
+	{
 		Con_Printf("Bad maxclients (%u) from server\n", cl.maxclients);
 		return;
 	}
@@ -244,11 +231,13 @@ void CL_ParseServerInfo(void)
 // precache models
 
 	memset(cl.model_precache, 0, sizeof(cl.model_precache));
-	for (nummodels = 1;; nummodels++) {
+	for (nummodels = 1;; nummodels++)
+	{
 		str = MSG_ReadString();
 		if (!str[0])
 			break;
-		if (nummodels == MAX_MODELS) {
+		if (nummodels == MAX_MODELS)
+		{
 			Con_Printf("Server sent too many model precaches\n");
 			return;
 		}
@@ -259,11 +248,13 @@ void CL_ParseServerInfo(void)
 
 // precache sounds
 	memset(cl.sound_precache, 0, sizeof(cl.sound_precache));
-	for (numsounds = 1;; numsounds++) {
+	for (numsounds = 1;; numsounds++)
+	{
 		str = MSG_ReadString();
 		if (!str[0])
 			break;
-		if (numsounds == MAX_SOUNDS) {
+		if (numsounds == MAX_SOUNDS)
+		{
 			Con_Printf("Server sent too many sound precaches\n");
 			return;
 		}
@@ -277,57 +268,26 @@ void CL_ParseServerInfo(void)
 // now we try to load everything else until a cache allocation fails
 //
 
-	for (i = 1; i < nummodels; i++) {
+	for (i = 1; i < nummodels; i++)
+	{
 		cl.model_precache[i] = Mod_ForName(model_precache[i], false);
-		if (cl.model_precache[i] == NULL) {
-// download start
-			qboolean download_try_worked = cls.demoplayback || sv.active ? false : Download_Attempt(model_precache[i]);
-
-			if (download_try_worked) {
-				i--; // Subtract 1 so we try this model again in next iteration
-				continue;  // Bail on loop and resume
-			}
-
-			Con_Printf("Model %s not found\n", model_precache[i]);
-
-			return;  //don't disconnect, let them sit in console and ask for help.
+		if (cl.model_precache[i] == NULL)
+		{
+			Host_Error("Model %s not found", model_precache[i]);
 		}
 		CL_KeepaliveMessage();
 	}
 
 	S_BeginPrecaching();
-	for (i = 1; i < numsounds; i++) {
-		qboolean precached_worked = true;
+	for (i = 1; i < numsounds; i++)
+	{
 		cl.sound_precache[i] = S_PrecacheSound(sound_precache[i]);
-		if (precached_worked == false) {
-// download start
-			qboolean download_try_worked = cls.demoplayback || sv.active ? false : Download_Attempt(va("sound/%s", sound_precache[i]));
-
-//			if (download_try_worked)
-//				S_PrecacheSound_Again(cl.sound_precache[i]);
-
-		}
 		CL_KeepaliveMessage();
 	}
 	S_EndPrecaching();
 
 // local state
 	cl_entities[0].model = cl.worldmodel = cl.model_precache[1];
-
-	{
-		char mapname[MAX_QPATH];
-		char locs_file_name[MAX_QPATH];
-
-		COM_StripExtension(model_precache[1], mapname);
-		SNPrintf(locs_file_name, sizeof(locs_file_name), "locs/%s.loc", COM_SkipPath(mapname));
-
-		if (LOC_LoadLocations(locs_file_name) == false && cls.demoplayback == false && sv.active == false) {
-			if (Download_Attempt(locs_file_name))
-				LOC_LoadLocations(locs_file_name);
-
-		}
-
-	}
 
 	COM_StripExtension(COM_SkipPath(model_precache[1]), tempname);
 
@@ -341,28 +301,31 @@ void CL_ParseServerInfo(void)
 extern cvar_t r_interpolate_transform;
 void CL_EntityInterpolateOrigins(entity_t *ent)
 {
-	qboolean no_interpolate = false;
-
-	if (r_interpolate_transform.value) {
+	if (r_interpolate_transform.value)
+	{
 		float timepassed = cl.time - ent->translate_start_time;
 		float blend = 0;
 		vec3_t delta = { 0, 0, 0 };
 
-		if (ent->translate_start_time == 0 || timepassed > 1) {
+		if (ent->translate_start_time == 0 || timepassed > 1)
+		{
 			ent->translate_start_time = cl.time;
 
 			VectorCopy(ent->origin, ent->lastorigin);
 			VectorCopy(ent->origin, ent->currorigin);
 		}
 
-		if (!VectorCompare(ent->origin, ent->currorigin)) {
+		if (!VectorCompare(ent->origin, ent->currorigin))
+		{
 			ent->translate_start_time = cl.time;
 
 			VectorCopy(ent->currorigin, ent->lastorigin);
 			VectorCopy(ent->origin, ent->currorigin);
 
 			blend = 0;
-		} else {
+		}
+		else
+		{
 			blend = timepassed / 0.1;
 
 			if (cl.paused || blend > 1)
@@ -380,32 +343,36 @@ void CL_EntityInterpolateOrigins(entity_t *ent)
 			ent->origin[1] = ent->lastorigin[1] * lastlerp + ent->currorigin[1] * currlerp;
 			ent->origin[2] = ent->lastorigin[2] * lastlerp + ent->currorigin[2] * currlerp;
 		}
-
 	}
 }
 
 void CL_EntityInterpolateAngles(entity_t *ent)
 {
-	if (r_interpolate_transform.value) {
+	if (r_interpolate_transform.value)
+	{
 		float timepassed = cl.time - ent->rotate_start_time;
 		float blend = 0;
 		vec3_t delta = { 0, 0, 0 };
 
-		if (ent->rotate_start_time == 0 || timepassed > 1) {
+		if (ent->rotate_start_time == 0 || timepassed > 1)
+		{
 			ent->rotate_start_time = cl.time;
 
 			VectorCopy(ent->angles, ent->lastangles);
 			VectorCopy(ent->angles, ent->currangles);
 		}
 
-		if (!VectorCompare(ent->angles, ent->currangles)) {
+		if (!VectorCompare(ent->angles, ent->currangles))
+		{
 			ent->rotate_start_time = cl.time;
 
 			VectorCopy(ent->currangles, ent->lastangles);
 			VectorCopy(ent->angles, ent->currangles);
 
 			blend = 0;
-		} else {
+		}
+		else
+		{
 			blend = timepassed / 0.1;
 
 			if (cl.paused || blend > 1)
@@ -478,11 +445,12 @@ static void CL_ParseUpdate(int bits)
 {
 	int i, num;
 	model_t *model;
-	qboolean forcelink;
+	bool forcelink;
 	entity_t *ent;
 	int skin;
 
-	if (cls.signon == SIGNONS - 1) {	// first update is the final signon stage
+	if (cls.signon == SIGNONS - 1)
+	{	// first update is the final signon stage
 		cls.signon = SIGNONS;
 		CL_SignonReply();
 	}
@@ -502,16 +470,20 @@ static void CL_ParseUpdate(int bits)
 
 	ent->msgtime = cl.mtime[0];
 
-	if (bits & U_MODEL) {
+	if (bits & U_MODEL)
+	{
 		ent->modelindex = MSG_ReadByte();
 		if (ent->modelindex >= MAX_MODELS)
 			Host_Error("CL_ParseUpdate: bad modelindex");
-	} else {
+	}
+	else
+	{
 		ent->modelindex = ent->baseline.modelindex;
 	}
 
 	model = cl.model_precache[ent->modelindex];
-	if (model != ent->model) {
+	if (model != ent->model)
+	{
 		ent->model = model;
 		// automatic animation (torches, etc) can be either all together or randomized
 		if (model)
@@ -539,7 +511,8 @@ static void CL_ParseUpdate(int bits)
 	i = (bits & U_COLORMAP) ? MSG_ReadByte() : ent->baseline.colormap;
 	if (!i)
 		ent->colormap = 0;
-	else {
+	else
+	{
 //		Con_Printf("ent: num %i colormap %i frame %i\n", num, i, ent->frame);
 		if (i > cl.maxclients)
 			Sys_Error("i >= cl.maxclients");
@@ -547,7 +520,8 @@ static void CL_ParseUpdate(int bits)
 	}
 
 	skin = (bits & U_SKIN) ? MSG_ReadByte() : ent->baseline.skin;
-	if (skin != ent->skinnum) {
+	if (skin != ent->skinnum)
+	{
 		ent->skinnum = skin;
 		if (num > 0 && num <= cl.maxclients)
 			R_TranslatePlayerSkin(num - 1);
@@ -572,13 +546,16 @@ static void CL_ParseUpdate(int bits)
 		extern cvar_t cl_gameplayhack_monster_lerp;
 
 		if (bits & U_NOLERP)
+		{
 			if (!cl_gameplayhack_monster_lerp.value)
 				ent->forcelink = true;
 			else
 				ent->forcelink = (sv.active == true);
+		}
 	}
 
-	if (forcelink) {	// didn't have an update last message
+	if (forcelink)
+	{	// didn't have an update last message
 		VectorCopy(ent->msg_origins[0], ent->msg_origins[1]);
 		VectorCopy(ent->msg_origins[0], ent->origin);
 		VectorCopy(ent->msg_angles[0], ent->msg_angles[1]);
@@ -600,7 +577,8 @@ void CL_ParseBaseline(entity_t *ent)
 	ent->baseline.frame = MSG_ReadByte();
 	ent->baseline.colormap = MSG_ReadByte();
 	ent->baseline.skin = MSG_ReadByte();
-	for (i = 0; i < 3; i++) {
+	for (i = 0; i < 3; i++)
+	{
 		ent->baseline.origin[i] = MSG_ReadCoord();
 		ent->baseline.angles[i] = MSG_ReadAngle();
 	}
@@ -621,14 +599,16 @@ static void CL_ParseClientdata(int bits)
 	cl.idealpitch = (bits & SU_IDEALPITCH) ? MSG_ReadChar() : 0;
 
 	VectorCopy(cl.mvelocity[0], cl.mvelocity[1]);
-	for (i = 0; i < 3; i++) {
+	for (i = 0; i < 3; i++)
+	{
 		cl.punchangle[i] = (bits & (SU_PUNCH1 << i)) ? MSG_ReadChar() : 0;
 		cl.mvelocity[0][i] = (bits & (SU_VELOCITY1 << i)) ? MSG_ReadChar() * 16 : 0;
 	}
 
 // [always sent]	if (bits & SU_ITEMS)
 	i = MSG_ReadLong();
-	if (cl.items != i) {	// set flash times
+	if (cl.items != i)
+	{	// set flash times
 		Sbar_Changed();
 		for (j = 0; j < 32; j++)
 			if ((i & (1 << j)) && !(cl.items & (1 << j)))
@@ -642,19 +622,22 @@ static void CL_ParseClientdata(int bits)
 	cl.stats[STAT_WEAPONFRAME] = (bits & SU_WEAPONFRAME) ? MSG_ReadByte() : 0;
 
 	i = (bits & SU_ARMOR) ? MSG_ReadByte() : 0;
-	if (cl.stats[STAT_ARMOR] != i) {
+	if (cl.stats[STAT_ARMOR] != i)
+	{
 		cl.stats[STAT_ARMOR] = i;
 		Sbar_Changed();
 	}
 
 	i = (bits & SU_WEAPON) ? MSG_ReadByte() : 0;
-	if (cl.stats[STAT_WEAPON] != i) {
+	if (cl.stats[STAT_WEAPON] != i)
+	{
 		cl.stats[STAT_WEAPON] = i;
 		Sbar_Changed();
 	}
 
 	i = MSG_ReadShort();
-	if (cl.stats[STAT_HEALTH] != i) {
+	if (cl.stats[STAT_HEALTH] != i)
+	{
 		if (i <= 0)
 			memcpy(cl.death_location, cl_entities[cl.viewentity].origin, sizeof(vec3_t));
 		cl.stats[STAT_HEALTH] = i;
@@ -662,14 +645,17 @@ static void CL_ParseClientdata(int bits)
 	}
 
 	i = MSG_ReadByte();
-	if (cl.stats[STAT_AMMO] != i) {
+	if (cl.stats[STAT_AMMO] != i)
+	{
 		cl.stats[STAT_AMMO] = i;
 		Sbar_Changed();
 	}
 
-	for (i = 0; i < 4; i++) {
+	for (i = 0; i < 4; i++)
+	{
 		j = MSG_ReadByte();
-		if (cl.stats[STAT_SHELLS + i] != j) {
+		if (cl.stats[STAT_SHELLS + i] != j)
+		{
 			cl.stats[STAT_SHELLS + i] = j;
 			Sbar_Changed();
 		}
@@ -677,13 +663,18 @@ static void CL_ParseClientdata(int bits)
 
 	i = MSG_ReadByte();
 
-	if (standard_quake) {
-		if (cl.stats[STAT_ACTIVEWEAPON] != i) {
+	if (standard_quake)
+	{
+		if (cl.stats[STAT_ACTIVEWEAPON] != i)
+		{
 			cl.stats[STAT_ACTIVEWEAPON] = i;
 			Sbar_Changed();
 		}
-	} else {
-		if (cl.stats[STAT_ACTIVEWEAPON] != (1 << i)) {
+	}
+	else
+	{
+		if (cl.stats[STAT_ACTIVEWEAPON] != (1 << i))
+		{
 			cl.stats[STAT_ACTIVEWEAPON] = (1 << i);
 			Sbar_Changed();
 		}
@@ -774,7 +765,8 @@ void CL_ParseProQuakeMessage(void)
 	MSG_ReadByte();
 	cmd = MSG_ReadByte();
 
-	switch (cmd) {
+	switch (cmd)
+	{
 	case pqc_new_team:
 		Sbar_Changed();
 		team = MSG_ReadByte() - 16;
@@ -819,7 +811,8 @@ void CL_ParseProQuakeMessage(void)
 
 	case pqc_match_reset:
 		Sbar_Changed();
-		for (i = 0; i < 14; i++) {
+		for (i = 0; i < 14; i++)
+		{
 			cl.teamscores[i].colors = 0;
 			cl.teamscores[i].frags = 0;		// JPG 3.20 - added this
 		}
@@ -827,7 +820,8 @@ void CL_ParseProQuakeMessage(void)
 		break;
 
 	case pqc_ping_times:
-		while (ping = MSG_ReadShortPQ()) {
+		while ((ping = MSG_ReadShortPQ()))
+		{
 			if ((ping / 4096) >= cl.maxclients)
 				Host_Error("CL_ParseProQuakeMessage: pqc_ping_times > MAX_SCOREBOARD");
 			cl.scores[ping / 4096].ping = ping & 4095;
@@ -859,8 +853,10 @@ void Q_Version(char *s)
 	t += 1;  // Baker: lazy, to avoid name "q_version" triggering this; later do it "right"
 	l = strlen(t);
 
-	while (n < l) {
-		if (!strncmp(t, ": q_version", 9)) {
+	while (n < l)
+	{
+		if (!strncmp(t, ": q_version", 9))
+		{
 			Cbuf_AddText(va("say %s version %s\n", ENGINE_NAME, VersionString()));
 			Cbuf_Execute();
 			q_version_reply_time = realtime;
@@ -882,36 +878,38 @@ void CL_ParseProQuakeString(char *string)
 	static int checkping = -1;
 	int ping, i;
 	char *s, *s2, *s3;
-	static int checkip = -1;	// player whose IP address we're expecting
-
-	// JPG 1.05 - for ip logging
-	static int remove_status = 0;
-	static int begin_status = 0;
-	static int playercount = 0;
 
 	// JPG 3.02 - made this more robust.. try to eliminate screwups due to "unconnected" and '\n'
 	s = string;
-	if (!strcmp(string, "Client ping times:\n") && pq_scoreboard_pings.value) {
+	if (!strcmp(string, "Client ping times:\n") && pq_scoreboard_pings.value)
+	{
 		cl.last_ping_time = cl.time;
 		checkping = 0;
 		if (!cl.console_ping)
 			*string = 0;
-	} else if (checkping >= 0) {
+	}
+	else if (checkping >= 0)
+	{
 		while (*s == ' ')
 			s++;
 		ping = 0;
-		if (*s >= '0' && *s <= '9') {
+		if (*s >= '0' && *s <= '9')
+		{
 			while (*s >= '0' && *s <= '9')
 				ping = 10 * ping + *s++ - '0';
-			if ((*s++ == ' ') && *s && (s2 = strchr(s, '\n'))) {
+			if ((*s++ == ' ') && *s && (s2 = strchr(s, '\n')))
+			{
 				s3 = cl.scores[checkping].name;
-				while ((s3 = strchr(s3, '\n')) && s2) {
+				while ((s3 = strchr(s3, '\n')) && s2)
+				{
 					s3++;
 					s2 = strchr(s2 + 1, '\n');
 				}
-				if (s2) {
+				if (s2)
+				{
 					*s2 = 0;
-					if (!strncmp(cl.scores[checkping].name, s, 15)) {
+					if (!strncmp(cl.scores[checkping].name, s, 15))
+					{
 						cl.scores[checkping].ping = ping > 9999 ? 9999 : ping;
 						for (checkping++; !*cl.scores[checkping].name && checkping < cl.maxclients; checkping++)
 							;
@@ -922,34 +920,43 @@ void CL_ParseProQuakeString(char *string)
 					*string = 0;
 				if (checkping == cl.maxclients)
 					checkping = -1;
-			} else
+			}
+			else
 				checkping = -1;
-		} else
+		}
+		else
 			checkping = -1;
 		cl.console_ping = cl.console_ping && (checkping >= 0);	// JPG 1.05 cl.sbar_ping -> cl.console_ping
 	}
 
 	// check for match time
-	if (!strncmp(string, "Match ends in ", 14)) {
+	if (!strncmp(string, "Match ends in ", 14))
+	{
 		s = string + 14;
-		if ((*s != 'T') && strchr(s, 'm')) {
+		if ((*s != 'T') && strchr(s, 'm'))
+		{
 			sscanf(s, "%d", &cl.minutes);
 			cl.seconds = 0;
 			cl.last_match_time = cl.time;
 		}
-	} else if (!strcmp(string, "Match paused\n"))
+	}
+	else if (!strcmp(string, "Match paused\n"))
 		cl.match_pause_time = cl.time;
-	else if (!strcmp(string, "Match unpaused\n")) {
+	else if (!strcmp(string, "Match unpaused\n"))
+	{
 		cl.last_match_time += (cl.time - cl.match_pause_time);
 		cl.match_pause_time = 0;
-	} else if (!strcmp(string, "The match is over\n") || !strncmp(string, "Match begins in", 15))
+	}
+	else if (!strcmp(string, "The match is over\n") || !strncmp(string, "Match begins in", 15))
 		cl.minutes = 255;
-	else if (checkping < 0) {
+	else if (checkping < 0)
+	{
 		s = string;
 		i = 0;
 		while (*s >= '0' && *s <= '9')
 			i = 10 * i + *s++ - '0';
-		if (!strcmp(s, " minutes remaining\n")) {
+		if (!strcmp(s, " minutes remaining\n"))
+		{
 			cl.minutes = i;
 			cl.seconds = 0;
 			cl.last_match_time = cl.time;
@@ -988,19 +995,22 @@ void CL_ParseServerMessage(void)
 //
 	MSG_BeginReading();
 
-	while (1) {
+	while (1)
+	{
 		if (msg_badread)
 			Host_Error("CL_ParseServerMessage: Bad server message");
 
 		cmd = MSG_ReadByte();
 
-		if (cmd == -1) {
+		if (cmd == -1)
+		{
 			SHOWNET("END OF MESSAGE");
 			return;		// end of message
 		}
 
 		// if the high bit of the command byte is set, it is a fast update
-		if (cmd & 128) {
+		if (cmd & 128)
+		{
 			SHOWNET("fast update");
 			CL_ParseUpdate(cmd & 127);
 			continue;
@@ -1009,7 +1019,8 @@ void CL_ParseServerMessage(void)
 		SHOWNET(svc_strings[cmd]);
 
 		// other commands
-		switch (cmd) {
+		switch (cmd)
+		{
 		default:
 			Host_Error("CL_ParseServerMessage: Illegible server message\n");
 			break;
@@ -1047,7 +1058,8 @@ void CL_ParseServerMessage(void)
 
 		case svc_centerprint:
 			str = MSG_ReadString();
-			if (!con_nocenterprint.value) {
+			if (!con_nocenterprint.value)
+			{
 				SCR_CenterPrint(str);
 			}
 			Con_LogCenterPrint(str);		//johnfitz -- log centerprints to console
@@ -1075,7 +1087,8 @@ void CL_ParseServerMessage(void)
 			for (i = 0; i < 3; i++)
 				cl.viewangles[i] = MSG_ReadAngle();
 
-			if (!cls.demoplayback) {
+			if (!cls.demoplayback)
+			{
 				VectorCopy(cl.mviewangles[0], cl.mviewangles[1]);
 
 				// JPG - hack with last_angle_time to autodetect continuous svc_setangles

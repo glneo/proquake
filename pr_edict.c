@@ -37,7 +37,7 @@ unsigned short pr_crc;
 int type_size[8] = { 1, sizeof(string_t) / 4, 1, 3, 1, 1, sizeof(func_t) / 4, sizeof(void *) / 4 };
 
 ddef_t *ED_FieldAtOfs(int ofs);
-qboolean ED_ParseEpair(void *base, ddef_t *key, char *s);
+bool ED_ParseEpair(void *base, ddef_t *key, char *s);
 
 cvar_t nomonsters = { "nomonsters", "0" };
 cvar_t gamecfg = { "gamecfg", "0" };
@@ -262,41 +262,41 @@ char *PR_ValueString(etype_t type, eval_t *val)
 
 	switch (type) {
 	case ev_string:
-		SNPrintf(line, sizeof(line), "%s", PR_GetString(val->string));
+		snprintf(line, sizeof(line), "%s", PR_GetString(val->string));
 		break;
 
 	case ev_entity:
-		SNPrintf(line, sizeof(line), "entity %i", NUM_FOR_EDICT(PROG_TO_EDICT(val->edict)));
+		snprintf(line, sizeof(line), "entity %i", NUM_FOR_EDICT(PROG_TO_EDICT(val->edict)));
 		break;
 
 	case ev_function:
 		f = pr_functions + val->function;
-		SNPrintf(line, sizeof(line), "%s()", PR_GetString(f->s_name));
+		snprintf(line, sizeof(line), "%s()", PR_GetString(f->s_name));
 		break;
 
 	case ev_field:
 		def = ED_FieldAtOfs(val->_int);
-		SNPrintf(line, sizeof(line), ".%s", PR_GetString(def->s_name));
+		snprintf(line, sizeof(line), ".%s", PR_GetString(def->s_name));
 		break;
 
 	case ev_void:
-		SNPrintf(line, sizeof(line), "void");
+		snprintf(line, sizeof(line), "void");
 		break;
 
 	case ev_float:
-		SNPrintf(line, sizeof(line), "%5.1f", val->_float);
+		snprintf(line, sizeof(line), "%5.1f", val->_float);
 		break;
 
 	case ev_vector:
-		SNPrintf(line, sizeof(line), "'%5.1f %5.1f %5.1f'", val->vector[0], val->vector[1], val->vector[2]);
+		snprintf(line, sizeof(line), "'%5.1f %5.1f %5.1f'", val->vector[0], val->vector[1], val->vector[2]);
 		break;
 
 	case ev_pointer:
-		SNPrintf(line, sizeof(line), "pointer");
+		snprintf(line, sizeof(line), "pointer");
 		break;
 
 	default:
-		SNPrintf(line, sizeof(line), "bad type %i", type);
+		snprintf(line, sizeof(line), "bad type %i", type);
 		break;
 	}
 
@@ -321,37 +321,37 @@ char *PR_UglyValueString(etype_t type, eval_t *val)
 
 	switch (type) {
 	case ev_string:
-		SNPrintf(line, sizeof(line), "%s", PR_GetString(val->string));
+		snprintf(line, sizeof(line), "%s", PR_GetString(val->string));
 		break;
 
 	case ev_entity:
-		SNPrintf(line, sizeof(line), "%i", NUM_FOR_EDICT(PROG_TO_EDICT(val->edict)));
+		snprintf(line, sizeof(line), "%i", NUM_FOR_EDICT(PROG_TO_EDICT(val->edict)));
 		break;
 
 	case ev_function:
 		f = pr_functions + val->function;
-		SNPrintf(line, sizeof(line), "%s", PR_GetString(f->s_name));
+		snprintf(line, sizeof(line), "%s", PR_GetString(f->s_name));
 		break;
 
 	case ev_field:
 		def = ED_FieldAtOfs(val->_int);
-		SNPrintf(line, sizeof(line), "%s", PR_GetString(def->s_name));
+		snprintf(line, sizeof(line), "%s", PR_GetString(def->s_name));
 		break;
 
 	case ev_void:
-		SNPrintf(line, sizeof(line), "void");
+		snprintf(line, sizeof(line), "void");
 		break;
 
 	case ev_float:
-		SNPrintf(line, sizeof(line), "%f", val->_float);
+		snprintf(line, sizeof(line), "%f", val->_float);
 		break;
 
 	case ev_vector:
-		SNPrintf(line, sizeof(line), "%f %f %f", val->vector[0], val->vector[1], val->vector[2]);
+		snprintf(line, sizeof(line), "%f %f %f", val->vector[0], val->vector[1], val->vector[2]);
 		break;
 
 	default:
-		SNPrintf(line, sizeof(line), "bad type %i", type);
+		snprintf(line, sizeof(line), "bad type %i", type);
 		break;
 	}
 
@@ -375,10 +375,10 @@ char *PR_GlobalString(int ofs)
 
 	val = (void *) &pr_globals[ofs];
 	if (!(def = ED_GlobalAtOfs(ofs))) {
-		SNPrintf(line, sizeof(line), "%i(\?\?\?)", ofs);
+		snprintf(line, sizeof(line), "%i(\?\?\?)", ofs);
 	} else {
 		s = PR_ValueString(def->type, val);
-		SNPrintf(line, sizeof(line), "%i(%s)%s", ofs, PR_GetString(def->s_name), s);
+		snprintf(line, sizeof(line), "%i(%s)%s", ofs, PR_GetString(def->s_name), s);
 	}
 
 	i = strlen(line);
@@ -396,9 +396,9 @@ char *PR_GlobalStringNoContents(int ofs)
 	static char line[128];
 
 	if (!(def = ED_GlobalAtOfs(ofs)))
-		SNPrintf(line, sizeof(line), "%i(\?\?\?)", ofs);
+		snprintf(line, sizeof(line), "%i(\?\?\?)", ofs);
 	else
-		SNPrintf(line, sizeof(line), "%i(%s)", ofs, PR_GetString(def->s_name));
+		snprintf(line, sizeof(line), "%i(%s)", ofs, PR_GetString(def->s_name));
 
 	i = strlen(line);
 	for (; i < 20; i++)
@@ -679,7 +679,7 @@ int ED_NewString(char *string)
  returns false if error
  ==============
  */
-qboolean ED_ParseEpair(void *base, ddef_t *key, char *s)
+bool ED_ParseEpair(void *base, ddef_t *key, char *s)
 {
 	int i;
 	char string[128];
@@ -751,8 +751,8 @@ qboolean ED_ParseEpair(void *base, ddef_t *key, char *s)
 char *ED_ParseEdict(char *data, edict_t *ent)
 {
 	ddef_t *key;
-	qboolean anglehack;
-	qboolean init;
+	bool anglehack;
+	bool init;
 	char keyname[256];
 	int n;
 
@@ -816,7 +816,7 @@ char *ED_ParseEdict(char *data, edict_t *ent)
 			char temp[32];
 
 			strncpy(temp, com_token, sizeof(temp));
-			SNPrintf(com_token, sizeof(com_token), "0 %s 0", temp);
+			snprintf(com_token, sizeof(com_token), "0 %s 0", temp);
 		}
 
 		if (!ED_ParseEpair((void *) &ent->v, key, com_token))

@@ -28,8 +28,6 @@ typedef	int fixed16_t;
 struct mplane_s;
 extern vec3_t vec3_origin;
 
-#define Q_rint(x) ((x) > 0 ? (int)((x) + 0.5) : (int)((x) - 0.5))
-
 #define DotProduct(x,y) (x[0]*y[0]+x[1]*y[1]+x[2]*y[2])
 #define VectorSubtract(a,b,out) {out[0]=a[0]-b[0];out[1]=a[1]-b[1];out[2]=a[2]-b[2];}
 #define VectorAdd(a,b,out) {out[0]=a[0]+b[0];out[1]=a[1]+b[1];out[2]=a[2]+b[2];}
@@ -48,7 +46,6 @@ void CrossProduct(vec3_t v1, vec3_t v2, vec3_t cross);
 
 void VectorInverse(vec3_t v);
 void VectorScale(vec3_t in, vec_t scale, vec3_t out);
-int Q_log2(int val);
 
 int ParseFloats(char *s, float *f, int *f_size);
 

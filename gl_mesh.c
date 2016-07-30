@@ -29,7 +29,7 @@ ALIAS MODEL DISPLAY LIST GENERATION
 */
 
 
-static qboolean	used[8192];
+static int	used[8192];
 
 // the command list holds counts and s/t values that are valid for
 // every frame

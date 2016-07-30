@@ -126,7 +126,7 @@ void R_Envmap_f(void)
  ===============
  */
 
-qboolean recentcolor_isSet[MAX_SCOREBOARD];
+bool recentcolor_isSet[MAX_SCOREBOARD];
 int recentcolor[MAX_SCOREBOARD];
 int recentskinnum[MAX_SCOREBOARD];
 
@@ -287,7 +287,7 @@ void R_NewMap(void)
  ====================
  */
 #ifdef INTEL_OPENGL_DRIVER_WORKAROUND
-extern qboolean IntelDisplayAdapter;
+extern bool IntelDisplayAdapter;
 #endif
 void R_TimeRefresh_f(void)
 {

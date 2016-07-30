@@ -49,7 +49,6 @@ static unsigned long myAddr;
 
 int UDP_Init (void)
 {
-	struct hostent *local;
 	char	buff[MAXHOSTNAMELEN];
 	struct qsockaddr addr;
 	char *colon;
@@ -78,7 +77,7 @@ int UDP_Init (void)
 		// JPG 3.00 from CSR
 		/*
 		gethostname(buff, MAXHOSTNAMELEN);
-		local = gethostbyname(buff);
+		struct hostent *local = gethostbyname(buff);
 		myAddr = *(int *)local->h_addr_list[0];
 		*/
 		myAddr = INADDR_ANY;
@@ -119,7 +118,7 @@ void UDP_Shutdown (void)
 
 //=============================================================================
 
-void UDP_Listen (qboolean state)
+void UDP_Listen (bool state)
 {
 	// enable listening
 	if (state)
@@ -144,7 +143,7 @@ int UDP_OpenSocket (int port)
 {
 	int newsocket;
 	struct sockaddr_in address;
-	qboolean _true = true;
+	bool _true = true;
 
 	if ((newsocket = socket (PF_INET, SOCK_DGRAM, IPPROTO_UDP)) == -1)
 		return -1;
@@ -275,7 +274,7 @@ int UDP_CheckNewConnections (void)
 
 int UDP_Read (int socket, byte *buf, int len, struct qsockaddr *addr)
 {
-	int addrlen = sizeof (struct qsockaddr);
+	socklen_t addrlen = sizeof (struct qsockaddr);
 	int ret;
 
 	ret = recvfrom (socket, buf, len, 0, (struct sockaddr *)addr, &addrlen);
@@ -363,7 +362,7 @@ int UDP_StringToAddr (char *string, struct qsockaddr *addr)
 
 int UDP_GetSocketAddr (int socket, struct qsockaddr *addr)
 {
-	int addrlen = sizeof(struct qsockaddr);
+	socklen_t addrlen = sizeof(struct qsockaddr);
 	unsigned int a;
 
 	memset(addr, 0, sizeof(struct qsockaddr));

@@ -51,8 +51,10 @@ void Host_Quit(void)
 
 void Host_Quit_f(void)
 {
-	if (cl_confirmquit.value) {
-		if ((key_dest != key_console && !con_forcedup) && cls.state != ca_dedicated) {
+	if (cl_confirmquit.value)
+	{
+		if ((key_dest != key_console && !con_forcedup) && cls.state != ca_dedicated)
+		{
 			M_Menu_Quit_f();
 			return;
 		}
@@ -66,25 +68,28 @@ void Host_Quit_f(void)
 //==============================================================================
 
 // Declarations shared with common.c:
-typedef struct {
+typedef struct
+{
 	char name[MAX_QPATH];
 	int filepos, filelen;
 } packfile_t;
 
-typedef struct pack_s {
+typedef struct pack_s
+{
 	char filename[MAX_OSPATH];
 	int handle;
 	int numfiles;
 	packfile_t *files;
 } pack_t;
 
-typedef struct searchpath_s {
+typedef struct searchpath_s
+{
 	char filename[MAX_OSPATH];
 	pack_t *pack;          // only one of filename / pack will be used
 	struct searchpath_s *next;
 } searchpath_t;
 
-extern qboolean com_modified;
+extern bool com_modified;
 extern searchpath_t *com_searchpaths;
 pack_t *COM_LoadPackFile(char *packfile);
 
@@ -93,8 +98,10 @@ pack_t *COM_LoadPackFile(char *packfile);
 void KillGameDir(searchpath_t *search)
 {
 	searchpath_t *search_killer;
-	while (search) {
-		if (*search->filename) {
+	while (search)
+	{
+		if (*search->filename)
+		{
 			com_searchpaths = search->next;
 			Z_Free(search);
 			return; //once you hit the dir, youve already freed the paks
@@ -112,7 +119,8 @@ void KillGameDir(searchpath_t *search)
 int NumGames(searchpath_t *search)
 {
 	int found = 0;
-	while (search) {
+	while (search)
+	{
 		if (*search->filename)
 			found++;
 		search = search->next;
@@ -132,7 +140,8 @@ void Host_Game_f(void)
 	pack_t *pak;
 	char pakfile[MAX_OSPATH]; //FIXME: it's confusing to use this string for two different things
 
-	if (Cmd_Argc() > 1) {
+	if (Cmd_Argc() > 1)
+	{
 
 		if (!registered.value) //disable command for shareware quake
 		{
@@ -140,14 +149,15 @@ void Host_Game_f(void)
 			return;
 		}
 
-		if (strstr(Cmd_Argv(1), "..")) {
+		if (strstr(Cmd_Argv(1), ".."))
+		{
 			Con_Printf("Relative pathnames are not allowed.\n");
 			return;
 		}
 
 		strcpy(pakfile, va("%s/%s", host_parms.basedir, Cmd_Argv(1)));
 		if (!strcasecmp(pakfile, com_gamedir)) //no change
-				{
+		{
 			Con_Printf("\"game\" is already \"%s\"\n", COM_SkipPath(com_gamedir));
 			return;
 		}
@@ -168,15 +178,16 @@ void Host_Game_f(void)
 		strcpy(com_gamedir, pakfile);
 
 		if (strcasecmp(Cmd_Argv(1), GAMENAME)) //game is not id1
-				{
+		{
 			search = Z_Malloc(sizeof(searchpath_t));
 			strcpy(search->filename, pakfile);
 			search->next = com_searchpaths;
 			com_searchpaths = search;
 
 			//Load the paks if any are found:
-			for (i = 0;; i++) {
-				SNPrintf(pakfile, sizeof(pakfile), "%s/pak%i.pak", com_gamedir, i);
+			for (i = 0;; i++)
+			{
+				snprintf(pakfile, sizeof(pakfile), "%s/pak%i.pak", com_gamedir, i);
 				pak = COM_LoadPackFile(pakfile);
 				if (!pak)
 					break;
@@ -200,7 +211,8 @@ void Host_Game_f(void)
 		cls.recent_file[0] = 0;
 
 		Con_Printf("\"gamedir\" changed to \"%s\"\n", COM_SkipPath(com_gamedir));
-	} else
+	}
+	else
 		//Diplay the current gamedir
 		Con_Printf("\"gamedir\" is \"%s\"\n", COM_SkipPath(com_gamedir));
 }
@@ -209,7 +221,8 @@ void Host_Game_f(void)
 //johnfitz -- modlist management
 //==============================================================================
 
-typedef struct mod_s {
+typedef struct mod_s
+{
 	char name[MAX_OSPATH];
 	struct mod_s *next;
 } mod_t;
@@ -230,14 +243,16 @@ void Modlist_Add(char *name)
 
 	//insert each entry in alphabetical order
 	if (modlist == NULL || strcasecmp(mod->name, modlist->name) < 0) //insert at front
-			{
+	{
 		mod->next = modlist;
 		modlist = mod;
-	} else //insert later
+	}
+	else //insert later
 	{
 		prev = modlist;
 		cursor = modlist->next;
-		while (cursor && (strcasecmp(mod->name, cursor->name) > 0)) {
+		while (cursor && (strcasecmp(mod->name, cursor->name) > 0))
+		{
 			prev = cursor;
 			cursor = cursor->next;
 		}
@@ -246,7 +261,7 @@ void Modlist_Add(char *name)
 	}
 }
 
- /*
+/*
  ==================
  Host_Mods_f -- johnfitz
 
@@ -277,13 +292,15 @@ void Host_Mapname_f(void)
 {
 	char name[MAX_QPATH];
 
-	if (sv.active) {
+	if (sv.active)
+	{
 		COM_StripExtension(sv.worldmodel->name + 5, name);
 		Con_Printf("\"mapname\" is \"%s\"\n", name);
 		return;
 	}
 
-	if (cls.state == ca_connected) {
+	if (cls.state == ca_connected)
+	{
 		COM_StripExtension(cl.worldmodel->name + 5, name);
 		Con_Printf("\"mapname\" is \"%s\"\n", name);
 		return;
@@ -301,14 +318,17 @@ void Host_Status_f(void)
 	int j, a, b, c; // Baker 3.60 - a,b,c added for IP
 	void (*print)(char *fmt, ...);
 
-	if (cmd_source == src_command) {
-		if (!sv.active) {
+	if (cmd_source == src_command)
+	{
+		if (!sv.active)
+		{
 			cl.console_status = true;	// JPG 1.05 - added this;
 			Cmd_ForwardToServer_f();
 			return;
 		}
 		print = Con_Printf;
-	} else
+	}
+	else
 		print = SV_ClientPrintf;
 
 	print("host:    %s (anti-wallhack %s)\n", Cvar_VariableString(hostname.name), sv_cullentities.value ? "on [mode: players]" : "off");
@@ -317,17 +337,20 @@ void Host_Status_f(void)
 		print("tcp/ip:  %s\n", my_tcpip_address);
 	print("map:     %s\n", sv.name);
 	print("players: %i active (%i max)\n\n", net_activeconnections, svs.maxclients);
-	for (j = 0, client = svs.clients; j < svs.maxclients; j++, client++) {
+	for (j = 0, client = svs.clients; j < svs.maxclients; j++, client++)
+	{
 		if (!client->active)
 			continue;
 		seconds = (int) (net_time - client->netconnection->connecttime);
 		minutes = seconds / 60;
-		if (minutes) {
+		if (minutes)
+		{
 			seconds -= (minutes * 60);
 			hours = minutes / 60;
 			if (hours)
 				minutes -= (hours * 60);
-		} else
+		}
+		else
 			hours = 0;
 		print("#%-2u %-16.16s  %3i  %2i:%02i:%02i\n", j + 1, client->name, (int) client->edict->v.frags, hours, minutes, seconds);
 
@@ -351,27 +374,32 @@ void Host_QC_Exec(void)
 	dfunction_t *ED_FindFunction(char *name);
 	dfunction_t *f;
 
-	if (cmd_source == src_command) {
+	if (cmd_source == src_command)
+	{
 		Cmd_ForwardToServer_f();
 		return;
 	}
 
-	if (!sv.active) {
+	if (!sv.active)
+	{
 		Con_Printf("Not running local game\n");
 		return;
 	};
 
-	if (!developer.value) {
+	if (!developer.value)
+	{
 		Con_Printf("Only available in developer mode\n");
 		return;
 	};
 
 	f = 0;
-	if ((f = ED_FindFunction(Cmd_Argv(1))) != NULL) {
+	if ((f = ED_FindFunction(Cmd_Argv(1))) != NULL)
+	{
 
 		pr_global_struct->self = EDICT_TO_PROG(sv_player);
 		PR_ExecuteProgram((func_t) (f - pr_functions));
-	} else
+	}
+	else
 		Con_Printf("bad function\n");
 
 }
@@ -385,7 +413,8 @@ void Host_QC_Exec(void)
  */
 void Host_God_f(void)
 {
-	if (cmd_source == src_command) {
+	if (cmd_source == src_command)
+	{
 		Cmd_ForwardToServer_f();
 		return;
 	}
@@ -394,7 +423,8 @@ void Host_God_f(void)
 		return;
 
 	//johnfitz -- allow user to explicitly set god mode to on or off
-	switch (Cmd_Argc()) {
+	switch (Cmd_Argc())
+	{
 	case 1:
 		sv_player->v.flags = (int) sv_player->v.flags ^ FL_GODMODE;
 		if (!((int) sv_player->v.flags & FL_GODMODE))
@@ -403,10 +433,13 @@ void Host_God_f(void)
 			SV_ClientPrintf("godmode ON\n");
 		break;
 	case 2:
-		if (atof(Cmd_Argv(1))) {
+		if (atof(Cmd_Argv(1)))
+		{
 			sv_player->v.flags = (int) sv_player->v.flags | FL_GODMODE;
 			SV_ClientPrintf("godmode ON\n");
-		} else {
+		}
+		else
+		{
 			sv_player->v.flags = (int) sv_player->v.flags & ~FL_GODMODE;
 			SV_ClientPrintf("godmode OFF\n");
 		}
@@ -420,7 +453,8 @@ void Host_God_f(void)
 
 void Host_Notarget_f(void)
 {
-	if (cmd_source == src_command) {
+	if (cmd_source == src_command)
+	{
 		Cmd_ForwardToServer_f();
 		return;
 	}
@@ -429,7 +463,8 @@ void Host_Notarget_f(void)
 		return;
 
 	//johnfitz -- allow user to explicitly set notarget to on or off
-	switch (Cmd_Argc()) {
+	switch (Cmd_Argc())
+	{
 	case 1:
 		sv_player->v.flags = (int) sv_player->v.flags ^ FL_NOTARGET;
 		if (!((int) sv_player->v.flags & FL_NOTARGET))
@@ -438,10 +473,13 @@ void Host_Notarget_f(void)
 			SV_ClientPrintf("notarget ON\n");
 		break;
 	case 2:
-		if (atof(Cmd_Argv(1))) {
+		if (atof(Cmd_Argv(1)))
+		{
 			sv_player->v.flags = (int) sv_player->v.flags | FL_NOTARGET;
 			SV_ClientPrintf("notarget ON\n");
-		} else {
+		}
+		else
+		{
 			sv_player->v.flags = (int) sv_player->v.flags & ~FL_NOTARGET;
 			SV_ClientPrintf("notarget OFF\n");
 		}
@@ -455,7 +493,8 @@ void Host_Notarget_f(void)
 
 void Host_Noclip_f(void)
 {
-	if (cmd_source == src_command) {
+	if (cmd_source == src_command)
+	{
 		Cmd_ForwardToServer_f();
 		return;
 	}
@@ -464,24 +503,31 @@ void Host_Noclip_f(void)
 		return;
 
 	//johnfitz -- allow user to explicitly set noclip to on or off
-	switch (Cmd_Argc()) {
+	switch (Cmd_Argc())
+	{
 	case 1:
-		if (sv_player->v.movetype != MOVETYPE_NOCLIP) {
+		if (sv_player->v.movetype != MOVETYPE_NOCLIP)
+		{
 			cl.noclip_anglehack = true;
 			sv_player->v.movetype = MOVETYPE_NOCLIP;
 			SV_ClientPrintf("noclip ON\n");
-		} else {
+		}
+		else
+		{
 			cl.noclip_anglehack = false;
 			sv_player->v.movetype = MOVETYPE_WALK;
 			SV_ClientPrintf("noclip OFF\n");
 		}
 		break;
 	case 2:
-		if (atof(Cmd_Argv(1))) {
+		if (atof(Cmd_Argv(1)))
+		{
 			cl.noclip_anglehack = true;
 			sv_player->v.movetype = MOVETYPE_NOCLIP;
 			SV_ClientPrintf("noclip ON\n");
-		} else {
+		}
+		else
+		{
 			cl.noclip_anglehack = false;
 			sv_player->v.movetype = MOVETYPE_WALK;
 			SV_ClientPrintf("noclip OFF\n");
@@ -503,7 +549,8 @@ void Host_Noclip_f(void)
  */
 void Host_Fly_f(void)
 {
-	if (cmd_source == src_command) {
+	if (cmd_source == src_command)
+	{
 		Cmd_ForwardToServer_f();
 		return;
 	}
@@ -512,21 +559,28 @@ void Host_Fly_f(void)
 		return;
 
 	//johnfitz -- allow user to explicitly set noclip to on or off
-	switch (Cmd_Argc()) {
+	switch (Cmd_Argc())
+	{
 	case 1:
-		if (sv_player->v.movetype != MOVETYPE_FLY) {
+		if (sv_player->v.movetype != MOVETYPE_FLY)
+		{
 			sv_player->v.movetype = MOVETYPE_FLY;
 			SV_ClientPrintf("flymode ON\n");
-		} else {
+		}
+		else
+		{
 			sv_player->v.movetype = MOVETYPE_WALK;
 			SV_ClientPrintf("flymode OFF\n");
 		}
 		break;
 	case 2:
-		if (atof(Cmd_Argv(1))) {
+		if (atof(Cmd_Argv(1)))
+		{
 			sv_player->v.movetype = MOVETYPE_FLY;
 			SV_ClientPrintf("flymode ON\n");
-		} else {
+		}
+		else
+		{
 			sv_player->v.movetype = MOVETYPE_WALK;
 			SV_ClientPrintf("flymode OFF\n");
 		}
@@ -545,14 +599,17 @@ void Host_Ping_f(void)
 	client_t *client;
 	char *n;	// JPG - for ping +N
 
-	if (cmd_source == src_command) {
+	if (cmd_source == src_command)
+	{
 		// JPG - check for ping +N
-		if (Cmd_Argc() == 2) {
+		if (Cmd_Argc() == 2)
+		{
 			if (cls.state != ca_connected)
 				return;
 
 			n = Cmd_Argv(1);
-			if (*n == '+') {
+			if (*n == '+')
+			{
 				Cvar_Set("pq_lag", n + 1);
 				return;
 			}
@@ -564,7 +621,8 @@ void Host_Ping_f(void)
 	}
 
 	SV_ClientPrintf("Client ping times:\n");
-	for (i = 0, client = svs.clients; i < svs.maxclients; i++, client++) {
+	for (i = 0, client = svs.clients; i < svs.maxclients; i++, client++)
+	{
 		if (!client->active)
 			continue;
 		total = 0;
@@ -609,7 +667,8 @@ void Host_Map_f(void)
 	SCR_BeginLoadingPlaque();
 
 	cls.mapstring[0] = 0;
-	for (i = 0; i < Cmd_Argc(); i++) {
+	for (i = 0; i < Cmd_Argc(); i++)
+	{
 		strlcat(cls.mapstring, Cmd_Argv(i), sizeof(cls.mapstring));
 		strlcat(cls.mapstring, " ", sizeof(cls.mapstring));
 	}
@@ -621,10 +680,12 @@ void Host_Map_f(void)
 	if (!sv.active)
 		return;
 
-	if (cls.state != ca_dedicated) {
+	if (cls.state != ca_dedicated)
+	{
 		strcpy(cls.spawnparms, "");
 
-		for (i = 2; i < Cmd_Argc(); i++) {
+		for (i = 2; i < Cmd_Argc(); i++)
+		{
 			strlcat(cls.spawnparms, Cmd_Argv(i), sizeof(cls.spawnparms));
 			strlcat(cls.spawnparms, " ", sizeof(cls.spawnparms));
 		}
@@ -644,11 +705,13 @@ void Host_Changelevel_f(void)
 {
 	char level[MAX_QPATH];
 
-	if (Cmd_Argc() != 2) {
+	if (Cmd_Argc() != 2)
+	{
 		Con_Printf("changelevel <levelname> : continue game on a new level\n");
 		return;
 	}
-	if (!sv.active || cls.demoplayback) {
+	if (!sv.active || cls.demoplayback)
+	{
 		Con_Printf("Only the server may changelevel\n");
 		return;
 	}
@@ -717,7 +780,8 @@ void Host_Connect_f(void)
 	char name[MAX_QPATH];
 
 	cls.demonum = -1;		// stop demo loop in case this fails
-	if (cls.demoplayback) {
+	if (cls.demoplayback)
+	{
 		CL_StopPlayback();
 		CL_Disconnect();
 	}
@@ -753,7 +817,7 @@ void Host_SavegameComment(char *text)
 	for (i = 0; i < SAVEGAME_COMMENT_LENGTH; i++)
 		text[i] = ' ';
 	memcpy(text, cl.levelname, min(strlen(cl.levelname), 22)); //johnfitz -- only copy 22 chars.
-	SNPrintf(kills, sizeof(kills), "kills:%3i/%3i", cl.stats[STAT_MONSTERS], cl.stats[STAT_TOTALMONSTERS]);
+	snprintf(kills, sizeof(kills), "kills:%3i/%3i", cl.stats[STAT_MONSTERS], cl.stats[STAT_TOTALMONSTERS]);
 	memcpy(text + 22, kills, strlen(kills));
 // convert space to _ to make stdio happy
 	for (i = 0; i < SAVEGAME_COMMENT_LENGTH; i++)
@@ -772,45 +836,53 @@ void Host_Savegame_f(void)
 	if (cmd_source != src_command)
 		return;
 
-	if (!sv.active) {
+	if (!sv.active)
+	{
 		Con_Printf("Not playing a local game.\n");
 		return;
 	}
 
-	if (cl.intermission) {
+	if (cl.intermission)
+	{
 		Con_Printf("Can't save in intermission.\n");
 		return;
 	}
 
-	if (svs.maxclients != 1) {
+	if (svs.maxclients != 1)
+	{
 		Con_Printf("Can't save multiplayer games.\n");
 		return;
 	}
 
-	if (Cmd_Argc() != 2) {
+	if (Cmd_Argc() != 2)
+	{
 		Con_Printf("save <savename> : save a game\n");
 		return;
 	}
 
-	if (strstr(Cmd_Argv(1), "..")) {
+	if (strstr(Cmd_Argv(1), ".."))
+	{
 		Con_Printf("Relative pathnames are not allowed.\n");
 		return;
 	}
 
-	for (i = 0; i < svs.maxclients; i++) {
-		if (svs.clients[i].active && (svs.clients[i].edict->v.health <= 0)) {
+	for (i = 0; i < svs.maxclients; i++)
+	{
+		if (svs.clients[i].active && (svs.clients[i].edict->v.health <= 0))
+		{
 			Con_Printf("Can't savegame with a dead player\n");
 			return;
 		}
 	}
 
-	SNPrintf(name, sizeof(name), "%s/%s", com_gamedir, Cmd_Argv(1));
+	snprintf(name, sizeof(name), "%s/%s", com_gamedir, Cmd_Argv(1));
 	COM_ForceExtension(name, ".sav"); // joe: force to ".sav"
 
 	Con_Printf("Saving game to %s...\n", name);
 	f = fopen(name, "w");
 
-	if (!f) {
+	if (!f)
+	{
 		Con_Printf("ERROR: couldn't open save file for writing.\n");
 		return;
 	}
@@ -826,7 +898,8 @@ void Host_Savegame_f(void)
 
 // write the light styles
 
-	for (i = 0; i < MAX_LIGHTSTYLES; i++) {
+	for (i = 0; i < MAX_LIGHTSTYLES; i++)
+	{
 		if (sv.lightstyles[i])
 			fprintf(f, "%s\n", sv.lightstyles[i]);
 		else
@@ -834,7 +907,8 @@ void Host_Savegame_f(void)
 	}
 
 	ED_WriteGlobals(f);
-	for (i = 0; i < sv.num_edicts; i++) {
+	for (i = 0; i < sv.num_edicts; i++)
+	{
 		ED_Write(f, EDICT_NUM(i));
 		// fflush (f);  // Baker: MH proves commenting this out makes save games decent speed
 	}
@@ -858,14 +932,15 @@ void Host_Loadgame_f(void)
 	if (cmd_source != src_command)
 		return;
 
-	if (Cmd_Argc() != 2) {
+	if (Cmd_Argc() != 2)
+	{
 		Con_Printf("load <savename> : load a game\n");
 		return;
 	}
 
 	cls.demonum = -1;		// stop demo loop in case this fails
 
-	SNPrintf(name, sizeof(name), "%s/%s", com_gamedir, Cmd_Argv(1));
+	snprintf(name, sizeof(name), "%s/%s", com_gamedir, Cmd_Argv(1));
 	COM_DefaultExtension(name, ".sav");
 
 // we can't call SCR_BeginLoadingPlaque, because too much stack space has
@@ -874,14 +949,16 @@ void Host_Loadgame_f(void)
 
 	Con_Printf("Loading game from %s...\n", name);
 	f = fopen(name, "r");
-	if (!f) {
+	if (!f)
+	{
 		Con_Printf("ERROR: couldn't open save file for reading.\n");
 		return;
 	}
 
 	if (fscanf(f, "%i\n", &version) < 1)
 		Con_Printf("ERROR: couldn't read from file.\n");
-	if (version != SAVEGAME_VERSION) {
+	if (version != SAVEGAME_VERSION)
+	{
 		fclose(f);
 		Con_Printf("Savegame is version %i, not %i\n", version, SAVEGAME_VERSION);
 		return;
@@ -906,7 +983,8 @@ void Host_Loadgame_f(void)
 
 	SV_SpawnServer(mapname);
 
-	if (!sv.active) {
+	if (!sv.active)
+	{
 		Con_Printf("Couldn't load map\n");
 		return;
 	}
@@ -915,7 +993,8 @@ void Host_Loadgame_f(void)
 
 // load the light styles
 
-	for (i = 0; i < MAX_LIGHTSTYLES; i++) {
+	for (i = 0; i < MAX_LIGHTSTYLES; i++)
+	{
 		if (fscanf(f, "%s\n", str) < 1)
 			Con_Printf("ERROR: couldn't read from file.\n");
 		sv.lightstyles[i] = Hunk_Alloc(strlen(str) + 1);
@@ -924,13 +1003,16 @@ void Host_Loadgame_f(void)
 
 // load the edicts out of the savegame file
 	entnum = -1;		// -1 is the globals
-	while (!feof(f)) {
-		for (i = 0; i < sizeof(str) - 1; i++) {
+	while (!feof(f))
+	{
+		for (i = 0; i < sizeof(str) - 1; i++)
+		{
 			r = fgetc(f);
 			if (r == EOF || !r)
 				break;
 			str[i] = r;
-			if (r == '}') {
+			if (r == '}')
+			{
 				i++;
 				break;
 			}
@@ -945,9 +1027,12 @@ void Host_Loadgame_f(void)
 		if (strcmp(com_token, "{"))
 			Sys_Error("First token isn't a brace");
 
-		if (entnum == -1) {	// parse the global vars
+		if (entnum == -1)
+		{	// parse the global vars
 			ED_ParseGlobals(start);
-		} else {	// parse an edict
+		}
+		else
+		{	// parse an edict
 
 			ent = EDICT_NUM(entnum);
 			memset(&ent->v, 0, progs->entityfields * 4);
@@ -970,38 +1055,30 @@ void Host_Loadgame_f(void)
 	for (i = 0; i < NUM_SPAWN_PARMS; i++)
 		svs.clients->spawn_parms[i] = spawn_parms[i];
 
-	if (cls.state != ca_dedicated) {
+	if (cls.state != ca_dedicated)
+	{
 		CL_EstablishConnection("local");
 		Host_Reconnect_f();
 	}
 }
 
-//============================================================================
-
 void Host_Name_f(void)
 {
-	char *newName;
-	int a, b, c;	// JPG 1.05 - ip address logging
+	char newName[32];
 
-	if (Cmd_Argc() == 1) {
+	if (Cmd_Argc() == 1)
+	{
 		Con_Printf("\"name\" is \"%s\"\n", cl_name.string);
 		return;
 	}
 	if (Cmd_Argc() == 2)
-		newName = Cmd_Argv(1);
+		strlcpy(newName, Cmd_Argv(1), sizeof(newName));
 	else
-		newName = Cmd_Args();
-	newName[15] = 0;
+		strlcpy(newName, Cmd_Args(), sizeof(newName));
+	newName[15] = 0; // client_t structure actually says name[32].
 
-// JPG 3.02 - remove bad characters
-	for (a = 0; newName[a]; a++) {
-		if (newName[a] == 10)
-			newName[a] = ' ';
-		else if (newName[a] == 13)
-			newName[a] += 128;
-	}
-
-	if (cmd_source == src_command) {
+	if (cmd_source == src_command)
+	{
 		if (strcmp(cl_name.string, newName) == 0)
 			return;
 		Cvar_Set("_cl_name", newName);
@@ -1011,16 +1088,14 @@ void Host_Name_f(void)
 	}
 
 	if (host_client->name[0] && strcmp(host_client->name, "unconnected"))
+	{
 		if (strcmp(host_client->name, newName) != 0)
 			Con_Printf("%s renamed to %s\n", host_client->name, newName);
-	strlcpy(host_client->name, newName, sizeof(host_client->name));
+	}
+	strcpy(host_client->name, newName);
 	host_client->edict->v.netname = PR_SetEngineString(host_client->name);
 
-
-	// JPG 3.00 - prevent messages right after a colour/name change
-	host_client->change_time = sv.time;
-
-// send notification to all clients
+	// send notification to all clients
 
 	MSG_WriteByte(&sv.reliable_datagram, svc_updatename);
 	MSG_WriteByte(&sv.reliable_datagram, host_client - svs.clients);
@@ -1037,7 +1112,7 @@ char *VersionString(void)
 	//                        "Linux GL ProQuake 3.99x"
 	//                        "Windows D3D ProQuake 3.99x"
 
-	SNPrintf(str, sizeof(str), "%s %s %s", OS_NAME, RENDERER_NAME, ENGINE_VERSION);
+	snprintf(str, sizeof(str), "%s %s %s", OS_NAME, RENDERER_NAME, ENGINE_VERSION);
 
 	return str;
 }
@@ -1053,20 +1128,24 @@ void Host_Version_f(void)
 //#endif
 }
 
-void Host_Say(qboolean teamonly)
+void Host_Say(bool teamonly)
 {
 	client_t *client;
 	client_t *save;
 	int j;
 	char *p;
-	unsigned char text[64];
-	qboolean fromServer = false;
+	char text[64];
+	bool fromServer = false;
 
-	if (cmd_source == src_command) {
-		if (cls.state == ca_dedicated) {
+	if (cmd_source == src_command)
+	{
+		if (cls.state == ca_dedicated)
+		{
 			fromServer = true;
 			teamonly = false;
-		} else {
+		}
+		else
+		{
 			Cmd_ForwardToServer_f();
 			return;
 		}
@@ -1079,13 +1158,15 @@ void Host_Say(qboolean teamonly)
 
 	p = Cmd_Args();
 // remove quotes if present
-	if (*p == '"') {
+	if (*p == '"')
+	{
 		p++;
 		p[strlen(p) - 1] = 0;
 	}
 
 // turn on color set 1
-	if (!fromServer) {
+	if (!fromServer)
+	{
 		// R00k - dont allow new connecting players to spam obscenities...
 		if (pq_connectmute.value && (net_time - host_client->netconnection->connecttime) < pq_connectmute.value)
 			return;
@@ -1105,20 +1186,24 @@ void Host_Say(qboolean teamonly)
 		if (pq_showedict.value)
 			Sys_Printf("#%d ", NUM_FOR_EDICT(host_client->edict));
 		if (teamplay.value && teamonly) // JPG - added () for mm2
-			SNPrintf(text, sizeof(text), "%c(%s): ", 1, save->name);
+			snprintf(text, sizeof(text), "%c(%s): ", 1, save->name);
 		else
-			SNPrintf(text, sizeof(text), "%c%s: ", 1, save->name);
+			snprintf(text, sizeof(text), "%c%s: ", 1, save->name);
 
 		// JPG 3.20 - optionally remove '\r'
-		if (pq_removecr.value) {
+		if (pq_removecr.value)
+		{
 			char *ch;
-			for (ch = p; *ch; ch++) {
+			for (ch = p; *ch; ch++)
+			{
 				if (*ch == '\r')
 					*ch += 128;
 			}
 		}
-	} else {
-		SNPrintf(text, sizeof(text), "%c<%s> ", 1, hostname.string);
+	}
+	else
+	{
+		snprintf(text, sizeof(text), "%c<%s> ", 1, hostname.string);
 	}
 
 	j = sizeof(text) - 2 - strlen(text);  // -2 for /n and null terminator
@@ -1128,7 +1213,8 @@ void Host_Say(qboolean teamonly)
 	strlcat(text, p, sizeof(text));
 	strlcat(text, "\n", sizeof(text));
 
-	for (j = 0, client = svs.clients; j < svs.maxclients; j++, client++) {
+	for (j = 0, client = svs.clients; j < svs.maxclients; j++, client++)
+	{
 		if (!client || !client->active || !client->spawned)
 			continue;
 		if (teamplay.value && teamonly && client->edict->v.team != save->edict->v.team)
@@ -1163,13 +1249,15 @@ void Host_Tell_f(void)
 	char *p;
 	char text[64] = { 0 };
 
-	if (cmd_source == src_command) {
+	if (cmd_source == src_command)
+	{
 		Cmd_ForwardToServer_f();
 		return;
 	}
 
 	// JPG - disabled Tell (to prevent cheating)
-	if (host_client->netconnection->mod != MOD_QSMACK) {
+	if (host_client->netconnection->mod != MOD_QSMACK)
+	{
 		SV_ClientPrintf("%cTell is diabled on this server\n", 1);
 		return;
 	}
@@ -1183,7 +1271,8 @@ void Host_Tell_f(void)
 	p = Cmd_Args();
 
 // remove quotes if present
-	if (*p == '"') {
+	if (*p == '"')
+	{
 		p++;
 		p[strlen(p) - 1] = 0;
 	}
@@ -1197,7 +1286,8 @@ void Host_Tell_f(void)
 	strlcat(text, "\n", sizeof(text));
 
 	save = host_client;
-	for (j = 0, client = svs.clients; j < svs.maxclients; j++, client++) {
+	for (j = 0, client = svs.clients; j < svs.maxclients; j++, client++)
+	{
 		if (!client->active || !client->spawned)
 			continue;
 		if (strcasecmp(client->name, Cmd_Argv(1)))
@@ -1215,7 +1305,8 @@ void Host_Color_f(void)
 	int playercolor;
 	extern cvar_t sv_allcolors;
 
-	if (Cmd_Argc() == 1) {
+	if (Cmd_Argc() == 1)
+	{
 		Con_Printf("\"color\" is \"%i %i\"\n", ((int) cl_color.value) >> 4, ((int) cl_color.value) & 0x0f);
 		Con_Printf("color <0-13> [0-13]\n");
 		return;
@@ -1223,14 +1314,16 @@ void Host_Color_f(void)
 
 	if (Cmd_Argc() == 2)
 		top = bottom = atoi(Cmd_Argv(1));
-	else {
+	else
+	{
 		top = atoi(Cmd_Argv(1));
 		bottom = atoi(Cmd_Argv(2));
 	}
 
 	top &= 15;
 	bottom &= 15;
-	if (!sv_allcolors.value) {
+	if (!sv_allcolors.value)
+	{
 		if (top > 13)
 			top = 13;
 
@@ -1240,7 +1333,8 @@ void Host_Color_f(void)
 
 	playercolor = top * 16 + bottom;
 
-	if (cmd_source == src_command) {
+	if (cmd_source == src_command)
+	{
 		Cvar_SetValue("_cl_color", playercolor);
 		if (cls.state == ca_connected)
 			Cmd_ForwardToServer_f();
@@ -1266,12 +1360,14 @@ void Host_Color_f(void)
 
 void Host_Kill_f(void)
 {
-	if (cmd_source == src_command) {
+	if (cmd_source == src_command)
+	{
 		Cmd_ForwardToServer_f();
 		return;
 	}
 
-	if (sv_player->v.health <= 0) {
+	if (sv_player->v.health <= 0)
+	{
 		SV_ClientPrintf("Can't suicide -- already dead!\n");	// JPG 3.02 allready->already
 		return;
 	}
@@ -1286,18 +1382,23 @@ void Host_Pause_f(void)
 //	if (cls.demonum == -1) // Don't allow startdemos to be paused
 	cl.paused ^= 2;		// to handle demo-pause
 
-	if (cmd_source == src_command) {
+	if (cmd_source == src_command)
+	{
 		Cmd_ForwardToServer_f();
 		return;
 	}
 	if (!pausable.value)
 		SV_ClientPrintf("Pause not allowed.\n");
-	else {
+	else
+	{
 		sv.paused ^= 1;
 
-		if (sv.paused) {
+		if (sv.paused)
+		{
 			SV_BroadcastPrintf("%s paused the game\n", PR_GetString(sv_player->v.netname));
-		} else {
+		}
+		else
+		{
 			SV_BroadcastPrintf("%s unpaused the game\n", PR_GetString(sv_player->v.netname));
 		}
 
@@ -1311,12 +1412,14 @@ void Host_Pause_f(void)
 
 void Host_PreSpawn_f(void)
 {
-	if (cmd_source == src_command) {
+	if (cmd_source == src_command)
+	{
 		Con_Printf("prespawn is not valid from the console\n");
 		return;
 	}
 
-	if (host_client->spawned) {
+	if (host_client->spawned)
+	{
 		Con_Printf("prespawn not valid -- already spawned\n");	// JPG 3.02 allready->already
 		return;
 	}
@@ -1335,21 +1438,26 @@ void Host_Spawn_f(void)
 	client_t *client;
 	edict_t *ent;
 
-	if (cmd_source == src_command) {
+	if (cmd_source == src_command)
+	{
 		Con_Printf("spawn is not valid from the console\n");
 		return;
 	}
 
-	if (host_client->spawned) {
+	if (host_client->spawned)
+	{
 		Con_Printf("Spawn not valid -- already spawned\n");
 		return;
 	}
 
 	// run the entrance script
-	if (sv.loadgame) {	// loaded games are fully inited already
-				// if this is the last client to be connected, unpause
+	if (sv.loadgame)
+	{	// loaded games are fully inited already
+		// if this is the last client to be connected, unpause
 		sv.paused = false;
-	} else {
+	}
+	else
+	{
 		// set up the edict
 		ent = host_client->edict;
 
@@ -1380,7 +1488,8 @@ void Host_Spawn_f(void)
 	MSG_WriteByte(&host_client->message, svc_time);
 	MSG_WriteFloat(&host_client->message, sv.time);
 
-	for (i = 0, client = svs.clients; i < svs.maxclients; i++, client++) {
+	for (i = 0, client = svs.clients; i < svs.maxclients; i++, client++)
+	{
 		MSG_WriteByte(&host_client->message, svc_updatename);
 		MSG_WriteByte(&host_client->message, i);
 		MSG_WriteString(&host_client->message, client->name);
@@ -1393,7 +1502,8 @@ void Host_Spawn_f(void)
 	}
 
 // send all current light styles
-	for (i = 0; i < MAX_LIGHTSTYLES; i++) {
+	for (i = 0; i < MAX_LIGHTSTYLES; i++)
+	{
 		MSG_WriteByte(&host_client->message, svc_lightstyle);
 		MSG_WriteByte(&host_client->message, (char) i);
 		MSG_WriteString(&host_client->message, sv.lightstyles[i]);
@@ -1426,11 +1536,14 @@ void Host_Spawn_f(void)
 // with a permanent head tilt
 	ent = EDICT_NUM(1 + (host_client - svs.clients));
 	MSG_WriteByte(&host_client->message, svc_setangle);
-	if (sv.loadgame) {
+	if (sv.loadgame)
+	{
 		MSG_WriteAngle(&host_client->message, ent->v.v_angle[0]);
 		MSG_WriteAngle(&host_client->message, ent->v.v_angle[1]);
 		MSG_WriteAngle(&host_client->message, 0);
-	} else {
+	}
+	else
+	{
 		MSG_WriteAngle(&host_client->message, ent->v.angles[0]);
 		MSG_WriteAngle(&host_client->message, ent->v.angles[1]);
 		MSG_WriteAngle(&host_client->message, 0);
@@ -1448,7 +1561,8 @@ void Host_Spawn_f(void)
 
 void Host_Begin_f(void)
 {
-	if (cmd_source == src_command) {
+	if (cmd_source == src_command)
+	{
 		Con_Printf("begin is not valid from the console\n");
 		return;
 	}
@@ -1473,19 +1587,23 @@ void Host_Kick_f(void)
 	char *message = NULL;
 	client_t *save;
 	int i;
-	qboolean byNumber = false;
+	bool byNumber = false;
 
-	if (cmd_source == src_command) {
-		if (!sv.active) {
+	if (cmd_source == src_command)
+	{
+		if (!sv.active)
+		{
 			Cmd_ForwardToServer_f();
 			return;
 		}
-	} else if (pr_global_struct->deathmatch)
+	}
+	else if (pr_global_struct->deathmatch)
 		return;
 
 	save = host_client;
 
-	if (Cmd_Argc() > 2 && strcmp(Cmd_Argv(1), "#") == 0) {
+	if (Cmd_Argc() > 2 && strcmp(Cmd_Argv(1), "#") == 0)
+	{
 		i = atof(Cmd_Argv(2)) - 1;
 		if (i < 0 || i >= svs.maxclients)
 			return;
@@ -1493,8 +1611,11 @@ void Host_Kick_f(void)
 			return;
 		host_client = &svs.clients[i];
 		byNumber = true;
-	} else {
-		for (i = 0, host_client = svs.clients; i < svs.maxclients; i++, host_client++) {
+	}
+	else
+	{
+		for (i = 0, host_client = svs.clients; i < svs.maxclients; i++, host_client++)
+		{
 			if (!host_client->active)
 				continue;
 			if (strcasecmp(host_client->name, Cmd_Argv(1)) == 0)
@@ -1502,7 +1623,8 @@ void Host_Kick_f(void)
 		}
 	}
 
-	if (i < svs.maxclients) {
+	if (i < svs.maxclients)
+	{
 		if (cmd_source == src_command)
 			if (cls.state == ca_dedicated)
 				who = "Console";
@@ -1515,9 +1637,11 @@ void Host_Kick_f(void)
 		if (host_client == save)
 			return;
 
-		if (Cmd_Argc() > 2) {
+		if (Cmd_Argc() > 2)
+		{
 			message = COM_Parse(Cmd_Args());
-			if (byNumber) {
+			if (byNumber)
+			{
 				message++;							// skip the #
 				while (*message == ' ')				// skip white space
 					message++;
@@ -1542,7 +1666,7 @@ void Host_Kick_f(void)
  DEBUGGING TOOLS
 
  ===============================================================================
-*/
+ */
 
 void Host_Give_f(void)
 {
@@ -1550,7 +1674,8 @@ void Host_Give_f(void)
 	int v;
 	eval_t *val;
 
-	if (cmd_source == src_command) {
+	if (cmd_source == src_command)
+	{
 		Cmd_ForwardToServer_f();
 		return;
 	}
@@ -1561,7 +1686,8 @@ void Host_Give_f(void)
 	t = Cmd_Argv(1);
 	v = atoi(Cmd_Argv(2));
 
-	switch (t[0]) {
+	switch (t[0])
+	{
 	case '0':
 	case '1':
 	case '2':
@@ -1573,26 +1699,32 @@ void Host_Give_f(void)
 	case '8':
 	case '9':
 		// MED 01/04/97 added hipnotic give stuff
-		if (hipnotic) {
-			if (t[0] == '6') {
+		if (hipnotic)
+		{
+			if (t[0] == '6')
+			{
 				if (t[1] == 'a')
 					sv_player->v.items = (int) sv_player->v.items | HIT_PROXIMITY_GUN;
 				else
 					sv_player->v.items = (int) sv_player->v.items | IT_GRENADE_LAUNCHER;
-			} else if (t[0] == '9')
+			}
+			else if (t[0] == '9')
 				sv_player->v.items = (int) sv_player->v.items | HIT_LASER_CANNON;
 			else if (t[0] == '0')
 				sv_player->v.items = (int) sv_player->v.items | HIT_MJOLNIR;
 			else if (t[0] >= '2')
 				sv_player->v.items = (int) sv_player->v.items | (IT_SHOTGUN << (t[0] - '2'));
-		} else {
+		}
+		else
+		{
 			if (t[0] >= '2')
 				sv_player->v.items = (int) sv_player->v.items | (IT_SHOTGUN << (t[0] - '2'));
 		}
 		break;
 
 	case 's':
-		if (rogue) {
+		if (rogue)
+		{
 			if ((val = GETEDICTFIELDVALUE(sv_player, eval_ammo_shells1)))
 				val->_float = v;
 		}
@@ -1601,20 +1733,26 @@ void Host_Give_f(void)
 		break;
 
 	case 'n':
-		if (rogue) {
-			if ((val = GETEDICTFIELDVALUE(sv_player, eval_ammo_nails1))) {
+		if (rogue)
+		{
+			if ((val = GETEDICTFIELDVALUE(sv_player, eval_ammo_nails1)))
+			{
 				val->_float = v;
 				if (sv_player->v.weapon <= IT_LIGHTNING)
 					sv_player->v.ammo_nails = v;
 			}
-		} else {
+		}
+		else
+		{
 			sv_player->v.ammo_nails = v;
 		}
 		break;
 
 	case 'l':
-		if (rogue) {
-			if ((val = GETEDICTFIELDVALUE(sv_player, eval_ammo_lava_nails))) {
+		if (rogue)
+		{
+			if ((val = GETEDICTFIELDVALUE(sv_player, eval_ammo_lava_nails)))
+			{
 				val->_float = v;
 				if (sv_player->v.weapon > IT_LIGHTNING)
 					sv_player->v.ammo_nails = v;
@@ -1623,20 +1761,26 @@ void Host_Give_f(void)
 		break;
 
 	case 'r':
-		if (rogue) {
-			if ((val = GETEDICTFIELDVALUE(sv_player, eval_ammo_rockets1))) {
+		if (rogue)
+		{
+			if ((val = GETEDICTFIELDVALUE(sv_player, eval_ammo_rockets1)))
+			{
 				val->_float = v;
 				if (sv_player->v.weapon <= IT_LIGHTNING)
 					sv_player->v.ammo_rockets = v;
 			}
-		} else {
+		}
+		else
+		{
 			sv_player->v.ammo_rockets = v;
 		}
 		break;
 
 	case 'm':
-		if (rogue) {
-			if ((val = GETEDICTFIELDVALUE(sv_player, eval_ammo_multi_rockets))) {
+		if (rogue)
+		{
+			if ((val = GETEDICTFIELDVALUE(sv_player, eval_ammo_multi_rockets)))
+			{
 				val->_float = v;
 				if (sv_player->v.weapon > IT_LIGHTNING)
 					sv_player->v.ammo_rockets = v;
@@ -1649,20 +1793,26 @@ void Host_Give_f(void)
 		break;
 
 	case 'c':
-		if (rogue) {
-			if ((val = GETEDICTFIELDVALUE(sv_player, eval_ammo_cells1))) {
+		if (rogue)
+		{
+			if ((val = GETEDICTFIELDVALUE(sv_player, eval_ammo_cells1)))
+			{
 				val->_float = v;
 				if (sv_player->v.weapon <= IT_LIGHTNING)
 					sv_player->v.ammo_cells = v;
 			}
-		} else {
+		}
+		else
+		{
 			sv_player->v.ammo_cells = v;
 		}
 		break;
 
 	case 'p':
-		if (rogue) {
-			if ((val = GETEDICTFIELDVALUE(sv_player, eval_ammo_plasma))) {
+		if (rogue)
+		{
+			if ((val = GETEDICTFIELDVALUE(sv_player, eval_ammo_plasma)))
+			{
 				val->_float = v;
 				if (sv_player->v.weapon > IT_LIGHTNING)
 					sv_player->v.ammo_cells = v;
@@ -1672,17 +1822,20 @@ void Host_Give_f(void)
 		// Baker 3.60 - give "a" for armor from FitzQuake
 		//johnfitz -- give armour
 	case 'a':
-		if (v >= 0 && v <= 100) {
+		if (v >= 0 && v <= 100)
+		{
 			sv_player->v.armortype = 0.3;
 			sv_player->v.armorvalue = v;
 			sv_player->v.items = sv_player->v.items - ((int) (sv_player->v.items) & (int) (IT_ARMOR1 | IT_ARMOR2 | IT_ARMOR3)) + IT_ARMOR1;
 		}
-		if (v > 100 && v <= 150) {
+		if (v > 100 && v <= 150)
+		{
 			sv_player->v.armortype = 0.6;
 			sv_player->v.armorvalue = v;
 			sv_player->v.items = sv_player->v.items - ((int) (sv_player->v.items) & (int) (IT_ARMOR1 | IT_ARMOR2 | IT_ARMOR3)) + IT_ARMOR2;
 		}
-		if (v > 150 && v <= 200) {
+		if (v > 150 && v <= 200)
+		{
 			sv_player->v.armortype = 0.8;
 			sv_player->v.armorvalue = v;
 			sv_player->v.items = sv_player->v.items - ((int) (sv_player->v.items) & (int) (IT_ARMOR1 | IT_ARMOR2 | IT_ARMOR3)) + IT_ARMOR3;
@@ -1697,7 +1850,8 @@ edict_t *FindViewthing(void)
 	int i;
 	edict_t *e;
 
-	for (i = 0; i < sv.num_edicts; i++) {
+	for (i = 0; i < sv.num_edicts; i++)
+	{
 		e = EDICT_NUM(i);
 		if (!strcmp(PR_GetString(e->v.classname), "viewthing"))
 			return e;
@@ -1716,7 +1870,8 @@ void Host_Viewmodel_f(void)
 		return;
 
 	m = Mod_ForName(Cmd_Argv(1), false);
-	if (!m) {
+	if (!m)
+	{
 		Con_Printf("Can't load %s\n", Cmd_Argv(1));
 		return;
 	}
@@ -1813,19 +1968,22 @@ void Host_Startdemos_f(void)
 	}
 #endif
 
-	if (cls.state == ca_dedicated) {
+	if (cls.state == ca_dedicated)
+	{
 		if (!sv.active)
 			Cbuf_AddText("map start\n");
 		return;
 	}
 
 	c = Cmd_Argc() - 1;
-	if (c > MAX_DEMOS) {
+	if (c > MAX_DEMOS)
+	{
 		Con_Printf("Max %i demos in demoloop\n", MAX_DEMOS);
 		c = MAX_DEMOS;
 	}
 
-	if (Cmd_Argc() != 1) {
+	if (Cmd_Argc() != 1)
+	{
 		cls.demonum = 0;
 
 	}
@@ -1834,10 +1992,12 @@ void Host_Startdemos_f(void)
 	for (i = 1; i < c + 1; i++)
 		strncpy(cls.demos[i - 1], Cmd_Argv(i), sizeof(cls.demos[0]) - 1);
 
-	if (!sv.active && cls.demonum != -1 && !cls.demoplayback) {
+	if (!sv.active && cls.demonum != -1 && !cls.demoplayback)
+	{
 		cls.demonum = 0;
 		CL_NextDemo();
-	} else
+	}
+	else
 		cls.demonum = -1;
 }
 
@@ -1889,7 +2049,8 @@ void Load_Stats_Id_f(void)
 		Con_Printf("%s command requires a parameter\n", Cmd_Argv(0));
 	else if (atoi(Cmd_Argv(1)) == 0)
 		Con_Printf("%s command uses a number", Cmd_Argv(0));
-	else {
+	else
+	{
 		//FIXME: This was not a portable solution
 		//int hdsernum = Sys_GetHardDriveSerial (argv[0]) / 1000000;
 		int hdsernum = 0;
@@ -1905,14 +2066,16 @@ void Stats_Id_f(void)
 		Con_Printf("%s <quakeone.com stats id> to log it\n");
 	else if (atoi(Cmd_Argv(1)) == 0)
 		Con_Printf("Your QuakeOne.com stats id is a number\n");
-	else {
+	else
+	{
 		char buffer[32] = { 0 };
 		const char* stats_id_text = Cmd_Argv(1);
 		const char* cursor = stats_id_text;
 		int stringlen = strlen(stats_id_text);
 		int i;
 		FILE *f;
-		for (i = 0; i < stringlen; i++) {
+		for (i = 0; i < stringlen; i++)
+		{
 			// Advance past dashes and stuff  IS_NUM
 			while (*cursor && (!DIGIT(*cursor)))
 				cursor++;
@@ -1924,7 +2087,8 @@ void Stats_Id_f(void)
 		f = fopen(va("%s/id1/stats_id.cfg", com_basedir), "wt");
 		if (!f)
 			Con_Printf("Could open stats id file for writing\n");
-		else {
+		else
+		{
 			int stats_num = atoi(buffer);
 			//FIXME: This was not a portable solution
 			//int hdsernum = Sys_GetHardDriveSerial (argv[0]) / 1000000;

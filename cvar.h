@@ -48,13 +48,13 @@
  interface from being ambiguous.
  */
 
-// ICH BIN EIN HACK!!!!  I changed 'server' from qboolean to int so that I can
+// ICH BIN EIN HACK!!!!  I changed 'server' from bool to int so that I can
 // have more that two values: non-server, server, server-mute ... jpg
 typedef struct cvar_s
 {
 	char *name;
 	char *string;
-	qboolean archive; // set to true to cause it to be saved to vars.rc
+	bool archive; // set to true to cause it to be saved to vars.rc
 	int server; // notifies players when changed
 	float value;
 	struct cvar_s *next;
@@ -82,7 +82,7 @@ char *Cvar_CompleteVariable(char *partial);
 // attempts to match a partial variable name for command line completion
 // returns NULL if nothing fits
 
-qboolean Cvar_Command(void);
+bool Cvar_Command(void);
 // called by Cmd_ExecuteString when Cmd_Argv(0) doesn't match a known
 // command.  Returns true if the command was a variable reference that
 // was handled. (print or change)

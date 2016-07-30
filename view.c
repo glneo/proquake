@@ -25,7 +25,7 @@
  */
 
 #ifdef MACOSX
-qboolean qMinimized;
+bool qMinimized;
 #endif
 
 cvar_t lcd_x = { "lcd_x", "0" };
@@ -475,10 +475,10 @@ void V_CalcBlend(void)
  */
 
 
-void V_UpdatePalette_Static(qboolean forced)
+void V_UpdatePalette_Static(bool forced)
 {
 	int i, j;
-	qboolean blend_changed;
+	bool blend_changed;
 	byte *basepal, *newpal;
 	byte pal[768];
 	float r, g, b, a;
@@ -564,7 +564,7 @@ void V_UpdatePalette_Static(qboolean forced)
 		newpal += 3;
 	}
 
-	VID_ShiftPaletteOld(pal);
+//	VID_ShiftPaletteOld(pal);
 }
 
 /*
@@ -882,11 +882,10 @@ void SCR_DrawCoords(void)
  */
 void SCR_DrawVolume(void)
 {
-	int i, yofs;
-	float j;
+	int yofs;
 	char bar[11];
 	static float volume_time = 0;
-	extern qboolean volume_changed;
+	extern bool volume_changed;
 
 	if (realtime < volume_time - 2.0)
 	{
@@ -904,7 +903,7 @@ void SCR_DrawVolume(void)
 //		return;
 //	}
 
-//	for (i = 1, j = 0.1; i <= 10; i++, j += 0.1)
+//	for (int i = 1, float j = 0.1; i <= 10; i++, j += 0.1)
 //		bar[i - 1] = ((volume.value + 0.05) >= j) ? 139 : 11; // Baker 3.60 + 0.0.5 hack for now
 
 	bar[10] = 0;
@@ -914,64 +913,6 @@ void SCR_DrawVolume(void)
 	Draw_String(vid.width - 88, yofs, bar);
 	Draw_String(vid.width - 88, yofs + 8, "volume");
 }
-
-#ifdef SUPPORTS_AUTOID_SOFTWARE
-void R_DrawNameTags(void)
-{
-	int i;
-	vec3_t center;
-	vec3_t tagcenter;
-	vec3_t waste, waste2;
-//	frame_t *frame;
-	entity_t *state;
-	vec3_t OurViewPoint;
-	vec3_t ThisClientPoint;
-	vec3_t stop;
-	extern cvar_t scr_autoid;
-
-	if (!scr_autoid.value || cls.state != ca_connected || !cls.demoplayback)
-	return;
-
-	for (i = 0; i < cl.maxclients; i++)
-	{
-		state = &cl_entities[1+i];
-
-		if (!state->model->name)		// NULL model
-		continue;
-
-		if (!(state->modelindex == cl_modelindex[mi_player]))// Not a player model
-		continue;
-
-		if (ISDEAD(state->frame))// Dead
-		continue;
-
-//		if (strcmp(state->model->name, "progs/player.mdl"))
-//			continue;
-
-//		if (R_CullSphere(state->origin, 0))
-//			continue;
-
-		VectorCopy (r_refdef.vieworg, OurViewPoint);
-		VectorCopy (state->origin, ThisClientPoint);
-
-		TraceLine (OurViewPoint, ThisClientPoint, stop);
-
-		if (stop[0] != 0 || stop[1] != 0 || stop[2] != 0)// Quick and dirty traceline
-		continue;
-
-		VectorCopy(state->origin, tagcenter);
-		tagcenter[2] += 32;
-		ML_Project(tagcenter, center, r_refdef.viewangles, r_refdef.vieworg, (float)r_refdef.vrect.width/r_refdef.vrect.height, r_refdef.fov_y);
-		if (center[2] > 1)
-		continue;
-		//Con_Printf("Center is x, y, z %f %f %f\n", center[0], center[1], center[2]);
-		Draw_String(center[0]*r_refdef.vrect.width+r_refdef.vrect.x, (1-center[1])*r_refdef.vrect.height+r_refdef.vrect.y, cl.scores[i].name);
-		//Con_Printf("Drawing tag for number %i = %s\n", i, cl.scores[i].name);
-		//Con_Printf("Drawing at x %i,y i% \n", center[0]*r_refdef.vrect.width+r_refdef.vrect.x, (1-center[1])*r_refdef.vrect.height+r_refdef.vrect.y);
-		//Con_Printf("Our screen %i %i with center0/1 %f %f\n",  r_refdef.vrect.width, r_refdef.vrect.height, center[0], center[1]);
-	}
-}
-#endif
 
 /*
  ==================

@@ -20,7 +20,6 @@
 #include "quakedef.h"
 
 #include <SDL2/SDL.h>
-#define USE_SDL2
 
 #define MAX_MODE_LIST	600
 #define MAX_BPPS_LIST	5
@@ -44,13 +43,13 @@ unsigned d_8to24table[256];
 
 int texture_extension_number = 1;
 
-static qboolean	vid_initialized = false;
+static bool	vid_initialized = false;
 
 static SDL_Window	*draw_context;
 static SDL_GLContext	gl_context;
 
-static qboolean	vid_locked = false; //johnfitz
-static qboolean	vid_changed = false;
+static bool	vid_locked = false; //johnfitz
+static bool	vid_changed = false;
 
 lpMTexFUNC             qglMultiTexCoord2f = NULL;
 lpSelTexFUNC   qglActiveTexture = NULL;
@@ -65,20 +64,20 @@ static void GL_SetupState (void); //johnfitz
 
 viddef_t vid; // global video state
 modestate_t modestate = MODE_NONE;
-qboolean scr_skipupdate;
+bool scr_skipupdate;
 
-qboolean gl_mtexable = false;
-qboolean gl_texture_env_combine = false; //johnfitz
-qboolean gl_texture_env_add = false; //johnfitz
-qboolean gl_swap_control = false; //johnfitz
-qboolean gl_anisotropy_able = false; //johnfitz
+bool gl_mtexable = false;
+bool gl_texture_env_combine = false; //johnfitz
+bool gl_texture_env_add = false; //johnfitz
+bool gl_swap_control = false; //johnfitz
+bool gl_anisotropy_able = false; //johnfitz
 float gl_max_anisotropy; //johnfitz
-qboolean gl_texture_NPOT = false; //ericw
-qboolean gl_vbo_able = false; //ericw
-qboolean gl_glsl_able = false; //ericw
+bool gl_texture_NPOT = false; //ericw
+bool gl_vbo_able = false; //ericw
+bool gl_glsl_able = false; //ericw
 GLint gl_max_texture_units = 0; //ericw
-qboolean gl_glsl_gamma_able = false; //ericw
-qboolean gl_glsl_alias_able = false; //ericw
+bool gl_glsl_gamma_able = false; //ericw
+bool gl_glsl_alias_able = false; //ericw
 int gl_stencilbits;
 
 PFNGLMULTITEXCOORD2FARBPROC GL_MTexCoord2fFunc = NULL; //johnfitz
@@ -126,32 +125,31 @@ static int VID_GetCurrentBPP (void)
 }
 
 
-static qboolean VID_GetFullscreen (void)
+static bool VID_GetFullscreen (void)
 {
 	return (SDL_GetWindowFlags(draw_context) & SDL_WINDOW_FULLSCREEN) != 0;
 }
 
-static qboolean VID_GetDesktopFullscreen (void)
+static bool VID_GetDesktopFullscreen (void)
 {
 	return (SDL_GetWindowFlags(draw_context) & SDL_WINDOW_FULLSCREEN_DESKTOP) != 0;
 }
 
-static qboolean VID_GetVSync (void)
+static bool VID_GetVSync (void)
 {
 	return SDL_GL_GetSwapInterval() == 1;
 }
 
-qboolean VID_HasMouseOrInputFocus (void)
+bool VID_HasMouseOrInputFocus (void)
 {
 	return (SDL_GetWindowFlags(draw_context) & (SDL_WINDOW_MOUSE_FOCUS | SDL_WINDOW_INPUT_FOCUS)) != 0;
 }
 
-qboolean VID_IsMinimized (void)
+bool VID_IsMinimized (void)
 {
 	return !(SDL_GetWindowFlags(draw_context) & SDL_WINDOW_SHOWN);
 }
 
-#if defined(USE_SDL2)
 /*
 ================
 VID_SDL2_GetDisplayMode
@@ -181,9 +179,8 @@ static SDL_DisplayMode *VID_SDL2_GetDisplayMode(int width, int height, int bpp)
 	}
 	return NULL;
 }
-#endif /* USE_SDL2 */
 
-static qboolean VID_ValidMode (int width, int height, int bpp, qboolean fullscreen)
+static bool VID_ValidMode (int width, int height, int bpp, bool fullscreen)
 {
 	if (width < 320)
 		return false;
@@ -212,7 +209,7 @@ static qboolean VID_ValidMode (int width, int height, int bpp, qboolean fullscre
 VID_SetMode
 ================
 */
-static qboolean VID_SetMode (int width, int height, int bpp, qboolean fullscreen)
+static bool VID_SetMode (int width, int height, int bpp, bool fullscreen)
 {
 	int		temp;
 	Uint32	flags;
@@ -362,7 +359,7 @@ static void VID_Changed_f (cvar_t *var)
 //static void VID_Restart (void)
 //{
 //	int width, height, bpp;
-//	qboolean fullscreen;
+//	bool fullscreen;
 //
 //	if (vid_locked || !vid_changed)
 //		return;
@@ -533,7 +530,7 @@ static void GL_Info_f (void)
 GL_CheckExtensions
 ===============
 */
-static qboolean GL_ParseExtensionList (const char *list, const char *name)
+static bool GL_ParseExtensionList (const char *list, const char *name)
 {
 	const char	*start;
 	const char	*where, *terminator;
@@ -654,24 +651,12 @@ static void GL_CheckExtensions (void)
 	//
 	if (!gl_swap_control)
 	{
-#if defined(USE_SDL2)
 		Con_Warning ("vertical sync not supported (SDL_GL_SetSwapInterval failed)\n");
-#else
-		Con_Warning ("vertical sync not supported (SDL_GL_SetAttribute failed)\n");
-#endif
 	}
-#if defined(USE_SDL2)
 	else if ((swap_control = SDL_GL_GetSwapInterval()) == -1)
-#else
-	else if (SDL_GL_GetAttribute(SDL_GL_SWAP_CONTROL, &swap_control) == -1)
-#endif
 	{
 		gl_swap_control = false;
-#if defined(USE_SDL2)
 		Con_Warning ("vertical sync not supported (SDL_GL_GetSwapInterval failed)\n");
-#else
-		Con_Warning ("vertical sync not supported (SDL_GL_GetAttribute failed)\n");
-#endif
 	}
 	else if ((vid_vsync.value && swap_control != 1) || (!vid_vsync.value && swap_control != 0))
 	{
@@ -680,11 +665,7 @@ static void GL_CheckExtensions (void)
 	}
 	else
 	{
-#if defined(USE_SDL2)
 		Con_Printf("FOUND: SDL_GL_SetSwapInterval\n");
-#else
-		Con_Printf("FOUND: SDL_GL_SWAP_CONTROL\n");
-#endif
 	}
 
 	// anisotropic filtering
@@ -915,14 +896,14 @@ static void VID_InitModelist (void)
 void VID_Init(unsigned char *palette)
 {
 	int p, width, height, bpp, display_width, display_height, display_bpp;
-	qboolean fullscreen;
-	const char *read_vars[] = {
-		"vid_fullscreen",
-		"vid_width",
-		"vid_height",
-		"vid_bpp",
-		"vid_vsync",
-	};
+	bool fullscreen;
+//	const char *read_vars[] = {
+//		"vid_fullscreen",
+//		"vid_width",
+//		"vid_height",
+//		"vid_bpp",
+//		"vid_vsync",
+//	};
 
 #define num_readvars	( sizeof(read_vars)/sizeof(read_vars[0]) )
 
@@ -1063,8 +1044,8 @@ void VID_Toggle(void)
 	// TODO: Clear out the dead code, reinstate the fast path using SDL_SetWindowFullscreen
 	// inside VID_SetMode, check window size to fix WinXP issue. This will
 	// keep all the mode changing code in one place.
-	static qboolean vid_toggle_works = false;
-	qboolean toggleWorked;
+	static bool vid_toggle_works = false;
+	bool toggleWorked;
 	Uint32 flags = 0;
 
 	S_ClearBuffer ();

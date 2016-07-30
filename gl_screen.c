@@ -91,7 +91,7 @@ cvar_t gl_triplebuffer = { "gl_triplebuffer", "1", true };
 cvar_t pq_drawfps = { "pq_drawfps", "0", true }; // JPG - draw frames per second
 cvar_t show_speed = { "show_speed", "0", false }; // JPG - draw frames per second
 
-qboolean scr_initialized;		// ready to draw
+bool scr_initialized;		// ready to draw
 
 qpic_t *scr_ram;
 qpic_t *scr_net;
@@ -104,10 +104,10 @@ viddef_t vid;				// global video state
 
 vrect_t scr_vrect;
 
-qboolean scr_disabled_for_loading;
-qboolean scr_drawloading;
+bool scr_disabled_for_loading;
+bool scr_drawloading;
 float scr_disabled_time;
-qboolean scr_skipupdate;
+bool scr_skipupdate;
 
 void SCR_ScreenShot_f(void);
 
@@ -198,7 +198,7 @@ void SCR_DrawCenterString(void)
 }
 
 extern cvar_t cl_scoreboard_clean;
-extern qboolean sb_showscores;
+extern bool sb_showscores;
 void SCR_CheckDrawCenterString(void)
 {
 //	scr_copytop = 1;
@@ -250,7 +250,7 @@ static void SCR_CalcRefdef(void)
 {
 	int h;
 	float size;
-	qboolean full = false;
+	bool full = false;
 
 //	scr_fullupdate = 0;		// force a background redraw
 	vid.recalc_refdef = 0;
@@ -497,7 +497,7 @@ void SCR_DrawFPS(void)
 	if (!pq_drawfps.value)
 		return;
 
-	SNPrintf(buff, sizeof(buff), "%3d", fps);
+	snprintf(buff, sizeof(buff), "%3d", fps);
 	x = vid.width - 48;
 
 	ch = buff;
@@ -545,7 +545,7 @@ void SCR_DrawSpeed(void)
 
 	if (display_speed >= 0)
 	{
-		SNPrintf(buff, sizeof(buff), "%3d", (int) display_speed);
+		snprintf(buff, sizeof(buff), "%3d", (int) display_speed);
 		ch = buff;
 		x = vid.width - 48;
 		while (*ch)
@@ -714,8 +714,8 @@ void SCR_ScreenShot_f(void)
 	//johnfitz -- changed name format from quake00 to fitz0000
 	for (i = 0; i < 10000; i++)
 	{
-		SNPrintf(tganame, sizeof(tganame), "quake%04i.tga", i);
-		SNPrintf(checkname, sizeof(checkname), "%s/%s", com_gamedir, tganame);
+		snprintf(tganame, sizeof(tganame), "quake%04i.tga", i);
+		snprintf(checkname, sizeof(checkname), "%s/%s", com_gamedir, tganame);
 		if (Sys_FileTime(checkname) == -1)
 			break;	// file doesn't exist
 	}
@@ -800,7 +800,7 @@ void SCR_EndLoadingPlaque(void)
 //=============================================================================
 
 char *scr_notifystring;
-qboolean scr_drawdialog;
+bool scr_drawdialog;
 
 void SCR_DrawNotifyString(void)
 {
@@ -901,7 +901,7 @@ void SCR_BringDownConsole(void)
 		SCR_UpdateScreen();
 
 	cl.cshifts[0].percent = 0;		// no area contents palette on next frame
-	VID_SetPaletteOld(host_basepal);
+//	VID_SetPaletteOld(host_basepal);
 }
 
 void SCR_TileClear(void)

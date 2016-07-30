@@ -273,7 +273,7 @@ void CL_SignonReply (void)
 		MSG_WriteString (&cls.message, va("color %i %i\n", ((int)cl_color.value)>>4, ((int)cl_color.value)&15));
 
 		MSG_WriteByte (&cls.message, clc_stringcmd);
-		SNPrintf (str, sizeof(str), "spawn %s", cls.spawnparms);
+		snprintf (str, sizeof(str), "spawn %s", cls.spawnparms);
 		MSG_WriteString (&cls.message, str);
 
 		break;
@@ -330,7 +330,7 @@ void CL_NextDemo (void)
 	}
 
 	SCR_BeginLoadingPlaque (); // Baker: Moved to AFTER we know demo will play
-	SNPrintf (str, sizeof(str), "nextstartdemo %s\n", cls.demos[cls.demonum]);
+	snprintf (str, sizeof(str), "nextstartdemo %s\n", cls.demos[cls.demonum]);
 	Cbuf_InsertText (str);
 	cls.demonum++;
 }
@@ -439,7 +439,7 @@ should be put at.
 */
 float CL_LerpPoint (void)
 {
-	extern qboolean bumper_on;
+	extern bool bumper_on;
 	float	f, frac;
 
 	f = cl.mtime[0] - cl.mtime[1];

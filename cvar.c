@@ -315,7 +315,7 @@ void Cvar_Reset(char *name)
 void Cvar_Set(char *var_name, char *value)
 {
 	cvar_t *var;
-	qboolean changed;
+	bool changed;
 
 	var = Cvar_FindVar(var_name);
 	if (!var)
@@ -459,7 +459,7 @@ void Cvar_RegisterVariable(cvar_t *variable, void *function)
  Handles variable inspection and changing from the console
  ============
  */
-qboolean Cvar_Command(void)
+bool Cvar_Command(void)
 {
 	cvar_t *v;
 

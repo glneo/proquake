@@ -38,10 +38,10 @@ int			key_count;			// incremented every key event
 char		*keybindings[256];
 int			keyshift[256];		// key to map to if shift held down in console
 int			key_repeats[256];	// if > 1, it is autorepeating
-qboolean	consolekeys[256];	// if true, can't be rebound while in console
-qboolean	menubound[256];	// if true, can't be rebound while in menu
-qboolean	keydown[256];
-qboolean	keygamedown[256];  // Baker: to prevent -aliases from triggering
+bool	consolekeys[256];	// if true, can't be rebound while in console
+bool	menubound[256];	// if true, can't be rebound while in menu
+bool	keydown[256];
+bool	keygamedown[256];  // Baker: to prevent -aliases from triggering
 
 
 cvar_t		cl_key_altenter = {"cl_key_altenter", "1", true}; // Baker 3.99q: allows user to disable new ALT-ENTER behavior
@@ -232,7 +232,7 @@ Interactive line editing and console scrollback
 void Key_Console (int key, int ascii)
 {
 	char	*cmd;
-	qboolean     passed=false;
+	bool     passed=false;
 
 	//Con_Printf ("Key Console ... k is %d a is %d\n", key, ascii);
 
@@ -341,7 +341,7 @@ void Key_Console (int key, int ascii)
 				best = least;
 		}
 
-		SNPrintf(key_lines[edit_line], sizeof(key_lines[edit_line]), "]%s ", best);
+		snprintf(key_lines[edit_line], sizeof(key_lines[edit_line]), "]%s ", best);
 		key_linepos = strlen(key_lines[edit_line]);
 		return;
 	}
@@ -479,7 +479,7 @@ void Key_Console (int key, int ascii)
 // JPG - added MAX_CHAT_SIZE
 #define MAX_CHAT_SIZE 45
 char chat_buffer[MAX_CHAT_SIZE];
-qboolean team_message = false;
+bool team_message = false;
 
 void Key_Message (int key, int ascii)
 {
@@ -648,7 +648,7 @@ void Key_Unbind_f (void)
 
 
 extern  keydest_t		key_dest;
-extern  qboolean com_modified;
+extern  bool com_modified;
 void Key_Unbindall_f (void)
 {
 	int		i;
@@ -941,7 +941,7 @@ void Key_Init (void)
 Key_TextEntry
 ===================
 */
-qboolean Key_TextEntry (void)
+bool Key_TextEntry (void)
 {
 //	if (key_inputgrab.active)
 //		return true;
@@ -953,7 +953,7 @@ qboolean Key_TextEntry (void)
 	case key_game:
 		if (!con_forcedup)
 			return false;
-		/* fallthrough */
+		return true;
 	case key_console:
 		return true;
 	default:
@@ -970,12 +970,12 @@ Called by the system between frames for both key up and key down events
 Should NOT be called during an interrupt!
 ===================
 */
-extern qboolean	cl_inconsole; // Baker 3.76 - from Qrack
-void Key_Event (int key, int ascii, qboolean down)
+extern bool	cl_inconsole; // Baker 3.76 - from Qrack
+void Key_Event (int key, int ascii, bool down)
 {
 	char	*kb;
 	char	cmd[1024];
-	qboolean wasgamekey = false;
+	bool wasgamekey = false;
 	int	flex_ascii;
 
 	// Baker: special ... K_MOUSECLICK
@@ -1148,7 +1148,7 @@ void Key_Event (int key, int ascii, qboolean down)
 			kb = keybindings[key];  // Baker 3.703 is this right
 			if (kb && kb[0] == '+')
 			{
-				SNPrintf (cmd, sizeof(cmd), "-%s %i\n", kb+1, key);
+				snprintf (cmd, sizeof(cmd), "-%s %i\n", kb+1, key);
 				Cbuf_AddText (cmd);
 			}
 			if (keyshift[key] != key)
@@ -1156,7 +1156,7 @@ void Key_Event (int key, int ascii, qboolean down)
 				kb = keybindings[keyshift[key]];
 				if (kb && kb[0] == '+')
 				{
-					SNPrintf (cmd, sizeof(cmd), "-%s %i\n", kb+1, key);
+					snprintf (cmd, sizeof(cmd), "-%s %i\n", kb+1, key);
 					Cbuf_AddText (cmd);
 				}
 			}
@@ -1192,7 +1192,7 @@ void Key_Event (int key, int ascii, qboolean down)
 
 			if (kb[0] == '+')
 			{	// button commands add keynum as a parm
-				SNPrintf (cmd, sizeof(cmd), "%s %i\n", kb, key);
+				snprintf (cmd, sizeof(cmd), "%s %i\n", kb, key);
 				Cbuf_AddText (cmd);
 			}
 			else

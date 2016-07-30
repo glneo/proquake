@@ -34,7 +34,7 @@ enum {
 
 // menus
 void M_Init (void);
-void M_Keydown (int key, int ascii, qboolean down);
+void M_Keydown (int key, int ascii, bool down);
 void M_Draw (void);
 void M_ToggleMenu_f (void);
 

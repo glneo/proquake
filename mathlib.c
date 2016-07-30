@@ -343,14 +343,6 @@ void VectorScale(vec3_t in, vec_t scale, vec3_t out)
 	out[2] = in[2] * scale;
 }
 
-int Q_log2(int val)
-{
-	int answer = 0;
-	while (val >>= 1)
-		answer++;
-	return answer;
-}
-
 void R_ConcatRotations(float in1[3][3], float in2[3][3], float out[3][3])
 {
 	out[0][0] = in1[0][0] * in2[0][0] + in1[0][1] * in2[1][0] + in1[0][2] * in2[2][0];

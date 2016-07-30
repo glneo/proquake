@@ -55,7 +55,7 @@ qpic_t	*sb_face_quad;
 qpic_t	*sb_face_invuln;
 qpic_t	*sb_face_invis_invuln;
 
-qboolean	sb_showscores;
+bool	sb_showscores;
 
 int			sb_lines;			// scan lines to draw
 
@@ -512,7 +512,7 @@ void Sbar_UpdateScoreboard (void)
 	{
 		k = fragsort[i];
 		s = &cl.scores[k];
-		SNPrintf (scoreboardtext[i], sizeof(scoreboardtext[i]), "%3i %s", s->frags, s->name);
+		snprintf (scoreboardtext[i], sizeof(scoreboardtext[i]), "%3i %s", s->frags, s->name);
 
 		top = s->colors & 0xf0;
 		bottom = (s->colors & 15) <<4;
@@ -546,26 +546,26 @@ void Sbar_SoloScoreboard (void)
 		switch (current_skill)
 		{
 		case 0:
-			SNPrintf (str, sizeof(str), "skill: %i", current_skill);
+			snprintf (str, sizeof(str), "skill: %i", current_skill);
 			break;
 		case 1:
-			SNPrintf (str, sizeof(str), "skill: %i", current_skill);
+			snprintf (str, sizeof(str), "skill: %i", current_skill);
 			break;
 		case 2:
-			SNPrintf (str, sizeof(str), "skill: %i", current_skill);
+			snprintf (str, sizeof(str), "skill: %i", current_skill);
 			break;
 		case 3:
-			SNPrintf (str, sizeof(str), "skill: %i", current_skill);
+			snprintf (str, sizeof(str), "skill: %i", current_skill);
 			break;
 		}
 
 		Draw_String (vid.width - (24 + strlen(str) * 8), 8 + (pq_drawfps.value ? 8:0) + (show_speed.value ? 8:0), str);
 	}
 
-	SNPrintf (str, sizeof(str),"Monsters:%3i /%3i", cl.stats[STAT_MONSTERS], cl.stats[STAT_TOTALMONSTERS]);
+	snprintf (str, sizeof(str),"Monsters:%3i /%3i", cl.stats[STAT_MONSTERS], cl.stats[STAT_TOTALMONSTERS]);
 	Sbar_DrawString (8, 4, str);
 
-	SNPrintf (str, sizeof(str),"Secrets :%3i /%3i", cl.stats[STAT_SECRETS], cl.stats[STAT_TOTALSECRETS]);
+	snprintf (str, sizeof(str),"Secrets :%3i /%3i", cl.stats[STAT_SECRETS], cl.stats[STAT_TOTALSECRETS]);
 	Sbar_DrawString (8, 12, str);
 
 // time
@@ -573,7 +573,7 @@ void Sbar_SoloScoreboard (void)
 	seconds = cl.time - 60*minutes;
 	tens = seconds / 10;
 	units = seconds - 10*tens;
-	SNPrintf (str, sizeof(str),"Time :%3i:%i%i", minutes, tens, units);
+	snprintf (str, sizeof(str),"Time :%3i:%i%i", minutes, tens, units);
 	Sbar_DrawString (184, 4, str);
 
 // draw level name
@@ -605,7 +605,7 @@ void Sbar_DrawInventory (void)
 	int		i, flashon, ystart;
 	char	num[6];
 	float	time;
-	qboolean	headsup;
+	bool	headsup;
 
 	// Baker: we only draw the sbar if 0 and viewsize is 100+
 	headsup = (cl_sbar.value == 0 && scr_viewsize.value>=100);
@@ -778,7 +778,7 @@ void Sbar_DrawInventory (void)
 // ammo counts
 	for (i=0 ; i<4 ; i++)
 	{
-		SNPrintf (num, sizeof(num), "%3i",cl.stats[STAT_SHELLS+i] );
+		snprintf (num, sizeof(num), "%3i",cl.stats[STAT_SHELLS+i] );
 		if (headsup) {
 			Sbar_DrawSubPic ((vid.width-42), -24 - (4-i)*11, sb_ibar, 3+(i*48), 0, 42, 11);
 			if (num[0] != ' ')
@@ -922,7 +922,7 @@ void Sbar_DrawFrags (void)
 		else if (cl.minutes || cl.seconds)
 		{
 			if (cl.seconds >= 128)
-				SNPrintf (num, sizeof(num), " -0:%02d", cl.seconds - 128);
+				snprintf (num, sizeof(num), " -0:%02d", cl.seconds - 128);
 			else
 			{
 				if (cl.match_pause_time)
@@ -931,7 +931,7 @@ void Sbar_DrawFrags (void)
 					match_time = ceil(60.0 * cl.minutes + cl.seconds - (cl.time - cl.last_match_time));
 				minutes = match_time / 60;
 				seconds = match_time - 60 * minutes;
-				SNPrintf (num, sizeof(num), "%3d:%02d", minutes, seconds);
+				snprintf (num, sizeof(num), "%3d:%02d", minutes, seconds);
 				if (!minutes)
 					mask = 128;
 			}
@@ -941,7 +941,7 @@ void Sbar_DrawFrags (void)
 			minutes = cl.time / 60;
 			seconds = cl.time - 60 * minutes;
 			minutes = minutes & 511;
-			SNPrintf (num, sizeof(num), "%3d:%02d", minutes, seconds);
+			snprintf (num, sizeof(num), "%3d:%02d", minutes, seconds);
 		}
 
 		for (i = 0 ; i < 6 ; i++)
@@ -977,7 +977,7 @@ void Sbar_DrawFrags (void)
 		Draw_Fill (xofs + x*8 + 10, y+4, 28, 3, bottom);
 
 	// draw number
-		SNPrintf (num, sizeof(num), "%3i",f);
+		snprintf (num, sizeof(num), "%3i",f);
 
 		Sbar_DrawCharacter ( (x+1)*8 , -24, num[0]);
 		Sbar_DrawCharacter ( (x+2)*8 , -24, num[1]);
@@ -1035,7 +1035,7 @@ void Sbar_DrawFace (void)
 
 		// draw number
 		f = s->frags;
-		SNPrintf (num, sizeof(num), "%3i",f);
+		snprintf (num, sizeof(num), "%3i",f);
 
 		if (top==8)
 		{
@@ -1104,7 +1104,7 @@ Sbar_Draw
 */
 void Sbar_Draw (void)
 {
-//	qboolean	headsup;	// joe
+//	bool	headsup;	// joe
 // Begin D3DQuake
 	if ( gNoStatusBar ) return;
 // End D3DQuake
@@ -1343,7 +1343,7 @@ void Sbar_DeathmatchOverlay (void)
 		if (s->ping && pq_scoreboard_pings.value)
 		{
 			ping = 1;
-			SNPrintf(num, sizeof(num), "%4d", s->ping);
+			snprintf(num, sizeof(num), "%4d", s->ping);
 
 			for (j = 0 ; j < 4 ; j++)
 				Draw_Character(x-56+j*8, y, num[j]);
@@ -1351,7 +1351,7 @@ void Sbar_DeathmatchOverlay (void)
 
 	// draw number
 		f = s->frags;
-		SNPrintf (num, sizeof(num), "%3i",f);
+		snprintf (num, sizeof(num), "%3i",f);
 
 		Draw_Character ( x+8 , y, num[0]);
 		Draw_Character ( x+16 , y, num[1]);
@@ -1377,7 +1377,7 @@ void Sbar_DeathmatchOverlay (void)
 		tens = n/10;
 		units = n%10;
 
-		SNPrintf (num, sizeof(num), "%3i:%i%i", minutes, tens, units);
+		snprintf (num, sizeof(num), "%3i:%i%i", minutes, tens, units);
 
 		Draw_String ( x+48 , y, num);
 }
@@ -1452,7 +1452,7 @@ void Sbar_MiniDeathmatchOverlay (void)
 
 	// draw number
 		f = s->frags;
-		SNPrintf (num, sizeof(num), "%3i",f);
+		snprintf (num, sizeof(num), "%3i",f);
 
 		Draw_Character ( x+8 , y, num[0]);
 		Draw_Character ( x+16 , y, num[1]);
@@ -1476,7 +1476,7 @@ void Sbar_MiniDeathmatchOverlay (void)
 		tens = n/10;
 		units = n%10;
 
-		SNPrintf (num, sizeof(num), "%3i:%i%i", minutes, tens, units);
+		snprintf (num, sizeof(num), "%3i:%i%i", minutes, tens, units);
 
 		Draw_String ( x+48 , y, num);
 }

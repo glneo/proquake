@@ -30,7 +30,7 @@ typedef struct efrag_s
 
 typedef struct entity_s
 {
-	qboolean forcelink; // model changed
+	bool forcelink; // model changed
 
 	int update_type;
 
@@ -71,7 +71,7 @@ typedef struct entity_s
 	float rotate_start_time;
 	vec3_t lastangles, currangles;
 
-	qboolean monsterstep;
+	bool monsterstep;
 } entity_t;
 
 typedef struct
@@ -143,7 +143,7 @@ void R_TeleportSplash(vec3_t org);
 void R_PushDlights(void);
 
 // surface cache related
-extern qboolean r_cache_thrash;	// set if thrashing the surface cache
+extern bool r_cache_thrash;	// set if thrashing the surface cache
 
 int D_SurfaceCacheForRes(int width, int height);
 void D_FlushCaches(void);

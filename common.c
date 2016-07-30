@@ -22,17 +22,14 @@
 static char *largv[MAX_NUM_ARGVS + NUM_SAFE_ARGVS + 1];
 static char *argvdummy = " ";
 
-static char *safeargvs[NUM_SAFE_ARGVS] =
-{ "-nolan", "-nosound", "-joystick", "-nomouse" };
+static char *safeargvs[NUM_SAFE_ARGVS] = { "-nolan", "-nosound", "-joystick", "-nomouse" };
 
-cvar_t registered =
-{ "registered", "0" };
-cvar_t cmdline =
-{ "cmdline", "", false, true };
+cvar_t registered = { "registered", "0" };
+cvar_t cmdline = { "cmdline", "", false, true };
 
-qboolean com_modified;   // set true if using non-id files
+bool com_modified;   // set true if using non-id files
 
-qboolean proghack;
+bool proghack;
 
 int static_registered = 1;  // only for startup check, then set
 
@@ -51,33 +48,22 @@ char **com_argv;
 #define CMDLINE_LENGTH	256
 char com_cmdline[CMDLINE_LENGTH];
 
-qboolean standard_quake = true, rogue, hipnotic;
+bool standard_quake = true, rogue, hipnotic;
 
 // Special command line options
 
-//qboolean		mod_conhide  = false;		// Conceal the console more
-//qboolean		mod_nosoundwarn = false;	// Don't warn about missing sounds
+//bool		mod_conhide  = false;		// Conceal the console more
+//bool		mod_nosoundwarn = false;	// Don't warn about missing sounds
 
 // this graphic needs to be in the pak file to use registered features
-static unsigned short pop[] =
-{
-	0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,
-	0x0000,0x0000,0x6600,0x0000,0x0000,0x0000,0x6600,0x0000,
-	0x0000,0x0066,0x0000,0x0000,0x0000,0x0000,0x0067,0x0000,
-	0x0000,0x6665,0x0000,0x0000,0x0000,0x0000,0x0065,0x6600,
-	0x0063,0x6561,0x0000,0x0000,0x0000,0x0000,0x0061,0x6563,
-	0x0064,0x6561,0x0000,0x0000,0x0000,0x0000,0x0061,0x6564,
-	0x0064,0x6564,0x0000,0x6469,0x6969,0x6400,0x0064,0x6564,
-	0x0063,0x6568,0x6200,0x0064,0x6864,0x0000,0x6268,0x6563,
-	0x0000,0x6567,0x6963,0x0064,0x6764,0x0063,0x6967,0x6500,
-	0x0000,0x6266,0x6769,0x6a68,0x6768,0x6a69,0x6766,0x6200,
-	0x0000,0x0062,0x6566,0x6666,0x6666,0x6666,0x6562,0x0000,
-	0x0000,0x0000,0x0062,0x6364,0x6664,0x6362,0x0000,0x0000,
-	0x0000,0x0000,0x0000,0x0062,0x6662,0x0000,0x0000,0x0000,
-	0x0000,0x0000,0x0000,0x0061,0x6661,0x0000,0x0000,0x0000,
-	0x0000,0x0000,0x0000,0x0000,0x6500,0x0000,0x0000,0x0000,
-	0x0000,0x0000,0x0000,0x0000,0x6400,0x0000,0x0000,0x0000
-};
+static unsigned short pop[] = { 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x6600, 0x0000, 0x0000, 0x0000, 0x6600, 0x0000,
+		0x0000, 0x0066, 0x0000, 0x0000, 0x0000, 0x0000, 0x0067, 0x0000, 0x0000, 0x6665, 0x0000, 0x0000, 0x0000, 0x0000, 0x0065, 0x6600, 0x0063, 0x6561,
+		0x0000, 0x0000, 0x0000, 0x0000, 0x0061, 0x6563, 0x0064, 0x6561, 0x0000, 0x0000, 0x0000, 0x0000, 0x0061, 0x6564, 0x0064, 0x6564, 0x0000, 0x6469,
+		0x6969, 0x6400, 0x0064, 0x6564, 0x0063, 0x6568, 0x6200, 0x0064, 0x6864, 0x0000, 0x6268, 0x6563, 0x0000, 0x6567, 0x6963, 0x0064, 0x6764, 0x0063,
+		0x6967, 0x6500, 0x0000, 0x6266, 0x6769, 0x6a68, 0x6768, 0x6a69, 0x6766, 0x6200, 0x0000, 0x0062, 0x6566, 0x6666, 0x6666, 0x6666, 0x6562, 0x0000,
+		0x0000, 0x0000, 0x0062, 0x6364, 0x6664, 0x6362, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0062, 0x6662, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,
+		0x0000, 0x0061, 0x6661, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x6500, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,
+		0x6400, 0x0000, 0x0000, 0x0000 };
 
 /*
 
@@ -113,7 +99,6 @@ static unsigned short pop[] =
  */
 
 //============================================================================
-
 // ClearLink is used for new headnodes
 void ClearLink(link_t *l)
 {
@@ -169,7 +154,7 @@ char *COM_Quakebar(int len)
  ============================================================================
  */
 
-qboolean bigendien;
+bool bigendien;
 
 short (*BigShort)(short l);
 short (*LittleShort)(short l);
@@ -339,7 +324,7 @@ void MSG_WritePreciseAngle(sizebuf_t *sb, float f)
 // reading functions
 //
 int msg_readcount;
-qboolean msg_badread;
+bool msg_badread;
 
 void MSG_BeginReading(void)
 {
@@ -419,8 +404,8 @@ int MSG_ReadLong(void)
 		return -1;
 	}
 
-	c = net_message.data[msg_readcount] + (net_message.data[msg_readcount + 1] << 8)
-			+ (net_message.data[msg_readcount + 2] << 16) + (net_message.data[msg_readcount + 3] << 24);
+	c = net_message.data[msg_readcount] + (net_message.data[msg_readcount + 1] << 8) + (net_message.data[msg_readcount + 2] << 16)
+			+ (net_message.data[msg_readcount + 3] << 24);
 
 	msg_readcount += 4;
 
@@ -756,7 +741,7 @@ char *COM_Parse(char *data)
 		data++;
 		len++;
 		c = *data;
-		if (c == '{' || c == '}' || c == ')' || c == '(' || c == '\'' /* || c==':' */)// JPG 3.20 - so that ip:port works
+		if (c == '{' || c == '}' || c == ')' || c == '(' || c == '\'' /* || c==':' */)                    // JPG 3.20 - so that ip:port works
 			break;
 	} while (c > 32);
 
@@ -839,7 +824,7 @@ void COM_Path_f(void);
  */
 void COM_InitArgv(int argc, char **argv)
 {
-	qboolean safe;
+	bool safe;
 	int i, j, n;
 
 	// reconstitute the command line for the cmdline externally visible cvar
@@ -910,8 +895,7 @@ void COM_InitArgv(int argc, char **argv)
  */
 void COM_Init(char *basedir)
 {
-	byte swaptest[2] =
-	{ 1, 0 };
+	byte swaptest[2] = { 1, 0 };
 
 // set the byte swapping variables in a portable manner
 	if (*(short *) swaptest == 1)
@@ -1058,7 +1042,7 @@ void COM_WriteFile(char *filename, void *data, int len)
 
 	Sys_mkdir(com_gamedir); //johnfitz -- if we've switched to a nonexistant gamedir, create it now so we don't crash
 
-	SNPrintf(name, sizeof(name), "%s/%s", com_gamedir, filename);
+	snprintf(name, sizeof(name), "%s/%s", com_gamedir, filename);
 
 	handle = Sys_FileOpenWrite(name);
 	if (handle == -1)
@@ -1192,7 +1176,7 @@ int COM_FindFile(char *filename, int *handle, FILE **file)
 					continue;
 			}
 
-			SNPrintf(netpath, sizeof(netpath), "%s/%s", search->filename, filename);
+			snprintf(netpath, sizeof(netpath), "%s/%s", search->filename, filename);
 
 			findtime = Sys_FileTime(netpath);
 			if (findtime == -1)
@@ -1205,15 +1189,15 @@ int COM_FindFile(char *filename, int *handle, FILE **file)
 			{
 #if defined(_WIN32)
 				if ((strlen(netpath) < 2) || (netpath[1] != ':'))
-				SNPrintf(cachepath, sizeof(cachepath),"%s%s", com_cachedir, netpath);
+				snprintf(cachepath, sizeof(cachepath),"%s%s", com_cachedir, netpath);
 
 				else
-				SNPrintf(cachepath, sizeof(cachepath),"%s%s", com_cachedir, netpath+2);
+				snprintf(cachepath, sizeof(cachepath),"%s%s", com_cachedir, netpath+2);
 
 //#elif defined (MACOSX) || defined (LINUX)
 #else // Above line is insufficient since we do PSP and Flash now too
 
-				SNPrintf(cachepath, sizeof(cachepath), "%s%s", com_cachedir, netpath);
+				snprintf(cachepath, sizeof(cachepath), "%s%s", com_cachedir, netpath);
 #endif //^^ Windows prefixes drive names (no idea what OSX or Linux do for multiple drives).  In truth the above needs work for Windows networked drives prefixes (see aguirRe Quake for solution)
 
 				cachetime = Sys_FileTime(cachepath);
@@ -1493,7 +1477,7 @@ void COM_AddGameDirectory(char *dir)
 // add any pak files in the format pak0.pak pak1.pak, ...
 	for (i = 0;; i++)
 	{
-		SNPrintf(pakfile, sizeof(pakfile), "%s/pak%i.pak", dir, i);
+		snprintf(pakfile, sizeof(pakfile), "%s/pak%i.pak", dir, i);
 		pak = COM_LoadPackFile(pakfile);
 		if (!pak)
 			break;
@@ -1608,50 +1592,53 @@ void COM_InitFilesystem() //johnfitz -- modified based on topaz's tutorial
 		proghack = true;
 }
 
-/*
- void COM_ToLowerString(char *in, char *out)
- {
- while (*in)
- {
- if (*in >= 'A' && *in <= 'Z')
- *out++ = *in++ + 'a' - 'A';
- else
- *out++ = *in++;
- }
- }
- */
-
-#ifdef _MSC_VER
-size_t VSNPrintf (char *buffer, const size_t count, const char *format, va_list args)
+void COM_SlashesForward_Like_Unix(char *WindowsStylePath)
 {
-	size_t result;
-
-	// For _vSNPrintf, if the number of bytes to write exceeds buffer, then count bytes are written
-	// and �1 is returned.
-
-	result = _vsnprintf (buffer, count, format, args);
-
-	// Conditionally null terminate the string
-	if (result == -1)
-	buffer[count - 1] = '\0';
-
-	return result;
+	size_t i;
+	// Translate "\" to "/"
+	for (i = 0; i < strlen(WindowsStylePath); i++)
+		if (WindowsStylePath[i] == '\\')
+			WindowsStylePath[i] = '/';
 }
 
-size_t SNPrintf (char *buffer, const size_t count, const char *format, ...)
+void COM_Reduce_To_Parent_Path(char* myPath)
 {
-	va_list args;			// pointer to the list of arguments
-	size_t result;
+	char* terminatePoint = strrchr(myPath, '/');
 
-	va_start (args, format);
-	result = VSNPrintf (buffer, count, format, args);
-	va_end (args);
+	if (terminatePoint)
+		*terminatePoint = '\0';
 
-	return result;
 }
 
-#endif
+char *COM_NiceFloatString(float floatvalue)
+{
+	static char buildstring[32];
+	int i;
 
+	snprintf(buildstring, sizeof(buildstring), "%f", floatvalue);
+
+	// Strip off ending zeros
+	for (i = strlen(buildstring) - 1; i > 0 && buildstring[i] == '0'; i--)
+		buildstring[i] = 0;
+
+	// Strip off ending period
+	if (buildstring[i] == '.')
+		buildstring[i] = 0;
+
+	return buildstring;
+}
+
+int COM_Minutes(int seconds)
+{
+	return seconds / 60;
+}
+
+int COM_Seconds(int seconds)
+{
+	return seconds % 60;
+}
+
+#ifndef HAVE_STRLCAT
 size_t strlcat(char *dst, const char *src, size_t siz)
 {
 	register char *d = dst;
@@ -1680,7 +1667,9 @@ size_t strlcat(char *dst, const char *src, size_t siz)
 
 	return (dlen + (s - src)); /* count does not include NUL */
 }
+#endif // #ifndef HAVE_STRLCAT
 
+#ifndef HAVE_STRLCPY
 size_t strlcpy(char *dst, const char *src, size_t siz)
 {
 	char *d = dst;
@@ -1708,78 +1697,7 @@ size_t strlcpy(char *dst, const char *src, size_t siz)
 
 	return (s - src - 1); /* count does not include NUL */
 }
-
-// Baker: strip leading spaces from string
-char *strltrim(char *s)
-{
-	char *t;
-
-	assert(s != NULL);
-	for (t = s; isspace(*t); ++t)
-		continue;
-	memmove(s, t, strlen(t) + 1); /* +1 so that '\0' is moved too */
-	return s;
-}
-
-char *strrtrim(char *s)
-{
-	char *t, *tt;
-
-	assert(s != NULL);
-
-	for (tt = t = s; *t != '\0'; ++t)
-		if (!isspace(*t))
-			tt = t + 1;
-	*tt = '\0';
-
-	return s;
-}
-
-void COM_SlashesForward_Like_Unix(char *WindowsStylePath)
-{
-	size_t i;
-	// Translate "\" to "/"
-	for (i = 0; i < strlen(WindowsStylePath); i++)
-		if (WindowsStylePath[i] == '\\')
-			WindowsStylePath[i] = '/';
-}
-
-void COM_Reduce_To_Parent_Path(char* myPath)
-{
-	char* terminatePoint = strrchr(myPath, '/');
-
-	if (terminatePoint)
-		*terminatePoint = '\0';
-
-}
-
-char *COM_NiceFloatString(float floatvalue)
-{
-	static char buildstring[32];
-	int i;
-
-	SNPrintf(buildstring, sizeof(buildstring), "%f", floatvalue);
-
-	// Strip off ending zeros
-	for (i = strlen(buildstring) - 1; i > 0 && buildstring[i] == '0'; i--)
-		buildstring[i] = 0;
-
-	// Strip off ending period
-	if (buildstring[i] == '.')
-		buildstring[i] = 0;
-
-	return buildstring;
-}
-
-int COM_Minutes(int seconds)
-{
-	return seconds / 60;
-}
-
-int COM_Seconds(int seconds)
-{
-	return seconds % 60;
-}
+#endif // #ifndef HAVE_STRLCPY
 
 ///////////////////////////////////////////////////////////////////////////////
 //
@@ -1803,7 +1721,7 @@ char *va(const char *format, ...)
 	va_list args;
 
 	va_start(args, format);
-	VSNPrintf(buffer_to_use, sizeof_a_buffer, format, args);
+	vsnprintf(buffer_to_use, sizeof_a_buffer, format, args);
 	va_end(args);
 
 	// Cycle through to next buffer for next time function is called

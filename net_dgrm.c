@@ -80,7 +80,7 @@ struct
 
 extern int m_return_state;
 //extern int m_state;
-extern qboolean m_return_onerror;
+extern bool m_return_onerror;
 extern char m_return_reason[64];
 
 
@@ -93,7 +93,7 @@ char *StrAddr (struct qsockaddr *addr)
 
 	for (n = 0; n < 16; n++)
 #ifdef MACOSX_NETWORK_DIFFERENCE
-		SNPrintf (buf + n << 1, 34 - (n << 1), "%02x", *p++);
+		snprintf (buf + n << 1, 34 - (n << 1), "%02x", *p++);
 #else
 		sprintf (buf + n * 2, "%02x", *p++);
 #endif /* MACOSX */
@@ -268,7 +268,7 @@ int ReSendMessage (qsocket_t *sock)
 	return 1;
 }
 
-qboolean Datagram_CanSendMessage (qsocket_t *sock)
+bool Datagram_CanSendMessage (qsocket_t *sock)
 {
 	if (sock->sendNext)
 		SendMessageNext (sock);
@@ -276,7 +276,7 @@ qboolean Datagram_CanSendMessage (qsocket_t *sock)
 	return sock->canSend;
 }
 
-qboolean Datagram_CanSendUnreliableMessage (qsocket_t *sock)
+bool Datagram_CanSendUnreliableMessage (qsocket_t *sock)
 {
 	return true;
 }
@@ -538,7 +538,7 @@ void Strip_Port (char *ch)
 	}
 }
 
-static qboolean testInProgress = false;
+static bool testInProgress = false;
 static int		testPollCount;
 static int		testDriver;
 static int		testSocket;
@@ -685,7 +685,7 @@ JustDoIt:
 }
 
 /* JPG 3.00 - got rid of these.  Just use test vars; only ONE outstanding test of any kind.
-static qboolean test2InProgress = false;
+static bool test2InProgress = false;
 static int		test2Driver;
 static int		test2Socket;
 */
@@ -1040,7 +1040,7 @@ void Datagram_Close (qsocket_t *sock)
 	sfunc.CloseSocket(sock->socket);
 }
 
-void Datagram_Listen (qboolean state)
+void Datagram_Listen (bool state)
 {
 	int i;
 
@@ -1164,7 +1164,7 @@ static qsocket_t *_Datagram_CheckNewConnections (void)
 		MSG_WriteString(&net_message, client->netconnection->address);
 		} else {
 			if (sscanf(client->netconnection->address, "%d.%d.%d", &a, &b, &c) == 3) // Baker 3.60 - engine side IP masking
-			SNPrintf (address, sizeof(address), "%d.%d.%d.xxx", a, b, c);
+			snprintf (address, sizeof(address), "%d.%d.%d.xxx", a, b, c);
 			MSG_WriteString(&net_message, address);
 		}
 
@@ -1389,7 +1389,7 @@ qsocket_t *Datagram_CheckNewConnections (void)
 	return ret;
 }
 
-static void _Datagram_SearchForHosts (qboolean xmit)
+static void _Datagram_SearchForHosts (bool xmit)
 {
 	int		i, n, ret, control;
 	struct qsockaddr readaddr;
@@ -1488,7 +1488,7 @@ static void _Datagram_SearchForHosts (qboolean xmit)
 	}
 }
 
-void Datagram_SearchForHosts (qboolean xmit)
+void Datagram_SearchForHosts (bool xmit)
 {
 	for (net_landriverlevel = 0; net_landriverlevel < net_numlandrivers; net_landriverlevel++)
 	{

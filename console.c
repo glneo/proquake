@@ -30,7 +30,7 @@ float		con_cursorspeed = 4;
 // JPG - upped CON_TEXTSIZE from 16384 to 65536
 #define		CON_TEXTSIZE	65536
 
-qboolean 	con_forcedup;		// because no entities to refresh
+bool 	con_forcedup;		// because no entities to refresh
 
 int			con_totallines;		// total lines in console scrollback
 int			con_backscroll;		// lines up from bottom to display
@@ -54,15 +54,15 @@ float		con_times[NUM_CON_TIMES];	// realtime time the line was generated
 int			con_vislines;
 int			con_notifylines;		// scan lines to clear for notify lines
 
-qboolean	con_debuglog;
+bool	con_debuglog;
 
-qboolean	cl_inconsole = false;//R00k
+bool	cl_inconsole = false;//R00k
 
 extern	char	key_lines[32][MAXCMDLINE];
 extern	int		edit_line;
 extern	int		key_linepos;
 
-qboolean	con_initialized = false;
+bool	con_initialized = false;
 
 
 
@@ -189,7 +189,7 @@ void Con_Dump_f (void)
 #if 1
 	//johnfitz -- there is a security risk in writing files with an arbitrary filename. so,
 	//until stuffcmd is crippled to alleviate this risk, just force the default filename.
-	SNPrintf(name, sizeof(name), "%s/condump.txt", com_gamedir);
+	snprintf(name, sizeof(name), "%s/condump.txt", com_gamedir);
 #else
 	if (Cmd_Argc() > 2)
 	{
@@ -204,11 +204,11 @@ void Con_Dump_f (void)
 			Con_Printf ("Relative pathnames are not allowed.\n");
 			return;
 		}
-		SNPrintf(name, sizeof(name), "%s/%s", com_gamedir, Cmd_Argv(1));
+		snprintf(name, sizeof(name), "%s/%s", com_gamedir, Cmd_Argv(1));
 		COM_DefaultExtension (name, ".txt");
 	}
 	else
-		SNPrintf(name, sizeof(name), "%s/condump.txt", com_gamedir);
+		snprintf(name, sizeof(name), "%s/condump.txt", com_gamedir);
 #endif
 
 	COM_CreatePath (name);
@@ -322,7 +322,7 @@ void Con_ClearNotify (void)
 Con_MessageMode_f
 ================
 */
-extern qboolean team_message;
+extern bool team_message;
 
 void Con_MessageMode_f (void)
 {
@@ -430,16 +430,16 @@ void Con_Init (void)
 				do
 				{
 					n = n + 1;
-					SNPrintf (logfilename, sizeof(logfilename), com_argv[con_debuglog+1], n);
+					snprintf (logfilename, sizeof(logfilename), com_argv[con_debuglog+1], n);
 					strlcat (logfilename, ".log", sizeof(logfilename));
-					SNPrintf (temp, sizeof(temp), "%s/%s", com_gamedir, logfilename);
+					snprintf (temp, sizeof(temp), "%s/%s", com_gamedir, logfilename);
 					fd = open(temp, O_CREAT | O_EXCL | O_WRONLY, 0666);
 				}
 				while (fd == -1);
 				close(fd);
 			}
 			else
-				SNPrintf (logfilename, sizeof(logfilename), "%s.log", com_argv[con_debuglog+1]);
+				snprintf (logfilename, sizeof(logfilename), "%s.log", com_argv[con_debuglog+1]);
 		}
 		else
 			strcpy(logfilename, "qconsole.log");
@@ -447,7 +447,7 @@ void Con_Init (void)
 		// JPG - changed t2 to logfilename
 		if (strlen (com_gamedir) < (MAXGAMEDIRLEN - strlen (logfilename)))
 		{
-			SNPrintf(temp, sizeof(temp), "%s/%s", com_gamedir, logfilename); // JPG - added the '/'
+			snprintf(temp, sizeof(temp), "%s/%s", com_gamedir, logfilename); // JPG - added the '/'
 			unlink (temp);
 		}
 
@@ -578,9 +578,9 @@ void Con_Print (char *txt)
 			if (msg_time < match_time - 2 || msg_time > match_time + 2)
 			{
 				if (pq_timestamp.value == 1)
-					SNPrintf (buff, sizeof(buff), "%d%c%02d", minutes, 'X' + 128, seconds);
+					snprintf (buff, sizeof(buff), "%d%c%02d", minutes, 'X' + 128, seconds);
 				else
-					SNPrintf (buff, sizeof(buff), "%02d", seconds);
+					snprintf (buff, sizeof(buff), "%02d", seconds);
 
 				if (cr)
 				{
@@ -681,7 +681,7 @@ void Con_DebugLog( /* char *file, */ char *fmt, ...)
     int fd;
 
     va_start(argptr, fmt);
-    VSNPrintf(data, sizeof(data), fmt, argptr);
+    vsnprintf(data, sizeof(data), fmt, argptr);
     va_end(argptr);
     fd = open(va("%s/%s", com_gamedir, logfilename), O_WRONLY | O_CREAT | O_APPEND, 0666);
     if( write(fd, data, strlen(data)) < strlen(data) )
@@ -702,10 +702,10 @@ void Con_Printf (char *fmt, ...)
 {
 	va_list		argptr;
 	char		msg[MAXPRINTMSG];
-	static qboolean	inupdate;
+	static bool	inupdate;
 
 	va_start (argptr,fmt);
-	VSNPrintf (msg,sizeof(msg),fmt,argptr);
+	vsnprintf (msg,sizeof(msg),fmt,argptr);
 	va_end (argptr);
 
 // also echo to debugging console
@@ -772,7 +772,7 @@ void Con_DPrintf (char *fmt, ...)
 		return;			// don't confuse non-developers with techie stuff...
 
 	va_start (argptr,fmt);
-	VSNPrintf (msg,sizeof(msg),fmt,argptr);
+	vsnprintf (msg,sizeof(msg),fmt,argptr);
 	va_end (argptr);
 
 	Con_SafePrintf ("%s", msg);
@@ -811,7 +811,7 @@ void Con_SafePrintf (char *fmt, ...)
 	int			temp;
 
 	va_start (argptr,fmt);
-	VSNPrintf (msg,sizeof(msg),fmt,argptr);
+	vsnprintf (msg,sizeof(msg),fmt,argptr);
 	va_end (argptr);
 
 	temp = scr_disabled_for_loading;
@@ -835,7 +835,7 @@ void Con_CenterPrintf (int linewidth, char *fmt, ...)
 	int		len, s;
 
 	va_start (argptr,fmt);
-	VSNPrintf (msg,sizeof(msg),fmt,argptr);
+	vsnprintf (msg,sizeof(msg),fmt,argptr);
 	va_end (argptr);
 
 	linewidth = min (linewidth, con_linewidth);
@@ -1019,7 +1019,7 @@ Draws the console with the solid background
 The typing input line at the bottom should only be drawn if typing is allowed
 ================
 */
-void Con_DrawConsole (int lines, qboolean drawinput)
+void Con_DrawConsole (int lines, bool drawinput)
 {
 	int				i, j, x, y, rows;
 	char			*text;

@@ -26,7 +26,7 @@ char	loadname[32];	// for hunk tags
 void Mod_LoadAliasModel (model_t *mod, void *buffer);
 void Mod_LoadSpriteModel (model_t *mod, void *buffer);
 void Mod_LoadBrushModel (model_t *mod, void *buffer);
-model_t *Mod_LoadModel (model_t *mod, qboolean crash);
+model_t *Mod_LoadModel (model_t *mod, bool crash);
 
 byte	mod_novis[MAX_MAP_LEAFS/8];
 
@@ -158,7 +158,7 @@ void Mod_ClearAll (void)
 {
 	int		i;
 	model_t	*mod;
-	static qboolean NoFree, Done;
+	static bool NoFree, Done;
 	extern	void GL_FreeTextures (void);
 
 	for (i=0 , mod=mod_known ; i<mod_numknown ; i++, mod++) 
@@ -233,7 +233,7 @@ Mod_LoadModel
 Loads a model into the cache
 ==================
 */
-model_t *Mod_LoadModel (model_t *mod, qboolean crash)
+model_t *Mod_LoadModel (model_t *mod, bool crash)
 {
 	unsigned *buf;
 	byte	stackbuf[1024];		// avoid dirtying the cache heap
@@ -296,7 +296,7 @@ Mod_ForName
 Loads in a model for the given name
 ==================
 */
-model_t *Mod_ForName (char *name, qboolean crash)
+model_t *Mod_ForName (char *name, bool crash)
 {
 	model_t	*mod;
 
@@ -409,7 +409,7 @@ void Mod_LoadTextures (lump_t *l)
 				ConvertPixels ((byte *)(tx + 1), pixels);
 
 				// get a new name for the fullbright mask to avoid cache mismatches
-				SNPrintf (fbr_mask_name, sizeof(fbr_mask_name), "fullbright_mask_%s", mt->name);
+				snprintf (fbr_mask_name, sizeof(fbr_mask_name), "fullbright_mask_%s", mt->name);
 
 				// load the fullbright pixels version of the texture
 				tx->fullbright = GL_LoadTexture (fbr_mask_name, tx->width, tx->height, (byte *)(tx + 1), texture_flag | TEX_MIPMAP | TEX_ALPHA);
@@ -576,7 +576,7 @@ vec3_t worldmaxs;
 Mod_LoadVertexes
 =================
 */
-void Mod_LoadVertexes (lump_t *l, qboolean storebounds)
+void Mod_LoadVertexes (lump_t *l, bool storebounds)
 {
 	dvertex_t	*in;
 	mvertex_t	*out;
@@ -1280,7 +1280,7 @@ void Mod_LoadBrushModel (model_t *mod, void *buffer)
 		{	// duplicate the basic information
 			char	name[10];
 
-			SNPrintf (name, sizeof(name), "*%i", i+1);
+			snprintf (name, sizeof(name), "*%i", i+1);
 			loadmodel = Mod_FindName (name);
 			*loadmodel = *mod;
 			strcpy (loadmodel->name, name);
@@ -1504,7 +1504,7 @@ static void *Mod_LoadAllSkins (int numskins, daliasskintype_t *pskintype)
 				pheader->texels[i] = texels - (byte *)pheader;
 				memcpy (texels, (byte *)(pskintype + 1), size);
 
-			SNPrintf (name, sizeof(name), "%s_%i", loadmodel->name, i);
+			snprintf (name, sizeof(name), "%s_%i", loadmodel->name, i);
 			pheader->gl_texturenum[i][0] =
 			pheader->gl_texturenum[i][1] =
 			pheader->gl_texturenum[i][2] =
@@ -1530,7 +1530,7 @@ static void *Mod_LoadAllSkins (int numskins, daliasskintype_t *pskintype)
 						pheader->texels[i] = texels - (byte *)pheader;
 						memcpy (texels, (byte *)(pskintype), size);
 					}
-					SNPrintf (name, sizeof(name), "%s_%i_%i", loadmodel->name, i,j);
+					snprintf (name, sizeof(name), "%s_%i_%i", loadmodel->name, i,j);
 					pheader->gl_texturenum[i][j&3] =
 						GL_LoadTexture (name, pheader->skinwidth,
 						pheader->skinheight, (byte *)(pskintype), TEX_MIPMAP);
@@ -1545,7 +1545,7 @@ static void *Mod_LoadAllSkins (int numskins, daliasskintype_t *pskintype)
 	return (void *)pskintype;
 }
 
-qboolean COM_ListMatch (char *liststr, const char *itemstr)
+bool COM_ListMatch (char *liststr, const char *itemstr)
 {
 	char	*start, *matchspot, *nextspot;
 	int		itemlen;
@@ -1741,7 +1741,7 @@ void * Mod_LoadSpriteFrame (void * pin, mspriteframe_t **ppframe, int framenum)
 	pspriteframe->left = origin[0];
 	pspriteframe->right = width + origin[0];
 
-	SNPrintf (name, sizeof(name), "%s_%i", loadmodel->name, framenum);
+	snprintf (name, sizeof(name), "%s_%i", loadmodel->name, framenum);
 	pspriteframe->gl_texturenum = GL_LoadTexture (name, width, height, (byte *)(pinframe + 1), TEX_MIPMAP | TEX_ALPHA);
 
 	return (void *)((byte *)pinframe + sizeof (dspriteframe_t) + size);

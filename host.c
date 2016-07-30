@@ -31,7 +31,7 @@ char host_worldname[MAX_QPATH];
 
 quakeparms_t host_parms;
 
-qboolean host_initialized;		// true if into command execution
+bool host_initialized;		// true if into command execution
 
 double host_frametime;
 double host_time;
@@ -50,7 +50,7 @@ jmp_buf host_abortserver;
 byte *host_basepal;
 byte *host_colormap;
 #ifdef SUPPORTS_DEMO_AUTOPLAY
-qboolean nostartdemos = false;
+bool nostartdemos = false;
 #endif
 
 cvar_t host_framerate = { "host_framerate", "0" };	// set for slow motion
@@ -117,7 +117,7 @@ void Host_EndGame(char *message, ...)
 	char string[1024];
 
 	va_start(argptr, message);
-	VSNPrintf(string, sizeof(string), message, argptr);
+	vsnprintf(string, sizeof(string), message, argptr);
 	va_end(argptr);
 	Con_DPrintf("Host_EndGame: %s\n", string);
 
@@ -150,7 +150,7 @@ void Host_Error(char *error, ...)
 {
 	va_list argptr;
 	char string[1024];
-	static qboolean inerror = false;
+	static bool inerror = false;
 
 	if (inerror)
 		Sys_Error("Host_Error: recursively entered");
@@ -159,7 +159,7 @@ void Host_Error(char *error, ...)
 	SCR_EndLoadingPlaque();		// reenable screen updates
 
 	va_start(argptr, error);
-	VSNPrintf(string, sizeof(string), error, argptr);
+	vsnprintf(string, sizeof(string), error, argptr);
 	va_end(argptr);
 	Con_Printf("Host_Error: %s\n", string);
 
@@ -376,7 +376,7 @@ void Host_WriteConfig(char *cfgname)
 
 	fclose(f);
 
-	SNPrintf(cls.recent_file, sizeof(cls.recent_file), "%s/config.cfg", com_gamedir);
+	snprintf(cls.recent_file, sizeof(cls.recent_file), "%s/config.cfg", com_gamedir);
 }
 
 /*
@@ -432,7 +432,7 @@ void SV_ClientPrintf(char *fmt, ...)
 	char string[1024];
 
 	va_start(argptr, fmt);
-	VSNPrintf(string, sizeof(string), fmt, argptr);
+	vsnprintf(string, sizeof(string), fmt, argptr);
 	va_end(argptr);
 
 	MSG_WriteByte(&host_client->message, svc_print);
@@ -453,7 +453,7 @@ void SV_BroadcastPrintf(char *fmt, ...)
 	int i;
 
 	va_start(argptr, fmt);
-	VSNPrintf(string, sizeof(string), fmt, argptr);
+	vsnprintf(string, sizeof(string), fmt, argptr);
 	va_end(argptr);
 
 	for (i = 0; i < svs.maxclients; i++)
@@ -477,7 +477,7 @@ void Host_ClientCommands(char *fmt, ...)
 	char string[1024];
 
 	va_start(argptr, fmt);
-	VSNPrintf(string, sizeof(string), fmt, argptr);
+	vsnprintf(string, sizeof(string), fmt, argptr);
 	va_end(argptr);
 
 	MSG_WriteByte(&host_client->message, svc_stufftext);
@@ -492,7 +492,7 @@ void Host_ClientCommands(char *fmt, ...)
  if (crash = true), don't bother sending signofs
  =====================
  */
-void SV_DropClient(qboolean crash)
+void SV_DropClient(bool crash)
 {
 	int saveSelf;
 	int i;
@@ -558,7 +558,7 @@ void SV_DropClient(qboolean crash)
  This only happens at the end of a game, not between levels
  ==================
  */
-void Host_ShutdownServer(qboolean crash)
+void Host_ShutdownServer(bool crash)
 {
 	int i;
 	int count;
@@ -653,7 +653,7 @@ void Host_ClearMemory(void)
  Returns false if the time is too short to run a frame
  ===================
  */
-qboolean Host_FilterTime(double time)
+bool Host_FilterTime(double time)
 {
 	double fps;
 
@@ -1049,7 +1049,7 @@ void Host_Init(quakeparms_t *parms)
 				{	0}, *ext = COM_FileExtension(infile);
 
 				if (!strncasecmp(ext, "dem", sizeof("dem")))
-				SNPrintf(tmp, sizeof(tmp), "playdemo \"%s\"\n", infile);
+				snprintf(tmp, sizeof(tmp), "playdemo \"%s\"\n", infile);
 
 				if (tmp[0])
 				{
@@ -1091,7 +1091,7 @@ void Host_Init(quakeparms_t *parms)
  */
 void Host_Shutdown(void)
 {
-	static qboolean isdown = false;
+	static bool isdown = false;
 
 	if (isdown)
 	{

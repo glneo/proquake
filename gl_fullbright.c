@@ -13,7 +13,7 @@
  */
 
 #include "quakedef.h"
-extern qboolean mtexenabled;
+extern bool mtexenabled;
 int FindFullbrightTexture (byte *pixels, int num_pix)
 {
     int i;

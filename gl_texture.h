@@ -52,7 +52,7 @@ extern lpSelTexFUNC qglActiveTexture;
 
 // Engine internal vars
 
-extern qboolean gl_mtexable;
+extern bool gl_mtexable;
 extern	int		gl_max_size;
 
 
@@ -61,7 +61,7 @@ extern	int texture_extension_number;
 extern	texture_t	*r_notexture_mip;
 extern	int		d_lightstylevalue[256];	// 8.8 fraction of base light value
 
-extern	qboolean	envmap;
+extern	bool	envmap;
 extern	int	cnttextures[2];
 extern	int	current_texture_num;
 extern	int	particletexture;
@@ -70,7 +70,7 @@ extern	int	playertextures;
 extern	int	skytexturenum;		// index in cl.loadmodel, not gl texture object
 
 extern	int			mirrortexturenum;	// quake texturenum, not gltexturenum
-extern	qboolean	mirror;
+extern	bool	mirror;
 extern	mplane_t	*mirror_plane;
 
 extern	int		texture_mode;

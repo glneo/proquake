@@ -16,7 +16,7 @@
 
 entity_t r_worldentity;
 
-qboolean r_cache_thrash;		// compatibility
+bool r_cache_thrash;		// compatibility
 
 vec3_t modelorg, r_entorigin;
 entity_t *currententity;
@@ -30,7 +30,7 @@ int c_brush_polys, c_alias_polys;
 
 int particletexture;	// little dot for particles
 int playertextures;		// up to 16 color translated skins
-qboolean envmap;				// true during envmap command capture
+bool envmap;				// true during envmap command capture
 
 int currenttexture = -1;		// to avoid unnecessary texture sets
 
@@ -39,7 +39,7 @@ int cnttextures[2] = { -1, -1 };     // cached
 int skyboxtextures;
 
 int mirrortexturenum;	// quake texturenum, not gltexturenum
-qboolean mirror;
+bool mirror;
 mplane_t *mirror_plane;
 
 // view origin
@@ -105,7 +105,7 @@ cvar_t gl_overbright = { "gl_overbright", "0", true };
  Returns true if the box is completely outside the frustum
  =================
  */
-qboolean R_CullBox(vec3_t mins, vec3_t maxs)
+bool R_CullBox(vec3_t mins, vec3_t maxs)
 {
 	int i;
 
@@ -672,7 +672,7 @@ void R_SetupAliasBlendedFrame(int frame, aliashdr_t *paliashdr, entity_t* e)
  Returns true if the box is completely outside the frustum
  =================
  */
-qboolean R_CullBoxA(const vec3_t emins, const vec3_t emaxs)
+bool R_CullBoxA(const vec3_t emins, const vec3_t emaxs)
 {
 	int i;
 	mplane_t *p;
@@ -727,7 +727,7 @@ qboolean R_CullBoxA(const vec3_t emins, const vec3_t emaxs)
  =================
  */
 #define PlaneDiff(point, plane) (((plane)->type < 3 ? (point)[(plane)->type] : DotProduct((point), (plane)->normal)) - (plane)->dist)
-qboolean R_CullSphere(const vec3_t centre, const float radius)
+bool R_CullSphere(const vec3_t centre, const float radius)
 {
 	int i;
 	mplane_t *p;
@@ -741,7 +741,7 @@ qboolean R_CullSphere(const vec3_t centre, const float radius)
 	return false;
 }
 
-qboolean R_CullForEntity(const entity_t *ent/*, vec3_t returned_center*/)
+bool R_CullForEntity(const entity_t *ent/*, vec3_t returned_center*/)
 {
 	vec3_t mins, maxs;
 
@@ -767,7 +767,7 @@ qboolean R_CullForEntity(const entity_t *ent/*, vec3_t returned_center*/)
 void R_DrawAliasModel(entity_t *ent)
 {
 	int client_no = currententity - cl_entities;
-	qboolean isPlayer = (client_no >= 1 && client_no <= cl.maxclients) ? true : false;
+	bool isPlayer = (client_no >= 1 && client_no <= cl.maxclients) ? true : false;
 	int lnum;
 	vec3_t dist;
 	float add;
@@ -777,7 +777,7 @@ void R_DrawAliasModel(entity_t *ent)
 	float an;
 	int anim;
 
-	qboolean torch = false; // Flags is this model is a torch
+	bool torch = false; // Flags is this model is a torch
 
 	VectorAdd(currententity->origin, clmodel->mins, mins);
 	VectorAdd(currententity->origin, clmodel->maxs, maxs);

@@ -33,7 +33,7 @@ typedef struct glRect_s
 } glRect_t;
 
 static glpoly_t *lightmap_polys[MAX_LIGHTMAPS];
-static qboolean lightmap_modified[MAX_LIGHTMAPS];
+static bool lightmap_modified[MAX_LIGHTMAPS];
 static glRect_t lightmap_rectchange[MAX_LIGHTMAPS];
 
 static int allocated[MAX_LIGHTMAPS][BLOCK_WIDTH];
@@ -328,12 +328,14 @@ void R_BlendLightmaps(void)
 	glDepthMask(GL_FALSE);		// GL_FALSE = 0  don't bother writing Z
 
 	if (gl_lightmap_format == GL_LUMINANCE)
+	{
 #ifdef SUPPORTS_GL_OVERBRIGHTS // DX8QUAKE
 		if (gl_overbright.value)
 			glBlendFunc(GL_DST_COLOR, GL_SRC_COLOR);
 		else
 #endif
 			glBlendFunc(GL_ZERO, GL_ONE_MINUS_SRC_COLOR);
+	}
 
 // Baker: everything except intensity and luminance are broke
 //        and GLQuake uses luminance by default.
@@ -985,7 +987,7 @@ void R_DrawBrushModel(entity_t *ent)
 	msurface_t *psurf;
 	mplane_t *pplane;
 	model_t *clmodel = ent->model;
-	qboolean rotated;
+	bool rotated;
 
 	current_texture_num = -1;
 
@@ -1259,7 +1261,7 @@ void R_MarkLeaves(void)
 	mnode_t *node;
 	extern cvar_t gl_nearwater_fix;
 	msurface_t **mark;
-	qboolean nearwaterportal = false;
+	bool nearwaterportal = false;
 
 	// Check if near water to avoid HOMs when crossing the surface
 	if (gl_nearwater_fix.value)
@@ -1470,7 +1472,7 @@ void GL_BuildLightmaps(void)
 	model_t *m;
 
 #ifdef MACOSX_EXTRA_FEATURES
-	extern qboolean gl_luminace_lightmaps;
+	extern bool gl_luminace_lightmaps;
 #endif /* MACOSX */
 
 	memset(allocated, 0, sizeof(allocated));

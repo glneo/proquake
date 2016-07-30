@@ -24,11 +24,11 @@ cvar_t chase_yaw = { "chase_yaw", "0" };
 cvar_t chase_roll = { "chase_roll", "0" };
 cvar_t chase_pitch = { "chase_pitch", "45" };
 
-static vec3_t chase_pos;
-static vec3_t chase_angles;
+//static vec3_t chase_pos;
+//static vec3_t chase_angles;
 
 static vec3_t chase_dest;
-static vec3_t chase_dest_angles;
+//static vec3_t chase_dest_angles;
 
 void Chase_Init(void)
 {

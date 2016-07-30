@@ -105,10 +105,10 @@ typedef struct {
 
 	// demo recording info must be here, because record is started before
 	// entering a map (and clearing client_state_t)
-	qboolean demorecording;
-	qboolean demoplayback;
+	bool demorecording;
+	bool demoplayback;
 
-	qboolean demorewind;
+	bool demorewind;
 	float demospeed;
 
 	char demoname[MAX_QPATH];	// So we can print demo whatever completed.
@@ -121,10 +121,10 @@ typedef struct {
 	float demo_cltime_start;		// Above except cl.time
 	float demo_cltime_elapsed;	// Above except cl.time
 
-	qboolean capturedemo;			// Indicates if we are capturing demo playback
-	qboolean capturedemo_and_exit;	// Quit after capturedemo
+	bool capturedemo;			// Indicates if we are capturing demo playback
+	bool capturedemo_and_exit;	// Quit after capturedemo
 
-	qboolean timedemo;
+	bool timedemo;
 	int forcetrack;			// -1 = use normal cd track
 	FILE *demofile;
 	int td_lastframe;		// to meter out one message a frame
@@ -178,16 +178,16 @@ typedef struct {
 	// pitch drifting vars
 	float idealpitch;
 	float pitchvel;
-	qboolean nodrift;
+	bool nodrift;
 	float driftmove;
 	double laststop;
 
 	float viewheight;
 	float crouch;			// local amount for smoothing stepups
 
-	qboolean paused;			// send over by server
-	qboolean onground;
-	qboolean inwater;
+	bool paused;			// send over by server
+	bool onground;
+	bool inwater;
 
 	int intermission;	// don't change view angle, full screen, etc
 	int completed_time;	// latched at intermission start
@@ -225,14 +225,14 @@ typedef struct {
 	// frag scoreboard
 	scoreboard_t *scores;			// [cl.maxclients]
 	teamscore_t *teamscores;		// [13] - JPG for teamscores in status bar
-	qboolean teamgame;			// JPG = true for match, false for individual
+	bool teamgame;			// JPG = true for match, false for individual
 	int minutes;			// JPG - for match time in status bar
 	int seconds;			// JPG - for match time in status bar
 	double last_match_time;	// JPG - last time match time was obtained
 	double last_ping_time;		// JPG - last time pings were obtained
-	qboolean console_ping;		// JPG 1.05 - true if the ping came from the console
+	bool console_ping;		// JPG 1.05 - true if the ping came from the console
 	double last_status_time;	// JPG 1.05 - last time status was obtained
-	qboolean console_status;		// JPG 1.05 - true if the status came from the console
+	bool console_status;		// JPG 1.05 - true if the status came from the console
 	double match_pause_time;	// JPG - time that match was paused (or 0)
 
 	vec3_t death_location;		// JPG 3.20 - used for %d formatting
@@ -240,7 +240,7 @@ typedef struct {
 	double last_angle_time;
 	vec3_t lerpangles;			// JPG - angles now used by view.c so that smooth chasecam doesn't fuck up demos
 
-	qboolean noclip_anglehack;
+	bool noclip_anglehack;
 } client_state_t;
 
 //

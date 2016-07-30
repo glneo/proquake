@@ -28,7 +28,7 @@
  */
 int c_yes, c_no;
 
-qboolean SV_CheckBottom(edict_t *ent)
+bool SV_CheckBottom(edict_t *ent)
 {
 	vec3_t mins, maxs, start, stop;
 	trace_t trace;
@@ -98,7 +98,7 @@ qboolean SV_CheckBottom(edict_t *ent)
  pr_global_struct->trace_normal is set to the normal of the blocking wall
  =============
  */
-qboolean SV_movestep(edict_t *ent, vec3_t move, qboolean relink)
+bool SV_movestep(edict_t *ent, vec3_t move, bool relink)
 {
 	float dz;
 	vec3_t oldorg, neworg, end;
@@ -220,7 +220,7 @@ qboolean SV_movestep(edict_t *ent, vec3_t move, qboolean relink)
  ======================
  */
 void PF_changeyaw(void);
-qboolean SV_StepDirection(edict_t *ent, float yaw, float dist)
+bool SV_StepDirection(edict_t *ent, float yaw, float dist)
 {
 	vec3_t move, oldorigin;
 	float delta;
@@ -303,7 +303,7 @@ void SV_NewChaseDir(edict_t *actor, edict_t *enemy, float dist)
 	}
 
 // try other directions
-	if (((rand() & 3) & 1) || abs(deltay) > abs(deltax))
+	if (((rand() & 3) & 1) || fabsf(deltay) > fabsf(deltax))
 	{
 		tdir = d[1];
 		d[1] = d[2];
@@ -351,7 +351,7 @@ void SV_NewChaseDir(edict_t *actor, edict_t *enemy, float dist)
  SV_CloseEnough
  ======================
  */
-qboolean SV_CloseEnough(edict_t *ent, edict_t *goal, float dist)
+bool SV_CloseEnough(edict_t *ent, edict_t *goal, float dist)
 {
 	int i;
 

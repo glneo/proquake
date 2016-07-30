@@ -35,7 +35,7 @@ void SCR_DrawCoords (void);
 
 float V_CalcRoll (vec3_t angles, vec3_t velocity);
 
-void V_UpdatePalette_Static (qboolean forced);
+void V_UpdatePalette_Static (bool forced);
 
 void BuildGammaTable (float g);			// JPG 3.02
 

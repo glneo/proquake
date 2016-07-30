@@ -412,8 +412,8 @@ void S_PaintChannels(int endtime)
 		// clipping
 		for (i = 0; i < end - paintedtime; i++)
 		{
-			paintbuffer[i].left = CLAMP(-32768 << 8, paintbuffer[i].left, 32767 << 8) >> 1;
-			paintbuffer[i].right = CLAMP(-32768 << 8, paintbuffer[i].right, 32767 << 8) >> 1;
+			paintbuffer[i].left = CLAMP(-32768 * 256, paintbuffer[i].left, 32767 * 256) >> 1;
+			paintbuffer[i].right = CLAMP(-32768 * 256, paintbuffer[i].right, 32767 * 256) >> 1;
 		}
 
 		// apply a lowpass filter

@@ -16,7 +16,7 @@ typedef struct
 } location_t;
 
 // Load the locations for the current level from the location file
-qboolean LOC_LoadLocations (char* mapname);
+bool LOC_LoadLocations (char* mapname);
 
 // Get the name of the location of a point
 char *LOC_GetLocation (vec3_t p);

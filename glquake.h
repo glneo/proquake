@@ -154,12 +154,12 @@ void R_Sky_NewMap (void);
 void GL_Set2D (void);
 void Draw_Crosshair(void);
 void Build_Gamma_Table (void);
-void SmoothFontSet(qboolean smoothfont_choice);
+void SmoothFontSet(bool smoothfont_choice);
 
 // gl_rmain.c
-qboolean R_CullBox (vec3_t, vec3_t);
+bool R_CullBox (vec3_t, vec3_t);
 #ifdef SUPPORTS_AUTOID_HARDWARE
-qboolean R_CullSphere (vec3_t centre, float radius);
+bool R_CullSphere (vec3_t centre, float radius);
 #endif
 
 void R_RotateForEntity (entity_t *);
@@ -220,8 +220,8 @@ void GL_CheckTextureRAM (GLenum theTarget, GLint theLevel, GLint theInternalForm
 
 void Check_GammaOld (unsigned char *pal);
 //vid_wgl.c :( and may osx ... needs moved to ^^
-qboolean VID_Is8bit (void);
-qboolean CheckExtension (const char *extension);
+bool VID_Is8bit (void);
+bool CheckExtension (const char *extension);
 
 
 
@@ -229,7 +229,7 @@ qboolean CheckExtension (const char *extension);
 
 // move this to vid_glcommon.c?
 
-extern qboolean using_hwgamma; // Baker hw gamma support
+extern bool using_hwgamma; // Baker hw gamma support
 
 
 extern	float	gldepthmin, gldepthmax;

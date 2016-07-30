@@ -23,8 +23,8 @@ typedef struct framepos_s {
 } framepos_t;
 
 framepos_t *dem_framepos = NULL;
-qboolean start_of_demo = false;
-qboolean bumper_on = false;
+bool start_of_demo = false;
+bool bumper_on = false;
 
 /*
  ==============================================================================
@@ -220,12 +220,12 @@ int CL_GetMessage(void)
 			char *ch;
 			int len;
 
-			len = strlen(demo_head[0]);
-			ch = strstr(demo_head[0] + len + 1, "ProQuake Server Version");
+			len = strlen((char *)demo_head[0]);
+			ch = strstr((char *)demo_head[0] + len + 1, "ProQuake Server Version");
 			if (ch)
 				memcpy(ch, va("ProQuake \217Demo\217 Version %4.2f", PROQUAKE_SERIES_VERSION), 28);
 			else {
-				ch = demo_head[0] + demo_head_size[0];
+				ch = (char *)demo_head[0] + demo_head_size[0];
 				*ch++ = svc_print;
 				ch += 1 + sprintf(ch, "\n\35\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\37\n"
 						      "\n   \01\02\02\02\02\02\02\02\02\02\02\02\02\02\02\02\02\02\02\02\02\02\02\02\02\02\02\02\02\03");
@@ -332,7 +332,7 @@ void CL_Record_f(void)
 	} else
 		track = -1;
 
-	SNPrintf(name, sizeof(name), "%s/%s", com_gamedir, Cmd_Argv(1));
+	snprintf(name, sizeof(name), "%s/%s", com_gamedir, Cmd_Argv(1));
 	CL_Clear_Demos_Queue(); // timedemo is a very intentional action
 
 //
@@ -358,7 +358,7 @@ void CL_Record_f(void)
 	}
 
 	// Officially recording ... copy the name for reference
-	SNPrintf(cls.demoname, sizeof(cls.demoname), "%s", name);
+	snprintf(cls.demoname, sizeof(cls.demoname), "%s", name);
 
 	cls.forcetrack = track;
 	fprintf(cls.demofile, "%i\n", cls.forcetrack);
@@ -436,7 +436,7 @@ void CL_Record_f(void)
 void StartPlayingOpenedDemo(void)
 {
 	int c;
-	qboolean neg = false;
+	bool neg = false;
 
 	cls.demoplayback = true;
 	cls.state = ca_connected;
@@ -461,7 +461,7 @@ void StartPlayingOpenedDemo(void)
  ====================
  */
 // Baker: So we know this is a real start demo
-qboolean play_as_start_demo = false;
+bool play_as_start_demo = false;
 void CL_PlayDemo_NextStartDemo_f(void)
 {
 	play_as_start_demo = true;
@@ -514,7 +514,7 @@ void CL_PlayDemo_f(void)
 		}
 	}
 
-	SNPrintf(cls.demoname, sizeof(cls.demoname), "%s", name);
+	snprintf(cls.demoname, sizeof(cls.demoname), "%s", name);
 	cls.demo_offset_start = ftell(cls.demofile);	// qfs_lastload.offset instead?
 	cls.demo_file_length = com_filesize;
 	cls.demo_hosttime_start = cls.demo_hosttime_elapsed = 0; // Fill this in ... host_time;

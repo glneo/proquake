@@ -21,7 +21,7 @@ LOC_LoadLocations
 Load the locations for the current level from the location file
 ===============
 */
-qboolean LOC_LoadLocations (char* loc_file_name)
+bool LOC_LoadLocations (char* loc_file_name)
 {
 	FILE *f;
 	char *ch;

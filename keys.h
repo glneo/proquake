@@ -173,7 +173,7 @@ extern	int		history_line;
 
 extern	cvar_t	in_keymap;
 
-void Key_Event (int key, int ascii, qboolean down);
+void Key_Event (int key, int ascii, bool down);
 void Key_Init (void);
 void Key_WriteBindings (FILE *f);
 void Key_SetBinding (int keynum, char *binding);
@@ -182,4 +182,4 @@ void Key_ClearStates (void);
 void History_Shutdown (void);
 
 
-qboolean Key_InternationalON(void);
+bool Key_InternationalON(void);

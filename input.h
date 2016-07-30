@@ -36,4 +36,7 @@ void IN_ClearStates(void); // restores all button and position states to default
 void IN_Keyboard_Acquire(void);
 void IN_Keyboard_Unacquire(void);
 
+void IN_Deactivate(bool free_cursor);
+void IN_Activate(void);
+
 #endif /* __INPUT_H */

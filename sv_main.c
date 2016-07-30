@@ -84,7 +84,7 @@ void SV_Init(void)
 	}
 
 	for (i = 0; i < MAX_MODELS; i++)
-		SNPrintf(localmodels[i], sizeof(localmodels[i]), "*%i", i);
+		snprintf(localmodels[i], sizeof(localmodels[i]), "*%i", i);
 }
 
 /*
@@ -212,11 +212,11 @@ void SV_SendServerinfo(client_t *client)
 
 	// JPG - This used to be VERSION 1.09 SERVER (xxxxx CRC)
 	MSG_WriteByte(&client->message, svc_print);
-	SNPrintf(message, sizeof(message), "\n\35\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\37\n"
+	snprintf(message, sizeof(message), "\n\35\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\37\n"
 			"\n   \01\02\02\02\02\02\02\02\02\02\02\02\02\02\02\02\02\02\02\02\02\02\02\02\02\02\02\02\02\03");
 	MSG_WriteString(&client->message, message);
 	MSG_WriteByte(&client->message, svc_print);
-	SNPrintf(message, sizeof(message), "\02\n   \04ProQuake Server Version %4.2f\06"
+	snprintf(message, sizeof(message), "\02\n   \04ProQuake Server Version %4.2f\06"
 			"\n   \07\10\10\10\10\10\10\10\10\10\10\10\10\10\10\10\10\10\10\10\10\10\10\10\10\10\10\10\10\11", PROQUAKE_SERIES_VERSION);
 	MSG_WriteString(&client->message, message);
 
@@ -443,7 +443,7 @@ byte *SV_FatPVS(vec3_t org, model_t *worldmodel)
  SV_WriteEntitiesToClient
  =============
  */
-void SV_WriteEntitiesToClient(edict_t *clent, sizebuf_t *msg, qboolean nomap)
+void SV_WriteEntitiesToClient(edict_t *clent, sizebuf_t *msg, bool nomap)
 {
 	int e, i, bits;
 	float miss;
@@ -702,7 +702,7 @@ void SV_WriteClientdataToMessage(edict_t *ent, sizebuf_t *msg)
  SV_SendClientDatagram
  =======================
  */
-qboolean SV_SendClientDatagram(client_t *client)
+bool SV_SendClientDatagram(client_t *client)
 {
 	byte buf[MAX_DATAGRAM];
 	sizebuf_t msg;
@@ -1065,13 +1065,13 @@ void SV_SpawnServer(char *server)
 	sv.time = 1.0;
 
 	strlcpy(sv.name, server, sizeof(sv.name));
-	SNPrintf(sv.modelname, sizeof(sv.modelname), "maps/%s.bsp", server);
+	snprintf(sv.modelname, sizeof(sv.modelname), "maps/%s.bsp", server);
 	sv.worldmodel = Mod_ForName(sv.modelname, false);
 
 	//Baker 3.99b: R00k if map isnt found then load the sv_defaultmap instead
 	if (!sv.worldmodel && sv_defaultmap.string[0]) {
 		strcpy(sv.name, sv_defaultmap.string);
-		SNPrintf(sv.modelname, sizeof(sv.modelname), "maps/%s.bsp", sv_defaultmap.string);
+		snprintf(sv.modelname, sizeof(sv.modelname), "maps/%s.bsp", sv_defaultmap.string);
 		sv.worldmodel = Mod_ForName(sv.modelname, false);
 	}
 	// Baker 3.99b: end mod
