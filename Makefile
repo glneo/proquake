@@ -1,17 +1,31 @@
-CFLAGS += -O3 -g -ffast-math -funroll-loops -fexpensive-optimizations
-LDFLAGS += -lm -lGL -lglfw
+CFLAGS += -O3 -ffast-math -funroll-loops
+LDFLAGS += -lm -lGL -lSDL2
 
 #############################################################################
 # SETUP AND BUILD
 #############################################################################
 
-all: glquake
+all: quake
 
 #############################################################################
-# GLQuake
+# Quake
 #############################################################################
 
-GLQUAKE_OBJS = \
+QUAKE_OBJS = \
+	common.o \
+	cvar.o \
+	crc.o \
+	host.o \
+	host_cmd.o \
+	keys.o \
+	location.o \
+	menu.o \
+	mathlib.o \
+	zone.o \
+	view.o \
+	wad.o \
+	world.o \
+	sys_linux.o \
 	cl_demo.o \
 	cl_input.o \
 	cl_main.o \
@@ -19,11 +33,8 @@ GLQUAKE_OBJS = \
 	cl_tent.o \
 	chase.o \
 	cmd.o \
-	common.o \
 	console.o \
-	crc.o \
-	cvar.o \
-	\
+	in_sdl.o \
 	gl_draw.o \
 	gl_mesh.o \
 	gl_model.o \
@@ -33,18 +44,10 @@ GLQUAKE_OBJS = \
 	gl_rmisc.o \
 	gl_rsurf.o \
 	gl_screen.o \
-	gl_test.o \
 	gl_warp.o \
 	gl_fullbright.o \
-	\
-	host.o \
-	host_cmd.o \
-	iplog.o \
-	keys.o \
-	location.o \
-	matrix.o \
-	menu.o \
-	mathlib.o \
+	gl_vidsdl.o \
+	sbar.o \
 	net_dgrm.o \
 	net_loop.o \
 	net_main.o \
@@ -55,34 +58,24 @@ GLQUAKE_OBJS = \
 	pr_edict.o \
 	pr_exec.o \
 	r_part.o \
-	sbar.o \
 	sv_main.o \
 	sv_phys.o \
 	sv_move.o \
 	sv_user.o \
-	zone.o	\
-	view.o	\
-	wad.o \
-	world.o \
-	sys_linux.o \
 	snd_dma.o \
 	snd_mem.o \
 	snd_mix.o \
-	snd_linux.o \
-	security.o \
-	vid_common_gl.o
+	snd_sdl.o \
 
-FW_OBJS = gl_vidfw.o
-
-glquake : $(GLQUAKE_OBJS) $(FW_OBJS)
-	$(CC) -o $@ $(GLQUAKE_OBJS) $(FW_OBJS) $(LDFLAGS)
+quake : $(QUAKE_OBJS)
+	$(CC) -o $@ $(LDFLAGS) $^
 
 %.o : %.c
-	$(CC) -c $(CFLAGS) $< -o $@
+	$(CC) -c -o $@ $(CFLAGS) $<
 
 #############################################################################
 # MISC
 #############################################################################
 
 clean:
-	$(RM) glquake.spec glquake $(GLQUAKE_OBJS) $(FW_OBJS)
+	$(RM) quake.spec quake $(QUAKE_OBJS)

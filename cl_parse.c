@@ -157,7 +157,7 @@ void CL_KeepaliveMessage(void)
 	memcpy(net_message.data, olddata, net_message.cursize);
 
 // check time
-	time = Sys_FloatTime();
+	time = Sys_DoubleTime();
 	if (time - lastmsg < 5)
 		return;
 	lastmsg = time;
@@ -270,11 +270,10 @@ void CL_ParseServerInfo(void)
 
 	for (i = 1; i < nummodels; i++)
 	{
+		Con_Printf("Caching: %s\n", model_precache[i]);
 		cl.model_precache[i] = Mod_ForName(model_precache[i], false);
 		if (cl.model_precache[i] == NULL)
-		{
 			Host_Error("Model %s not found", model_precache[i]);
-		}
 		CL_KeepaliveMessage();
 	}
 

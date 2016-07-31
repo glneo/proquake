@@ -79,7 +79,7 @@ cvar_t scr_fov = { "fov", "90", true };	// 10 - 170
 cvar_t default_fov = { "default_fov", "0", true };	// Default_fov from FuhQuake
 cvar_t scr_conspeed = { "scr_conspeed", "99999", true };  // Baker 3.60 - Save to config
 cvar_t scr_centertime = { "scr_centertime", "2" };
-cvar_t scr_showram = { "showram", "1" };
+cvar_t scr_showram = { "showram", "0" };
 cvar_t scr_showturtle = { "showturtle", "0" };
 cvar_t scr_showpause = { "showpause", "1" };
 cvar_t scr_printspeed = { "scr_printspeed", "8" };
@@ -403,8 +403,7 @@ void SCR_Init(void)
 	Cvar_RegisterVariable(&pq_drawfps, NULL); // JPG - draw frames per second
 	Cvar_RegisterVariable(&show_speed, NULL); // Baker 3.67
 
-// register our commands
-
+	// register our commands
 	Cmd_AddCommand("screenshot", SCR_ScreenShot_f);
 	Cmd_AddCommand("sizeup", SCR_SizeUp_f);
 	Cmd_AddCommand("sizedown", SCR_SizeDown_f);
@@ -416,27 +415,14 @@ void SCR_Init(void)
 	scr_initialized = true;
 }
 
-/*
- ==============
- SCR_DrawRam
- ==============
- */
 void SCR_DrawRam(void)
 {
 	if (!scr_showram.value)
 		return;
 
-	if (!r_cache_thrash)
-		return;
-
 	Draw_Pic(scr_vrect.x + 32, scr_vrect.y, scr_ram);
 }
 
-/*
- ==============
- SCR_DrawTurtle
- ==============
- */
 void SCR_DrawTurtle(void)
 {
 	static int count;
@@ -457,11 +443,6 @@ void SCR_DrawTurtle(void)
 	Draw_Pic(scr_vrect.x, scr_vrect.y, scr_turtle);
 }
 
-/*
- ==============
- SCR_DrawNet
- ==============
- */
 void SCR_DrawNet(void)
 {
 	if (realtime - cl.last_received_message < 0.3)
@@ -473,11 +454,6 @@ void SCR_DrawNet(void)
 	Draw_Pic(scr_vrect.x + 64, scr_vrect.y, scr_net);
 }
 
-/* JPG - draw frames per second
- ==============
- SCR_DrawFPS
- ==============
- */
 void SCR_DrawFPS(void)
 {
 	int x;
@@ -487,15 +463,15 @@ void SCR_DrawFPS(void)
 	char buff[10];
 	char *ch;
 
+	if (!pq_drawfps.value)
+		return;
+
 	if (realtime - last_realtime > 1.0)
 	{
 		fps = (host_framecount - last_framecount) / (realtime - last_realtime) + 0.5;
 		last_framecount = host_framecount;
 		last_realtime = realtime;
 	}
-
-	if (!pq_drawfps.value)
-		return;
 
 	snprintf(buff, sizeof(buff), "%3d", fps);
 	x = vid.width - 48;
@@ -858,7 +834,7 @@ int SCR_ModalMessage(char *text, float timeout) //johnfitz -- timeout
 
 	S_ClearBuffer();		// so dma doesn't loop current sound
 
-	time1 = Sys_FloatTime() + timeout; //johnfitz -- timeout
+	time1 = Sys_DoubleTime() + timeout; //johnfitz -- timeout
 	time2 = 0.0f; //johnfitz -- timeout
 
 	do
@@ -866,7 +842,7 @@ int SCR_ModalMessage(char *text, float timeout) //johnfitz -- timeout
 		key_count = -1;		// wait for a key down and up
 		Sys_SendKeyEvents();
 		if (timeout)
-			time2 = Sys_FloatTime(); //johnfitz -- zero timeout means wait forever.
+			time2 = Sys_DoubleTime(); //johnfitz -- zero timeout means wait forever.
 	} while (key_lastpress != 'y' && key_lastpress != 'n' && key_lastpress != K_ESCAPE && time2 <= time1);
 
 	scr_drawdialog = false;

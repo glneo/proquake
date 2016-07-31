@@ -26,8 +26,8 @@ set(PROQUAKE_SOURCES
 	console.c
 	in_sdl.c
 # Graphics
+	gl_alias.c
 	gl_draw.c
-	gl_mesh.c
 	gl_model.c
 	gl_refrag.c
 	gl_rlight.c
@@ -81,7 +81,7 @@ find_package(OpenGL REQUIRED)
 find_package(SDL2 REQUIRED)
 
 add_executable(proquake ${PROQUAKE_SOURCES})
-target_compile_options(proquake PRIVATE -O3;-ffast-math;-Wall)
-#target_compile_options(proquake PRIVATE -g)
+#target_compile_options(proquake PRIVATE -O3;-ffast-math;-Wall)
+target_compile_options(proquake PRIVATE -g)
 target_include_directories(proquake PUBLIC ${OPENGL_INCLUDE_DIRS} ${SDL2_INCLUDE_DIR})
 target_link_libraries(proquake m ${OPENGL_LIBRARIES} ${SDL2_LIBRARY})

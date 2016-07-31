@@ -45,53 +45,6 @@ int nostdout = 0;
 char *basedir = ".";
 char *cachedir = "/tmp";
 
-/*
- ===============================================================================
-
- SYNCHRONIZATION - JPG 3.30
-
- ===============================================================================
- */
-
-int hlock;
-
-double Sys_DoubleTime (void)
-{
-	return SDL_GetTicks() / 1000.0;
-}
-
-/*
- ================
- Sys_GetLock
- ================
- */
-void Sys_GetLock(void)
-{
-	int i;
-
-	for (i = 0; i < 10; i++)
-	{
-		hlock = open(va("%s/lock.dat", com_gamedir), O_CREAT | O_EXCL, S_IRUSR | S_IWUSR);
-		if (hlock != -1)
-			return;
-		sleep(1);
-	}
-
-	Sys_Printf("Warning: could not open lock; using crowbar\n");
-}
-
-/*
- ================
- Sys_ReleaseLock
- ================
- */
-void Sys_ReleaseLock(void)
-{
-	if (hlock != -1)
-		close(hlock);
-	unlink(va("%s/lock.dat", com_gamedir));
-}
-
 // =======================================================================
 // General routines
 // =======================================================================
@@ -175,6 +128,11 @@ void Sys_Warn(char *warning, ...)
 	vsnprintf(string, sizeof(string), warning, argptr);
 	va_end(argptr);
 	fprintf(stderr, "Warning: %s", string);
+}
+
+double Sys_DoubleTime (void)
+{
+	return SDL_GetTicks() / 1000.0;
 }
 
 /*
@@ -265,36 +223,11 @@ void Sys_DebugLog(char *file, char *fmt, ...)
 	close(fd);
 }
 
-double Sys_FloatTime(void)
-{
-	struct timeval tp;
-	struct timezone tzp;
-	static int secbase;
-
-	gettimeofday(&tp, &tzp);
-
-	if (!secbase)
-	{
-		secbase = tp.tv_sec;
-		return tp.tv_usec / 1000000.0;
-	}
-
-	return (tp.tv_sec - secbase) + tp.tv_usec / 1000000.0;
-}
-
-void Sys_OpenFolder_f(void)
-{
-	Con_Printf("folder command not implemented in linux yet\n");
-	return;
-}
-
-//TODO: gets text from clipboard
 char *Sys_GetClipboardData(void)
 {
 	return SDL_GetClipboardText();
 }
 
-//TODO: copies given text to clipboard
 void Sys_CopyToClipboard(char *text)
 {
 	SDL_SetClipboardText(text);
@@ -359,13 +292,13 @@ int main(int argc, char **argv)
 	if (COM_CheckParm("-nostdout"))
 		nostdout = 1;
 
-	Sys_Printf("Linux Quake -- Version %s\n", ENGINE_VERSION);
+	Sys_Printf("Quake -- Version %s\n", ENGINE_VERSION);
 
-	oldtime = Sys_FloatTime() - 0.1;
+	oldtime = Sys_DoubleTime() - 0.1;
 	while (true)
 	{
 		// find time spent rendering last frame
-		newtime = Sys_FloatTime();
+		newtime = Sys_DoubleTime();
 		time = newtime - oldtime;
 
 		if (cls.state == ca_dedicated)

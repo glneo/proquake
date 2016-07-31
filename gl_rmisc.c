@@ -14,17 +14,12 @@
 
 #include "quakedef.h"
 
-/*
- ==================
- R_InitTextures
- ==================
- */
 void R_InitTextures(void)
 {
 	int x, y, m;
 	byte *dest;
 
-// create a simple checkerboard texture for the default
+	// create a simple checkerboard texture for the default
 	r_notexture_mip = Hunk_AllocName(sizeof(texture_t) + 16 * 16 + 8 * 8 + 4 * 4 + 2 * 2, "notexture");
 
 	r_notexture_mip->width = r_notexture_mip->height = 16;
@@ -49,7 +44,7 @@ void R_InitTextures(void)
 	R_Init_FlashBlend_Bubble();
 }
 
-byte dottexture[8][8] =
+static byte dottexture[8][8] =
 {
 	{0,1,1,0,0,0,0,0},
 	{1,1,1,1,0,0,0,0},
@@ -132,106 +127,106 @@ int recentskinnum[MAX_SCOREBOARD];
 
 void R_TranslatePlayerSkin(int playernum)
 {
-	int top, bottom, i, j, size;
-	byte translate[256];
-	unsigned translate32[256];
-	model_t *model;
-	aliashdr_t *paliashdr;
-	byte *original;
-
-	unsigned pixels[512 * 256];
-
-	unsigned *out;
-	unsigned scaled_width, scaled_height;
-	int inwidth, inheight;
-	byte *inrow;
-	unsigned frac, fracstep;
-
-	// locate the original skin pixels
-	currententity = &cl_entities[1 + playernum];
-	if (!(model = currententity->model))
-		return;		// player doesn't have a model yet
-	if (model->type != mod_alias)
-		return; // only translate skins on alias models
-	if ((currententity->model->flags & MOD_PLAYER) == 0)
-		return; // Only translate player model
-	if (recentcolor_isSet[playernum] && recentcolor[playernum] == cl.scores[playernum].colors && recentskinnum[playernum] == currententity->skinnum)
-		return; // Same color as before
-
-	recentcolor_isSet[playernum] = true;
-	recentcolor[playernum] = cl.scores[playernum].colors;
-	recentskinnum[playernum] = currententity->skinnum;
-
-	GL_DisableMultitexture();
-
-	top = cl.scores[playernum].colors & 0xf0;
-	bottom = (cl.scores[playernum].colors & 15) << 4;
-
-	for (i = 0; i < 256; i++)
-		translate[i] = i;
-
-	for (i = 0; i < 16; i++)
-	{
-		// the artists made some backwards ranges. sigh.
-		translate[TOP_RANGE + i] = (top < 128) ? top + i : top + 15 - i;
-		translate[BOTTOM_RANGE + i] = (bottom < 128) ? bottom + i : bottom + 15 - i;
-	}
-
-	paliashdr = (aliashdr_t *) Mod_Extradata(model);
-	size = paliashdr->skinwidth * paliashdr->skinheight;
-	if (currententity->skinnum < 0 || currententity->skinnum >= paliashdr->numskins)
-	{
-		Con_Printf("(%d): Invalid player skin #%d\n", playernum, currententity->skinnum);
-		original = (byte *) paliashdr + paliashdr->texels[0];
-	}
-	else
-	{
-		original = (byte *) paliashdr + paliashdr->texels[currententity->skinnum];
-	}
-
-	if (size & 3)
-		Sys_Error("R_TranslatePlayerSkin: bad size (%d)", size);
-
-	inwidth = paliashdr->skinwidth;
-	inheight = paliashdr->skinheight;
-
-	// because this happens during gameplay, do it fast
-	// instead of sending it through gl_upload 8
-	GL_Bind(playertextures + playernum);
-
-	scaled_width = gl_max_size < 512 ? gl_max_size : 512;
-	scaled_height = gl_max_size < 256 ? gl_max_size : 256;
-
-	// allow users to crunch sizes down even more if they want
-	scaled_width >>= (int) gl_playermip.value;
-	scaled_height >>= (int) gl_playermip.value;
-
-	for (i = 0; i < 256; i++)
-		translate32[i] = d_8to24table[translate[i]];
-
-	out = pixels;
-	fracstep = inwidth * 0x10000 / scaled_width;
-	for (i = 0; i < scaled_height; i++, out += scaled_width)
-	{
-		inrow = original + inwidth * (i * inheight / scaled_height);
-		frac = fracstep >> 1;
-		for (j = 0; j < scaled_width; j += 4)
-		{
-			out[j] = translate32[inrow[frac >> 16]];
-			frac += fracstep;
-			out[j + 1] = translate32[inrow[frac >> 16]];
-			frac += fracstep;
-			out[j + 2] = translate32[inrow[frac >> 16]];
-			frac += fracstep;
-			out[j + 3] = translate32[inrow[frac >> 16]];
-			frac += fracstep;
-		}
-	}
-	glTexImage2D(GL_TEXTURE_2D, 0, gl_solid_format, scaled_width, scaled_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
-
-	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
-	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+//	int top, bottom, i, j, size;
+//	byte translate[256];
+//	unsigned translate32[256];
+//	model_t *model;
+//	alias_model_t *aliasmodel;
+//	byte *original;
+//
+//	unsigned pixels[512 * 256];
+//
+//	unsigned *out;
+//	unsigned scaled_width, scaled_height;
+//	int inwidth, inheight;
+//	byte *inrow;
+//	unsigned frac, fracstep;
+//
+//	// locate the original skin pixels
+//	currententity = &cl_entities[1 + playernum];
+//	if (!(model = currententity->model))
+//		return;		// player doesn't have a model yet
+//	if (model->type != mod_alias)
+//		return; // only translate skins on alias models
+//	if ((currententity->model->flags & MOD_PLAYER) == 0)
+//		return; // Only translate player model
+//	if (recentcolor_isSet[playernum] && recentcolor[playernum] == cl.scores[playernum].colors && recentskinnum[playernum] == currententity->skinnum)
+//		return; // Same color as before
+//
+//	recentcolor_isSet[playernum] = true;
+//	recentcolor[playernum] = cl.scores[playernum].colors;
+//	recentskinnum[playernum] = currententity->skinnum;
+//
+//	GL_DisableMultitexture();
+//
+//	top = cl.scores[playernum].colors & 0xf0;
+//	bottom = (cl.scores[playernum].colors & 15) << 4;
+//
+//	for (i = 0; i < 256; i++)
+//		translate[i] = i;
+//
+//	for (i = 0; i < 16; i++)
+//	{
+//		// the artists made some backwards ranges. sigh.
+//		translate[TOP_RANGE + i] = (top < 128) ? top + i : top + 15 - i;
+//		translate[BOTTOM_RANGE + i] = (bottom < 128) ? bottom + i : bottom + 15 - i;
+//	}
+//
+//	aliasmodel = (alias_model_t *) Mod_Extradata(model);
+//	size = aliasmodel->skinwidth * aliasmodel->skinheight;
+//	if (currententity->skinnum < 0 || currententity->skinnum >= aliasmodel->numskins)
+//	{
+//		Con_Printf("(%d): Invalid player skin #%d\n", playernum, currententity->skinnum);
+//		original = (byte *) aliasmodel + aliasmodel->texels[0];
+//	}
+//	else
+//	{
+//		original = (byte *) aliasmodel + aliasmodel->texels[currententity->skinnum];
+//	}
+//
+//	if (size & 3)
+//		Sys_Error("R_TranslatePlayerSkin: bad size (%d)", size);
+//
+//	inwidth = aliasmodel->skinwidth;
+//	inheight = aliasmodel->skinheight;
+//
+//	// because this happens during gameplay, do it fast
+//	// instead of sending it through gl_upload 8
+//	GL_Bind(playertextures + playernum);
+//
+//	scaled_width = gl_max_size < 512 ? gl_max_size : 512;
+//	scaled_height = gl_max_size < 256 ? gl_max_size : 256;
+//
+//	// allow users to crunch sizes down even more if they want
+//	scaled_width >>= (int) gl_playermip.value;
+//	scaled_height >>= (int) gl_playermip.value;
+//
+//	for (i = 0; i < 256; i++)
+//		translate32[i] = d_8to24table[translate[i]];
+//
+//	out = pixels;
+//	fracstep = inwidth * 0x10000 / scaled_width;
+//	for (i = 0; i < scaled_height; i++, out += scaled_width)
+//	{
+//		inrow = original + inwidth * (i * inheight / scaled_height);
+//		frac = fracstep >> 1;
+//		for (j = 0; j < scaled_width; j += 4)
+//		{
+//			out[j] = translate32[inrow[frac >> 16]];
+//			frac += fracstep;
+//			out[j + 1] = translate32[inrow[frac >> 16]];
+//			frac += fracstep;
+//			out[j + 2] = translate32[inrow[frac >> 16]];
+//			frac += fracstep;
+//			out[j + 3] = translate32[inrow[frac >> 16]];
+//			frac += fracstep;
+//		}
+//	}
+//	glTexImage2D(GL_TEXTURE_2D, 0, gl_solid_format, scaled_width, scaled_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
+//
+//	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+//	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+//	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
 }
 
@@ -248,11 +243,8 @@ void R_NewMap(void)
 	for (i = 0; i < 256; i++)
 		d_lightstylevalue[i] = 264;		// normal light value
 
-	memset(&r_worldentity, 0, sizeof(r_worldentity));
-	r_worldentity.model = cl.worldmodel;
-
-// clear out efrags in case the level hasn't been reloaded
-// FIXME: is this one short?
+	// clear out efrags in case the level hasn't been reloaded
+	// FIXME: is this one short?
 	for (i = 0; i < cl.worldmodel->numleafs; i++)
 		cl.worldmodel->leafs[i].efrags = NULL;
 
@@ -286,9 +278,6 @@ void R_NewMap(void)
  For program optimization
  ====================
  */
-#ifdef INTEL_OPENGL_DRIVER_WORKAROUND
-extern bool IntelDisplayAdapter;
-#endif
 void R_TimeRefresh_f(void)
 {
 	int i;
@@ -297,13 +286,10 @@ void R_TimeRefresh_f(void)
 	if (cls.state != ca_connected)
 		return;
 
-#ifdef INTEL_OPENGL_DRIVER_WORKAROUND
-	if (!IntelDisplayAdapter) // Baker: ruins screen
-#endif
 	glDrawBuffer(GL_FRONT);
 	glFinish();
 
-	start = Sys_FloatTime();
+	start = Sys_DoubleTime();
 	for (i = 0; i < 128; i++)
 	{
 		r_refdef.viewangles[1] = i * (360.0 / 128.0);
@@ -311,14 +297,10 @@ void R_TimeRefresh_f(void)
 	}
 
 	glFinish();
-	stop = Sys_FloatTime();
+	stop = Sys_DoubleTime();
 	time = stop - start;
 	Con_Printf("%f seconds (%f fps)\n", time, 128.0 / time);
 
 	glDrawBuffer(GL_BACK);
 	GL_EndRendering();
-}
-
-void D_FlushCaches(void)
-{
 }

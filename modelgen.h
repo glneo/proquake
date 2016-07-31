@@ -53,39 +53,34 @@ typedef struct {
 	float size;
 } mdl_t;
 
-// TODO: could be shorts
-
 typedef struct {
 	int onseam;
 	int s;
 	int t;
-} stvert_t;
+} dstvert_t;
 
 typedef struct dtriangle_s {
 	int facesfront;
 	int vertindex[3];
 } dtriangle_t;
 
-#define DT_FACES_FRONT				0x0010
-
-// This mirrors trivert_t in trilib.h, is present so Quake knows how to
-// load this data
+#define DT_FACES_FRONT 0x0010
 
 typedef struct {
 	byte v[3];
 	byte lightnormalindex;
-} trivertx_t;
+} dtrivertx_t;
 
 typedef struct {
-	trivertx_t bboxmin; // lightnormal isn't used
-	trivertx_t bboxmax; // lightnormal isn't used
+	dtrivertx_t bboxmin; // lightnormal isn't used
+	dtrivertx_t bboxmax; // lightnormal isn't used
 	char name[16]; // frame name from grabbing
 } daliasframe_t;
 
 typedef struct {
 	int numframes;
-	trivertx_t bboxmin; // lightnormal isn't used
-	trivertx_t bboxmax; // lightnormal isn't used
+	dtrivertx_t bboxmin; // lightnormal isn't used
+	dtrivertx_t bboxmax; // lightnormal isn't used
 } daliasgroup_t;
 
 typedef struct {
@@ -109,4 +104,3 @@ typedef struct {
 } daliasskintype_t;
 
 #define IDPOLYHEADER (('O'<<24)+('P'<<16)+('D'<<8)+'I') // little-endian "IDPO"
-

@@ -143,7 +143,7 @@ extern client_static_t cls;
 
 //
 // the client_state_t structure is wiped completely at every
-// server signon
+// server sign-on
 //
 typedef struct {
 	int movemessages;	// since connecting to this server

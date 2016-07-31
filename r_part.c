@@ -58,7 +58,7 @@ void R_InitParticles(void)
  */
 
 #define NUMVERTEXNORMALS	162
-extern float r_avertexnormals[NUMVERTEXNORMALS][3];
+extern const float r_avertexnormals[NUMVERTEXNORMALS][3];
 vec3_t avelocities[NUMVERTEXNORMALS];
 float beamlength = 16;
 

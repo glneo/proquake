@@ -48,11 +48,6 @@ msurface_t *waterchain = NULL;
 
 void R_RenderDynamicLightmaps(msurface_t *fa);
 
-/*
- ================
- DrawGLPoly
- ================
- */
 void DrawGLPoly(glpoly_t *p)
 {
 	int i;
@@ -68,11 +63,6 @@ void DrawGLPoly(glpoly_t *p)
 	glEnd();
 }
 
-/*
- ===============
- R_AddDynamicLights
- ===============
- */
 void R_AddDynamicLights(msurface_t *surf)
 {
 	int lnum, i, smax, tmax, s, t, sd, td;
@@ -554,7 +544,6 @@ void DrawTextureChains(void)
 	msurface_t *s;
 	texture_t *t;
 
-#if !defined(DX8QUAKE_NO_GL_TEXSORT_ZERO)
 	if (!gl_texsort.value)
 	{
 		GL_DisableMultitexture();
@@ -567,7 +556,6 @@ void DrawTextureChains(void)
 
 		return;
 	}
-#endif
 
 	for (i = 0; i < cl.worldmodel->numtextures; i++)
 	{
@@ -938,11 +926,6 @@ void R_RenderBrushPoly(msurface_t *fa)
 	}
 }
 
-/*
- ================
- R_MirrorChain
- ================
- */
 void R_MirrorChain(msurface_t *s)
 {
 	if (mirror)
@@ -1055,11 +1038,9 @@ void R_DrawBrushModel(entity_t *ent)
 		// draw the polygon
 		if (((psurf->flags & SURF_PLANEBACK) && (dot < -BACKFACE_EPSILON)) || (!(psurf->flags & SURF_PLANEBACK) && (dot > BACKFACE_EPSILON)))
 		{
-#if !defined(DX8QUAKE_NO_GL_TEXSORT_ZERO)
 			if (!gl_texsort.value)
 				R_DrawSequentialPoly(psurf);
 			else
-#endif
 				R_RenderBrushPoly(psurf);
 		}
 	}
@@ -1249,11 +1230,6 @@ void R_DrawWorld(void)
 
 }
 
-/*
- ===============
- R_MarkLeaves
- ===============
- */
 void R_MarkLeaves(void)
 {
 	int i;
@@ -1471,13 +1447,9 @@ void GL_BuildLightmaps(void)
 	int i, j;
 	model_t *m;
 
-#ifdef MACOSX_EXTRA_FEATURES
-	extern bool gl_luminace_lightmaps;
-#endif /* MACOSX */
-
 	memset(allocated, 0, sizeof(allocated));
 
-	r_framecount = 1;		// no dlightcache
+	r_framecount = 1; // no dlightcache
 
 	if (!lightmap_textures)
 	{
@@ -1501,18 +1473,16 @@ void GL_BuildLightmaps(void)
 			GL_CreateSurfaceLightmap(m->surfaces + i);
 			if (m->surfaces[i].flags & SURF_DRAWTURB)
 				continue;
-#ifndef QUAKE2
+
 			if (m->surfaces[i].flags & SURF_DRAWSKY)
 				continue;
-#endif
+
 			BuildSurfaceDisplayList(m->surfaces + i);
 		}
 	}
 
-#if !defined(DX8QUAKE_NO_GL_TEXSORT_ZERO)
 	if (!gl_texsort.value)
 		GL_SelectTexture(GL_TEXTURE1_ARB);
-#endif
 
 	// upload all lightmaps that were filled
 	for (i = 0; i < MAX_LIGHTMAPS; i++)
@@ -1531,9 +1501,6 @@ void GL_BuildLightmaps(void)
 				lightmaps + i * BLOCK_WIDTH * BLOCK_HEIGHT * lightmap_bytes);
 	}
 
-#if !defined(DX8QUAKE_NO_GL_TEXSORT_ZERO)
 	if (!gl_texsort.value)
 		GL_SelectTexture(GL_TEXTURE0_ARB);
-#endif
-
 }

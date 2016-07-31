@@ -45,9 +45,6 @@ typedef struct
 #define	AREA_DEPTH	4
 #define	AREA_NODES	32
 
-extern	entity_t	r_worldentity;
-
-
 void SV_ClearWorld (void);
 // called after the world model has been loaded, before linking any entities
 

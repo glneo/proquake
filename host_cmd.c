@@ -1475,7 +1475,7 @@ void Host_Spawn_f(void)
 		pr_global_struct->self = EDICT_TO_PROG(sv_player);
 		PR_ExecuteProgram(pr_global_struct->ClientConnect);
 
-		if ((Sys_FloatTime() - host_client->netconnection->connecttime) <= sv.time)
+		if ((Sys_DoubleTime() - host_client->netconnection->connecttime) <= sv.time)
 			Sys_Printf("%s entered the game\n", host_client->name);
 
 		PR_ExecuteProgram(pr_global_struct->PutClientInServer);
@@ -1900,13 +1900,13 @@ void Host_Viewframe_f(void)
 
 void PrintFrameName(model_t *m, int frame)
 {
-	aliashdr_t *hdr;
+	alias_model_t *aliasmodel;
 	maliasframedesc_t *pframedesc;
 
-	hdr = (aliashdr_t *) Mod_Extradata(m);
-	if (!hdr)
+	aliasmodel = (alias_model_t *) Mod_Extradata(m);
+	if (!aliasmodel)
 		return;
-	pframedesc = &hdr->frames[frame];
+	pframedesc = &aliasmodel->frames[frame];
 
 	Con_Printf("frame %i: %s\n", frame, pframedesc->name);
 }

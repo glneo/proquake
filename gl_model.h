@@ -236,73 +236,81 @@ typedef struct
 
  ALIAS MODELS
 
- Alias models are position independent, so the cache manager can move them.
  ==============================================================================
  */
 
-typedef struct
-{
+typedef struct {
 	int firstpose;
 	int numposes;
 	float interval;
-	trivertx_t bboxmin;
-	trivertx_t bboxmax;
-	int frame;
+	vec3_t bboxmin;
+	vec3_t bboxmax;
 	char name[16];
 } maliasframedesc_t;
 
-typedef struct
-{
-	trivertx_t bboxmin;
-	trivertx_t bboxmax;
+typedef struct {
+	vec3_t bboxmin;
+	vec3_t bboxmax;
 	int frame;
 } maliasgroupframedesc_t;
 
-typedef struct
-{
+typedef struct {
 	int numframes;
 	int intervals;
 	maliasgroupframedesc_t frames[1];
 } maliasgroup_t;
 
-// !!! if this is changed, it must be changed in asm_draw.h too !!!
-typedef struct mtriangle_s
-{
-	int facesfront;
-	int vertindex[3];
+typedef struct {
+	vec3_t v;
+	vec3_t normal;
+} mtrivertx_t;
+
+typedef struct {
+	float s;
+	float t;
+} mstvert_t;
+
+typedef struct mtriangle_s {
+	short vertindex[3];
 } mtriangle_t;
 
-#define	MAX_SKINS	32
+/* some sane limits, these can be changed or removed if needed */
+#define	MAX_SKINS 32
+#define	MAX_SKIN_HEIGHT 480
+#define	MAX_SKIN_WIDTH 480
+#define	MAXALIASVERTS 4096
+#define	MAXALIASFRAMES 256
+#define	MAXALIASTRIS 4096
+
 typedef struct
 {
-	int ident;
-	int version;
 	vec3_t scale;
 	vec3_t scale_origin;
 	float boundingradius;
 	vec3_t eyeposition;
+
 	int numskins;
 	int skinwidth;
 	int skinheight;
-	int numvertsperframe;
+	int (*gl_texturenum)[4];
+
+	int numverts;
+	mstvert_t *stverts[2];
+
 	int numtris;
+	mtriangle_t *triangles;
+	int backstart;
+
 	int numframes;
+	maliasframedesc_t *frames;
+
+	int numposes;
+	mtrivertx_t *poseverts[1000];
+
 	synctype_t synctype;
 	int flags;
 	float size;
-
-	int numposes;
-	int poseverts;
-	int posedata;	// numposes*poseverts trivert_t
-	int commands;	// gl command list with embedded s/t
-	int gl_texturenum[MAX_SKINS][4];
-	int texels[MAX_SKINS];	// only for player skins
-	maliasframedesc_t frames[1];	// variable sized
-} aliashdr_t;
-
-#define	MAXALIASVERTS	4096
-#define	MAXALIASFRAMES	256
-#define	MAXALIASTRIS	4096
+} alias_model_t;
 
 //===================================================================
 

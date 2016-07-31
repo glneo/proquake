@@ -182,7 +182,7 @@ void VID_Init(unsigned char *palette)
 	glfwSetWindowCloseCallback(window, window_close_callback);
 
 	snprintf(gldir, sizeof(gldir), "%s/OpenGL", com_gamedir);
-	Sys_mkdir (gldir);
+//	Sys_mkdir (gldir);
 
         Check_GammaOld(palette);
 	VID_SetPaletteOld(palette);

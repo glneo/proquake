@@ -1513,8 +1513,8 @@ int GL_LoadPicTexture(qpic_t *pic)
 
 /****************************************/
 
-int current_texture_num = -1;		// to avoid unnecessary texture sets
 
+int current_texture_num = -1; // to avoid unnecessary texture sets
 void GL_Bind(int texnum)
 {
 	if (current_texture_num == texnum)
@@ -1522,17 +1522,6 @@ void GL_Bind(int texnum)
 
 	current_texture_num = texnum;
 	glBindTexture(GL_TEXTURE_2D, texnum);
-
-	/*
-	 #ifdef MACOSX_EXTRA_FEATURES
-	 if (gl_texturefilteranisotropic)
-	 {
-	 extern GLfloat	gl_texureanisotropylevel;
-
-	 glTexParameterfv (GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, &gl_texureanisotropylevel);
-	 }
-	 #endif // MACOSX
-	 */
 }
 
 static GLenum currenttarget = GL_TEXTURE0_ARB;

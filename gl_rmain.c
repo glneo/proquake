@@ -14,31 +14,25 @@
 
 #include "quakedef.h"
 
-entity_t r_worldentity;
-
-bool r_cache_thrash;		// compatibility
-
-vec3_t modelorg, r_entorigin;
+vec3_t modelorg;
 entity_t *currententity;
 
-int r_visframecount;	// bumped when going to a new PVS
-int r_framecount;		// used for dlight push checking
+int r_visframecount; // bumped when going to a new PVS
+int r_framecount; // used for dlight push checking
 
-mplane_t frustum[4];
+static mplane_t frustum[4];
 
 int c_brush_polys, c_alias_polys;
 
-int particletexture;	// little dot for particles
-int playertextures;		// up to 16 color translated skins
-bool envmap;				// true during envmap command capture
+int particletexture; // little dot for particles
+int playertextures; // up to 16 color translated skins
+bool envmap; // true during envmap command capture
 
-int currenttexture = -1;		// to avoid unnecessary texture sets
-
-int cnttextures[2] = { -1, -1 };     // cached
+int cnttextures[2] = { -1, -1 }; // cached
 
 int skyboxtextures;
 
-int mirrortexturenum;	// quake texturenum, not gltexturenum
+int mirrortexturenum; // quake texturenum, not gltexturenum
 bool mirror;
 mplane_t *mirror_plane;
 
@@ -58,17 +52,14 @@ mleaf_t *r_viewleaf, *r_oldviewleaf;
 
 texture_t *r_notexture_mip;
 
-int d_lightstylevalue[256];	// 8.8 fraction of base light value
+int d_lightstylevalue[256]; // 8.8 fraction of base light value
 
 cvar_t r_norefresh = { "r_norefresh", "0" };
 cvar_t r_drawentities = { "r_drawentities", "1" };
-cvar_t r_drawviewmodel = { "r_drawviewmodel", "1", true };  // Baker 3.80x - Save to config
-cvar_t r_ringalpha = { "r_ringalpha", "0.4", true }; // Baker 3.80x - gl_ringalpha
-cvar_t r_truegunangle = { "r_truegunangle", "0", true };  // Baker 3.80x - Optional "true" gun positioning on viewmodel
 cvar_t r_speeds = { "r_speeds", "0" };
-cvar_t r_fullbright = { "r_fullbright", "0" };
-cvar_t r_lightmap = { "r_lightmap", "0" };
 cvar_t r_shadows = { "r_shadows", "0" };
+
+
 cvar_t r_mirroralpha = { "r_mirroralpha", "1" };
 cvar_t r_wateralpha = { "r_wateralpha", "1", true };
 cvar_t r_dynamic = { "r_dynamic", "1" };
@@ -93,10 +84,15 @@ cvar_t gl_playermip = { "gl_playermip", "0", true };
 cvar_t gl_nocolors = { "gl_nocolors", "0" };
 cvar_t gl_finish = { "gl_finish", "0" };
 
+
+cvar_t r_truegunangle = { "r_truegunangle", "0", true };  // Baker 3.80x - Optional "true" gun positioning on viewmodel
+cvar_t r_drawviewmodel = { "r_drawviewmodel", "1", true };  // Baker 3.80x - Save to config
+cvar_t r_ringalpha = { "r_ringalpha", "0.4", true }; // Baker 3.80x - gl_ringalpha
+cvar_t r_fullbright = { "r_fullbright", "0" };
+cvar_t r_lightmap = { "r_lightmap", "0" };
+
 cvar_t gl_fullbright = { "gl_fullbright", "0", true };
-#ifdef SUPPORTS_GL_OVERBRIGHTS
 cvar_t gl_overbright = { "gl_overbright", "0", true };
-#endif
 
 /*
  =================
@@ -258,11 +254,7 @@ void R_DrawSpriteModel(entity_t *ent)
  ===============================================================================
  */
 
-#define NUMVERTEXNORMALS	162
 
-float r_avertexnormals[NUMVERTEXNORMALS][3] = {
-	#include "anorms.h"
-};
 
 vec3_t shadevector;
 float shadelight, ambientlight;
@@ -278,71 +270,34 @@ float *shadedots = r_avertexnormal_dots[0];
 int lastposenum;
 int lastposenum0;  // Interpolation
 
-/*
- =============
- GL_DrawAliasFrame
- =============
- */
-
-void GL_DrawAliasFrame(aliashdr_t *paliashdr, int posenum)
+void GL_DrawAliasFrame(alias_model_t *aliasmodel, int pose)
 {
 	float alpha;
-	float l;
-	trivertx_t *verts;
-	int *order;
-	int count;
 
-	// Baker 3.80x - Transparent weapon (invisibility ring option)
-	alpha = (currententity == &cl.viewent) ?
-			((cl.items & IT_INVISIBILITY) ? (r_ringalpha.value < 1 ? r_ringalpha.value : 0) : (r_drawviewmodel.value ? 1 : 0)) : 1;
+	if (currententity != &cl.viewent)
+		alpha = 1.0f;
+	else
+	{
+		if(cl.items & IT_INVISIBILITY)
+			alpha = r_ringalpha.value;
+		else if (r_drawviewmodel.value)
+			alpha = 1.0f;
+		else
+			alpha = 0;
+	}
 
-	lastposenum = posenum;
-
-	verts = (trivertx_t *) ((byte *) paliashdr + paliashdr->posedata);
-	verts += posenum * paliashdr->poseverts;
-
-	order = (int *) ((byte *) paliashdr + paliashdr->commands);
+	lastposenum = pose;
 
 	if (alpha < 1)
 		glEnable(GL_BLEND);
 
-	while (1)
-	{
-		// get the vertex count and primitive type
-		count = *order++;
-		if (!count)
-			break;		// done
-		if (count < 0)
-		{
-			count = -count;
-			glBegin(GL_TRIANGLE_FAN);
-		}
-		else
-		{
-			glBegin(GL_TRIANGLE_STRIP);
-		}
+	glVertexPointer(3, GL_FLOAT, sizeof(*(aliasmodel->poseverts[0])), &aliasmodel->poseverts[pose]->v);
+	glTexCoordPointer(2, GL_FLOAT, sizeof(*(aliasmodel->stverts[0])), &aliasmodel->stverts[0]->s);
+	glNormalPointer(GL_FLOAT, sizeof(*(aliasmodel->poseverts[0])), &aliasmodel->poseverts[pose]->normal);
 
-		do
-		{
-			// texture coordinates come from the draw list
-			glTexCoord2f(((float *) order)[0], ((float *) order)[1]);
-			order += 2;
-
-			if (r_fullbright.value || !cl.worldmodel->lightdata)
-				l = 1;
-			else
-				// normals and vertexes come from the frame list
-				l = shadedots[verts->lightnormalindex] * shadelight;
-			// Baker 3.80x - This is no longer used
-			// glColor3f (l, l, l);
-			glColor4f(l, l, l, alpha); // Baker 3.80x - transparent weapon
-			glVertex3f(verts->v[0], verts->v[1], verts->v[2]);
-
-			verts++;
-		} while (--count);
-
-		glEnd();
-	}
+	glDrawElements(GL_TRIANGLES, aliasmodel->backstart * 3, GL_UNSIGNED_SHORT, aliasmodel->triangles);
+	glTexCoordPointer(2, GL_FLOAT, sizeof(*(aliasmodel->stverts[1])), &aliasmodel->stverts[1]->s);
+	glDrawElements(GL_TRIANGLES, (aliasmodel->numtris - aliasmodel->backstart) * 3, GL_UNSIGNED_SHORT, (aliasmodel->triangles + aliasmodel->backstart));
 
 	if (alpha < 1)
 		glDisable(GL_BLEND);
@@ -356,257 +311,257 @@ void GL_DrawAliasFrame(aliashdr_t *paliashdr, int posenum)
  fenix@io.com: model animation interpolation
  =============
  */
-void GL_DrawAliasBlendedFrame(aliashdr_t *paliashdr, int pose1, int pose2, float blend)
-{
-	float alpha; // Baker 3.80x - added alpha for r_ringalpha
-	float l;
-	trivertx_t* verts1;
-	trivertx_t* verts2;
-	int* order;
-	int count;
-	vec3_t d;
-
-	// Baker 3.80x - Transparent weapon (invisibility ring option)
-	alpha = (currententity == &cl.viewent) ?
-			((cl.items & IT_INVISIBILITY) ? (r_ringalpha.value < 1 ? r_ringalpha.value : 0) : (r_drawviewmodel.value ? 1 : 0)) : 1;
-
-	lastposenum0 = pose1;
-	lastposenum = pose2;
-
-	verts1 = (trivertx_t *) ((byte *) paliashdr + paliashdr->posedata);
-	verts2 = verts1;
-
-	verts1 += pose1 * paliashdr->poseverts;
-	verts2 += pose2 * paliashdr->poseverts;
-
-	order = (int *) ((byte *) paliashdr + paliashdr->commands);
-
-	if (alpha < 1)
-		glEnable(GL_BLEND);
-
-	for (;;)
-	{
-		// get the vertex count and primitive type
-		count = *order++;
-
-		if (!count)
-			break;
-
-		if (count < 0)
-		{
-			count = -count;
-			glBegin(GL_TRIANGLE_FAN);
-		}
-		else
-		{
-			glBegin(GL_TRIANGLE_STRIP);
-		}
-
-		do
-		{
-			// texture coordinates come from the draw list
-			glTexCoord2f(((float *) order)[0], ((float *) order)[1]);
-			order += 2;
-
-			// normals and vertexes come from the frame list
-			// blend the light intensity from the two frames together
-			d[0] = shadedots[verts2->lightnormalindex] - shadedots[verts1->lightnormalindex];
-
-			l = shadelight * (shadedots[verts1->lightnormalindex] + (blend * d[0]));
-			glColor3f(l, l, l);
-
-			VectorSubtract(verts2->v, verts1->v, d);
-
-			// blend the vertex positions from each frame together
-			glColor4f(l, l, l, alpha); // Baker 3.80x - transparent weapon
-			glVertex3f(verts1->v[0] + (blend * d[0]), verts1->v[1] + (blend * d[1]), verts1->v[2] + (blend * d[2]));
-
-			verts1++;
-			verts2++;
-		} while (--count);
-
-		glEnd();
-	}
-
-	if (alpha < 1)
-		glDisable(GL_BLEND);
-
-}
+//void GL_DrawAliasBlendedFrame(aliashdr_t *paliashdr, int pose1, int pose2, float blend)
+//{
+//	float alpha; // Baker 3.80x - added alpha for r_ringalpha
+//	float l;
+//	trivertx_t* verts1;
+//	trivertx_t* verts2;
+//	int* order;
+//	int count;
+//	vec3_t d;
+//
+//	// Baker 3.80x - Transparent weapon (invisibility ring option)
+//	alpha = (currententity == &cl.viewent) ?
+//			((cl.items & IT_INVISIBILITY) ? (r_ringalpha.value < 1 ? r_ringalpha.value : 0) : (r_drawviewmodel.value ? 1 : 0)) : 1;
+//
+//	lastposenum0 = pose1;
+//	lastposenum = pose2;
+//
+//	verts1 = (trivertx_t *) ((byte *) paliashdr + paliashdr->posedata);
+//	verts2 = verts1;
+//
+//	verts1 += pose1 * paliashdr->poseverts;
+//	verts2 += pose2 * paliashdr->poseverts;
+//
+//	order = (int *) ((byte *) paliashdr + paliashdr->commands);
+//
+//	if (alpha < 1)
+//		glEnable(GL_BLEND);
+//
+//	for (;;)
+//	{
+//		// get the vertex count and primitive type
+//		count = *order++;
+//
+//		if (!count)
+//			break;
+//
+//		if (count < 0)
+//		{
+//			count = -count;
+//			glBegin(GL_TRIANGLE_FAN);
+//		}
+//		else
+//		{
+//			glBegin(GL_TRIANGLE_STRIP);
+//		}
+//
+//		do
+//		{
+//			// texture coordinates come from the draw list
+//			glTexCoord2f(((float *) order)[0], ((float *) order)[1]);
+//			order += 2;
+//
+//			// normals and vertexes come from the frame list
+//			// blend the light intensity from the two frames together
+//			d[0] = shadedots[verts2->lightnormalindex] - shadedots[verts1->lightnormalindex];
+//
+//			l = shadelight * (shadedots[verts1->lightnormalindex] + (blend * d[0]));
+//			glColor3f(l, l, l);
+//
+//			VectorSubtract(verts2->v, verts1->v, d);
+//
+//			// blend the vertex positions from each frame together
+//			glColor4f(l, l, l, alpha); // Baker 3.80x - transparent weapon
+//			glVertex3f(verts1->v[0] + (blend * d[0]), verts1->v[1] + (blend * d[1]), verts1->v[2] + (blend * d[2]));
+//
+//			verts1++;
+//			verts2++;
+//		} while (--count);
+//
+//		glEnd();
+//	}
+//
+//	if (alpha < 1)
+//		glDisable(GL_BLEND);
+//
+//}
 
 /*
  =============
  GL_DrawAliasShadow
  =============
  */
-extern vec3_t lightspot;
+//extern vec3_t lightspot;
 
-void GL_DrawAliasShadow(aliashdr_t *paliashdr, int posenum)
-{
-	trivertx_t *verts;
-	int *order;
-	vec3_t point;
-	float height, lheight;
-	int count;
-
-	lheight = currententity->origin[2] - lightspot[2];
-
-	height = 0;
-	verts = (trivertx_t *) ((byte *) paliashdr + paliashdr->posedata);
-	verts += posenum * paliashdr->poseverts;
-	order = (int *) ((byte *) paliashdr + paliashdr->commands);
-
-	height = -lheight + 1.0;
-
-	while (1)
-	{
-		// get the vertex count and primitive type
-		count = *order++;
-		if (!count)
-			break;		// done
-		if (count < 0)
-		{
-			count = -count;
-			glBegin(GL_TRIANGLE_FAN);
-		}
-		else
-		{
-			glBegin(GL_TRIANGLE_STRIP);
-		}
-
-		do
-		{
-			// texture coordinates come from the draw list
-			// (skipped for shadows) glTexCoord2fv ((float *)order);
-			order += 2;
-
-			// normals and vertexes come from the frame list
-			point[0] = verts->v[0] * paliashdr->scale[0] + paliashdr->scale_origin[0];
-			point[1] = verts->v[1] * paliashdr->scale[1] + paliashdr->scale_origin[1];
-			point[2] = verts->v[2] * paliashdr->scale[2] + paliashdr->scale_origin[2];
-
-			point[0] -= shadevector[0] * (point[2] + lheight);
-			point[1] -= shadevector[1] * (point[2] + lheight);
-			point[2] = height;
-//			height -= 0.001;
-			glVertex3fv(point);
-
-			verts++;
-		} while (--count);
-
-		glEnd();
-	}
-}
-
-/*
- =============
- GL_DrawAliasBlendedShadow
-
- fenix@io.com: model animation interpolation
- =============
- */
-void GL_DrawAliasBlendedShadow(aliashdr_t *paliashdr, int pose1, int pose2, entity_t* e)
-{
-	trivertx_t* verts1;
-	trivertx_t* verts2;
-	int* order;
-	vec3_t point1;
-	vec3_t point2;
-	vec3_t d;
-	float height;
-	float lheight;
-	int count;
-	float blend;
-
-	blend = (cl.time - e->frame_start_time) / e->frame_interval;
-
-	if (blend > 1)
-		blend = 1;
-
-	lheight = e->origin[2] - lightspot[2];
-	height = 1.0 - lheight;
-
-	verts1 = (trivertx_t *) ((byte *) paliashdr + paliashdr->posedata);
-	verts2 = verts1;
-
-	verts1 += pose1 * paliashdr->poseverts;
-	verts2 += pose2 * paliashdr->poseverts;
-
-	order = (int *) ((byte *) paliashdr + paliashdr->commands);
-
-	for (;;)
-	{
-		// get the vertex count and primitive type
-		count = *order++;
-
-		if (!count)
-			break;
-
-		if (count < 0)
-		{
-			count = -count;
-			glBegin(GL_TRIANGLE_FAN);
-		}
-		else
-		{
-			glBegin(GL_TRIANGLE_STRIP);
-		}
-
-		do
-		{
-			order += 2;
-
-			point1[0] = verts1->v[0] * paliashdr->scale[0] + paliashdr->scale_origin[0];
-			point1[1] = verts1->v[1] * paliashdr->scale[1] + paliashdr->scale_origin[1];
-			point1[2] = verts1->v[2] * paliashdr->scale[2] + paliashdr->scale_origin[2];
-
-			point1[0] -= shadevector[0] * (point1[2] + lheight);
-			point1[1] -= shadevector[1] * (point1[2] + lheight);
-
-			point2[0] = verts2->v[0] * paliashdr->scale[0] + paliashdr->scale_origin[0];
-			point2[1] = verts2->v[1] * paliashdr->scale[1] + paliashdr->scale_origin[1];
-			point2[2] = verts2->v[2] * paliashdr->scale[2] + paliashdr->scale_origin[2];
-
-			point2[0] -= shadevector[0] * (point2[2] + lheight);
-			point2[1] -= shadevector[1] * (point2[2] + lheight);
-
-			VectorSubtract(point2, point1, d);
-
-			glVertex3f(point1[0] + (blend * d[0]), point1[1] + (blend * d[1]), height);
-
-			verts1++;
-			verts2++;
-		} while (--count);
-
-		glEnd();
-	}
-}
+//void GL_DrawAliasShadow(aliashdr_t *paliashdr, int posenum)
+//{
+//	trivertx_t *verts;
+//	int *order;
+//	vec3_t point;
+//	float height, lheight;
+//	int count;
+//
+//	lheight = currententity->origin[2] - lightspot[2];
+//
+//	height = 0;
+//	verts = (trivertx_t *) ((byte *) paliashdr + paliashdr->posedata);
+//	verts += posenum * paliashdr->poseverts;
+//	order = (int *) ((byte *) paliashdr + paliashdr->commands);
+//
+//	height = -lheight + 1.0;
+//
+//	while (1)
+//	{
+//		// get the vertex count and primitive type
+//		count = *order++;
+//		if (!count)
+//			break;		// done
+//		if (count < 0)
+//		{
+//			count = -count;
+//			glBegin(GL_TRIANGLE_FAN);
+//		}
+//		else
+//		{
+//			glBegin(GL_TRIANGLE_STRIP);
+//		}
+//
+//		do
+//		{
+//			// texture coordinates come from the draw list
+//			// (skipped for shadows) glTexCoord2fv ((float *)order);
+//			order += 2;
+//
+//			// normals and vertexes come from the frame list
+//			point[0] = verts->v[0] * paliashdr->scale[0] + paliashdr->scale_origin[0];
+//			point[1] = verts->v[1] * paliashdr->scale[1] + paliashdr->scale_origin[1];
+//			point[2] = verts->v[2] * paliashdr->scale[2] + paliashdr->scale_origin[2];
+//
+//			point[0] -= shadevector[0] * (point[2] + lheight);
+//			point[1] -= shadevector[1] * (point[2] + lheight);
+//			point[2] = height;
+////			height -= 0.001;
+//			glVertex3fv(point);
+//
+//			verts++;
+//		} while (--count);
+//
+//		glEnd();
+//	}
+//}
+//
+///*
+// =============
+// GL_DrawAliasBlendedShadow
+//
+// fenix@io.com: model animation interpolation
+// =============
+// */
+//void GL_DrawAliasBlendedShadow(aliashdr_t *paliashdr, int pose1, int pose2, entity_t* e)
+//{
+//	trivertx_t* verts1;
+//	trivertx_t* verts2;
+//	int* order;
+//	vec3_t point1;
+//	vec3_t point2;
+//	vec3_t d;
+//	float height;
+//	float lheight;
+//	int count;
+//	float blend;
+//
+//	blend = (cl.time - e->frame_start_time) / e->frame_interval;
+//
+//	if (blend > 1)
+//		blend = 1;
+//
+//	lheight = e->origin[2] - lightspot[2];
+//	height = 1.0 - lheight;
+//
+//	verts1 = (trivertx_t *) ((byte *) paliashdr + paliashdr->posedata);
+//	verts2 = verts1;
+//
+//	verts1 += pose1 * paliashdr->poseverts;
+//	verts2 += pose2 * paliashdr->poseverts;
+//
+//	order = (int *) ((byte *) paliashdr + paliashdr->commands);
+//
+//	for (;;)
+//	{
+//		// get the vertex count and primitive type
+//		count = *order++;
+//
+//		if (!count)
+//			break;
+//
+//		if (count < 0)
+//		{
+//			count = -count;
+//			glBegin(GL_TRIANGLE_FAN);
+//		}
+//		else
+//		{
+//			glBegin(GL_TRIANGLE_STRIP);
+//		}
+//
+//		do
+//		{
+//			order += 2;
+//
+//			point1[0] = verts1->v[0] * paliashdr->scale[0] + paliashdr->scale_origin[0];
+//			point1[1] = verts1->v[1] * paliashdr->scale[1] + paliashdr->scale_origin[1];
+//			point1[2] = verts1->v[2] * paliashdr->scale[2] + paliashdr->scale_origin[2];
+//
+//			point1[0] -= shadevector[0] * (point1[2] + lheight);
+//			point1[1] -= shadevector[1] * (point1[2] + lheight);
+//
+//			point2[0] = verts2->v[0] * paliashdr->scale[0] + paliashdr->scale_origin[0];
+//			point2[1] = verts2->v[1] * paliashdr->scale[1] + paliashdr->scale_origin[1];
+//			point2[2] = verts2->v[2] * paliashdr->scale[2] + paliashdr->scale_origin[2];
+//
+//			point2[0] -= shadevector[0] * (point2[2] + lheight);
+//			point2[1] -= shadevector[1] * (point2[2] + lheight);
+//
+//			VectorSubtract(point2, point1, d);
+//
+//			glVertex3f(point1[0] + (blend * d[0]), point1[1] + (blend * d[1]), height);
+//
+//			verts1++;
+//			verts2++;
+//		} while (--count);
+//
+//		glEnd();
+//	}
+//}
 
 /*
  =================
  R_SetupAliasFrame
  =================
  */
-void R_SetupAliasFrame(int frame, aliashdr_t *paliashdr)
+void R_SetupAliasFrame(int frame, alias_model_t *aliasmodel)
 {
 	int pose, numposes;
 	float interval;
 
-	if ((frame >= paliashdr->numframes) || (frame < 0))
+	if ((frame >= aliasmodel->numframes) || (frame < 0))
 	{
 		Con_DPrintf("R_AliasSetupFrame: no such frame %d\n", frame);
 		frame = 0;
 	}
 
-	pose = paliashdr->frames[frame].firstpose;
-	numposes = paliashdr->frames[frame].numposes;
+	pose = aliasmodel->frames[frame].firstpose;
+	numposes = aliasmodel->frames[frame].numposes;
 
 	if (numposes > 1)
 	{
-		interval = paliashdr->frames[frame].interval;
+		interval = aliasmodel->frames[frame].interval;
 		pose += (int) (cl.time / interval) % numposes;
 	}
 
-	GL_DrawAliasFrame(paliashdr, pose);
+	GL_DrawAliasFrame(aliasmodel, pose);
 }
 
 /*
@@ -616,54 +571,54 @@ void R_SetupAliasFrame(int frame, aliashdr_t *paliashdr)
  fenix@io.com: model animation interpolation
  =================
  */
-void R_SetupAliasBlendedFrame(int frame, aliashdr_t *paliashdr, entity_t* e)
-{
-	int pose;
-	int numposes;
-	float blend;
-
-	if ((frame >= paliashdr->numframes) || (frame < 0))
-	{
-		Con_DPrintf("R_AliasSetupFrame: no such frame %d\n", frame);
-		frame = 0;
-	}
-
-	pose = paliashdr->frames[frame].firstpose;
-	numposes = paliashdr->frames[frame].numposes;
-
-	if (numposes > 1)
-	{
-		e->frame_interval = paliashdr->frames[frame].interval;
-		pose += (int) (cl.time / e->frame_interval) % numposes;
-	}
-	else
-	{
-// One tenth of a second is a good for most Quake animations.
-// If the nextthink is longer then the animation is usually meant to pause
-// (e.g. check out the shambler magic animation in shambler.qc). If its
-// shorter then things will still be smoothed partly, and the jumps will be
-// less noticable because of the shorter time. So, this is probably a good assumption.
-		e->frame_interval = 0.1;
-	}
-
-	if (e->currpose != pose)
-	{
-		e->frame_start_time = cl.time;
-		e->lastpose = e->currpose;
-		e->currpose = pose;
-		blend = 0;
-	}
-	else
-	{
-		blend = (cl.time - e->frame_start_time) / e->frame_interval;
-	}
-
-	// weird things start happening if blend passes 1
-	if (cl.paused || blend > 1)
-		blend = 1;
-
-	GL_DrawAliasBlendedFrame(paliashdr, e->lastpose, e->currpose, blend);
-}
+//void R_SetupAliasBlendedFrame(int frame, aliashdr_t *paliashdr, entity_t* e)
+//{
+//	int pose;
+//	int numposes;
+//	float blend;
+//
+//	if ((frame >= paliashdr->numframes) || (frame < 0))
+//	{
+//		Con_DPrintf("R_AliasSetupFrame: no such frame %d\n", frame);
+//		frame = 0;
+//	}
+//
+//	pose = paliashdr->frames[frame].firstpose;
+//	numposes = paliashdr->frames[frame].numposes;
+//
+//	if (numposes > 1)
+//	{
+//		e->frame_interval = paliashdr->frames[frame].interval;
+//		pose += (int) (cl.time / e->frame_interval) % numposes;
+//	}
+//	else
+//	{
+//// One tenth of a second is a good for most Quake animations.
+//// If the nextthink is longer then the animation is usually meant to pause
+//// (e.g. check out the shambler magic animation in shambler.qc). If its
+//// shorter then things will still be smoothed partly, and the jumps will be
+//// less noticable because of the shorter time. So, this is probably a good assumption.
+//		e->frame_interval = 0.1;
+//	}
+//
+//	if (e->currpose != pose)
+//	{
+//		e->frame_start_time = cl.time;
+//		e->lastpose = e->currpose;
+//		e->currpose = pose;
+//		blend = 0;
+//	}
+//	else
+//	{
+//		blend = (cl.time - e->frame_start_time) / e->frame_interval;
+//	}
+//
+//	// weird things start happening if blend passes 1
+//	if (cl.paused || blend > 1)
+//		blend = 1;
+//
+//	GL_DrawAliasBlendedFrame(paliashdr, e->lastpose, e->currpose, blend);
+//}
 
 /*
  =================
@@ -773,7 +728,7 @@ void R_DrawAliasModel(entity_t *ent)
 	float add;
 	model_t *clmodel = currententity->model;
 	vec3_t mins, maxs;
-	aliashdr_t *paliashdr;
+	alias_model_t *aliasmodel;
 	float an;
 	int anim;
 
@@ -788,8 +743,7 @@ void R_DrawAliasModel(entity_t *ent)
 	if (R_CullForEntity(ent))
 		return;
 
-	VectorCopy(currententity->origin, r_entorigin);
-	VectorSubtract(r_origin, r_entorigin, modelorg);
+	VectorSubtract(r_origin, currententity->origin, modelorg);
 
 	// get lighting information
 
@@ -847,9 +801,9 @@ void R_DrawAliasModel(entity_t *ent)
 	VectorNormalize(shadevector);
 
 	// locate the proper data
-	paliashdr = (aliashdr_t *) Mod_Extradata(currententity->model);
+	aliasmodel = (alias_model_t *)Mod_Extradata(currententity->model);
 
-	c_alias_polys += paliashdr->numtris;
+	c_alias_polys += aliasmodel->numtris;
 
 	// draw all the triangles
 
@@ -858,18 +812,6 @@ void R_DrawAliasModel(entity_t *ent)
 	glPushMatrix();
 
 	R_RotateForEntity(ent);
-
-	if (!strcmp(clmodel->name, "progs/eyes.mdl") /*&& gl_doubleeyes.value*/)
-	{
-		// double size of eyes, since they are really hard to see in gl
-		glTranslatef(paliashdr->scale_origin[0], paliashdr->scale_origin[1], paliashdr->scale_origin[2] - (22 + 8));
-		glScalef(paliashdr->scale[0] * 2, paliashdr->scale[1] * 2, paliashdr->scale[2] * 2);
-	}
-	else
-	{
-		glTranslatef(paliashdr->scale_origin[0], paliashdr->scale_origin[1], paliashdr->scale_origin[2]);
-		glScalef(paliashdr->scale[0], paliashdr->scale[1], paliashdr->scale[2]);
-	}
 
 	anim = (int) (cl.time * 10) & 3;
 
@@ -881,7 +823,7 @@ void R_DrawAliasModel(entity_t *ent)
 			(r_colored_dead_bodies.value || isPlayer))					// Either we want colored dead bodies or it is a player
 		GL_Bind(playertextures - 1 + currententity->colormap /*client_no*/);
 	else
-		GL_Bind(paliashdr->gl_texturenum[currententity->skinnum][anim]);
+		GL_Bind(aliasmodel->gl_texturenum[currententity->skinnum][anim]);
 
 	if (gl_smoothmodels.value)
 		glShadeModel(GL_SMOOTH);
@@ -892,18 +834,18 @@ void R_DrawAliasModel(entity_t *ent)
 
 	// fenix@io.com: model animation interpolation
 	// Baker: r_interpolate_weapon here!
-	if (r_interpolate_animation.value)
-	{
+//	if (r_interpolate_animation.value)
+//	{
 //		if (client_no == 1)
 //			Con_Debugf("Player entity 1 current num is %i %s\n", currententity, currententity->model->name);
 //		if (client_no == 0)
 //			Con_Debugf("Player entity 0 current num is %i %s\n", currententity, currententity->model->name);
-		R_SetupAliasBlendedFrame(currententity->frame, paliashdr, currententity);
-	}
-	else
-	{
-		R_SetupAliasFrame(currententity->frame, paliashdr);
-	}
+//		R_SetupAliasBlendedFrame(currententity->frame, aliasmodel, currententity);
+//	}
+//	else
+//	{
+		R_SetupAliasFrame(currententity->frame, aliasmodel);
+//	}
 
 	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
 
@@ -942,14 +884,14 @@ void R_DrawAliasModel(entity_t *ent)
 		glColor4f(0.0f, 0.0f, 0.0f, 0.5f /* r_shadows.value */); // KH
 
 		// fenix@io.com: model animation interpolation
-		if (r_interpolate_animation.value)
-		{
-			GL_DrawAliasBlendedShadow(paliashdr, lastposenum0, lastposenum, currententity);
-		}
-		else
-		{
-			GL_DrawAliasShadow(paliashdr, lastposenum);
-		}
+//		if (r_interpolate_animation.value)
+//		{
+//			GL_DrawAliasBlendedShadow(aliasmodel, lastposenum0, lastposenum, currententity);
+//		}
+//		else
+//		{
+//			GL_DrawAliasShadow(aliasmodel, lastposenum);
+//		}
 
 		glEnable(GL_TEXTURE_2D);
 		glDisable(GL_BLEND);
@@ -1225,8 +1167,6 @@ void R_SetupFrame(void)
 
 	V_CalcBlend();
 
-	r_cache_thrash = false;
-
 	c_brush_polys = 0;
 	c_alias_polys = 0;
 }
@@ -1244,11 +1184,6 @@ void MYgluPerspective(GLdouble fovy, GLdouble aspect, GLdouble zNear, GLdouble z
 	glFrustum(xmin, xmax, ymin, ymax, zNear, zFar);
 }
 
-/*
- =============
- R_SetupGL
- =============
- */
 void R_SetupGL(void)
 {
 	float screenaspect;
@@ -1304,14 +1239,6 @@ void R_SetupGL(void)
 
 	glRotatef(-90, 1, 0, 0);	    // put Z going up
 	glRotatef(90, 0, 0, 1);	    // put Z going up
-
-#ifdef SUPPORTS_XCLIP
-	if (gl_xflip.value)  //Atomizer - GL_XFLIP
-	{
-		glScalef (1, -1, 1);
-		glCullFace(GL_BACK);
-	}
-#endif
 
 	glRotatef(-r_refdef.viewangles[2], 1, 0, 0);
 	glRotatef(-r_refdef.viewangles[0], 0, 1, 0);
@@ -1563,13 +1490,13 @@ void R_RenderView(void)
 	if (r_norefresh.value)
 		return;
 
-	if (!r_worldentity.model || !cl.worldmodel)
+	if (!cl.worldmodel)
 		Sys_Error("R_RenderView: NULL worldmodel");
 
 	if (r_speeds.value)
 	{
 		glFinish();
-		time1 = Sys_FloatTime();
+		time1 = Sys_DoubleTime();
 		c_brush_polys = 0;
 		c_alias_polys = 0;
 	}
@@ -1594,7 +1521,7 @@ void R_RenderView(void)
 
 	if (r_speeds.value)
 	{
-		time2 = Sys_FloatTime();
+		time2 = Sys_DoubleTime();
 		Con_Printf("%3i ms  %4i wpoly %4i epoly\n", (int) ((time2 - time1) * 1000), c_brush_polys, c_alias_polys);
 	}
 }

@@ -128,7 +128,7 @@ void SV_StartParticle(vec3_t org, vec3_t dir, int color, int count)
  ==================
  SV_StartSound
 
- Each entity can have eight independant sound sources, like voice,
+ Each entity can have eight independent sound sources, like voice,
  weapon, feet, etc.
 
  Channel 0 is an auto-allocate channel, the others override anything
