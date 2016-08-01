@@ -15,9 +15,8 @@
 #ifndef __GLQUAKE_H
 #define __GLQUAKE_H
 
-#include <GL/gl.h>
-#include <GL/glu.h>
-#include <GL/glext.h>
+#include <GLES/gl.h>
+#include <GLES/glext.h>
 #include <math.h>
 
 #define TEX_NOFLAGS			0 // Baker: I use this to mark the absense of any flags
@@ -166,7 +165,7 @@ void R_DrawWorld(void);
 void R_DrawWaterSurfaces(void);
 void R_MarkLeaves(void);
 void R_MirrorChain(msurface_t *s);
-void DrawGLPoly(glpoly_t *p);
+void DrawGLPoly(glpoly_t *p, int tex_offset);
 void DrawGLWaterPoly(glpoly_t *p);
 void DrawGLWaterPolyLightmap(glpoly_t *p);
 void GL_BuildLightmaps(void);

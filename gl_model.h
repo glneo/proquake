@@ -309,7 +309,6 @@ typedef struct
 
 	synctype_t synctype;
 	int flags;
-	float size;
 } alias_model_t;
 
 //===================================================================

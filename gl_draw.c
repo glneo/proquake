@@ -40,7 +40,8 @@ extern cvar_t crosshair, cl_crosshaircentered, cl_crossx, cl_crossy;
 
 qpic_t crosshairpic;
 
-typedef struct {
+typedef struct
+{
 	int texnum;
 	float sl, tl, sh, th;
 } glpic_t;
@@ -51,8 +52,6 @@ qpic_t *conback = (qpic_t *) &conback_buffer;
 extern int GL_LoadPicTexture(qpic_t *pic);
 
 int gl_lightmap_format = 4;
-int gl_solid_format = 3;
-int gl_alpha_format = 4;
 
 int gl_filter_min = GL_LINEAR_MIPMAP_NEAREST;
 int gl_filter_max = GL_LINEAR;
@@ -115,7 +114,8 @@ static byte crosshairdata[NUMCROSSHAIRS][64] = {
 	},
 };
 
-typedef struct {
+typedef struct
+{
 	unsigned int texnum;
 	char identifier[MAX_QPATH];
 	int width, height;
@@ -158,19 +158,23 @@ int Scrap_AllocBlock(int w, int h, int *x, int *y)
 	int best, best2;
 	int texnum;
 
-	for (texnum = 0; texnum < MAX_SCRAPS; texnum++) {
+	for (texnum = 0; texnum < MAX_SCRAPS; texnum++)
+	{
 		best = BLOCK_HEIGHT;
 
-		for (i = 0; i < BLOCK_WIDTH - w; i++) {
+		for (i = 0; i < BLOCK_WIDTH - w; i++)
+		{
 			best2 = 0;
 
-			for (j = 0; j < w; j++) {
+			for (j = 0; j < w; j++)
+			{
 				if (scrap_allocated[texnum][i + j] >= best)
 					break;
 				if (scrap_allocated[texnum][i + j] > best2)
 					best2 = scrap_allocated[texnum][i + j];
 			}
-			if (j == w) {	// this is a valid spot
+			if (j == w)
+			{	// this is a valid spot
 				*x = i;
 				*y = best = best2;
 			}
@@ -197,7 +201,8 @@ void Scrap_Upload(void)
 
 	scrap_uploads++;
 
-	for (texnum = 0; texnum < MAX_SCRAPS; texnum++) {
+	for (texnum = 0; texnum < MAX_SCRAPS; texnum++)
+	{
 		GL_Bind(scrap_texnum + texnum);
 		GL_Upload8(scrap_texels[texnum], BLOCK_WIDTH, BLOCK_HEIGHT, TEX_ALPHA);
 	}
@@ -207,7 +212,8 @@ void Scrap_Upload(void)
 //=============================================================================
 /* Support Routines */
 
-typedef struct cachepic_s {
+typedef struct cachepic_s
+{
 	char name[MAX_QPATH];
 	qpic_t pic;
 	byte padding[32];	// for appended glpic
@@ -231,7 +237,8 @@ qpic_t *Draw_PicFromWad(char *name)
 	gl = (glpic_t *) p->data;
 
 	// load little ones into the scrap
-	if (p->width < 64 && p->height < 64) {
+	if (p->width < 64 && p->height < 64)
+	{
 		int x, y;
 		int i, j, k;
 		int texnum;
@@ -251,7 +258,9 @@ qpic_t *Draw_PicFromWad(char *name)
 
 		pic_count++;
 		pic_texels += p->width * p->height;
-	} else {
+	}
+	else
+	{
 		gl->texnum = GL_LoadPicTexture(p);
 		gl->sl = 0;
 		gl->sh = 1;
@@ -322,7 +331,8 @@ void Draw_CharToConback(int num, byte *dest)
 
 	drawline = 8;
 
-	while (drawline--) {
+	while (drawline--)
+	{
 		for (x = 0; x < 8; x++)
 			if (source[x] != 255)
 				dest[x] = 0x60 + source[x];
@@ -332,14 +342,20 @@ void Draw_CharToConback(int num, byte *dest)
 
 }
 
-typedef struct {
+typedef struct
+{
 	char *name;
 	int minimize, maximize;
 } glmode_t;
 
-glmode_t modes[] = { { "GL_NEAREST", GL_NEAREST, GL_NEAREST }, { "GL_LINEAR", GL_LINEAR, GL_LINEAR }, { "GL_NEAREST_MIPMAP_NEAREST", GL_NEAREST_MIPMAP_NEAREST,
-		GL_NEAREST }, { "GL_LINEAR_MIPMAP_NEAREST", GL_LINEAR_MIPMAP_NEAREST, GL_LINEAR }, { "GL_NEAREST_MIPMAP_LINEAR", GL_NEAREST_MIPMAP_LINEAR,
-		GL_NEAREST }, { "GL_LINEAR_MIPMAP_LINEAR", GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR } };
+glmode_t modes[] = {
+	{ "GL_NEAREST", GL_NEAREST, GL_NEAREST },
+	{ "GL_LINEAR", GL_LINEAR, GL_LINEAR },
+	{ "GL_NEAREST_MIPMAP_NEAREST", GL_NEAREST_MIPMAP_NEAREST, GL_NEAREST },
+	{ "GL_LINEAR_MIPMAP_NEAREST", GL_LINEAR_MIPMAP_NEAREST, GL_LINEAR },
+	{ "GL_NEAREST_MIPMAP_LINEAR", GL_NEAREST_MIPMAP_LINEAR, GL_NEAREST },
+	{ "GL_LINEAR_MIPMAP_LINEAR", GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR }
+};
 
 /*
  ===============
@@ -366,12 +382,14 @@ void OnChange_gl_texturemode(void)
 	if (recursiveblock)
 		return;		// Get out
 
-	for (i = 0; i < 6; i++) {
+	for (i = 0; i < 6; i++)
+	{
 		char *str = gl_texturemode.string;
 		if (!strcasecmp(modes[i].name, str))
 			break;
 
-		if (isdigit(*str) && atoi(str) - 1 == i) {
+		if (isdigit(*str) && atoi(str) - 1 == i)
+		{
 			// We have a number, set the cvar as the mode name
 			recursiveblock = true; // Let's prevent this from occuring twice
 			Cvar_Set("gl_texturemode", modes[i].name);
@@ -380,7 +398,8 @@ void OnChange_gl_texturemode(void)
 		}
 	}
 
-	if (i == 6) {
+	if (i == 6)
+	{
 		Con_Printf("bad filter name, available are:\n");
 		for (i = 0; i < 6; i++)
 			Con_Printf("%s (%d)\n", modes[i].name, i + 1);
@@ -393,8 +412,10 @@ void OnChange_gl_texturemode(void)
 	gl_filter_max = modes[i].maximize;
 
 	// change all the existing mipmap texture objects
-	for (i = 0, glt = gltextures; i < numgltextures; i++, glt++) {
-		if (glt->texmode & TEX_MIPMAP) {
+	for (i = 0, glt = gltextures; i < numgltextures; i++, glt++)
+	{
+		if (glt->texmode & TEX_MIPMAP)
+		{
 			Con_DPrintf("Doing texture %s\n", glt->identifier);
 			GL_Bind(glt->texnum);
 			glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, gl_filter_min);
@@ -428,7 +449,8 @@ void SmoothFontSet(bool smoothfont_choice)
 
 void Draw_SmoothFont_f(void)
 {
-	if (Cmd_Argc() == 1) {
+	if (Cmd_Argc() == 1)
+	{
 		Con_Printf("gl_smoothfont is %d\n", smoothfont);
 		return;
 	}
@@ -509,7 +531,8 @@ void Draw_Init(void)
 	texture_extension_number += MAX_SCRAPS;
 
 	// Load the crosshair pics
-	for (i = 0; i < NUMCROSSHAIRS; i++) {
+	for (i = 0; i < NUMCROSSHAIRS; i++)
+	{
 		crosshairtextures[i] = GL_LoadTexture("", 8, 8, crosshairdata[i], TEX_ALPHA);
 		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
@@ -591,13 +614,12 @@ static bool IsValid(int y, int num)
 
 static void Character(int x, int y, int num)
 {
-	int row, col;
 	float frow, fcol, size, offset;
 
 	num &= 255;
 
-	row = num >> 4;
-	col = num & 15;
+	int row = num >> 4;
+	int col = num & 15;
 
 	frow = row * 0.0625;
 	fcol = col * 0.0625;
@@ -605,14 +627,29 @@ static void Character(int x, int y, int num)
 //	offset = 0.002; // slight offset to avoid in-between lines distortion
 	offset = 0.03125; // offset to match expanded charset texture
 
-	glTexCoord2f(fcol, frow);
-	glVertex2f(x, y);
-	glTexCoord2f(fcol + size, frow);
-	glVertex2f(x + 8, y);
-	glTexCoord2f(fcol + size, frow + size - offset);
-	glVertex2f(x + 8, y + 8);
-	glTexCoord2f(fcol, frow + size - offset);
-	glVertex2f(x, y + 8);
+	GLfloat texts[] = {
+		fcol,        frow,
+		fcol + size, frow,
+		fcol + size, frow + size - offset,
+		fcol,        frow + size - offset,
+	};
+
+	GLfloat verts[] = {
+		x,     y,
+		x + 8, y,
+		x + 8, y + 8,
+		x,     y + 8,
+	};
+
+	glEnableClientState(GL_VERTEX_ARRAY);
+	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+
+	glTexCoordPointer(2, GL_FLOAT, 0, texts);
+	glVertexPointer(2, GL_FLOAT, 0, verts);
+	glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+
+	glDisableClientState(GL_VERTEX_ARRAY);
+	glDisableClientState(GL_TEXTURE_COORD_ARRAY);
 }
 
 void Draw_Character(int x, int y, int num)
@@ -622,11 +659,7 @@ void Draw_Character(int x, int y, int num)
 
 	GL_Bind(char_texture);
 
-	glBegin(GL_QUADS);
-
 	Character(x, y, num);
-
-	glEnd();
 }
 
 /*
@@ -638,17 +671,14 @@ void Draw_String(int x, int y, char *str)
 {
 	GL_Bind(char_texture);
 
-	glBegin(GL_QUADS);
-
-	while (*str) {
+	while (*str)
+	{
 		if (IsValid(y, *str))
 			Character(x, y, *str);
 
 		str++;
 		x += 8;
 	}
-
-	glEnd();
 }
 
 byte *StringToRGB(char *s)
@@ -657,11 +687,14 @@ byte *StringToRGB(char *s)
 	static byte rgb[4];
 
 	Cmd_TokenizeString(s);
-	if (Cmd_Argc() == 3) {
+	if (Cmd_Argc() == 3)
+	{
 		rgb[0] = (byte) atoi(Cmd_Argv(0));
 		rgb[1] = (byte) atoi(Cmd_Argv(1));
 		rgb[2] = (byte) atoi(Cmd_Argv(2));
-	} else {
+	}
+	else
+	{
 		col = (byte *) &d_8to24table[(byte) atoi(s)];
 		rgb[0] = col[0];
 		rgb[1] = col[1];
@@ -683,7 +716,8 @@ void Draw_Crosshair(void)
 	byte *col;
 	extern vrect_t scr_vrect;
 
-	if (crosshair.value >= 2 && (crosshair.value <= NUMCROSSHAIRS + 1)) {
+	if (crosshair.value >= 2 && (crosshair.value <= NUMCROSSHAIRS + 1))
+	{
 		x = scr_vrect.x + scr_vrect.width / 2 + cl_crossx.value;
 		y = scr_vrect.y + scr_vrect.height / 2 + cl_crossy.value;
 
@@ -694,13 +728,16 @@ void Draw_Crosshair(void)
 
 		col = StringToRGB(crosshaircolor.string);
 
-		if (gl_crosshairalpha.value) {
+		if (gl_crosshairalpha.value)
+		{
 			glDisable(GL_ALPHA_TEST);
 			glEnable(GL_BLEND);
 			col[3] = CLAMP (0, gl_crosshairalpha.value, 1) * 255;
-			glColor4ubv(col);
-		} else {
-			glColor3ubv(col);
+			glColor4ub(col[0], col[1], col[2], col[3]);
+		}
+		else
+		{
+			glColor4ub(col[0], col[1], col[2], 255);
 		}
 
 		GL_Bind(crosshairtextures[(int) crosshair.value - 2]);
@@ -712,29 +749,48 @@ void Draw_Crosshair(void)
 		ofs1 *= (vid.width / 320) * CLAMP(0, crosshairsize.value, 20);
 		ofs2 *= (vid.width / 320) * CLAMP(0, crosshairsize.value, 20);
 
-		glBegin(GL_QUADS);
-		glTexCoord2f(sl, tl);
-		glVertex2f(x - ofs1, y - ofs1);
-		glTexCoord2f(sh, tl);
-		glVertex2f(x + ofs2, y - ofs1);
-		glTexCoord2f(sh, th);
-		glVertex2f(x + ofs2, y + ofs2);
-		glTexCoord2f(sl, th);
-		glVertex2f(x - ofs1, y + ofs2);
-		glEnd();
+		GLfloat texts[] = {
+			sl, tl,
+			sh, tl,
+			sh, th,
+			sl, th,
+		};
 
-		if (gl_crosshairalpha.value) {
+		GLfloat verts[] = {
+			x - ofs1, y - ofs1,
+			x + ofs2, y - ofs1,
+			x + ofs2, y + ofs2,
+			x - ofs1, y + ofs2,
+		};
+
+		glEnableClientState(GL_VERTEX_ARRAY);
+		glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+
+		glTexCoordPointer(2, GL_FLOAT, 0, texts);
+		glVertexPointer(2, GL_FLOAT, 0, verts);
+		glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+
+		glDisableClientState(GL_VERTEX_ARRAY);
+		glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+
+		if (gl_crosshairalpha.value)
+		{
 			glDisable(GL_BLEND);
 			glEnable(GL_ALPHA_TEST);
 		}
 
 		glTexEnvf( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
-		glColor3f(1, 1, 1);
-	} else if (crosshair.value) {
-		if (!cl_crosshaircentered.value) {
+		glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+	}
+	else if (crosshair.value)
+	{
+		if (!cl_crosshaircentered.value)
+		{
 			// Standard off-center Quake crosshair
 			Draw_Character(scr_vrect.x + scr_vrect.width / 2 + cl_crossx.value, scr_vrect.y + scr_vrect.height / 2 + cl_crossy.value, '+');
-		} else {
+		}
+		else
+		{
 			// Baker 3.60 - Centered crosshair (FuhQuake)
 			Draw_Character(scr_vrect.x + scr_vrect.width / 2 - 4 + cl_crossx.value, scr_vrect.y + scr_vrect.height / 2 - 4 + cl_crossy.value, '+');
 		}
@@ -766,24 +822,43 @@ void Draw_AlphaPic(int x, int y, qpic_t *pic, float alpha)
 
 	if (scrap_dirty)
 		Scrap_Upload();
-	gl = (glpic_t *) pic->data;
+
 	glDisable(GL_ALPHA_TEST);
 	glEnable(GL_BLEND);
 //	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 //	glCullFace(GL_FRONT);
-	glColor4f(1, 1, 1, alpha);
+
+	gl = (glpic_t *) pic->data;
 	GL_Bind(gl->texnum);
-	glBegin(GL_QUADS);
-	glTexCoord2f(gl->sl, gl->tl);
-	glVertex2f(x, y);
-	glTexCoord2f(gl->sh, gl->tl);
-	glVertex2f(x + pic->width, y);
-	glTexCoord2f(gl->sh, gl->th);
-	glVertex2f(x + pic->width, y + pic->height);
-	glTexCoord2f(gl->sl, gl->th);
-	glVertex2f(x, y + pic->height);
-	glEnd();
-	glColor4f(1, 1, 1, 1);
+
+	glColor4f(1, 1, 1, alpha);
+
+	GLfloat texts[] = {
+		gl->sl, gl->tl,
+		gl->sh, gl->tl,
+		gl->sh, gl->th,
+		gl->sl, gl->th,
+	};
+
+	GLfloat verts[] = {
+		x,              y,
+		x + pic->width, y,
+		x + pic->width, y + pic->height,
+		x,              y + pic->height,
+	};
+
+	glEnableClientState(GL_VERTEX_ARRAY);
+	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+
+	glTexCoordPointer(2, GL_FLOAT, 0, texts);
+	glVertexPointer(2, GL_FLOAT, 0, verts);
+	glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+
+	glDisableClientState(GL_VERTEX_ARRAY);
+	glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+
+	glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+
 	glEnable(GL_ALPHA_TEST);
 	glDisable(GL_BLEND);
 }
@@ -799,19 +874,35 @@ void Draw_Pic(int x, int y, qpic_t *pic)
 
 	if (scrap_dirty)
 		Scrap_Upload();
+
 	gl = (glpic_t *) pic->data;
-	glColor4f(1, 1, 1, 1);
 	GL_Bind(gl->texnum);
-	glBegin(GL_QUADS);
-	glTexCoord2f(gl->sl, gl->tl);
-	glVertex2f(x, y);
-	glTexCoord2f(gl->sh, gl->tl);
-	glVertex2f(x + pic->width, y);
-	glTexCoord2f(gl->sh, gl->th);
-	glVertex2f(x + pic->width, y + pic->height);
-	glTexCoord2f(gl->sl, gl->th);
-	glVertex2f(x, y + pic->height);
-	glEnd();
+
+	glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+
+	GLfloat texts[] = {
+		gl->sl, gl->tl,
+		gl->sh, gl->tl,
+		gl->sh, gl->th,
+		gl->sl, gl->th,
+	};
+
+	GLfloat verts[] = {
+		x,              y,
+		x + pic->width, y,
+		x + pic->width, y + pic->height,
+		x,              y + pic->height,
+	};
+
+	glEnableClientState(GL_VERTEX_ARRAY);
+	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+
+	glTexCoordPointer(2, GL_FLOAT, 0, texts);
+	glVertexPointer(2, GL_FLOAT, 0, verts);
+	glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+
+	glDisableClientState(GL_VERTEX_ARRAY);
+	glDisableClientState(GL_TEXTURE_COORD_ARRAY);
 }
 
 /*
@@ -846,18 +937,32 @@ void Draw_SubPic(int x, int y, qpic_t *pic, int srcx, int srcy, int width, int h
 	newtl = gl->tl + (srcy * oldglheight) / pic->height;
 	newth = newtl + (height * oldglheight) / pic->height;
 
-	glColor4f(1, 1, 1, 1);
+	glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
 	GL_Bind(gl->texnum);
-	glBegin(GL_QUADS);
-	glTexCoord2f(newsl, newtl);
-	glVertex2f(x, y);
-	glTexCoord2f(newsh, newtl);
-	glVertex2f(x + width, y);
-	glTexCoord2f(newsh, newth);
-	glVertex2f(x + width, y + height);
-	glTexCoord2f(newsl, newth);
-	glVertex2f(x, y + height);
-	glEnd();
+
+	GLfloat texts[] = {
+		newsl, newtl,
+		newsh, newtl,
+		newsh, newth,
+		newsl, newth,
+	};
+
+	GLfloat verts[] = {
+		x,         y,
+		x + width, y,
+		x + width, y + height,
+		x,         y + height,
+	};
+
+	glEnableClientState(GL_VERTEX_ARRAY);
+	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+
+	glTexCoordPointer(2, GL_FLOAT, 0, texts);
+	glVertexPointer(2, GL_FLOAT, 0, verts);
+	glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+
+	glDisableClientState(GL_VERTEX_ARRAY);
+	glDisableClientState(GL_TEXTURE_COORD_ARRAY);
 }
 
 /*
@@ -879,9 +984,11 @@ void Draw_TransPicTranslate(int x, int y, qpic_t *pic, byte *translation)
 	c = pic->width * pic->height;
 
 	dest = trans;
-	for (v = 0; v < 64; v++, dest += 64) {
+	for (v = 0; v < 64; v++, dest += 64)
+	{
 		src = &menuplyr_pixels[((v * pic->height) >> 6) * pic->width];
-		for (u = 0; u < 64; u++) {
+		for (u = 0; u < 64; u++)
+		{
 			p = src[(u * pic->width) >> 6];
 			if (p == 255)
 				dest[u] = p;
@@ -890,22 +997,36 @@ void Draw_TransPicTranslate(int x, int y, qpic_t *pic, byte *translation)
 		}
 	}
 
-	glTexImage2D(GL_TEXTURE_2D, 0, gl_alpha_format, 64, 64, 0, GL_RGBA, GL_UNSIGNED_BYTE, trans);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 64, 64, 0, GL_RGBA, GL_UNSIGNED_BYTE, trans);
 
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-	glColor3f(1, 1, 1);
-	glBegin(GL_QUADS);
-	glTexCoord2f(0, 0);
-	glVertex2f(x, y);
-	glTexCoord2f(1, 0);
-	glVertex2f(x + pic->width, y);
-	glTexCoord2f(1, 1);
-	glVertex2f(x + pic->width, y + pic->height);
-	glTexCoord2f(0, 1);
-	glVertex2f(x, y + pic->height);
-	glEnd();
+	glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+
+	GLfloat texts[] = {
+		0, 0,
+		1, 0,
+		1, 1,
+		0, 1,
+	};
+
+	GLfloat verts[] = {
+		x,              y,
+		x + pic->width, y,
+		x + pic->width, y + pic->height,
+		x,              y + pic->height,
+	};
+
+	glEnableClientState(GL_VERTEX_ARRAY);
+	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+
+	glTexCoordPointer(2, GL_FLOAT, 0, texts);
+	glVertexPointer(2, GL_FLOAT, 0, verts);
+	glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+
+	glDisableClientState(GL_VERTEX_ARRAY);
+	glDisableClientState(GL_TEXTURE_COORD_ARRAY);
 }
 
 /*
@@ -982,7 +1103,8 @@ void VID_Consize_f(void)
 		case 1:// consize is 50% width (if possible)
 
 		// if resolution is < 640, must use the resolution itself.
-		if (vid.width < 640) {
+		if (vid.width < 640)
+		{
 			exception = 1; // Notify later about console resolution unavailable
 			desiredwidth = vid.width;
 			break;
@@ -1020,7 +1142,9 @@ void VID_Consize_f(void)
 	if ((int)(startwidth / vid.conwidth) == ((startwidth + 0.0f) / (vid.conwidth + 0.0f)) /*&& (int)(startheight / vid.conheight) == ((startheight + 0.0f) / (vid.conheight + 0.0f))*/)
 	{
 		SmoothFontSet (false);
-	} else {
+	}
+	else
+	{
 		SmoothFontSet (true);
 	}
 
@@ -1048,18 +1172,32 @@ void VID_Consize_f(void)
  */
 void Draw_TileClear(int x, int y, int w, int h)
 {
-	glColor3f(1, 1, 1);
+	glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
 	GL_Bind(*(int *) draw_backtile->data);
-	glBegin(GL_QUADS);
-	glTexCoord2f(x / 64.0, y / 64.0);
-	glVertex2f(x, y);
-	glTexCoord2f((x + w) / 64.0, y / 64.0);
-	glVertex2f(x + w, y);
-	glTexCoord2f((x + w) / 64.0, (y + h) / 64.0);
-	glVertex2f(x + w, y + h);
-	glTexCoord2f(x / 64.0, (y + h) / 64.0);
-	glVertex2f(x, y + h);
-	glEnd();
+
+	GLfloat texts[] = {
+		x / 64.0, y / 64.0,
+		(x + w) / 64.0, y / 64.0,
+		(x + w) / 64.0, (y + h) / 64.0,
+		x / 64.0, (y + h) / 64.0,
+	};
+
+	GLfloat verts[] = {
+		x,     y,
+		x + w, y,
+		x + w, y + h,
+		x,     y + h,
+	};
+
+	glEnableClientState(GL_VERTEX_ARRAY);
+	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+
+	glTexCoordPointer(2, GL_FLOAT, 0, texts);
+	glVertexPointer(2, GL_FLOAT, 0, verts);
+	glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+
+	glDisableClientState(GL_VERTEX_ARRAY);
+	glDisableClientState(GL_TEXTURE_COORD_ARRAY);
 }
 
 #ifdef SUPPORTS_2DPICS_ALPHA
@@ -1072,33 +1210,40 @@ void Draw_TileClear(int x, int y, int w, int h)
  */
 void Draw_AlphaFill(int x, int y, int w, int h, int c, float alpha)
 {
-	alpha = CLAMP(0, alpha, 1);
+	alpha = CLAMP(0, alpha, 1.0f);
 
 	if (!alpha)
 		return;
 
 	glDisable(GL_TEXTURE_2D);
-	if (alpha < 1) {
+	if (alpha < 1.0f)
+	{
 		glEnable(GL_BLEND);
 		glDisable(GL_ALPHA_TEST);
-		glColor4f(host_basepal[c * 3] / 255.0, host_basepal[c * 3 + 1] / 255.0, host_basepal[c * 3 + 2] / 255.0, alpha);
-	} else {
-		glColor3f(host_basepal[c * 3] / 255.0, host_basepal[c * 3 + 1] / 255.0, host_basepal[c * 3 + 2] / 255.0);
 	}
+	glColor4f(host_basepal[c * 3] / 255.0, host_basepal[c * 3 + 1] / 255.0, host_basepal[c * 3 + 2] / 255.0, alpha);
 
-	glBegin(GL_QUADS);
-	glVertex2f(x, y);
-	glVertex2f(x + w, y);
-	glVertex2f(x + w, y + h);
-	glVertex2f(x, y + h);
-	glEnd();
+	GLfloat verts[] = {
+		x,     y,
+		x + w, y,
+		x + w, y + h,
+		x,     y + h,
+	};
+
+	glEnableClientState(GL_VERTEX_ARRAY);
+
+	glVertexPointer(2, GL_FLOAT, 0, verts);
+	glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+
+	glDisableClientState(GL_VERTEX_ARRAY);
 
 	glEnable(GL_TEXTURE_2D);
-	if (alpha < 1) {
+	if (alpha < 1)
+	{
 		glEnable(GL_ALPHA_TEST);
 		glDisable(GL_BLEND);
 	}
-	glColor3f(1, 1, 1);
+	glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
 }
 #endif
 
@@ -1112,17 +1257,23 @@ void Draw_AlphaFill(int x, int y, int w, int h, int c, float alpha)
 void Draw_Fill(int x, int y, int w, int h, int c)
 {
 	glDisable(GL_TEXTURE_2D);
-	glColor3f(host_basepal[c * 3] / 255.0, host_basepal[c * 3 + 1] / 255.0, host_basepal[c * 3 + 2] / 255.0);
+	glColor4f(host_basepal[c * 3] / 255.0, host_basepal[c * 3 + 1] / 255.0, host_basepal[c * 3 + 2] / 255.0, 1.0f);
 
-	glBegin(GL_QUADS);
+	GLfloat verts[] = {
+		x,     y,
+		x + w, y,
+		x + w, y + h,
+		x,     y + h,
+	};
 
-	glVertex2f(x, y);
-	glVertex2f(x + w, y);
-	glVertex2f(x + w, y + h);
-	glVertex2f(x, y + h);
+	glEnableClientState(GL_VERTEX_ARRAY);
 
-	glEnd();
-	glColor3f(1, 1, 1);
+	glVertexPointer(2, GL_FLOAT, 0, verts);
+	glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+
+	glDisableClientState(GL_VERTEX_ARRAY);
+
+	glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
 	glEnable(GL_TEXTURE_2D);
 }
 //=============================================================================
@@ -1140,14 +1291,22 @@ void Draw_FadeScreen(void)
 	glEnable(GL_BLEND);
 	glDisable(GL_TEXTURE_2D);
 	glColor4f(0, 0, 0, gl_fadescreen_alpha.value);
-	glBegin(GL_QUADS);
-	glVertex2f(0, 0);
-	glVertex2f(vid.width, 0);
-	glVertex2f(vid.width, vid.height);
-	glVertex2f(0, vid.height);
-	glEnd();
 
-	glColor4f(1, 1, 1, 1);
+	GLfloat verts[] = {
+		0, 0,
+		vid.width, 0,
+		vid.width, vid.height,
+		0, vid.height,
+	};
+
+	glEnableClientState(GL_VERTEX_ARRAY);
+
+	glVertexPointer(2, GL_FLOAT, 0, verts);
+	glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+
+	glDisableClientState(GL_VERTEX_ARRAY);
+
+	glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
 	glEnable(GL_TEXTURE_2D);
 	glDisable(GL_BLEND);
 
@@ -1166,26 +1325,19 @@ void Draw_FadeScreen(void)
  */
 void Draw_BeginDisc(void)
 {
-#ifdef INTEL_OPENGL_DRIVER_WORKAROUND
-	extern bool IntelDisplayAdapter;
-	// Baker: Intel display adapters issue fix
-
-	if (IntelDisplayAdapter)
-	return;
-#endif
-
 	if (!draw_disc)
 		return;
 
 	//if (mod_conhide==true && (key_dest != key_console && key_dest != key_message)) {
-	if (key_dest != key_console && key_dest != key_message) {
+	if (key_dest != key_console && key_dest != key_message)
+	{
 		// No draw this either
 		return;
 	}
 
-	glDrawBuffer(GL_FRONT);
+//	glDrawBuffer(GL_FRONT);
 	Draw_Pic(vid.width - 24, 0, draw_disc);
-	glDrawBuffer(GL_BACK);
+//	glDrawBuffer(GL_BACK);
 }
 
 /*
@@ -1198,6 +1350,19 @@ void Draw_BeginDisc(void)
  */
 void Draw_EndDisc(void)
 {
+}
+
+
+void MYglOrthof(GLfloat left, GLfloat right, GLfloat bottom, GLfloat top, GLfloat zNear, GLfloat zFar)
+{
+	GLfloat matrix[] = {
+		2.0f/(right-left), 0.0f, 0.0f, 0.0f,
+		0.0f, 2.0f/(top-bottom), 0.0f, 0.0f,
+		0.0f, 0.0f, -2.0f/(zFar-zNear), 0.0f,
+		-(right+left)/(right-left), -(top+bottom)/(top-bottom), -(zFar+zNear)/(zFar-zNear), 1.0f,
+	};
+
+	glMultMatrixf(matrix);
 }
 
 /*
@@ -1213,7 +1378,7 @@ void GL_Set2D(void)
 
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
-	glOrtho(0, vid.width, vid.height, 0, -99999, 99999);
+	MYglOrthof(0, vid.width, vid.height, 0, -99999, 99999);
 
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
@@ -1224,7 +1389,7 @@ void GL_Set2D(void)
 	glEnable(GL_ALPHA_TEST);
 //	glDisable (GL_ALPHA_TEST);
 
-	glColor4f(1, 1, 1, 1);
+	glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
 }
 
 //====================================================================
@@ -1239,7 +1404,8 @@ int GL_FindTexture(char *identifier)
 	int i;
 	gltexture_t *glt;
 
-	for (i = 0, glt = gltextures; i < numgltextures; i++, glt++) {
+	for (i = 0, glt = gltextures; i < numgltextures; i++, glt++)
+	{
 		if (!strcmp(identifier, glt->identifier))
 			return gltextures[i].texnum;
 	}
@@ -1259,10 +1425,12 @@ void GL_ResampleTexture(unsigned *in, int inwidth, int inheight, unsigned *out, 
 	unsigned frac, fracstep;
 
 	fracstep = inwidth * 0x10000 / outwidth;
-	for (i = 0; i < outheight; i++, out += outwidth) {
+	for (i = 0; i < outheight; i++, out += outwidth)
+	{
 		inrow = in + inwidth * (i * inheight / outheight);
 		frac = fracstep >> 1;
-		for (j = 0; j < outwidth; j += 4) {
+		for (j = 0; j < outwidth; j += 4)
+		{
 			out[j] = inrow[frac >> 16];
 			frac += fracstep;
 			out[j + 1] = inrow[frac >> 16];
@@ -1290,8 +1458,10 @@ void GL_MipMap(byte *in, int width, int height)
 	width <<= 2;
 	height >>= 1;
 	out = in;
-	for (i = 0; i < height; i++, in += width) {
-		for (j = 0; j < width; j += 8, out += 4, in += 8) {
+	for (i = 0; i < height; i++, in += width)
+	{
+		for (j = 0; j < width; j += 8, out += 4, in += 8)
+		{
 			out[0] = (in[0] + in[4] + in[width + 0] + in[width + 4]) >> 2;
 			out[1] = (in[1] + in[5] + in[width + 1] + in[width + 5]) >> 2;
 			out[2] = (in[2] + in[6] + in[width + 2] + in[width + 6]) >> 2;
@@ -1307,7 +1477,7 @@ void GL_MipMap(byte *in, int width, int height)
  */
 void GL_Upload32(unsigned *data, int width, int height, int mode)
 {
-	int samples;
+	GLint samples;
 	static unsigned scaled[1024 * 512];	// [512*256];
 	int scaled_width, scaled_height;
 
@@ -1327,26 +1497,31 @@ void GL_Upload32(unsigned *data, int width, int height, int mode)
 	if (scaled_width * scaled_height > sizeof(scaled) / 4)
 		Sys_Error("GL_LoadTexture: too big");
 
-	samples = (mode & TEX_ALPHA) ? gl_alpha_format : gl_solid_format;
+	samples = (mode & TEX_ALPHA) ? GL_RGBA : GL_RGB;
 
 	texels += scaled_width * scaled_height;
 
-	if (scaled_width == width && scaled_height == height) {
-		if (!(mode & TEX_MIPMAP)) {
+	if (scaled_width == width && scaled_height == height)
+	{
+		if (!(mode & TEX_MIPMAP))
+		{
 			glTexImage2D(GL_TEXTURE_2D, 0, samples, scaled_width, scaled_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
 
 			goto done;
 		}
 		memcpy(scaled, data, width * height * 4);
-	} else
+	}
+	else
 		GL_ResampleTexture(data, width, height, scaled, scaled_width, scaled_height);
 
 	glTexImage2D(GL_TEXTURE_2D, 0, samples, scaled_width, scaled_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, scaled);
-	if ((mode & TEX_MIPMAP)) {
+	if ((mode & TEX_MIPMAP))
+	{
 		int miplevel;
 
 		miplevel = 0;
-		while (scaled_width > 1 || scaled_height > 1) {
+		while (scaled_width > 1 || scaled_height > 1)
+		{
 			GL_MipMap((byte *) scaled, scaled_width, scaled_height);
 			scaled_width >>= 1;
 			scaled_height >>= 1;
@@ -1361,10 +1536,13 @@ void GL_Upload32(unsigned *data, int width, int height, int mode)
 	}
 	done:
 
-	if ((mode & TEX_MIPMAP)) {
+	if ((mode & TEX_MIPMAP))
+	{
 		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, gl_filter_min);
 		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, gl_filter_max);
-	} else {
+	}
+	else
+	{
 		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, gl_filter_max);
 		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, gl_filter_max);
 	}
@@ -1385,9 +1563,11 @@ void GL_Upload8(byte *data, int width, int height, int mode)
 	s = width * height;
 	// if there are no transparent pixels, make it a 3 component
 	// texture even if it was specified as otherwise
-	if (mode & TEX_ALPHA) {
+	if (mode & TEX_ALPHA)
+	{
 		noalpha = true;
-		for (i = 0; i < s; i++) {
+		for (i = 0; i < s; i++)
+		{
 			p = data[i];
 			if (p == 255)
 				noalpha = false;
@@ -1396,10 +1576,13 @@ void GL_Upload8(byte *data, int width, int height, int mode)
 
 		if (noalpha)
 			mode = mode - TEX_ALPHA; // Baker: we know this bit flag exists due to IF, so just subtract it
-	} else {
+	}
+	else
+	{
 		if (s & 3)
 			Sys_Error("GL_Upload8: s&3");
-		for (i = 0; i < s; i += 4) {
+		for (i = 0; i < s; i += 4)
+		{
 			trans[i] = d_8to24table[data[i]];
 			trans[i + 1] = d_8to24table[data[i + 1]];
 			trans[i + 2] = d_8to24table[data[i + 2]];
@@ -1421,20 +1604,24 @@ void GL_FreeTextures(void)
 
 	Con_DPrintf("GL_FreeTextures: Entry.\n");
 
-	if (gl_free_world_textures.value == 0) {
+	if (gl_free_world_textures.value == 0)
+	{
 		Con_DPrintf("GL_FreeTextures: Not Clearing old Map Textures.\n");
 		return;
 	}
 
 	Con_DPrintf("GL_FreeTextures: Freeing textures (numgltextures = %i) \n", numgltextures);
 
-	for (i = j = 0; i < numgltextures; ++i, ++j) {
+	for (i = j = 0; i < numgltextures; ++i, ++j)
+	{
 		if (gltextures[i].texmode & TEX_WORLD) //Only clear out world textures... for now.
 		{
 			Con_DPrintf("GL_FreeTextures: Clearing texture %s\n", gltextures[i].identifier);
 			glDeleteTextures(1, &gltextures[i].texnum);
 			--j;
-		} else if (j < i) {
+		}
+		else if (j < i)
+		{
 //			Con_DPrintf("GL_FreeTextures: NOT Clearing texture %s\n", gltextures[i].identifier);
 			gltextures[j] = gltextures[i];
 		}
@@ -1463,9 +1650,12 @@ int GL_LoadTexture(char *identifier, int width, int height, byte *data, int mode
 	crc = CRC_Block(data, width * height); // Baker 3.80x - LoadTexture fix LordHavoc provided by Reckless
 
 	// see if the texture is already present
-	if (identifier[0]) {
-		for (i = 0, glt = gltextures; i < numgltextures; i++, glt++) {
-			if (!strcmp(identifier, glt->identifier)) {
+	if (identifier[0])
+	{
+		for (i = 0, glt = gltextures; i < numgltextures; i++, glt++)
+		{
+			if (!strcmp(identifier, glt->identifier))
+			{
 				// Baker 3.60 - LoadTexture fix LordHavoc provided by Reckless
 				if (width != glt->width || height != glt->height || crc != glt->crc)
 					goto setup;
@@ -1493,7 +1683,8 @@ int GL_LoadTexture(char *identifier, int width, int height, byte *data, int mode
 	glt->crc = crc;
 
 	// Baker: part 1 of gl dedicated server fix by Nathan Cline
-	if (cls.state != ca_dedicated) {
+	if (cls.state != ca_dedicated)
+	{
 		GL_Bind(glt->texnum);
 		GL_Upload8(data, width, height, mode);
 	}
@@ -1512,7 +1703,6 @@ int GL_LoadPicTexture(qpic_t *pic)
 }
 
 /****************************************/
-
 
 int current_texture_num = -1; // to avoid unnecessary texture sets
 void GL_Bind(int texnum)
@@ -1535,7 +1725,7 @@ void GL_SelectTexture(GLenum target)
 	if (target == currenttarget)
 		return;
 
-	qglActiveTexture(target);
+	glActiveTexture(target);
 
 	cnttextures[currenttarget - GL_TEXTURE0_ARB] = current_texture_num;
 	current_texture_num = cnttextures[target - GL_TEXTURE0_ARB];
@@ -1544,7 +1734,8 @@ void GL_SelectTexture(GLenum target)
 
 void GL_DisableMultitexture(void)
 {
-	if (mtexenabled) {
+	if (mtexenabled)
+	{
 		glDisable(GL_TEXTURE_2D);
 		GL_SelectTexture(GL_TEXTURE0_ARB);
 		mtexenabled = false;
@@ -1553,7 +1744,8 @@ void GL_DisableMultitexture(void)
 
 void GL_EnableMultitexture(void)
 {
-	if (gl_mtexable) {
+	if (gl_mtexable)
+	{
 		GL_SelectTexture(GL_TEXTURE1_ARB);
 		glEnable(GL_TEXTURE_2D);
 		mtexenabled = true;

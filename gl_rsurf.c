@@ -48,19 +48,17 @@ msurface_t *waterchain = NULL;
 
 void R_RenderDynamicLightmaps(msurface_t *fa);
 
-void DrawGLPoly(glpoly_t *p)
+void DrawGLPoly(glpoly_t *p, int tex_offset)
 {
-	int i;
-	float *v;
+	glEnableClientState(GL_VERTEX_ARRAY);
+	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
 
-	glBegin(GL_POLYGON);
-	v = p->verts[0];
-	for (i = 0; i < p->numverts; i++, v += VERTEXSIZE)
-	{
-		glTexCoord2f(v[3], v[4]);
-		glVertex3fv(v);
-	}
-	glEnd();
+	glTexCoordPointer(2, GL_FLOAT, VERTEXSIZE * sizeof(float), &p->verts[0][tex_offset]);
+	glVertexPointer(3, GL_FLOAT, VERTEXSIZE * sizeof(float), &p->verts[0][0]);
+	glDrawArrays(GL_TRIANGLE_FAN, 0, p->numverts);
+
+	glDisableClientState(GL_VERTEX_ARRAY);
+	glDisableClientState(GL_TEXTURE_COORD_ARRAY);
 }
 
 void R_AddDynamicLights(msurface_t *surf)
@@ -355,21 +353,9 @@ void R_BlendLightmaps(void)
 		{
 			// JPG - added r_waterwarp
 			if ((p->flags & SURF_UNDERWATER) && r_waterwarp.value)
-			{
-
 				DrawGLWaterPolyLightmap(p);
-			}
 			else
-			{
-				glBegin(GL_POLYGON);
-				v = p->verts[0];
-				for (j = 0; j < p->numverts; j++, v += VERTEXSIZE)
-				{
-					glTexCoord2f(v[5], v[6]);
-					glVertex3fv(v);
-				}
-				glEnd();
-			}
+				DrawGLPoly(p, 5);
 		}
 	}
 
@@ -631,12 +617,13 @@ void R_DrawSequentialPoly(msurface_t *s)
 			R_UploadLightmap(s->lightmaptexturenum);
 
 			glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_BLEND);
-			glBegin(GL_POLYGON);
+//			glBegin(GL_POLYGON);
+			glBegin(GL_TRIANGLE_FAN);
 			v = p->verts[0];
 			for (i = 0; i < p->numverts; i++, v += VERTEXSIZE)
 			{
-				qglMultiTexCoord2f(GL_TEXTURE0_ARB, v[3], v[4]);
-				qglMultiTexCoord2f(GL_TEXTURE1_ARB, v[5], v[6]);
+				glMultiTexCoord4f(GL_TEXTURE0_ARB, v[3], v[4], 0.0f, 1.0f);
+				glMultiTexCoord4f(GL_TEXTURE1_ARB, v[5], v[6], 0.0f, 1.0f);
 				glVertex3fv(v);
 			}
 			glEnd();
@@ -651,25 +638,11 @@ void R_DrawSequentialPoly(msurface_t *s)
 
 			t = R_TextureAnimation(s->texinfo->texture);
 			GL_Bind(t->gl_texturenum);
-			glBegin(GL_POLYGON);
-			v = p->verts[0];
-			for (i = 0; i < p->numverts; i++, v += VERTEXSIZE)
-			{
-				glTexCoord2f(v[3], v[4]);
-				glVertex3fv(v);
-			}
-			glEnd();
+			DrawGLPoly(p, 3);
 
 			GL_Bind(lightmap_textures + s->lightmaptexturenum);
 			glEnable(GL_BLEND);
-			glBegin(GL_POLYGON);
-			v = p->verts[0];
-			for (i = 0; i < p->numverts; i++, v += VERTEXSIZE)
-			{
-				glTexCoord2f(v[5], v[6]);
-				glVertex3fv(v);
-			}
-			glEnd();
+			DrawGLPoly(p, 5);
 
 			glDisable(GL_BLEND);
 		}
@@ -683,7 +656,7 @@ void R_DrawSequentialPoly(msurface_t *s)
 			GL_DisableMultitexture();
 			glEnable(GL_BLEND);
 			GL_Bind(t->fullbright);
-			DrawGLPoly(s->polys);
+			DrawGLPoly(s->polys, 3);
 			glDisable(GL_BLEND);
 		}
 #endif
@@ -740,8 +713,8 @@ void R_DrawSequentialPoly(msurface_t *s)
 		v = p->verts[0];
 		for (i = 0; i < p->numverts; i++, v += VERTEXSIZE)
 		{
-			qglMultiTexCoord2f(GL_TEXTURE0_ARB, v[3], v[4]);
-			qglMultiTexCoord2f(GL_TEXTURE1_ARB, v[5], v[6]);
+			glMultiTexCoord4f(GL_TEXTURE0_ARB, v[3], v[4], 0.0f, 1.0f);
+			glMultiTexCoord4f(GL_TEXTURE1_ARB, v[5], v[6], 0.0f, 1.0f);
 
 			nv[0] = v[0] + 8 * sin(v[1] * 0.05 + realtime) * sin(v[2] * 0.05 + realtime);
 			nv[1] = v[1] + 8 * sin(v[0] * 0.05 + realtime) * sin(v[2] * 0.05 + realtime);
@@ -870,7 +843,7 @@ void R_RenderBrushPoly(msurface_t *fa)
 	if ((fa->flags & SURF_UNDERWATER) && r_waterwarp.value)		// JPG - added r_waterwarp
 		DrawGLWaterPoly(fa->polys);
 	else
-		DrawGLPoly(fa->polys);
+		DrawGLPoly(fa->polys, 3);
 
 #ifndef NOFULLBRIGHT
 	if (gl_fullbright.value)
@@ -940,19 +913,16 @@ void GL_PolygonOffset (int offset)
 	if (offset > 0)
 	{
 		glEnable (GL_POLYGON_OFFSET_FILL);
-		glEnable (GL_POLYGON_OFFSET_LINE);
 		glPolygonOffset(1, offset);
 	}
 	else if (offset < 0)
 	{
 		glEnable (GL_POLYGON_OFFSET_FILL);
-		glEnable (GL_POLYGON_OFFSET_LINE);
 		glPolygonOffset(-1, offset);
 	}
 	else
 	{
 		glDisable (GL_POLYGON_OFFSET_FILL);
-		glDisable (GL_POLYGON_OFFSET_LINE);
 	}
 }
 #endif
@@ -993,7 +963,7 @@ void R_DrawBrushModel(entity_t *ent)
 	if (R_CullBox(mins, maxs))
 		return;
 
-	glColor3f(1, 1, 1);
+	glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
 
 	memset(lightmap_polys, 0, sizeof(lightmap_polys));
 
@@ -1214,7 +1184,7 @@ void R_DrawWorld(void)
 	currententity = &ent;
 	current_texture_num = -1;
 
-	glColor3f(1, 1, 1);
+	glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
 	memset(lightmap_polys, 0, sizeof(lightmap_polys));
 
 	R_RecursiveWorldNode(cl.worldmodel->nodes);
@@ -1497,7 +1467,7 @@ void GL_BuildLightmaps(void)
 		GL_Bind(lightmap_textures + i);
 		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-		glTexImage2D(GL_TEXTURE_2D, 0, lightmap_bytes, BLOCK_WIDTH, BLOCK_HEIGHT, 0, gl_lightmap_format, GL_UNSIGNED_BYTE,
+		glTexImage2D(GL_TEXTURE_2D, 0, gl_lightmap_format, BLOCK_WIDTH, BLOCK_HEIGHT, 0, gl_lightmap_format, GL_UNSIGNED_BYTE,
 				lightmaps + i * BLOCK_WIDTH * BLOCK_HEIGHT * lightmap_bytes);
 	}
 

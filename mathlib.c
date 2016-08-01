@@ -74,13 +74,6 @@ void LerpVector(const vec3_t from, const vec3_t to, float frac, vec3_t out)
 	out[2] = from[2] + frac * (to[2] - from[2]);
 }
 
-float VecLength2(vec3_t v1, vec3_t v2)
-{
-	vec3_t k;
-	VectorSubtract(v1, v2, k);
-	return sqrt(k[0] * k[0] + k[1] * k[1] + k[2] * k[2]);
-}
-
 void RotatePointAroundVector(vec3_t dst, const vec3_t dir, const vec3_t point, float degrees)
 {
 	float m[3][3];
@@ -312,6 +305,16 @@ void CrossProduct(vec3_t v1, vec3_t v2, vec3_t cross)
 vec_t VectorLength(vec3_t v)
 {
 	return sqrtf(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]);
+}
+
+float RadiusFromBounds(vec3_t mins, vec3_t maxs)
+{
+	vec3_t corner;
+
+	for (int i = 0; i < 3; i++)
+		corner[i] = fabs(mins[i]) > fabs(maxs[i]) ? fabs(mins[i]) : fabs(maxs[i]);
+
+	return VectorLength(corner);
 }
 
 float VectorNormalize(vec3_t v)

@@ -209,7 +209,7 @@ void EmitWaterPolys(msurface_t *fa)
 
 	for (p = fa->polys; p; p = p->next)
 	{
-		glBegin(GL_POLYGON);
+		glBegin(GL_TRIANGLE_FAN);
 		for (i = 0, v = p->verts[0]; i < p->numverts; i++, v += VERTEXSIZE)
 		{
 			os = v[3];
@@ -244,7 +244,7 @@ void EmitSkyPolys(msurface_t *fa)
 
 	for (p = fa->polys; p; p = p->next)
 	{
-		glBegin(GL_POLYGON);
+		glBegin(GL_TRIANGLE_FAN);
 		for (i = 0, v = p->verts[0]; i < p->numverts; i++, v += VERTEXSIZE)
 		{
 			VectorSubtract(v, r_origin, dir);
@@ -391,7 +391,7 @@ void R_InitSky(texture_t *mt)
 	if (!solidskytexture)
 		solidskytexture = texture_extension_number++;
 	GL_Bind(solidskytexture);
-	glTexImage2D(GL_TEXTURE_2D, 0, gl_solid_format, 128, 128, 0, GL_RGBA, GL_UNSIGNED_BYTE, trans);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 128, 128, 0, GL_RGBA, GL_UNSIGNED_BYTE, trans);
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
@@ -408,7 +408,7 @@ void R_InitSky(texture_t *mt)
 	if (!alphaskytexture)
 		alphaskytexture = texture_extension_number++;
 	GL_Bind(alphaskytexture);
-	glTexImage2D(GL_TEXTURE_2D, 0, gl_alpha_format, 128, 128, 0, GL_RGBA, GL_UNSIGNED_BYTE, trans);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 128, 128, 0, GL_RGBA, GL_UNSIGNED_BYTE, trans);
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 }

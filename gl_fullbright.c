@@ -57,7 +57,7 @@ void DrawFullBrightTextures (msurface_t *first_surf, int num_surfs)
         {
             glEnable (GL_BLEND);
             GL_Bind (t->fullbright);
-            DrawGLPoly (fa->polys);
+            DrawGLPoly (fa->polys, 3);
             glDisable (GL_BLEND);
         }
 

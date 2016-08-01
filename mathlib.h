@@ -39,7 +39,7 @@ void VectorMA(vec3_t veca, float scale, vec3_t vecb, vec3_t vecc);
 
 int VectorCompare(vec3_t v1, vec3_t v2);
 vec_t VectorLength(vec3_t v);
-float VecLength2(vec3_t v1, vec3_t v2);
+float RadiusFromBounds(vec3_t mins, vec3_t maxs);
 void LerpVector(const vec3_t from, const vec3_t to, float frac, vec3_t out);
 
 void CrossProduct(vec3_t v1, vec3_t v2, vec3_t cross);

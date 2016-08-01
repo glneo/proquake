@@ -212,36 +212,37 @@ void R_DrawSpriteModel(entity_t *ent)
 		right = vright;
 	}
 
-	glColor3f(1, 1, 1);
+	glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
 
 	GL_DisableMultitexture();
 
 	GL_Bind(frame->gl_texturenum);
 
 	glEnable(GL_ALPHA_TEST);
-	glBegin(GL_QUADS);
 
-	glTexCoord2f(0, 1);
-	VectorMA(ent->origin, frame->down, up, point);
-	VectorMA(point, frame->left, right, point);
-	glVertex3fv(point);
-
-	glTexCoord2f(0, 0);
-	VectorMA(ent->origin, frame->up, up, point);
-	VectorMA(point, frame->left, right, point);
-	glVertex3fv(point);
-
-	glTexCoord2f(1, 0);
-	VectorMA(ent->origin, frame->up, up, point);
-	VectorMA(point, frame->right, right, point);
-	glVertex3fv(point);
-
-	glTexCoord2f(1, 1);
-	VectorMA(ent->origin, frame->down, up, point);
-	VectorMA(point, frame->right, right, point);
-	glVertex3fv(point);
-
-	glEnd();
+//	glBegin(GL_QUADS);
+//
+//	glTexCoord2f(0, 1);
+//	VectorMA(ent->origin, frame->down, up, point);
+//	VectorMA(point, frame->left, right, point);
+//	glVertex3fv(point);
+//
+//	glTexCoord2f(0, 0);
+//	VectorMA(ent->origin, frame->up, up, point);
+//	VectorMA(point, frame->left, right, point);
+//	glVertex3fv(point);
+//
+//	glTexCoord2f(1, 0);
+//	VectorMA(ent->origin, frame->up, up, point);
+//	VectorMA(point, frame->right, right, point);
+//	glVertex3fv(point);
+//
+//	glTexCoord2f(1, 1);
+//	VectorMA(ent->origin, frame->down, up, point);
+//	VectorMA(point, frame->right, right, point);
+//	glVertex3fv(point);
+//
+//	glEnd();
 
 	glDisable(GL_ALPHA_TEST);
 }
@@ -272,24 +273,38 @@ int lastposenum0;  // Interpolation
 
 void GL_DrawAliasFrame(alias_model_t *aliasmodel, int pose)
 {
-	float alpha;
-
-	if (currententity != &cl.viewent)
-		alpha = 1.0f;
-	else
-	{
-		if(cl.items & IT_INVISIBILITY)
-			alpha = r_ringalpha.value;
-		else if (r_drawviewmodel.value)
-			alpha = 1.0f;
-		else
-			alpha = 0;
-	}
+//	float alpha;
+//
+//	if (currententity != &cl.viewent)
+//		alpha = 1.0f;
+//	else
+//	{
+//		if(cl.items & IT_INVISIBILITY)
+//			alpha = r_ringalpha.value;
+//		else if (r_drawviewmodel.value)
+//			alpha = 1.0f;
+//		else
+//			alpha = 0;
+//	}
+//
+//
+//
+//	if (alpha < 1.0f)
+//	{
+//		glEnable(GL_BLEND);
+//		glColor4f(1.0f, 1.0f, 1.0f, alpha);
+//	}
 
 	lastposenum = pose;
 
-	if (alpha < 1)
-		glEnable(GL_BLEND);
+//	glBindTexture(GL_TEXTURE_2D, aliasmodel->gl_texturenum[0][0]);
+//	glEnable(GL_TEXTURE_2D);
+
+//	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+	glEnableClientState(GL_VERTEX_ARRAY);
+	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+	glEnableClientState(GL_NORMAL_ARRAY);
 
 	glVertexPointer(3, GL_FLOAT, sizeof(*(aliasmodel->poseverts[0])), &aliasmodel->poseverts[pose]->v);
 	glTexCoordPointer(2, GL_FLOAT, sizeof(*(aliasmodel->stverts[0])), &aliasmodel->stverts[0]->s);
@@ -299,9 +314,12 @@ void GL_DrawAliasFrame(alias_model_t *aliasmodel, int pose)
 	glTexCoordPointer(2, GL_FLOAT, sizeof(*(aliasmodel->stverts[1])), &aliasmodel->stverts[1]->s);
 	glDrawElements(GL_TRIANGLES, (aliasmodel->numtris - aliasmodel->backstart) * 3, GL_UNSIGNED_SHORT, (aliasmodel->triangles + aliasmodel->backstart));
 
-	if (alpha < 1)
-		glDisable(GL_BLEND);
+	glDisableClientState(GL_VERTEX_ARRAY);
+	glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+	glDisableClientState(GL_NORMAL_ARRAY);
 
+//	if (alpha < 1.0f)
+//		glDisable(GL_BLEND);
 }
 
 /*
@@ -368,7 +386,7 @@ void GL_DrawAliasFrame(alias_model_t *aliasmodel, int pose)
 //			d[0] = shadedots[verts2->lightnormalindex] - shadedots[verts1->lightnormalindex];
 //
 //			l = shadelight * (shadedots[verts1->lightnormalindex] + (blend * d[0]));
-//			glColor3f(l, l, l);
+//			glColor4f(l, l, l, 1.0f);
 //
 //			VectorSubtract(verts2->v, verts1->v, d);
 //
@@ -701,12 +719,11 @@ bool R_CullForEntity(const entity_t *ent/*, vec3_t returned_center*/)
 	vec3_t mins, maxs;
 
 	if (ent->angles[0] || ent->angles[1] || ent->angles[2])
-		return R_CullSphere(ent->origin, ent->model->radius);		// Angles turned; do sphere cull test
+		return R_CullSphere(ent->origin, ent->model->radius); // Angles turned; do sphere cull test
 
 	// Angles all 0; do box cull test
-
-	VectorAdd(ent->origin, ent->model->mins, mins);			// Add entity origin and model mins to calc mins
-	VectorAdd(ent->origin, ent->model->maxs, maxs);			// Add entity origin and model maxs to calc maxs
+	VectorAdd(ent->origin, ent->model->mins, mins); // Add entity origin and model mins to calc mins
+	VectorAdd(ent->origin, ent->model->maxs, maxs); // Add entity origin and model maxs to calc maxs
 
 //	if (returned_center)
 //		LerpVector (mins, maxs, 0.5, returned_center);
@@ -1032,11 +1049,11 @@ void R_DrawViewModel(void)
 	diffuse[0] = diffuse[1] = diffuse[2] = diffuse[3] = (float) shadelight / 128;
 
 	// hack the depth range to prevent view model from poking into walls
-	glDepthRange(gldepthmin, gldepthmin + 0.3 * (gldepthmax - gldepthmin));
+	glDepthRangef(gldepthmin, gldepthmin + 0.3 * (gldepthmax - gldepthmin));
 
 	R_DrawAliasModel(currententity);
 
-	glDepthRange(gldepthmin, gldepthmax);
+	glDepthRangef(gldepthmin, gldepthmax);
 }
 
 /*
@@ -1064,15 +1081,21 @@ void R_PolyBlend(void)
 	glRotatef(-90, 1, 0, 0);	    // put Z going up
 	glRotatef(90, 0, 0, 1);	    // put Z going up
 
-	glColor4fv(v_blend);
+	glColor4f(v_blend[0], v_blend[1], v_blend[2], v_blend[3]);
 
-	glBegin(GL_QUADS);
+	GLfloat verts[] = {
+		10, 100, 100,
+		10, -100, 100,
+		10, -100, -100,
+		10, 100, -100,
+	};
 
-	glVertex3f(10, 100, 100);
-	glVertex3f(10, -100, 100);
-	glVertex3f(10, -100, -100);
-	glVertex3f(10, 100, -100);
-	glEnd();
+	glEnableClientState(GL_VERTEX_ARRAY);
+
+	glVertexPointer(3, GL_FLOAT, 0, verts);
+	glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+
+	glDisableClientState(GL_VERTEX_ARRAY);
 
 	glDisable(GL_BLEND);
 	glEnable(GL_TEXTURE_2D);
@@ -1171,9 +1194,21 @@ void R_SetupFrame(void)
 	c_alias_polys = 0;
 }
 
-void MYgluPerspective(GLdouble fovy, GLdouble aspect, GLdouble zNear, GLdouble zFar)
+void MYglFrustumf(GLfloat left, GLfloat right, GLfloat bottom, GLfloat top, GLfloat zNear, GLfloat zFar)
 {
-	GLdouble xmin, xmax, ymin, ymax;
+	GLfloat matrix[] = {
+		(2.0f * zNear)/(right-left), 0.0f, 0.0f, 0.0f,
+		0.0f, (2.0f * zNear)/(top-bottom), 0.0f, 0.0f,
+		(right + left) / (right - left), (top + bottom) / (top - bottom), -(zFar + zNear) / (zFar - zNear), -1.0f,
+		0.0f, 0.0f, -(2 * zFar * zNear) / (zFar - zNear), 0.0f,
+	};
+
+	glMultMatrixf(matrix);
+}
+
+void MYgluPerspective(GLfloat fovy, GLfloat aspect, GLfloat zNear, GLfloat zFar)
+{
+	GLfloat xmin, xmax, ymin, ymax;
 
 	ymax = zNear * tan(fovy * M_PI / 360.0);
 	ymin = -ymax;
@@ -1181,7 +1216,7 @@ void MYgluPerspective(GLdouble fovy, GLdouble aspect, GLdouble zNear, GLdouble z
 	xmin = ymin * aspect;
 	xmax = ymax * aspect;
 
-	glFrustum(xmin, xmax, ymin, ymax, zNear, zFar);
+	MYglFrustumf(xmin, xmax, ymin, ymax, zNear, zFar);
 }
 
 void R_SetupGL(void)
@@ -1396,7 +1431,7 @@ void R_Clear(void)
 		glDepthFunc(GL_LEQUAL);
 	}
 
-	glDepthRange(gldepthmin, gldepthmax);
+	glDepthRangef(gldepthmin, gldepthmax);
 }
 
 /*
@@ -1434,7 +1469,7 @@ void R_Mirror(void)
 
 	gldepthmin = 0.5;
 	gldepthmax = 1;
-	glDepthRange(gldepthmin, gldepthmax);
+	glDepthRangef(gldepthmin, gldepthmax);
 	glDepthFunc(GL_LEQUAL);
 
 	R_RenderScene();
@@ -1442,7 +1477,7 @@ void R_Mirror(void)
 
 	gldepthmin = 0;
 	gldepthmax = 0.5;
-	glDepthRange(gldepthmin, gldepthmax);
+	glDepthRangef(gldepthmin, gldepthmax);
 	glDepthFunc(GL_LEQUAL);
 
 	// blend on top

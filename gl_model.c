@@ -169,8 +169,6 @@ model_t *Mod_FindName(char *name)
 	int i;
 	model_t *mod;
 
-	printf("***** %s\n", name);
-
 	if (!name[0])
 		Sys_Error("Mod_FindName: NULL name");
 
@@ -225,6 +223,8 @@ model_t *Mod_LoadModel(model_t *mod, bool crash)
 
 	loadmodel = mod;
 
+	mod->needload = false;
+
 	// call the appropriate loader
 	header_magic = LittleLong(*(uint32_t *) buf);
 	switch (header_magic)
@@ -269,8 +269,8 @@ void Mod_TouchModel(char *name)
 
 	if (!mod->needload)
 	{
-		if (mod->type == mod_alias)
-			Cache_Check (&mod->cache);
+//		if (mod->type == mod_alias)
+//			Cache_Check (&mod->cache);
 	}
 }
 
@@ -1145,22 +1145,6 @@ void Mod_LoadPlanes(lump_t *l)
 		out->type = LittleLong(in->type);
 		out->signbits = bits;
 	}
-}
-
-/*
- =================
- RadiusFromBounds
- =================
- */
-float RadiusFromBounds(vec3_t mins, vec3_t maxs)
-{
-	int i;
-	vec3_t corner;
-
-	for (i = 0; i < 3; i++)
-		corner[i] = fabs(mins[i]) > fabs(maxs[i]) ? fabs(mins[i]) : fabs(maxs[i]);
-
-	return VectorLength(corner);
 }
 
 /*

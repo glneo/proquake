@@ -41,11 +41,11 @@ most exception of circumstances, right?
 #define GL_MAX_TEXTURE_UNITS_ARB	0x84E2
 
 // GL external vars, functions
-typedef void (APIENTRY *lpMTexFUNC)(GLenum, GLfloat, GLfloat);
-typedef void (APIENTRY *lpSelTexFUNC)(GLenum);
+//typedef void (APIENTRY *lpMTexFUNC)(GLenum, GLfloat, GLfloat);
+//typedef void (APIENTRY *lpSelTexFUNC)(GLenum);
 
-extern lpMTexFUNC qglMultiTexCoord2f;
-extern lpSelTexFUNC qglActiveTexture;
+//extern lpMTexFUNC qglMultiTexCoord2f;
+//extern lpSelTexFUNC qglActiveTexture;
 
 
 #define GL_MAX_TEXTURE_UNITS_ARB	0x84E2

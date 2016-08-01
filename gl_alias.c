@@ -16,13 +16,39 @@
 
 #include "quakedef.h"
 
-extern model_t *loadmodel;
-
 #define NUMVERTEXNORMALS 162
 
 const float r_avertexnormals[NUMVERTEXNORMALS][3] = {
 	#include "anorms.h"
 };
+
+void Mod_CalcAliasBounds(model_t *mod, alias_model_t *aliasmodel)
+{
+	//clear out all data
+	for (int i = 0; i < 3; i++)
+	{
+		mod->mins[i] = INT32_MAX;
+		mod->maxs[i] = INT32_MIN;
+	}
+
+	//process verts
+	for (int i = 0; i < aliasmodel->numposes; i++)
+	{
+		for (int j = 0; j < aliasmodel->numverts; j++)
+		{
+			vec3_t v;
+
+			for (int k = 0; k < 3; k++)
+				v[k] = aliasmodel->poseverts[i][j].v[k];
+
+			for (int k = 0; k < 3; k++)
+			{
+				mod->mins[k] = min(mod->mins[k], v[k]);
+				mod->maxs[k] = max(mod->maxs[k], v[k]);
+			}
+		}
+	}
+}
 
 static void *Mod_LoadAliasFrame(alias_model_t *aliasmodel, int *posenum, int i, daliasframetype_t *pframetype)
 {
@@ -168,7 +194,7 @@ void Mod_FloodFillSkin(byte *skin, int skinwidth, int skinheight)
 	}
 }
 
-static void *Mod_LoadAllSkins(alias_model_t *aliasmodel, daliasskintype_t *pskintype)
+static void *Mod_LoadAllSkins(alias_model_t *aliasmodel, daliasskintype_t *pskintype, const char *mod_name)
 {
 	int skinsize = aliasmodel->skinwidth * aliasmodel->skinheight;
 	int groupskins;
@@ -184,9 +210,9 @@ static void *Mod_LoadAllSkins(alias_model_t *aliasmodel, daliasskintype_t *pskin
 		if (pskintype->type == ALIAS_SKIN_SINGLE)
 		{
 			skin = (byte *)(pskintype + 1);
-			//Mod_FloodFillSkin(skin, aliasmodel->skinwidth, aliasmodel->skinheight);
+			Mod_FloodFillSkin(skin, aliasmodel->skinwidth, aliasmodel->skinheight);
 
-			snprintf(name, sizeof(name), "%s_%i", loadmodel->name, i);
+			snprintf(name, sizeof(name), "%s_%i", mod_name, i);
 			aliasmodel->gl_texturenum[i][0] =
 			aliasmodel->gl_texturenum[i][1] =
 			aliasmodel->gl_texturenum[i][2] =
@@ -204,8 +230,8 @@ static void *Mod_LoadAllSkins(alias_model_t *aliasmodel, daliasskintype_t *pskin
 			int j;
 			for (j = 0; j < groupskins; j++)
 			{
-				//Mod_FloodFillSkin(skin, aliasmodel->skinwidth, aliasmodel->skinheight);
-				snprintf(name, sizeof(name), "%s_%i_%i", loadmodel->name, i, j);
+				Mod_FloodFillSkin(skin, aliasmodel->skinwidth, aliasmodel->skinheight);
+				snprintf(name, sizeof(name), "%s_%i_%i", mod_name, i, j);
 				aliasmodel->gl_texturenum[i][j & 3] = GL_LoadTexture(name, aliasmodel->skinwidth, aliasmodel->skinheight, skin, TEX_MIPMAP);
 				skin += skinsize;
 			}
@@ -260,7 +286,7 @@ void Mod_LoadAliasModel(model_t *mod, void *buffer)
 
 	// load the skins
 	daliasskintype_t *pskintype = (daliasskintype_t *)(pinmodel + 1);
-	pskintype = Mod_LoadAllSkins(aliasmodel, pskintype);
+	pskintype = Mod_LoadAllSkins(aliasmodel, pskintype, mod_name);
 
 	// load texture cords s and t
 	dstvert_t *pinstverts = (dstvert_t *)pskintype;
@@ -312,12 +338,7 @@ void Mod_LoadAliasModel(model_t *mod, void *buffer)
 	if (strcmp("progs/player.mdl", mod_name) == 0)
 		mod->flags |= MOD_PLAYER;
 
-	// bboxes fun
-//	for (int i = 0; i < 3; i++)
-//	{
-//		mod->mins[i] = aliasbboxmins[i] * aliasmodel->scale[i] + aliasmodel->scale_origin[i];
-//		mod->maxs[i] = aliasbboxmaxs[i] * aliasmodel->scale[i] + aliasmodel->scale_origin[i];
-//	}
+	Mod_CalcAliasBounds(mod, aliasmodel);
 
 	mod->radius = RadiusFromBounds(mod->mins, mod->maxs);
 
