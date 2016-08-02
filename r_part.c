@@ -709,7 +709,20 @@ void R_DrawParticles(void)
 	glEnable(GL_BLEND);
 	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
 
-	glBegin(GL_TRIANGLES);
+	GLfloat texts[] = {
+		0, 0,
+		1, 0,
+		0, 1,
+	};
+
+	GLfloat verts[3*3];
+
+	glEnableClientState(GL_VERTEX_ARRAY);
+	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+
+	glTexCoordPointer(2, GL_FLOAT, 0, texts);
+	glVertexPointer(3, GL_FLOAT, 0, verts);
+
 	for (p = active_particles; p; p = p->next)
 	{
 		// hack a scale up to keep particles from disapearing
@@ -720,15 +733,14 @@ void R_DrawParticles(void)
 			scale = 1 + scale * 0.004;
 
 		glColor4ub(((byte *)&d_8to24table[(int) p->color])[0], ((byte *)&d_8to24table[(int) p->color])[1], ((byte *)&d_8to24table[(int) p->color])[2], 255);
-		glTexCoord2f(0, 0);
-		glVertex3fv(p->org);
-
-		glTexCoord2f(1, 0);
-		glVertex3f(p->org[0] + up[0] * scale, p->org[1] + up[1] * scale, p->org[2] + up[2] * scale);
-		glTexCoord2f(0, 1);
-		glVertex3f(p->org[0] + right[0] * scale, p->org[1] + right[1] * scale, p->org[2] + right[2] * scale);
+		verts[0] = p->org[0]; verts[1] = p->org[1]; verts[2] = p->org[2];
+		verts[3] = p->org[0] + up[0] * scale; verts[4] = p->org[1] + up[1] * scale; verts[5] = p->org[2] + up[2] * scale;
+		verts[6] = p->org[0] + right[0] * scale; verts[7] = p->org[1] + right[1] * scale; verts[8] = p->org[2] + right[2] * scale;
+		glDrawArrays(GL_TRIANGLES, 0, 3);
 	}
-	glEnd();
+
+	glDisableClientState(GL_VERTEX_ARRAY);
+	glDisableClientState(GL_TEXTURE_COORD_ARRAY);
 
 	glDisable(GL_BLEND);
 	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);

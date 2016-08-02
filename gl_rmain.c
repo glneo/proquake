@@ -220,29 +220,41 @@ void R_DrawSpriteModel(entity_t *ent)
 
 	glEnable(GL_ALPHA_TEST);
 
-//	glBegin(GL_QUADS);
-//
-//	glTexCoord2f(0, 1);
-//	VectorMA(ent->origin, frame->down, up, point);
-//	VectorMA(point, frame->left, right, point);
-//	glVertex3fv(point);
-//
-//	glTexCoord2f(0, 0);
-//	VectorMA(ent->origin, frame->up, up, point);
-//	VectorMA(point, frame->left, right, point);
-//	glVertex3fv(point);
-//
-//	glTexCoord2f(1, 0);
-//	VectorMA(ent->origin, frame->up, up, point);
-//	VectorMA(point, frame->right, right, point);
-//	glVertex3fv(point);
-//
-//	glTexCoord2f(1, 1);
-//	VectorMA(ent->origin, frame->down, up, point);
-//	VectorMA(point, frame->right, right, point);
-//	glVertex3fv(point);
-//
-//	glEnd();
+
+	GLfloat texts[] = {
+		0, 1,
+		0, 0,
+		1, 0,
+		1, 1,
+	};
+
+	GLfloat verts[3*4];
+
+	VectorMA(ent->origin, frame->down, up, point);
+	VectorMA(point, frame->left, right, point);
+	verts[0] = point[0]; verts[1] = point[1]; verts[2] = point[2];
+
+	VectorMA(ent->origin, frame->up, up, point);
+	VectorMA(point, frame->left, right, point);
+	verts[3] = point[0]; verts[4] = point[1]; verts[5] = point[2];
+
+	VectorMA(ent->origin, frame->up, up, point);
+	VectorMA(point, frame->right, right, point);
+	verts[6] = point[0]; verts[7] = point[1]; verts[8] = point[2];
+
+	VectorMA(ent->origin, frame->down, up, point);
+	VectorMA(point, frame->right, right, point);
+	verts[9] = point[0]; verts[10] = point[1]; verts[11] = point[2];
+
+	glEnableClientState(GL_VERTEX_ARRAY);
+	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+
+	glTexCoordPointer(2, GL_FLOAT, 0, texts);
+	glVertexPointer(3, GL_FLOAT, 0, verts);
+	glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+
+	glDisableClientState(GL_VERTEX_ARRAY);
+	glDisableClientState(GL_TEXTURE_COORD_ARRAY);
 
 	glDisable(GL_ALPHA_TEST);
 }
@@ -1002,7 +1014,7 @@ void R_DrawViewModel(void)
 	if (!r_drawentities.value)
 		return;
 
-	if (cl.items & IT_INVISIBILITY && r_ringalpha.value == 1.0f)
+	if ((cl.items & IT_INVISIBILITY) && (r_ringalpha.value == 1.0f))
 		return;
 
 	if (cl.stats[STAT_HEALTH] <= 0)

@@ -203,8 +203,6 @@ bool CheckExtension(const char *extension);
 
 // move this to vid_glcommon.c?
 
-extern bool using_hwgamma; // Baker hw gamma support
-
 extern float gldepthmin, gldepthmax;
 extern byte color_white[4], color_black[4];
 
