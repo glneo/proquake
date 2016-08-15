@@ -1903,7 +1903,7 @@ void PrintFrameName(model_t *m, int frame)
 	alias_model_t *aliasmodel;
 	maliasframedesc_t *pframedesc;
 
-	aliasmodel = (alias_model_t *) Mod_Extradata(m);
+	aliasmodel = m->aliasmodel;
 	if (!aliasmodel)
 		return;
 	pframedesc = &aliasmodel->frames[frame];

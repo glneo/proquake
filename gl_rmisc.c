@@ -245,8 +245,8 @@ void R_NewMap(void)
 
 	// clear out efrags in case the level hasn't been reloaded
 	// FIXME: is this one short?
-	for (i = 0; i < cl.worldmodel->numleafs; i++)
-		cl.worldmodel->leafs[i].efrags = NULL;
+	for (i = 0; i < cl.worldmodel->brushmodel->numleafs; i++)
+		cl.worldmodel->brushmodel->leafs[i].efrags = NULL;
 
 	r_viewleaf = NULL;
 	R_ClearParticles();
@@ -258,15 +258,15 @@ void R_NewMap(void)
 	mirrortexturenum = -1;
 	skychain = waterchain = NULL;
 
-	for (i = 0; i < cl.worldmodel->numtextures; i++)
+	for (i = 0; i < cl.worldmodel->brushmodel->numtextures; i++)
 	{
-		if (!cl.worldmodel->textures[i])
+		if (!cl.worldmodel->brushmodel->textures[i])
 			continue;
-		if (!strncmp(cl.worldmodel->textures[i]->name, "sky", 3))
+		if (!strncmp(cl.worldmodel->brushmodel->textures[i]->name, "sky", 3))
 			skytexturenum = i;
-		if (!strncmp(cl.worldmodel->textures[i]->name, "window02_1", 10))
+		if (!strncmp(cl.worldmodel->brushmodel->textures[i]->name, "window02_1", 10))
 			mirrortexturenum = i;
-		cl.worldmodel->textures[i]->texturechain = NULL;
+		cl.worldmodel->brushmodel->textures[i]->texturechain = NULL;
 	}
 
 }

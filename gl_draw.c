@@ -641,15 +641,9 @@ static void Character(int x, int y, int num)
 		x,     y + 8,
 	};
 
-	glEnableClientState(GL_VERTEX_ARRAY);
-	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-
 	glTexCoordPointer(2, GL_FLOAT, 0, texts);
 	glVertexPointer(2, GL_FLOAT, 0, verts);
 	glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
-
-	glDisableClientState(GL_VERTEX_ARRAY);
-	glDisableClientState(GL_TEXTURE_COORD_ARRAY);
 }
 
 void Draw_Character(int x, int y, int num)
@@ -763,15 +757,9 @@ void Draw_Crosshair(void)
 			x - ofs1, y + ofs2,
 		};
 
-		glEnableClientState(GL_VERTEX_ARRAY);
-		glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-
 		glTexCoordPointer(2, GL_FLOAT, 0, texts);
 		glVertexPointer(2, GL_FLOAT, 0, verts);
 		glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
-
-		glDisableClientState(GL_VERTEX_ARRAY);
-		glDisableClientState(GL_TEXTURE_COORD_ARRAY);
 
 		if (gl_crosshairalpha.value)
 		{
@@ -847,15 +835,9 @@ void Draw_AlphaPic(int x, int y, qpic_t *pic, float alpha)
 		x,              y + pic->height,
 	};
 
-	glEnableClientState(GL_VERTEX_ARRAY);
-	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-
 	glTexCoordPointer(2, GL_FLOAT, 0, texts);
 	glVertexPointer(2, GL_FLOAT, 0, verts);
 	glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
-
-	glDisableClientState(GL_VERTEX_ARRAY);
-	glDisableClientState(GL_TEXTURE_COORD_ARRAY);
 
 	glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
 
@@ -894,15 +876,9 @@ void Draw_Pic(int x, int y, qpic_t *pic)
 		x,              y + pic->height,
 	};
 
-	glEnableClientState(GL_VERTEX_ARRAY);
-	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-
 	glTexCoordPointer(2, GL_FLOAT, 0, texts);
 	glVertexPointer(2, GL_FLOAT, 0, verts);
 	glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
-
-	glDisableClientState(GL_VERTEX_ARRAY);
-	glDisableClientState(GL_TEXTURE_COORD_ARRAY);
 }
 
 /*
@@ -954,15 +930,9 @@ void Draw_SubPic(int x, int y, qpic_t *pic, int srcx, int srcy, int width, int h
 		x,         y + height,
 	};
 
-	glEnableClientState(GL_VERTEX_ARRAY);
-	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-
 	glTexCoordPointer(2, GL_FLOAT, 0, texts);
 	glVertexPointer(2, GL_FLOAT, 0, verts);
 	glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
-
-	glDisableClientState(GL_VERTEX_ARRAY);
-	glDisableClientState(GL_TEXTURE_COORD_ARRAY);
 }
 
 /*
@@ -1018,15 +988,9 @@ void Draw_TransPicTranslate(int x, int y, qpic_t *pic, byte *translation)
 		x,              y + pic->height,
 	};
 
-	glEnableClientState(GL_VERTEX_ARRAY);
-	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-
 	glTexCoordPointer(2, GL_FLOAT, 0, texts);
 	glVertexPointer(2, GL_FLOAT, 0, verts);
 	glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
-
-	glDisableClientState(GL_VERTEX_ARRAY);
-	glDisableClientState(GL_TEXTURE_COORD_ARRAY);
 }
 
 /*
@@ -1189,15 +1153,9 @@ void Draw_TileClear(int x, int y, int w, int h)
 		x,     y + h,
 	};
 
-	glEnableClientState(GL_VERTEX_ARRAY);
-	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-
 	glTexCoordPointer(2, GL_FLOAT, 0, texts);
 	glVertexPointer(2, GL_FLOAT, 0, verts);
 	glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
-
-	glDisableClientState(GL_VERTEX_ARRAY);
-	glDisableClientState(GL_TEXTURE_COORD_ARRAY);
 }
 
 #ifdef SUPPORTS_2DPICS_ALPHA
@@ -1230,12 +1188,12 @@ void Draw_AlphaFill(int x, int y, int w, int h, int c, float alpha)
 		x,     y + h,
 	};
 
-	glEnableClientState(GL_VERTEX_ARRAY);
+	glDisableClientState(GL_TEXTURE_COORD_ARRAY);
 
 	glVertexPointer(2, GL_FLOAT, 0, verts);
 	glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 
-	glDisableClientState(GL_VERTEX_ARRAY);
+	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
 
 	glEnable(GL_TEXTURE_2D);
 	if (alpha < 1)
@@ -1266,24 +1224,18 @@ void Draw_Fill(int x, int y, int w, int h, int c)
 		x,     y + h,
 	};
 
-	glEnableClientState(GL_VERTEX_ARRAY);
+	glDisableClientState(GL_TEXTURE_COORD_ARRAY);
 
 	glVertexPointer(2, GL_FLOAT, 0, verts);
 	glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 
-	glDisableClientState(GL_VERTEX_ARRAY);
+	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
 
 	glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
 	glEnable(GL_TEXTURE_2D);
 }
 //=============================================================================
 
-/*
- ================
- Draw_FadeScreen
-
- ================
- */
 void Draw_FadeScreen(void)
 {
 	extern cvar_t gl_fadescreen_alpha;
@@ -1299,12 +1251,12 @@ void Draw_FadeScreen(void)
 		0, vid.height,
 	};
 
-	glEnableClientState(GL_VERTEX_ARRAY);
+	glDisableClientState(GL_TEXTURE_COORD_ARRAY);
 
 	glVertexPointer(2, GL_FLOAT, 0, verts);
 	glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 
-	glDisableClientState(GL_VERTEX_ARRAY);
+	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
 
 	glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
 	glEnable(GL_TEXTURE_2D);
@@ -1714,7 +1666,7 @@ void GL_Bind(int texnum)
 	glBindTexture(GL_TEXTURE_2D, texnum);
 }
 
-static GLenum currenttarget = GL_TEXTURE0_ARB;
+static GLenum currenttarget = GL_TEXTURE0;
 bool mtexenabled = false;
 
 void GL_SelectTexture(GLenum target)
@@ -1727,8 +1679,8 @@ void GL_SelectTexture(GLenum target)
 
 	glActiveTexture(target);
 
-	cnttextures[currenttarget - GL_TEXTURE0_ARB] = current_texture_num;
-	current_texture_num = cnttextures[target - GL_TEXTURE0_ARB];
+	cnttextures[currenttarget - GL_TEXTURE0] = current_texture_num;
+	current_texture_num = cnttextures[target - GL_TEXTURE0];
 	currenttarget = target;
 }
 
@@ -1737,7 +1689,7 @@ void GL_DisableMultitexture(void)
 	if (mtexenabled)
 	{
 		glDisable(GL_TEXTURE_2D);
-		GL_SelectTexture(GL_TEXTURE0_ARB);
+		GL_SelectTexture(GL_TEXTURE0);
 		mtexenabled = false;
 	}
 }
@@ -1746,7 +1698,7 @@ void GL_EnableMultitexture(void)
 {
 	if (gl_mtexable)
 	{
-		GL_SelectTexture(GL_TEXTURE1_ARB);
+		GL_SelectTexture(GL_TEXTURE1);
 		glEnable(GL_TEXTURE_2D);
 		mtexenabled = true;
 	}

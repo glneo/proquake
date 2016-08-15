@@ -717,9 +717,6 @@ void R_DrawParticles(void)
 
 	GLfloat verts[3*3];
 
-	glEnableClientState(GL_VERTEX_ARRAY);
-	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-
 	glTexCoordPointer(2, GL_FLOAT, 0, texts);
 	glVertexPointer(3, GL_FLOAT, 0, verts);
 
@@ -738,9 +735,6 @@ void R_DrawParticles(void)
 		verts[6] = p->org[0] + right[0] * scale; verts[7] = p->org[1] + right[1] * scale; verts[8] = p->org[2] + right[2] * scale;
 		glDrawArrays(GL_TRIANGLES, 0, 3);
 	}
-
-	glDisableClientState(GL_VERTEX_ARRAY);
-	glDisableClientState(GL_TEXTURE_COORD_ARRAY);
 
 	glDisable(GL_BLEND);
 	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);

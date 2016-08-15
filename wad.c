@@ -18,7 +18,18 @@ int wad_numlumps;
 lumpinfo_t *wad_lumps;
 byte *wad_base;
 
-void SwapPic(qpic_t *pic);
+/*
+ =============================================================================
+
+ automatic byte swapping
+
+ =============================================================================
+ */
+void SwapPic(qpic_t *pic)
+{
+	pic->width = LittleLong(pic->width);
+	pic->height = LittleLong(pic->height);
+}
 
 /*
  ==================
@@ -31,7 +42,7 @@ void SwapPic(qpic_t *pic);
  Can safely be performed in place.
  ==================
  */
-void W_CleanupName(char *in, char *out)
+static void W_CleanupName(char *in, char *out)
 {
 	int i, c;
 
@@ -50,11 +61,6 @@ void W_CleanupName(char *in, char *out)
 		out[i] = 0;
 }
 
-/*
- ====================
- W_LoadWadFile
- ====================
- */
 void W_LoadWadFile(char *filename)
 {
 	lumpinfo_t *lump_p;
@@ -63,10 +69,10 @@ void W_LoadWadFile(char *filename)
 	int infotableofs;
 
 	if (!(wad_base = COM_LoadHunkFile(filename)))
-		Sys_Error("W_LoadWadFile: couldn't load %s\n\n"
-				"Game data files are required to run; "
+		Sys_Error("couldn't load %s\n\n"
+				"Game data files are required to run;"
 				"usually this means you need Quake shareware or registered version.\n\n"
-				"Is glpro.exe in the proper folder?", filename);
+				"Are game files in the proper place?", filename);
 
 	header = (wadinfo_t *) wad_base;
 
@@ -87,12 +93,7 @@ void W_LoadWadFile(char *filename)
 	}
 }
 
-/*
- =============
- W_GetLumpinfo
- =============
- */
-lumpinfo_t *W_GetLumpinfo(char *name)
+static lumpinfo_t *W_GetLumpinfo(char *name)
 {
 	int i;
 	lumpinfo_t *lump_p;
@@ -106,7 +107,7 @@ lumpinfo_t *W_GetLumpinfo(char *name)
 			return lump_p;
 	}
 
-	Sys_Error("W_GetLumpinfo: %s not found", name);
+	Sys_Error("%s not found", name);
 	return NULL;
 }
 
@@ -124,24 +125,9 @@ void *W_GetLumpNum(int num)
 	lumpinfo_t *lump;
 
 	if (num < 0 || num > wad_numlumps)
-		Sys_Error("W_GetLumpNum: bad number: %i", num);
+		Sys_Error("bad number: %i", num);
 
 	lump = wad_lumps + num;
 
 	return (void *) (wad_base + lump->filepos);
 }
-
-/*
- =============================================================================
-
- automatic byte swapping
-
- =============================================================================
- */
-
-void SwapPic(qpic_t *pic)
-{
-	pic->width = LittleLong(pic->width);
-	pic->height = LittleLong(pic->height);
-}
-

@@ -1027,9 +1027,6 @@ void SCR_UpdateScreen(void)
 
 		if (cls.state == ca_connected)
 		{
-#ifdef SUPPORTS_AUTOID_SOFTWARE
-			R_DrawNameTags();
-#endif
 			Draw_Crosshair();
 			SCR_DrawFPS();					// JPG - draw FPS
 			SCR_DrawSpeed();				// Baker 3.67 - Drawspeed

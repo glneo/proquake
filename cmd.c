@@ -506,8 +506,6 @@ static char *cmd_args = NULL;
 
 cmd_source_t cmd_source;
 
-void Mat_Init_f(void);	// JPG
-
 /*
  ============
  Cmd_Argc

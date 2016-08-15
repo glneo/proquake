@@ -27,6 +27,7 @@ set(PROQUAKE_SOURCES
 	in_sdl.c
 # Graphics
 	gl_alias.c
+	gl_brush.c
 	gl_draw.c
 	gl_model.c
 	gl_refrag.c
@@ -35,6 +36,7 @@ set(PROQUAKE_SOURCES
 	gl_rmisc.c
 	gl_rsurf.c
 	gl_screen.c
+	gl_sprite.c
 	gl_warp.c
 	gl_fullbright.c
 	gl_vidsdl.c

@@ -16,6 +16,8 @@
 
 #include "quakedef.h"
 
+#include "gl_model.h"
+
 #define	BLOCK_WIDTH		128
 #define	BLOCK_HEIGHT	128
 
@@ -38,6 +40,8 @@ static glRect_t lightmap_rectchange[MAX_LIGHTMAPS];
 
 static int allocated[MAX_LIGHTMAPS][BLOCK_WIDTH];
 
+int poly_count;
+
 // the lightmap texture data needs to be kept in
 // main memory so texsubimage can update properly
 byte lightmaps[4 * MAX_LIGHTMAPS * BLOCK_WIDTH * BLOCK_HEIGHT];
@@ -50,15 +54,11 @@ void R_RenderDynamicLightmaps(msurface_t *fa);
 
 void DrawGLPoly(glpoly_t *p, int tex_offset)
 {
-	glEnableClientState(GL_VERTEX_ARRAY);
-	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+	poly_count++;
 
 	glTexCoordPointer(2, GL_FLOAT, VERTEXSIZE * sizeof(float), &p->verts[0][tex_offset]);
 	glVertexPointer(3, GL_FLOAT, VERTEXSIZE * sizeof(float), &p->verts[0][0]);
 	glDrawArrays(GL_TRIANGLE_FAN, 0, p->numverts);
-
-	glDisableClientState(GL_VERTEX_ARRAY);
-	glDisableClientState(GL_TEXTURE_COORD_ARRAY);
 }
 
 void R_AddDynamicLights(msurface_t *surf)
@@ -139,7 +139,7 @@ void R_BuildLightMap(msurface_t *surf, byte *dest, int stride)
 	lightmap = surf->samples;
 
 // set to full bright if no light data
-	if (r_fullbright.value || !cl.worldmodel->lightdata)
+	if (r_fullbright.value || !cl.worldmodel->brushmodel->lightdata)
 	{
 		for (i = 0; i < size; i++)
 			blocklights[i] = 255 * 256;
@@ -245,14 +245,14 @@ texture_t *R_TextureAnimation(texture_t *base)
 	relative = (int) (cl.time * 10) % base->anim_total;
 
 	count = 0;
-	while (base->anim_min > relative || base->anim_max <= relative)
-	{
-		base = base->anim_next;
-		if (!base)
-			Sys_Error("R_TextureAnimation: broken cycle");
-		if (++count > 100)
-			Sys_Error("R_TextureAnimation: infinite cycle");
-	}
+//	while (base->anim_min > relative || base->anim_max <= relative)
+//	{
+//		base = base->anim_next;
+//		if (!base)
+//			Sys_Error("R_TextureAnimation: broken cycle");
+//		if (++count > 100)
+//			Sys_Error("R_TextureAnimation: infinite cycle");
+//	}
 
 	return base;
 }
@@ -487,9 +487,9 @@ void R_DrawWaterSurfaces(void)
 #endif
 	{
 
-		for (i = 0; i < cl.worldmodel->numtextures; i++)
+		for (i = 0; i < cl.worldmodel->brushmodel->numtextures; i++)
 		{
-			t = cl.worldmodel->textures[i];
+			t = cl.worldmodel->brushmodel->textures[i];
 			if (!t)
 				continue;
 			s = t->texturechain;
@@ -543,9 +543,9 @@ void DrawTextureChains(void)
 		return;
 	}
 
-	for (i = 0; i < cl.worldmodel->numtextures; i++)
+	for (i = 0; i < cl.worldmodel->brushmodel->numtextures; i++)
 	{
-		t = cl.worldmodel->textures[i];
+		t = cl.worldmodel->brushmodel->textures[i];
 		if (!t)
 			continue;
 		s = t->texturechain;
@@ -570,7 +570,6 @@ void DrawTextureChains(void)
 	}
 }
 
-#if !defined(DX8QUAKE_NO_GL_TEXSORT_ZERO)
 /*
  ================
  R_DrawSequentialPoly
@@ -602,7 +601,7 @@ void R_DrawSequentialPoly(msurface_t *s)
 
 			t = R_TextureAnimation(s->texinfo->texture);
 			// Binds world to texture env 0
-			GL_SelectTexture(GL_TEXTURE0_ARB);
+			GL_SelectTexture(GL_TEXTURE0);
 			GL_Bind(t->gl_texturenum);
 //			BengtQuake uploads the lightmap here
 			R_UploadLightmap(s->lightmaptexturenum);
@@ -622,15 +621,14 @@ void R_DrawSequentialPoly(msurface_t *s)
 			v = p->verts[0];
 			for (i = 0; i < p->numverts; i++, v += VERTEXSIZE)
 			{
-				glMultiTexCoord4f(GL_TEXTURE0_ARB, v[3], v[4], 0.0f, 1.0f);
-				glMultiTexCoord4f(GL_TEXTURE1_ARB, v[5], v[6], 0.0f, 1.0f);
+				glMultiTexCoord4f(GL_TEXTURE0, v[3], v[4], 0.0f, 1.0f);
+				glMultiTexCoord4f(GL_TEXTURE1, v[5], v[6], 0.0f, 1.0f);
 				glVertex3fv(v);
 			}
 			glEnd();
-#ifdef NOFULLBRIGHT
+
 			if (!gl_fullbright.value)
-			return;
-#endif
+				return;
 		}
 		else
 		{
@@ -646,7 +644,7 @@ void R_DrawSequentialPoly(msurface_t *s)
 
 			glDisable(GL_BLEND);
 		}
-#ifndef NOFULLBRIGHT
+
 		if (gl_fullbright.value)
 		{
 			// draw fullbright mask if appropriate
@@ -659,7 +657,7 @@ void R_DrawSequentialPoly(msurface_t *s)
 			DrawGLPoly(s->polys, 3);
 			glDisable(GL_BLEND);
 		}
-#endif
+
 		return;
 	}
 
@@ -700,7 +698,7 @@ void R_DrawSequentialPoly(msurface_t *s)
 		p = s->polys;
 
 		t = R_TextureAnimation(s->texinfo->texture);
-		GL_SelectTexture(GL_TEXTURE0_ARB);
+		GL_SelectTexture(GL_TEXTURE0);
 		GL_Bind(t->gl_texturenum);
 		glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
 		GL_EnableMultitexture();
@@ -713,8 +711,8 @@ void R_DrawSequentialPoly(msurface_t *s)
 		v = p->verts[0];
 		for (i = 0; i < p->numverts; i++, v += VERTEXSIZE)
 		{
-			glMultiTexCoord4f(GL_TEXTURE0_ARB, v[3], v[4], 0.0f, 1.0f);
-			glMultiTexCoord4f(GL_TEXTURE1_ARB, v[5], v[6], 0.0f, 1.0f);
+			glMultiTexCoord4f(GL_TEXTURE0, v[3], v[4], 0.0f, 1.0f);
+			glMultiTexCoord4f(GL_TEXTURE1, v[5], v[6], 0.0f, 1.0f);
 
 			nv[0] = v[0] + 8 * sin(v[1] * 0.05 + realtime) * sin(v[2] * 0.05 + realtime);
 			nv[1] = v[1] + 8 * sin(v[0] * 0.05 + realtime) * sin(v[2] * 0.05 + realtime);
@@ -738,7 +736,7 @@ void R_DrawSequentialPoly(msurface_t *s)
 		DrawGLWaterPolyLightmap(p);
 		glDisable(GL_BLEND);
 	}
-#ifndef NOFULLBRIGHT
+
 	if (gl_fullbright.value)
 	{
 		// draw fullbright mask if appropriate
@@ -753,9 +751,7 @@ void R_DrawSequentialPoly(msurface_t *s)
 
 		return;
 	}
-#endif
 }
-#endif
 
 /*
  ================
@@ -810,11 +806,6 @@ void DrawGLWaterPolyLightmap(glpoly_t *p)
 	glEnd();
 }
 
-/*
- ================
- R_RenderBrushPoly
- ================
- */
 void R_RenderBrushPoly(msurface_t *fa)
 {
 	texture_t *t;
@@ -979,17 +970,17 @@ void R_DrawBrushModel(entity_t *ent)
 		modelorg[2] = DotProduct(temp, up);
 	}
 
-	psurf = &clmodel->surfaces[clmodel->firstmodelsurface];
+	psurf = &clmodel->brushmodel->surfaces[clmodel->brushmodel->firstmodelsurface];
 
 	// calculate dynamic lighting for bmodel if it's not an instanced model
-	if (clmodel->firstmodelsurface != 0 && !gl_flashblend.value)
+	if (clmodel->brushmodel->firstmodelsurface != 0 && !gl_flashblend.value)
 	{
 		for (k = 0; k < MAX_DLIGHTS; k++)
 		{
 			if (cl_dlights[k].die < cl.time || !cl_dlights[k].radius)
 				continue;
 
-			R_MarkLights(&cl_dlights[k], 1 << k, clmodel->nodes + clmodel->hulls[0].firstclipnode);
+			R_MarkLights(&cl_dlights[k], 1 << k, clmodel->brushmodel->nodes + clmodel->brushmodel->hulls[0].firstclipnode);
 		}
 	}
 
@@ -999,7 +990,7 @@ void R_DrawBrushModel(entity_t *ent)
 	ent->angles[0] = -ent->angles[0];	// stupid quake bug
 
 	// draw texture
-	for (i = 0; i < clmodel->nummodelsurfaces; i++, psurf++)
+	for (i = 0; i < clmodel->brushmodel->nummodelsurfaces; i++, psurf++)
 	{
 		// find which side of the node we are on
 		pplane = psurf->plane;
@@ -1018,7 +1009,7 @@ void R_DrawBrushModel(entity_t *ent)
 	R_BlendLightmaps();
 
 	if (gl_fullbright.value)
-		DrawFullBrightTextures(clmodel->surfaces, clmodel->numsurfaces);
+		DrawFullBrightTextures(clmodel->brushmodel->surfaces, clmodel->brushmodel->numsurfaces);
 
 	glPopMatrix();
 
@@ -1050,6 +1041,7 @@ void R_RecursiveWorldNode(mnode_t *node)
 
 	if (node->visframe != r_visframecount)
 		return;
+
 	if (R_CullBox(node->minmaxs, node->minmaxs + 3))
 		return;
 
@@ -1076,9 +1068,9 @@ void R_RecursiveWorldNode(mnode_t *node)
 		return;
 	}
 
-// node is just a decision point, so go down the apropriate sides
+	// node is just a decision point, so go down the appropriate sides
 
-// find which side of the node we are on
+	// find which side of the node we are on
 	plane = node->plane;
 
 	switch (plane->type)
@@ -1099,10 +1091,10 @@ void R_RecursiveWorldNode(mnode_t *node)
 
 	side = (dot >= 0) ? 0 : 1;
 
-// recurse down the children, front side first
+	// recurse down the children, front side first
 	R_RecursiveWorldNode(node->children[side]);
 
-// draw stuff
+	// draw stuff
 	c = node->numsurfaces;
 
 	if (c)
@@ -1128,7 +1120,7 @@ void R_RecursiveWorldNode(mnode_t *node)
 			}
 
 #else
-			for (surf = cl.worldmodel->surfaces + node->firstsurface; c; c--, surf++)
+			for (surf = cl.worldmodel->brushmodel->surfaces + node->firstsurface; c; c--, surf++)
 			{
 				if (surf->visframe != r_framecount)
 					continue;
@@ -1140,7 +1132,7 @@ void R_RecursiveWorldNode(mnode_t *node)
 				// if sorting by texture, just store it out
 				if (gl_texsort.value)
 				{
-					if (!mirror || surf->texinfo->texture != cl.worldmodel->textures[mirrortexturenum])
+					if (!mirror || surf->texinfo->texture != cl.worldmodel->brushmodel->textures[mirrortexturenum])
 					{
 						surf->texturechain = surf->texinfo->texture->texturechain;
 						surf->texinfo->texture->texturechain = surf;
@@ -1187,7 +1179,7 @@ void R_DrawWorld(void)
 	glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
 	memset(lightmap_polys, 0, sizeof(lightmap_polys));
 
-	R_RecursiveWorldNode(cl.worldmodel->nodes);
+	R_RecursiveWorldNode(cl.worldmodel->brushmodel->nodes);
 
 	DrawTextureChains();
 
@@ -1195,7 +1187,7 @@ void R_DrawWorld(void)
 
 #ifndef NOFULLBRIGHT
 	if (gl_fullbright.value)
-		DrawFullBrightTextures(cl.worldmodel->surfaces, cl.worldmodel->numsurfaces);
+		DrawFullBrightTextures(cl.worldmodel->brushmodel->surfaces, cl.worldmodel->brushmodel->numsurfaces);
 #endif
 
 }
@@ -1233,7 +1225,7 @@ void R_MarkLeaves(void)
 	if (r_novis.value)
 	{
 		vis = solid;
-		memset(solid, 0xff, (cl.worldmodel->numleafs + 7) >> 3);
+		memset(solid, 0xff, (cl.worldmodel->brushmodel->numleafs + 7) >> 3);
 	}
 	else if (nearwaterportal)
 	{
@@ -1242,14 +1234,14 @@ void R_MarkLeaves(void)
 	}
 	else
 	{
-		vis = Mod_LeafPVS(r_viewleaf, cl.worldmodel);
+		vis = Mod_LeafPVS(r_viewleaf, cl.worldmodel->brushmodel);
 	}
 
-	for (i = 0; i < cl.worldmodel->numleafs; i++)
+	for (i = 0; i < cl.worldmodel->brushmodel->numleafs; i++)
 	{
 		if (vis[i >> 3] & (1 << (i & 7)))
 		{
-			node = (mnode_t *) &cl.worldmodel->leafs[i + 1];
+			node = (mnode_t *) &cl.worldmodel->brushmodel->leafs[i + 1];
 			do
 			{
 				if (node->visframe == r_visframecount)
@@ -1305,7 +1297,7 @@ int AllocBlock(int w, int h, int *x, int *y)
 		return texnum;
 	}
 
-	Sys_Error("AllocBlock: full");
+//	Sys_Error("AllocBlock: full");
 	return 0;
 }
 
@@ -1327,7 +1319,7 @@ void BuildSurfaceDisplayList(msurface_t *fa)
 	glpoly_t *poly;
 
 // reconstruct the polygon
-	pedges = currentmodel->edges;
+	pedges = currentmodel->brushmodel->edges;
 	lnumverts = fa->numedges;
 	vertpage = 0;
 
@@ -1340,7 +1332,7 @@ void BuildSurfaceDisplayList(msurface_t *fa)
 
 	for (i = 0; i < lnumverts; i++)
 	{
-		lindex = currentmodel->surfedges[fa->firstedge + i];
+		lindex = currentmodel->brushmodel->surfedges[fa->firstedge + i];
 
 		if (lindex > 0)
 		{
@@ -1436,23 +1428,25 @@ void GL_BuildLightmaps(void)
 			break;
 		if (m->name[0] == '*')
 			continue;
-		r_pcurrentvertbase = m->vertexes;
+		if (m->type != mod_brush)
+			continue;
+		r_pcurrentvertbase = m->brushmodel->vertexes;
 		currentmodel = m;
-		for (i = 0; i < m->numsurfaces; i++)
+		for (i = 0; i < m->brushmodel->numsurfaces; i++)
 		{
-			GL_CreateSurfaceLightmap(m->surfaces + i);
-			if (m->surfaces[i].flags & SURF_DRAWTURB)
+			GL_CreateSurfaceLightmap(m->brushmodel->surfaces + i);
+			if (m->brushmodel->surfaces[i].flags & SURF_DRAWTURB)
 				continue;
 
-			if (m->surfaces[i].flags & SURF_DRAWSKY)
+			if (m->brushmodel->surfaces[i].flags & SURF_DRAWSKY)
 				continue;
 
-			BuildSurfaceDisplayList(m->surfaces + i);
+			BuildSurfaceDisplayList(m->brushmodel->surfaces + i);
 		}
 	}
 
 	if (!gl_texsort.value)
-		GL_SelectTexture(GL_TEXTURE1_ARB);
+		GL_SelectTexture(GL_TEXTURE1);
 
 	// upload all lightmaps that were filled
 	for (i = 0; i < MAX_LIGHTMAPS; i++)
@@ -1472,5 +1466,5 @@ void GL_BuildLightmaps(void)
 	}
 
 	if (!gl_texsort.value)
-		GL_SelectTexture(GL_TEXTURE0_ARB);
+		GL_SelectTexture(GL_TEXTURE0);
 }

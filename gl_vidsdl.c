@@ -796,10 +796,26 @@ void GL_BeginRendering (int *x, int *y, int *width, int *height)
 	*x = *y = 0;
 	*width = vid.width;
 	*height = vid.height;
+
+	extern int poly_count;
+
+	poly_count = 0;
+
+	glEnableClientState(GL_VERTEX_ARRAY);
+	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+//	glEnableClientState(GL_NORMAL_ARRAY);
 }
 
 void GL_EndRendering (void)
 {
+//	extern int poly_count;
+
+//	printf("%d\n", poly_count);
+
+	glDisableClientState(GL_VERTEX_ARRAY);
+	glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+//	glDisableClientState(GL_NORMAL_ARRAY);
+
 	glFlush();
 	SDL_GL_SwapWindow(draw_context);
 }

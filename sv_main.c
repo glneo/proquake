@@ -394,7 +394,7 @@ void SV_AddToFatPVS(vec3_t org, mnode_t *node, model_t *worldmodel)
 		// if this is a leaf, accumulate the pvs bits
 		if (node->contents < 0) {
 			if (node->contents != CONTENTS_SOLID) {
-				pvs = Mod_LeafPVS((mleaf_t *) node, worldmodel);
+				pvs = Mod_LeafPVS((mleaf_t *) node, worldmodel->brushmodel);
 				for (i = 0; i < fatbytes; i++)
 					fatpvs[i] |= pvs[i];
 			}
@@ -432,9 +432,9 @@ void SV_AddToFatPVS(vec3_t org, mnode_t *node, model_t *worldmodel)
  */
 byte *SV_FatPVS(vec3_t org, model_t *worldmodel)
 {
-	fatbytes = (worldmodel->numleafs + 31) >> 3;
+	fatbytes = (worldmodel->brushmodel->numleafs + 31) >> 3;
 	memset(fatpvs, 0, fatbytes);
-	SV_AddToFatPVS(org, worldmodel->nodes, worldmodel);
+	SV_AddToFatPVS(org, worldmodel->brushmodel->nodes, worldmodel);
 	return fatpvs;
 }
 
@@ -1089,7 +1089,7 @@ void SV_SpawnServer(char *server)
 	sv.sound_precache[0] = dummy;
 	sv.model_precache[0] = dummy;
 	sv.model_precache[1] = sv.modelname;
-	for (i = 1; i < sv.worldmodel->numsubmodels; i++) {
+	for (i = 1; i < sv.worldmodel->brushmodel->numsubmodels; i++) {
 		sv.model_precache[i + 1] = localmodels[i];
 		sv.models[i + 1] = Mod_ForName(localmodels[i], false);
 	}
@@ -1113,7 +1113,7 @@ void SV_SpawnServer(char *server)
 // serverflags are for cross level information (sigils)
 	pr_global_struct->serverflags = svs.serverflags;
 
-	ED_LoadFromFile(sv.worldmodel->entities);
+	ED_LoadFromFile(sv.worldmodel->brushmodel->entities);
 
 	sv.active = true;
 

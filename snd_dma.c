@@ -613,7 +613,7 @@ static void S_UpdateAmbientSounds(void)
 	if (!cl.worldmodel)
 		return;
 
-	l = Mod_PointInLeaf(listener_origin, cl.worldmodel);
+	l = Mod_PointInLeaf(listener_origin, cl.worldmodel->brushmodel);
 	if (!l || !ambient_level.value)
 	{
 		for (ambient_channel = 0; ambient_channel < NUM_AMBIENTS; ambient_channel++)

@@ -166,12 +166,12 @@ void GL_SubdivideSurface(msurface_t *fa)
 	numverts = 0;
 	for (i = 0; i < fa->numedges; i++)
 	{
-		lindex = loadmodel->surfedges[fa->firstedge + i];
+		lindex = loadmodel->brushmodel->surfedges[fa->firstedge + i];
 
 		if (lindex > 0)
-			vec = loadmodel->vertexes[loadmodel->edges[lindex].v[0]].position;
+			vec = loadmodel->brushmodel->vertexes[loadmodel->brushmodel->edges[lindex].v[0]].position;
 		else
-			vec = loadmodel->vertexes[loadmodel->edges[-lindex].v[1]].position;
+			vec = loadmodel->brushmodel->vertexes[loadmodel->brushmodel->edges[-lindex].v[1]].position;
 
 		if (numverts >= 64)
 			Sys_Error("GL_SubdivideSurface: excessive numverts %i", numverts);

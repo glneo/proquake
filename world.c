@@ -131,11 +131,11 @@ hull_t *SV_HullForEntity (edict_t *ent, vec3_t mins, vec3_t maxs, vec3_t offset)
 
 		VectorSubtract (maxs, mins, size);
 		if (size[0] < 3)
-			hull = &model->hulls[0];
+			hull = &model->brushmodel->hulls[0];
 		else if (size[0] <= 32)
-			hull = &model->hulls[1];
+			hull = &model->brushmodel->hulls[1];
 		else
-			hull = &model->hulls[2];
+			hull = &model->brushmodel->hulls[2];
 
 // calculate an offset value to center the origin
 		VectorSubtract (hull->clip_mins, mins, offset);
@@ -293,7 +293,7 @@ void SV_FindTouchedLeafs (edict_t *ent, mnode_t *node)
 			return;
 
 		leaf = (mleaf_t *)node;
-		leafnum = leaf - sv.worldmodel->leafs - 1;
+		leafnum = leaf - sv.worldmodel->brushmodel->leafs - 1;
 
 		ent->leafnums[ent->num_leafs] = leafnum;
 		ent->num_leafs++;
@@ -378,7 +378,7 @@ void SV_LinkEdict (edict_t *ent, bool touch_triggers)
 // link to PVS leafs
 	ent->num_leafs = 0;
 	if (ent->v.modelindex)
-		SV_FindTouchedLeafs (ent, sv.worldmodel->nodes);
+		SV_FindTouchedLeafs (ent, sv.worldmodel->brushmodel->nodes);
 
 	if (ent->v.solid == SOLID_NOT)
 		return;
@@ -459,7 +459,7 @@ int SV_PointContents (vec3_t p)
 {
 	int		cont;
 
-	cont = SV_HullPointContents (&sv.worldmodel->hulls[0], 0, p);
+	cont = SV_HullPointContents (&sv.worldmodel->brushmodel->hulls[0], 0, p);
 	if (cont <= CONTENTS_CURRENT_0 && cont >= CONTENTS_CURRENT_DOWN)
 		cont = CONTENTS_WATER;
 	return cont;
@@ -467,7 +467,7 @@ int SV_PointContents (vec3_t p)
 
 int SV_TruePointContents (vec3_t p)
 {
-	return SV_HullPointContents (&sv.worldmodel->hulls[0], 0, p);
+	return SV_HullPointContents (&sv.worldmodel->brushmodel->hulls[0], 0, p);
 }
 
 //===========================================================================

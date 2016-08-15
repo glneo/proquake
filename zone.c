@@ -336,8 +336,6 @@ int hunk_high_used;
 bool hunk_tempactive;
 int hunk_tempmark;
 
-void R_FreeTextures(void);
-
 /*
  ==============
  Hunk_Check

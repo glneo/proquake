@@ -14,31 +14,27 @@
 
 // Baker ...
 /*
-Basically texture related functions and variables go here
-What doesn't go here is general OpenGL stuff.
+ Basically texture related functions and variables go here
+ What doesn't go here is general OpenGL stuff.
 
-And Cvars really shouldn't go here except in the
-most exception of circumstances, right?
-*/
-
-
+ And Cvars really shouldn't go here except in the
+ most exception of circumstances, right?
+ */
 
 // GL constants and API stuffs (not internal vars)
-
-#ifndef GL_TEXTURE_H
-#define GL_TEXTURE_H
-
+#ifndef __GL_TEXTURE_H
+#define __GL_TEXTURE_H
 
 #define	MAX_GLTEXTURES	1024
 
 // Multitexture
 
 //multitexturing
-#define	GL_TEXTURE0_ARB 		0x84C0
-#define	GL_TEXTURE1_ARB 		0x84C1
-#define	GL_TEXTURE2_ARB 		0x84C2
-#define	GL_TEXTURE3_ARB 		0x84C3
-#define GL_MAX_TEXTURE_UNITS_ARB	0x84E2
+//#define GL_TEXTURE0_ARB 		0x84C0
+//#define GL_TEXTURE1_ARB 		0x84C1
+//#define GL_TEXTURE2_ARB 		0x84C2
+//#define GL_TEXTURE3_ARB 		0x84C3
+//#define GL_MAX_TEXTURE_UNITS_ARB	0x84E2
 
 // GL external vars, functions
 //typedef void (APIENTRY *lpMTexFUNC)(GLenum, GLfloat, GLfloat);
@@ -47,51 +43,45 @@ most exception of circumstances, right?
 //extern lpMTexFUNC qglMultiTexCoord2f;
 //extern lpSelTexFUNC qglActiveTexture;
 
-
-#define GL_MAX_TEXTURE_UNITS_ARB	0x84E2
+//#define GL_MAX_TEXTURE_UNITS_ARB	0x84E2
 
 // Engine internal vars
 
 extern bool gl_mtexable;
-extern	int		gl_max_size;
+extern int gl_max_size;
 
+extern int texture_extension_number;
 
-extern	int texture_extension_number;
+extern texture_t *r_notexture_mip;
+extern int d_lightstylevalue[256];	// 8.8 fraction of base light value
 
-extern	texture_t	*r_notexture_mip;
-extern	int		d_lightstylevalue[256];	// 8.8 fraction of base light value
+extern bool envmap;
+extern int cnttextures[2];
+extern int current_texture_num;
+extern int particletexture;
+extern int playertextures;
 
-extern	bool	envmap;
-extern	int	cnttextures[2];
-extern	int	current_texture_num;
-extern	int	particletexture;
-extern	int	playertextures;
+extern int skytexturenum;		// index in cl.loadmodel, not gl texture object
 
-extern	int	skytexturenum;		// index in cl.loadmodel, not gl texture object
+extern int mirrortexturenum;	// quake texturenum, not gltexturenum
+extern bool mirror;
+extern mplane_t *mirror_plane;
 
-extern	int			mirrortexturenum;	// quake texturenum, not gltexturenum
-extern	bool	mirror;
-extern	mplane_t	*mirror_plane;
-
-extern	int		texture_mode;
-extern	int		gl_lightmap_format;
-
+extern int texture_mode;
+extern int gl_lightmap_format;
 
 // Engine internal functions
 
-void GL_Bind (int texnum);
+void GL_Bind(int texnum);
 
-void GL_SelectTexture (GLenum target);
+void GL_SelectTexture(GLenum target);
 void GL_DisableMultitexture(void);
 void GL_EnableMultitexture(void);
 
+void GL_Upload32(unsigned *data, int width, int height, int mode);
+void GL_Upload8(byte *data, int width, int height, int mode);
+int GL_LoadTexture(char *identifier, int width, int height, byte *data, int mode);
+int GL_FindTexture(char *identifier);
+int GL_LoadTexture32(char *identifier, int width, int height, byte *data, int mode);
 
-
-
-void GL_Upload32 (unsigned *data, int width, int height, int mode);
-void GL_Upload8 (byte *data, int width, int height, int mode);
-int GL_LoadTexture (char *identifier, int width, int height, byte *data, int mode);
-int GL_FindTexture (char *identifier);
-int GL_LoadTexture32 (char *identifier, int width, int height, byte *data, int mode);
-
-#endif
+#endif /* __GL_TEXTURE_H */
