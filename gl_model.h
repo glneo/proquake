@@ -55,12 +55,12 @@ typedef struct texture_s
 	char name[16];
 	unsigned width, height;
 	int gl_texturenum;
-	struct msurface_s *texturechain;	// for gl_texsort drawing
-	int anim_total;				// total tenths in sequence ( 0 = no)
-	int anim_min, anim_max;		// time for this frame min <=time< max
-	struct texture_s *anim_next;		// in the animation sequence
-	struct texture_s *alternate_anims;	// bmodels in frmae 1 use these
-	unsigned offsets[MIPLEVELS];		// four mip maps stored
+	struct msurface_s *texturechain;        // for gl_texsort drawing
+	int anim_total;                         // total tenths in sequence ( 0 = no)
+	int anim_min, anim_max;                 // time for this frame min <=time< max
+	struct texture_s *anim_next;            // in the animation sequence
+	struct texture_s *alternate_anims;      // bmodels in frame 1 use these
+	unsigned offsets[MIPLEVELS];            // four mip maps stored
 	int fullbright;
 } texture_t;
 

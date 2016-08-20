@@ -15,22 +15,13 @@
  */
 
 #include "quakedef.h"
+
 /*
-
- The view is allowed to move slightly from it's true position for bobbing,
- but if it exceeds 8 pixels linear distance (spherical, not box), the list of
- entities sent from the server may not include everything in the pvs, especially
- when crossing a water boudnary.
-
+ * The view is allowed to move slightly from it's true position for bobbing,
+ * but if it exceeds 8 pixels linear distance (spherical, not box), the list of
+ * entities sent from the server may not include everything in the pvs, especially
+ * when crossing a water boundary.
  */
-
-#ifdef MACOSX
-bool qMinimized;
-#endif
-
-cvar_t lcd_x = { "lcd_x", "0" };
-cvar_t lcd_yaw = { "lcd_yaw", "0" };
-
 cvar_t scr_ofsx = { "scr_ofsx", "0", false };
 cvar_t scr_ofsy = { "scr_ofsy", "0", false };
 cvar_t scr_ofsz = { "scr_ofsz", "0", false };
@@ -192,11 +183,11 @@ static void V_DriftPitch(void)
 
 	delta = cl.idealpitch - cl.viewangles[PITCH];
 
-	if (!delta)
-	{
+//	if (!delta)
+//	{
 		cl.pitchvel = 0;
 		return;
-	}
+//	}
 
 	move = host_frametime * cl.pitchvel;
 	cl.pitchvel += host_frametime * v_centerspeed.value;
@@ -427,12 +418,6 @@ static void V_CalcPowerupCshift(void)
 		cl.cshifts[CSHIFT_POWERUP].percent = 0;
 }
 
-/*
- =============
- V_CalcBlend
- =============
- */
-
 void V_CalcBlend(void)
 {
 	float r, g, b, a, a2;
@@ -467,13 +452,6 @@ void V_CalcBlend(void)
 	if (v_blend[3] < 0)
 		v_blend[3] = 0;
 }
-
-/*
- =============
- V_UpdatePaletteNew
- =============
- */
-
 
 void V_UpdatePalette_Static(bool forced)
 {
@@ -869,8 +847,7 @@ void SCR_DrawCoords(void)
 		return;
 
 	Draw_String(16, 16,
-			va("Position xyz = %i %i %i", (int) cl_entities[cl.viewentity].origin[0],
-					(int) cl_entities[cl.viewentity].origin[1],
+			va("Position xyz = %i %i %i", (int) cl_entities[cl.viewentity].origin[0], (int) cl_entities[cl.viewentity].origin[1],
 					(int) cl_entities[cl.viewentity].origin[2]));
 
 }
@@ -922,15 +899,12 @@ void SCR_DrawVolume(void)
  the entity origin, so any view position inside that will be valid
  ==================
  */
-extern vrect_t scr_vrect;
-
 void V_RenderView(void)
 {
-
 	if (con_forcedup)
 		return;
 
-// don't allow cheats in multiplayer
+	// don't allow cheats in multiplayer
 	if (cl.maxclients > 1)
 	{
 		Cvar_Set("scr_ofsx", "0");
@@ -949,49 +923,16 @@ void V_RenderView(void)
 	}
 
 	R_PushDlights();
-
-	if (lcd_x.value)
-	{
-		// render two interleaved views
-		int i;
-
-		r_refdef.viewangles[YAW] -= lcd_yaw.value;
-		for (i = 0; i < 3; i++)
-			r_refdef.vieworg[i] -= right[i] * lcd_x.value;
-		R_RenderView();
-
-		R_PushDlights();
-
-		r_refdef.viewangles[YAW] += lcd_yaw.value * 2;
-		for (i = 0; i < 3; i++)
-			r_refdef.vieworg[i] += 2 * right[i] * lcd_x.value;
-		R_RenderView();
-
-		r_refdef.vrect.height <<= 1;
-
-	}
-	else
-	{
-		R_RenderView();
-	}
-
+	R_RenderView();
 }
 
 //============================================================================
 
-/*
- =============
- V_Init
- =============
- */
 void V_Init(void)
 {
 	Cmd_AddCommand("v_cshift", V_cshift_f);
 	Cmd_AddCommand("bf", V_BonusFlash_f);
 	Cmd_AddCommand("centerview", V_StartPitchDrift_f);
-
-	Cvar_RegisterVariable(&lcd_x, NULL);
-	Cvar_RegisterVariable(&lcd_yaw, NULL);
 
 	Cvar_RegisterVariable(&v_centermove, NULL);
 	Cvar_RegisterVariable(&v_centerspeed, NULL);
@@ -1029,8 +970,6 @@ void V_Init(void)
 	Cvar_RegisterVariable(&v_gunkick, NULL);
 
 	Cvar_RegisterVariable(&vold_gamma, NULL);
-
-	BuildGammaTable(1.0);	// no gamma yet
 
 	// JPG 1.05 - colour shifts
 	Cvar_RegisterVariable(&pq_waterblend, NULL);

@@ -1,6 +1,4 @@
 /*
- * This is the only file outside the refresh that touches the vid buffer
- *
  * Copyright (C) 1996-1997 Id Software, Inc.
  *
  * This program is free software; you can redistribute it and/or
@@ -51,14 +49,7 @@ qpic_t *conback = (qpic_t *) &conback_buffer;
 
 extern int GL_LoadPicTexture(qpic_t *pic);
 
-int gl_lightmap_format = 4;
-
-int gl_filter_min = GL_LINEAR_MIPMAP_NEAREST;
-int gl_filter_max = GL_LINEAR;
-
-int texels;
-
-#define		NUMCROSSHAIRS	5
+#define NUMCROSSHAIRS	5
 int crosshairtextures[NUMCROSSHAIRS];
 
 static byte crosshairdata[NUMCROSSHAIRS][64] = {
@@ -113,19 +104,6 @@ static byte crosshairdata[NUMCROSSHAIRS][64] = {
 		0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
 	},
 };
-
-typedef struct
-{
-	unsigned int texnum;
-	char identifier[MAX_QPATH];
-	int width, height;
-//	bool		mipmap;
-	unsigned short crc;  // Baker 3.80x - part of GL_LoadTexture: cache mismatch fix
-	int texmode;	// Baker: 4.26 to all clearing of world textures
-} gltexture_t;
-
-gltexture_t gltextures[MAX_GLTEXTURES];
-int numgltextures;
 
 /*
  =============================================================================
@@ -342,21 +320,6 @@ void Draw_CharToConback(int num, byte *dest)
 
 }
 
-typedef struct
-{
-	char *name;
-	int minimize, maximize;
-} glmode_t;
-
-glmode_t modes[] = {
-	{ "GL_NEAREST", GL_NEAREST, GL_NEAREST },
-	{ "GL_LINEAR", GL_LINEAR, GL_LINEAR },
-	{ "GL_NEAREST_MIPMAP_NEAREST", GL_NEAREST_MIPMAP_NEAREST, GL_NEAREST },
-	{ "GL_LINEAR_MIPMAP_NEAREST", GL_LINEAR_MIPMAP_NEAREST, GL_LINEAR },
-	{ "GL_NEAREST_MIPMAP_LINEAR", GL_NEAREST_MIPMAP_LINEAR, GL_NEAREST },
-	{ "GL_LINEAR_MIPMAP_LINEAR", GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR }
-};
-
 /*
  ===============
  Draw_LoadPics -- johnfitz
@@ -366,62 +329,6 @@ void Draw_LoadPics(void)
 {
 	draw_disc = Draw_PicFromWad("disc");
 	draw_backtile = Draw_PicFromWad("backtile");
-}
-
-/*
- ===============
- Draw_TextureMode_f
- ===============
- */
-void OnChange_gl_texturemode(void)
-{
-	int i;
-	gltexture_t *glt;
-	static bool recursiveblock = false;
-
-	if (recursiveblock)
-		return;		// Get out
-
-	for (i = 0; i < 6; i++)
-	{
-		char *str = gl_texturemode.string;
-		if (!strcasecmp(modes[i].name, str))
-			break;
-
-		if (isdigit(*str) && atoi(str) - 1 == i)
-		{
-			// We have a number, set the cvar as the mode name
-			recursiveblock = true; // Let's prevent this from occuring twice
-			Cvar_Set("gl_texturemode", modes[i].name);
-			recursiveblock = false;
-			break;
-		}
-	}
-
-	if (i == 6)
-	{
-		Con_Printf("bad filter name, available are:\n");
-		for (i = 0; i < 6; i++)
-			Con_Printf("%s (%d)\n", modes[i].name, i + 1);
-
-		Cvar_SetValue("gl_texturemode", 1);
-		return;
-	}
-
-	gl_filter_min = modes[i].minimize;
-	gl_filter_max = modes[i].maximize;
-
-	// change all the existing mipmap texture objects
-	for (i = 0, glt = gltextures; i < numgltextures; i++, glt++)
-	{
-		if (glt->texmode & TEX_MIPMAP)
-		{
-			Con_DPrintf("Doing texture %s\n", glt->identifier);
-			GL_Bind(glt->texnum);
-			glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, gl_filter_min);
-			glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, gl_filter_max);
-		}
-	}
 }
 
 /*
@@ -656,11 +563,6 @@ void Draw_Character(int x, int y, int num)
 	Character(x, y, num);
 }
 
-/*
- ================
- Draw_String
- ================
- */
 void Draw_String(int x, int y, char *str)
 {
 	GL_Bind(char_texture);
@@ -699,11 +601,6 @@ byte *StringToRGB(char *s)
 	return rgb;
 }
 
-/*
- ================
- Draw_Crosshair		-- joe, from FuhQuake
- ================
- */
 void Draw_Crosshair(void)
 {
 	float x, y, ofs1, ofs2, sh, th, sl, tl;
@@ -767,8 +664,8 @@ void Draw_Crosshair(void)
 			glEnable(GL_ALPHA_TEST);
 		}
 
-		glTexEnvf( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
 		glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+		glTexEnvf( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
 	}
 	else if (crosshair.value)
 	{
@@ -786,24 +683,6 @@ void Draw_Crosshair(void)
 
 }
 
-/*
- ================
- Draw_DebugChar
-
- Draws a single character directly to the upper right corner of the screen.
- This is for debugging lockups by drawing different chars in different parts
- of the code.
- ================
- */
-void Draw_DebugChar(char num)
-{
-}
-
-/*
- =============
- Draw_AlphaPic
- =============
- */
 void Draw_AlphaPic(int x, int y, qpic_t *pic, float alpha)
 {
 	glpic_t *gl;
@@ -819,7 +698,7 @@ void Draw_AlphaPic(int x, int y, qpic_t *pic, float alpha)
 	gl = (glpic_t *) pic->data;
 	GL_Bind(gl->texnum);
 
-	glColor4f(1, 1, 1, alpha);
+	glColor4f(1.0f, 1.0f, 1.0f, alpha);
 
 	GLfloat texts[] = {
 		gl->sl, gl->tl,
@@ -845,11 +724,6 @@ void Draw_AlphaPic(int x, int y, qpic_t *pic, float alpha)
 	glDisable(GL_BLEND);
 }
 
-/*
- =============
- Draw_Pic
- =============
- */
 void Draw_Pic(int x, int y, qpic_t *pic)
 {
 	glpic_t *gl;
@@ -859,8 +733,6 @@ void Draw_Pic(int x, int y, qpic_t *pic)
 
 	gl = (glpic_t *) pic->data;
 	GL_Bind(gl->texnum);
-
-	glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
 
 	GLfloat texts[] = {
 		gl->sl, gl->tl,
@@ -881,11 +753,6 @@ void Draw_Pic(int x, int y, qpic_t *pic)
 	glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 }
 
-/*
- =============
- Draw_TransPic
- =============
- */
 void Draw_TransPic(int x, int y, qpic_t *pic)
 {
 	if (x < 0 || (unsigned) (x + pic->width) > vid.width || y < 0 || (unsigned) (y + pic->height) > vid.height)
@@ -913,7 +780,6 @@ void Draw_SubPic(int x, int y, qpic_t *pic, int srcx, int srcy, int width, int h
 	newtl = gl->tl + (srcy * oldglheight) / pic->height;
 	newth = newtl + (height * oldglheight) / pic->height;
 
-	glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
 	GL_Bind(gl->texnum);
 
 	GLfloat texts[] = {
@@ -972,8 +838,6 @@ void Draw_TransPicTranslate(int x, int y, qpic_t *pic, byte *translation)
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-	glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
-
 	GLfloat texts[] = {
 		0, 0,
 		1, 0,
@@ -993,12 +857,6 @@ void Draw_TransPicTranslate(int x, int y, qpic_t *pic, byte *translation)
 	glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 }
 
-/*
- ================
- Draw_ConsoleBackground
-
- ================
- */
 void Draw_ConsoleBackground(int lines)
 {
 	int y = (vid.height * 3) >> 2;
@@ -1008,123 +866,6 @@ void Draw_ConsoleBackground(int lines)
 	else
 		Draw_AlphaPic(0, lines - vid.height, conback, (float) (1.2 * lines) / y);
 }
-
-#ifdef MACOSX // Cannot go in gl_vidnt.c equivalent; must go here
-/*
- ==================
- VID_Consize_f -- Baker -- called when vid_consize changes
- ==================
- */
-
-void VID_Consize_f(void)
-{
-	extern qpic_t *conback;
-	extern bool smoothfont_init;
-	extern int gGLDisplayWidth;
-	extern int gGLDisplayHeight;
-
-	float startwidth;
-	float startheight;
-	float desiredwidth;
-	extern cvar_t vid_consize;
-	int contype = vid_consize.value;
-	int exception = 0;
-
-#ifdef _WIN32
-	startwidth = vid.width = modelist[vid_default].width;
-	startheight = vid.height = modelist[vid_default].height;
-#else
-	startwidth = vid.width = gGLDisplayWidth;
-	startheight = vid.height = gGLDisplayHeight;
-#endif
-
-//	Con_Printf("Entering ...\n");
-//	Con_Printf("vid.width is %d and vid.height is %d\n", vid.width, vid.height);
-//	Con_Printf("vid.conwidth is %d and vid.conheight is %d\n", vid.conwidth, vid.conheight);
-
-	// Baker 3.97
-	// We need to appropriately set vid.width, vid.height, vid.smoothfont (?)
-
-//	vid_smoothfont = false; // Assume it is unnecessary
-
-	if (contype == -1)
-	{
-		// Automatic consize to avoid microscopic text
-		if (vid.width>=1024)
-		contype = 1;
-		else
-		contype = 0;
-	}
-
-	switch (contype)
-	{
-
-		case 0: // consize is width
-
-		desiredwidth = vid.width;
-		break;
-
-		case 1:// consize is 50% width (if possible)
-
-		// if resolution is < 640, must use the resolution itself.
-		if (vid.width < 640)
-		{
-			exception = 1; // Notify later about console resolution unavailable
-			desiredwidth = vid.width;
-			break;
-		}
-
-		desiredwidth = (int)(vid.width/2);
-		break;
-
-		case 3:
-		desiredwidth = 320;
-		break;
-
-		default:
-		// If vid.width is under 640, must use 320?
-		if (vid.width < 640)
-		{
-			exception = 2; // Notify later about console resolution unavailable
-			desiredwidth = vid.width;
-			break;
-		}
-		desiredwidth = 640;
-		break;
-	}
-
-	vid.conwidth = CLAMP (320, desiredwidth, vid.width);
-	vid.conwidth &= 0xFFFFFFF8;                      // But this must be a multiple of 8
-	vid.conheight = vid.conwidth * vid.height / vid.width;// Now set height using proper aspect ratio
-	vid.conheight &= 0xFFFFFFF8;// This too must be a multiple of 8
-
-	conback->width = vid.width = vid.conwidth;// = vid.width;
-	conback->height = vid.height = vid.conheight;// = vid.height;
-
-	//  Determine if smooth font is needed
-
-	if ((int)(startwidth / vid.conwidth) == ((startwidth + 0.0f) / (vid.conwidth + 0.0f)) /*&& (int)(startheight / vid.conheight) == ((startheight + 0.0f) / (vid.conheight + 0.0f))*/)
-	{
-		SmoothFontSet (false);
-	}
-	else
-	{
-		SmoothFontSet (true);
-	}
-
-	// Print messages AFTER console resizing to ensure they print right
-	if (exception)
-	{
-		if (exception == 1)
-		Con_Printf ("VID_Consize_f: 50%% console size unavailable, using 100%% for this resolution.\n");
-		else
-		Con_Printf ("VID_Consize_f: 640 console size unavailable, using 100%% for this resolution.\n");
-	}
-
-	vid.recalc_refdef = 1;
-
-}
-#endif
 
 /*
  =============
@@ -1136,7 +877,6 @@ void VID_Consize_f(void)
  */
 void Draw_TileClear(int x, int y, int w, int h)
 {
-	glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
 	GL_Bind(*(int *) draw_backtile->data);
 
 	GLfloat texts[] = {
@@ -1158,7 +898,6 @@ void Draw_TileClear(int x, int y, int w, int h)
 	glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 }
 
-#ifdef SUPPORTS_2DPICS_ALPHA
 /*
  =============
  Draw_AlphaFill
@@ -1203,7 +942,6 @@ void Draw_AlphaFill(int x, int y, int w, int h, int c, float alpha)
 	}
 	glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
 }
-#endif
 
 /*
  =============
@@ -1305,7 +1043,7 @@ void Draw_EndDisc(void)
 }
 
 
-void MYglOrthof(GLfloat left, GLfloat right, GLfloat bottom, GLfloat top, GLfloat zNear, GLfloat zFar)
+void Q_glOrthof(GLfloat left, GLfloat right, GLfloat bottom, GLfloat top, GLfloat zNear, GLfloat zFar)
 {
 	GLfloat matrix[] = {
 		2.0f/(right-left), 0.0f, 0.0f, 0.0f,
@@ -1330,7 +1068,7 @@ void GL_Set2D(void)
 
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
-	MYglOrthof(0, vid.width, vid.height, 0, -99999, 99999);
+	Q_glOrthof(0, vid.width, vid.height, 0, -99999, 99999);
 
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
@@ -1339,367 +1077,5 @@ void GL_Set2D(void)
 	glDisable(GL_CULL_FACE);
 	glDisable(GL_BLEND);
 	glEnable(GL_ALPHA_TEST);
-//	glDisable (GL_ALPHA_TEST);
-
-	glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
-}
-
-//====================================================================
-
-/*
- ================
- GL_FindTexture
- ================
- */
-int GL_FindTexture(char *identifier)
-{
-	int i;
-	gltexture_t *glt;
-
-	for (i = 0, glt = gltextures; i < numgltextures; i++, glt++)
-	{
-		if (!strcmp(identifier, glt->identifier))
-			return gltextures[i].texnum;
-	}
-
-	return -1;
-}
-
-/*
- ================
- GL_ResampleTexture
- ================
- */
-void GL_ResampleTexture(unsigned *in, int inwidth, int inheight, unsigned *out, int outwidth, int outheight)
-{
-	int i, j;
-	unsigned *inrow;
-	unsigned frac, fracstep;
-
-	fracstep = inwidth * 0x10000 / outwidth;
-	for (i = 0; i < outheight; i++, out += outwidth)
-	{
-		inrow = in + inwidth * (i * inheight / outheight);
-		frac = fracstep >> 1;
-		for (j = 0; j < outwidth; j += 4)
-		{
-			out[j] = inrow[frac >> 16];
-			frac += fracstep;
-			out[j + 1] = inrow[frac >> 16];
-			frac += fracstep;
-			out[j + 2] = inrow[frac >> 16];
-			frac += fracstep;
-			out[j + 3] = inrow[frac >> 16];
-			frac += fracstep;
-		}
-	}
-}
-
-/*
- ================
- GL_MipMap
-
- Operates in place, quartering the size of the texture
- ================
- */
-void GL_MipMap(byte *in, int width, int height)
-{
-	int i, j;
-	byte *out;
-
-	width <<= 2;
-	height >>= 1;
-	out = in;
-	for (i = 0; i < height; i++, in += width)
-	{
-		for (j = 0; j < width; j += 8, out += 4, in += 8)
-		{
-			out[0] = (in[0] + in[4] + in[width + 0] + in[width + 4]) >> 2;
-			out[1] = (in[1] + in[5] + in[width + 1] + in[width + 5]) >> 2;
-			out[2] = (in[2] + in[6] + in[width + 2] + in[width + 6]) >> 2;
-			out[3] = (in[3] + in[7] + in[width + 3] + in[width + 7]) >> 2;
-		}
-	}
-}
-
-/*
- ===============
- GL_Upload32
- ===============
- */
-void GL_Upload32(unsigned *data, int width, int height, int mode)
-{
-	GLint samples;
-	static unsigned scaled[1024 * 512];	// [512*256];
-	int scaled_width, scaled_height;
-
-	for (scaled_width = 1; scaled_width < width; scaled_width <<= 1)
-		;
-	for (scaled_height = 1; scaled_height < height; scaled_height <<= 1)
-		;
-
-	scaled_width >>= (int) gl_picmip.value;
-	scaled_height >>= (int) gl_picmip.value;
-
-	if (scaled_width > gl_max_size)
-		scaled_width = gl_max_size;
-	if (scaled_height > gl_max_size)
-		scaled_height = gl_max_size;
-
-	if (scaled_width * scaled_height > sizeof(scaled) / 4)
-		Sys_Error("GL_LoadTexture: too big");
-
-	samples = (mode & TEX_ALPHA) ? GL_RGBA : GL_RGB;
-
-	texels += scaled_width * scaled_height;
-
-	if (scaled_width == width && scaled_height == height)
-	{
-		if (!(mode & TEX_MIPMAP))
-		{
-			glTexImage2D(GL_TEXTURE_2D, 0, samples, scaled_width, scaled_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
-
-			goto done;
-		}
-		memcpy(scaled, data, width * height * 4);
-	}
-	else
-		GL_ResampleTexture(data, width, height, scaled, scaled_width, scaled_height);
-
-	glTexImage2D(GL_TEXTURE_2D, 0, samples, scaled_width, scaled_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, scaled);
-	if ((mode & TEX_MIPMAP))
-	{
-		int miplevel;
-
-		miplevel = 0;
-		while (scaled_width > 1 || scaled_height > 1)
-		{
-			GL_MipMap((byte *) scaled, scaled_width, scaled_height);
-			scaled_width >>= 1;
-			scaled_height >>= 1;
-			if (scaled_width < 1)
-				scaled_width = 1;
-			if (scaled_height < 1)
-				scaled_height = 1;
-			miplevel++;
-
-			glTexImage2D(GL_TEXTURE_2D, miplevel, samples, scaled_width, scaled_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, scaled);
-		}
-	}
-	done:
-
-	if ((mode & TEX_MIPMAP))
-	{
-		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, gl_filter_min);
-		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, gl_filter_max);
-	}
-	else
-	{
-		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, gl_filter_max);
-		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, gl_filter_max);
-	}
-}
-
-/*
- ===============
- GL_Upload8
- ===============
- */
-void GL_Upload8(byte *data, int width, int height, int mode)
-{
-	static unsigned trans[640 * 480];		// FIXME, temporary
-	int i, s;
-	bool noalpha;
-	int p;
-
-	s = width * height;
-	// if there are no transparent pixels, make it a 3 component
-	// texture even if it was specified as otherwise
-	if (mode & TEX_ALPHA)
-	{
-		noalpha = true;
-		for (i = 0; i < s; i++)
-		{
-			p = data[i];
-			if (p == 255)
-				noalpha = false;
-			trans[i] = d_8to24table[p];
-		}
-
-		if (noalpha)
-			mode = mode - TEX_ALPHA; // Baker: we know this bit flag exists due to IF, so just subtract it
-	}
-	else
-	{
-		if (s & 3)
-			Sys_Error("GL_Upload8: s&3");
-		for (i = 0; i < s; i += 4)
-		{
-			trans[i] = d_8to24table[data[i]];
-			trans[i + 1] = d_8to24table[data[i + 1]];
-			trans[i + 2] = d_8to24table[data[i + 2]];
-			trans[i + 3] = d_8to24table[data[i + 3]];
-		}
-	}
-
-	GL_Upload32(trans, width, height, mode);
-}
-
-/*
- ================
- GL_FreeTextures -- BPJ
- ================
- */
-void GL_FreeTextures(void)
-{
-	int i, j;
-
-	Con_DPrintf("GL_FreeTextures: Entry.\n");
-
-	if (gl_free_world_textures.value == 0)
-	{
-		Con_DPrintf("GL_FreeTextures: Not Clearing old Map Textures.\n");
-		return;
-	}
-
-	Con_DPrintf("GL_FreeTextures: Freeing textures (numgltextures = %i) \n", numgltextures);
-
-	for (i = j = 0; i < numgltextures; ++i, ++j)
-	{
-		if (gltextures[i].texmode & TEX_WORLD) //Only clear out world textures... for now.
-		{
-			Con_DPrintf("GL_FreeTextures: Clearing texture %s\n", gltextures[i].identifier);
-			glDeleteTextures(1, &gltextures[i].texnum);
-			--j;
-		}
-		else if (j < i)
-		{
-//			Con_DPrintf("GL_FreeTextures: NOT Clearing texture %s\n", gltextures[i].identifier);
-			gltextures[j] = gltextures[i];
-		}
-	}
-
-	numgltextures = j;
-
-	Con_DPrintf("GL_FreeTextures: Completed (numgltextures = %i) \n", numgltextures);
-
-}
-
-/*
- ================
- GL_LoadTexture
- Baker 3.80x - Uses LordHavoc's fix to eliminate GL_LoadTexture: Cache mismatch
- that occurs when maps with different textures using the same name are loaded.
- Code provided by Reckless
- ================
- */
-int GL_LoadTexture(char *identifier, int width, int height, byte *data, int mode)
-{
-	int i;
-	gltexture_t *glt;
-	unsigned short crc; // Baker 3.80x - LoadTexture fix LordHavoc provided by Reckless
-
-	crc = CRC_Block(data, width * height); // Baker 3.80x - LoadTexture fix LordHavoc provided by Reckless
-
-	// see if the texture is already present
-	if (identifier[0])
-	{
-		for (i = 0, glt = gltextures; i < numgltextures; i++, glt++)
-		{
-			if (!strcmp(identifier, glt->identifier))
-			{
-				// Baker 3.60 - LoadTexture fix LordHavoc provided by Reckless
-				if (width != glt->width || height != glt->height || crc != glt->crc)
-					goto setup;
-				return gltextures[i].texnum;
-			}
-		}
-		// Jack Palevich -- surely we want to remember this new texture.
-		// Doing this costs 1% fps per timedemo, probably because of the
-		// linear search through the texture cache, but it saves 10 MB
-		// of VM growth per level load. It also makes the GL_TEXTUREMODE
-		// console command work correctly.
-		// numgltextures++;  <---- Baker 3.70D3D - no implementing this yet, if at all
-
-	}
-//   else { get the hell rid of this :P
-	glt = &gltextures[numgltextures++];
-	//}
-
-	strcpy(glt->identifier, identifier);
-	glt->texnum = texture_extension_number++;
-
-	setup: glt->width = width;
-	glt->height = height;
-	glt->texmode = mode;
-	glt->crc = crc;
-
-	// Baker: part 1 of gl dedicated server fix by Nathan Cline
-	if (cls.state != ca_dedicated)
-	{
-		GL_Bind(glt->texnum);
-		GL_Upload8(data, width, height, mode);
-	}
-
-	return glt->texnum;
-}
-
-/*
- ================
- GL_LoadPicTexture
- ================
- */
-int GL_LoadPicTexture(qpic_t *pic)
-{
-	return GL_LoadTexture("", pic->width, pic->height, pic->data, TEX_ALPHA);
-}
-
-/****************************************/
-
-int current_texture_num = -1; // to avoid unnecessary texture sets
-void GL_Bind(int texnum)
-{
-	if (current_texture_num == texnum)
-		return;
-
-	current_texture_num = texnum;
-	glBindTexture(GL_TEXTURE_2D, texnum);
-}
-
-static GLenum currenttarget = GL_TEXTURE0;
-bool mtexenabled = false;
-
-void GL_SelectTexture(GLenum target)
-{
-	if (!gl_mtexable)
-		return;
-
-	if (target == currenttarget)
-		return;
-
-	glActiveTexture(target);
-
-	cnttextures[currenttarget - GL_TEXTURE0] = current_texture_num;
-	current_texture_num = cnttextures[target - GL_TEXTURE0];
-	currenttarget = target;
-}
-
-void GL_DisableMultitexture(void)
-{
-	if (mtexenabled)
-	{
-		glDisable(GL_TEXTURE_2D);
-		GL_SelectTexture(GL_TEXTURE0);
-		mtexenabled = false;
-	}
-}
-
-void GL_EnableMultitexture(void)
-{
-	if (gl_mtexable)
-	{
-		GL_SelectTexture(GL_TEXTURE1);
-		glEnable(GL_TEXTURE_2D);
-		mtexenabled = true;
-	}
+//	glDisable(GL_ALPHA_TEST);
 }

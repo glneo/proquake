@@ -16,11 +16,6 @@
 
 int r_dlightframecount;
 
-/*
- ==================
- R_AnimateLight
- ==================
- */
 void R_AnimateLight(void)
 {
 	int i, j, k;
@@ -100,7 +95,7 @@ void R_RenderDlight(dlight_t *light)
 	for (i = 0; i < 3; i++)
 		v[i] = light->origin[i] - vpn[i] * rad;
 	glVertex3fv(v);
-	glColor4f(0, 0, 0, 1.0f);
+	glColor4f(0.0f, 0.0f, 0.0f, 1.0f);
 	for (i = 16; i >= 0; i--)
 	{
 		for (j = 0; j < 3; j++)
@@ -108,13 +103,9 @@ void R_RenderDlight(dlight_t *light)
 		glVertex3fv(v);
 	}
 	glEnd();
+	glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
 }
 
-/*
- =============
- R_RenderDlights
- =============
- */
 void R_RenderDlights(void)
 {
 	int i;
@@ -154,11 +145,6 @@ void R_RenderDlights(void)
  =============================================================================
  */
 
-/*
- =============
- R_MarkLights
- =============
- */
 void R_MarkLights(dlight_t *light, int bit, mnode_t *node)
 {
 	mplane_t *splitplane;
@@ -199,11 +185,6 @@ void R_MarkLights(dlight_t *light, int bit, mnode_t *node)
 	R_MarkLights(light, bit, node->children[1]);
 }
 
-/*
- =============
- R_PushDlights
- =============
- */
 void R_PushDlights(void)
 {
 	int i;

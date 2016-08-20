@@ -98,8 +98,8 @@ void IN_Activate (void)
 	if (no_mouse)
 		return;
 
-	if (!SDL_SetRelativeMouseMode(SDL_TRUE))
-		Con_Printf("WARNING: SDL_SetRelativeMouseMode(SDL_TRUE) failed.\n");
+//	if (!SDL_SetRelativeMouseMode(SDL_TRUE))
+//		Con_Printf("WARNING: SDL_SetRelativeMouseMode(SDL_TRUE) failed.\n");
 
 	IN_EndIgnoringMouseEvents();
 
@@ -534,18 +534,18 @@ void IN_MouseMove(usercmd_t *cmd)
 	total_dx = 0;
 	total_dy = 0;
 
-	if ( (in_strafe.state & 1) || (lookstrafe.value && (in_mlook.state & 1) ))
+	if ( (in_strafe.state & 1) || (lookstrafe.value && (mlook_active) ))
 		cmd->sidemove += m_side.value * dmx;
 	else
 		cl.viewangles[YAW] -= m_yaw.value * dmx;
 
-	if (in_mlook.state & 1)
+	if (mlook_active)
 	{
-		if (dmx || dmy)
-			V_StopPitchDrift ();
+//		if (dmx || dmy)
+//			V_StopPitchDrift ();
 	}
 
-	if ( (in_mlook.state & 1) && !(in_strafe.state & 1))
+	if ( (mlook_active) && !(in_strafe.state & 1))
 	{
 		cl.viewangles[PITCH] += m_pitch.value * dmy;
 		/* johnfitz -- variable pitch clamping */
@@ -556,9 +556,9 @@ void IN_MouseMove(usercmd_t *cmd)
 	}
 	else
 	{
-//		if ((in_strafe.state & 1) && noclip_anglehack)
-//			cmd->upmove -= m_forward.value * dmy;
-//		else
+		if ((in_strafe.state & 1))
+			cmd->upmove -= m_forward.value * dmy;
+		else
 			cmd->forwardmove -= m_forward.value * dmy;
 	}
 }

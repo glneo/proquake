@@ -15,6 +15,7 @@ set(PROQUAKE_SOURCES
 	view.c
 	wad.c
 	world.c
+	sys_linux.c
 # Client
 	cl_demo.c
 	cl_input.c
@@ -29,23 +30,25 @@ set(PROQUAKE_SOURCES
 	gl_alias.c
 	gl_brush.c
 	gl_draw.c
+	gl_fullbright.c
 	gl_model.c
 	gl_refrag.c
 	gl_rlight.c
 	gl_rmain.c
-	gl_rmisc.c
 	gl_rsurf.c
 	gl_screen.c
 	gl_sprite.c
-	gl_warp.c
-	gl_fullbright.c
+	gl_texture.c
 	gl_vidsdl.c
+	gl_warp.c
 	sbar.c
 # Net
 	net_dgrm.c
 	net_loop.c
 	net_main.c
 	net_vcr.c
+	net_udp.c
+	net_bsd.c
 # Program
 	pr_cmds.c
 	pr_edict.c
@@ -63,20 +66,6 @@ set(PROQUAKE_SOURCES
 	snd_sdl.c
 )
 
-if(WIN32)
-	set(PROQUAKE_SOURCES ${PROQUAKE_SOURCES}
-		windows/net_win.c
-		windows/net_wins.c
-		windows/sys_win.c
-	)
-else()
-	set(PROQUAKE_SOURCES ${PROQUAKE_SOURCES}
-		net_udp.c
-		net_bsd.c
-		sys_linux.c
-	)
-endif()
-
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake")
 
 find_package(OpenGL REQUIRED)
@@ -84,6 +73,6 @@ find_package(SDL2 REQUIRED)
 
 add_executable(proquake ${PROQUAKE_SOURCES})
 #target_compile_options(proquake PRIVATE -O3;-ffast-math;-Wall)
-target_compile_options(proquake PRIVATE -g)
+target_compile_options(proquake PRIVATE -g;-Wall)
 target_include_directories(proquake PUBLIC ${OPENGL_INCLUDE_DIRS} ${SDL2_INCLUDE_DIR})
 target_link_libraries(proquake m ${OPENGL_LIBRARIES} ${SDL2_LIBRARY})

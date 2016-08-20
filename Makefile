@@ -1,17 +1,10 @@
 CFLAGS += -O3 -ffast-math -funroll-loops
 LDFLAGS += -lm -lGL -lSDL2
 
-#############################################################################
-# SETUP AND BUILD
-#############################################################################
-
 all: quake
 
-#############################################################################
-# Quake
-#############################################################################
-
 QUAKE_OBJS = \
+set(PROQUAKE_SOURCES
 	common.o \
 	cvar.o \
 	crc.o \
@@ -35,18 +28,20 @@ QUAKE_OBJS = \
 	cmd.o \
 	console.o \
 	in_sdl.o \
+	gl_alias.o \
+	gl_brush.o \
 	gl_draw.o \
-	gl_mesh.o \
+	gl_fullbright.o \
 	gl_model.o \
 	gl_refrag.o \
 	gl_rlight.o \
 	gl_rmain.o \
-	gl_rmisc.o \
 	gl_rsurf.o \
 	gl_screen.o \
-	gl_warp.o \
-	gl_fullbright.o \
+	gl_sprite.o \
+	gl_texture.o \
 	gl_vidsdl.o \
+	gl_warp.o \
 	sbar.o \
 	net_dgrm.o \
 	net_loop.o \
@@ -73,9 +68,6 @@ quake : $(QUAKE_OBJS)
 %.o : %.c
 	$(CC) -c -o $@ $(CFLAGS) $<
 
-#############################################################################
-# MISC
-#############################################################################
-
+.PHONY: clean
 clean:
-	$(RM) quake.spec quake $(QUAKE_OBJS)
+	$(RM) quake $(QUAKE_OBJS)

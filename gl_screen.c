@@ -86,8 +86,6 @@ cvar_t scr_printspeed = { "scr_printspeed", "8" };
 
 cvar_t vid_consize = { "vid_consize", "-1", true }; //Baker 3.97
 
-cvar_t gl_triplebuffer = { "gl_triplebuffer", "1", true };
-
 cvar_t pq_drawfps = { "pq_drawfps", "0", true }; // JPG - draw frames per second
 cvar_t show_speed = { "show_speed", "0", false }; // JPG - draw frames per second
 
@@ -398,8 +396,6 @@ void SCR_Init(void)
 	Cvar_RegisterVariable(&scr_centertime, NULL);
 	Cvar_RegisterVariable(&scr_printspeed, NULL);
 
-	Cvar_RegisterVariable(&gl_triplebuffer, NULL);
-
 	Cvar_RegisterVariable(&pq_drawfps, NULL); // JPG - draw frames per second
 	Cvar_RegisterVariable(&show_speed, NULL); // Baker 3.67
 
@@ -577,11 +573,6 @@ void SCR_DrawLoading(void)
 
 //=============================================================================
 
-/*
- ==================
- SCR_SetUpToDrawConsole
- ==================
- */
 void SCR_SetUpToDrawConsole(void)
 {
 	//johnfitz -- let's hack away the problem of slow console when host_timescale is <0
@@ -594,7 +585,7 @@ void SCR_SetUpToDrawConsole(void)
 	if (scr_drawloading)
 		return;		// never a console with loading plaque
 
-// decide on the height of the console
+	// decide on the height of the console
 	con_forcedup = !cl.worldmodel || cls.signon != SIGNONS;
 
 	if (con_forcedup)
@@ -685,9 +676,7 @@ void SCR_ScreenShot_f(void)
 	char checkname[MAX_OSPATH];
 	int i, c, temp;
 
-// find a file name to save it to
-
-	//johnfitz -- changed name format from quake00 to fitz0000
+	// find a file name to save it to
 	for (i = 0; i < 10000; i++)
 	{
 		snprintf(tganame, sizeof(tganame), "quake%04i.tga", i);
@@ -729,12 +718,6 @@ void SCR_ScreenShot_f(void)
 
 //=============================================================================
 
-/*
- ===============
- SCR_BeginLoadingPlaque
-
- ================
- */
 void SCR_BeginLoadingPlaque(void)
 {
 	S_StopAllSounds(true);
@@ -906,19 +889,12 @@ void SCR_TileClear(void)
 
  This is called every frame, and can also be called explicitly to flush
  text to the screen.
-
- WARNING: be very careful calling this from elsewhere, because the refresh
- needs almost the entire 256k of stack space!
  ==================
  */
 void SCR_UpdateScreen(void)
 {
-
 	if (cls.state == ca_dedicated)
-		return;				// stdout only
-
-	if (scr_skipupdate) // Baker: mirrored WinQuake for glpro in -dedicated mode -- wait ... test!
-		return;
+		return; // stdout only
 
 	if (scr_disabled_for_loading)
 	{
@@ -932,32 +908,11 @@ void SCR_UpdateScreen(void)
 	}
 
 	if (!scr_initialized || !con_initialized)
-		return;				// not initialized yet
-
-#ifdef _WIN32
-	{	// don't suck up any cpu if minimized
-		extern int Minimized;
-
-		if (Minimized)
-		return;
-	}
-#endif
-
-#ifdef MACOSX
-	if (qMinimized)
-	return;
-#endif
-
-	vid.numpages = 2 + (gl_triplebuffer.value ? 1 : 0); //johnfitz -- in case gl_triplebuffer is not 0 or 1
-//	scr_copytop = 0;
-//	scr_copyeverything = 0;
+		return; // not initialized yet
 
 	GL_BeginRendering(&glx, &gly, &glwidth, &glheight);
 
-//
-// determine size of refresh window
-//
-
+	// determine size of refresh window
 	if (oldfov != scr_fov.value)
 	{
 		oldfov = scr_fov.value;
@@ -971,25 +926,16 @@ void SCR_UpdateScreen(void)
 	}
 
 	if (vid.recalc_refdef)
-	{
-		// something changed, so reorder the screen
-		SCR_CalcRefdef();
-	}
+		SCR_CalcRefdef(); // something changed, so reorder the screen
 
-//
-// do 3D refresh drawing, and then update the screen
-//
+	// do 3D refresh drawing, and then update the screen
 	SCR_SetUpToDrawConsole();
 
 	V_RenderView();
 
 	GL_Set2D();
 
-// added by joe - IMPORTANT: this _must_ be here so that
-//			     palette flashes take effect in windowed mode too.
-
 	// draw any areas not covered by the refresh
-
 	if (cl_sbar.value >= 1.0 || scr_viewsize.value < 100.0)
 		SCR_TileClear();
 
@@ -1036,7 +982,6 @@ void SCR_UpdateScreen(void)
 			Sbar_Draw();
 		}
 
-//
 //		if (mod_conhide==false || (key_dest == key_console || key_dest == key_message))
 		SCR_DrawConsole();
 
@@ -1048,4 +993,3 @@ void SCR_UpdateScreen(void)
 
 	GL_EndRendering();
 }
-

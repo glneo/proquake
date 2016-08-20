@@ -12,13 +12,13 @@
  * General Public License for more details.
  */
 
-#ifndef VERSION_H
-#define VERSION_H
+#ifndef __VERSION_H
+#define __VERSION_H
 
-// Messages: 
-// MSVC: #pragma message ( "text" )
-// GCC version: #warning "hello"
-// #error to terminate compilation
+#define ENGINE_NAME "ProQuake"
+#define ENGINE_VERSION "4.93 Beta"
+#define ENGINE_HOMEPAGE_URL "http:////www.quakeone.com//proquake"
+#define PROQUAKE_SERIES_VERSION 4.93
 
 // Create our own define for Mac OS X
 #if defined(__APPLE__) && defined(__MACH__)
@@ -38,45 +38,14 @@
 #define CHASE_CAM_FIX
 #define SUPPORTS_TRANSFORM_INTERPOLATION // We are switching to r_interpolate_transform
 
-
 // Define Renderer Name
 #define RENDERER_NAME "GL"
 
-#ifdef MACOSX
-	#define MACOSX_EXTRA_FEATURES
-	#define MACOSX_UNKNOWN_DIFFERENCE
-	#define MACOSX_NETWORK_DIFFERENCE
-	#define MACOSX_KEYBOARD_EXTRAS
-	#define MACOSX_KEYBOARD_KEYPAD
-	#define MACOSX_PASTING
-	#define MACOSX_SENS_RANGE
-#endif
+// Define Capabilities
+#define SUPPORTS_HARDWARE_ANIM_INTERPOLATION // The hardware interpolation route
+#define SUPPORTS_2DPICS_ALPHA // Transparency of 2D pics
+#define SUPPORTS_GL_OVERBRIGHTS // Overbright method GLQuake is using, WinQuake always had them
+//#define SUPPORTS_VSYNC
+#define SUPPORTS_TRANSPARENT_SBAR
 
-// Define Specific General Capabilities
-#ifdef _WIN32
-	#define SUPPORTS_INTERNATIONAL_KEYBOARD     // I only know how to detect and address on Windows
-
-	#define SUPPORTS_DEMO_AUTOPLAY              // Windows only.  Uses file association
-	#define SUPPORTS_DIRECTINPUT 
-
-	#define WINDOWS_SCROLLWHEEL_PEEK            // CAPTURES MOUSEWHEEL WHEN keydest != game
-
-	// GLQUAKE additive features on top of _WIN32 only
-
-//	# define SUPPORTS_GLVIDEO_MODESWITCH        // Windows only for now.  Probably can be multiplat in future.
-	#define SUPPORTS_VSYNC                      // Vertical sync; only GL does this for now
-	#define SUPPORTS_TRANSPARENT_SBAR           // Not implemented in OSX?
-
-	#define RELEASE_MOUSE_FULLSCREEN            // D3DQUAKE gets an error if it loses focus in fullscreen, so that'd be stupid
-
-	#define OLD_SGIS                            // Old multitexture ... for now.
-#endif
-
-
-// Define Specific Rendering Capabilities
-# define SUPPORTS_HARDWARE_ANIM_INTERPOLATION	// The hardware interpolation route
-# define SUPPORTS_2DPICS_ALPHA					// Transparency of 2D pics
-# define SUPPORTS_GL_OVERBRIGHTS				// Overbright method GLQuake is using, WinQuake always had them
-
-
-#endif
+#endif /* __VERSION_H */

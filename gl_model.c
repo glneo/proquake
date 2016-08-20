@@ -1,5 +1,5 @@
 /*
- * Model loading and caching
+ * Common Model Functions
  *
  * Copyright (C) 1996-1997 Id Software, Inc.
  *
@@ -17,7 +17,6 @@
 // models are the only shared resource between a client and server running
 // on the same machine.
 #include "quakedef.h"
-#include "gl_fullbright.h"
 
 model_t *loadmodel;
 char loadname[32];	// for hunk tags
@@ -35,11 +34,6 @@ int mod_numknown;
 
 cvar_t gl_subdivide_size = { "gl_subdivide_size", "128", true };
 
-/*
- ===============
- Mod_Init
- ===============
- */
 void Mod_Init(void)
 {
 	Cvar_RegisterVariable(&gl_subdivide_size, NULL);
@@ -115,11 +109,6 @@ byte *Mod_LeafPVS(mleaf_t *leaf, brush_model_t *model)
 	return Mod_DecompressVis(leaf->compressed_vis, model);
 }
 
-/*
- ===================
- Mod_ClearAll
- ===================
- */
 void Mod_ClearAll(void)
 {
 	int i;
@@ -144,11 +133,6 @@ void Mod_ClearAll(void)
 		GL_FreeTextures();
 }
 
-/*
- ==================
- Mod_FindName
- ==================
- */
 model_t *Mod_FindName(char *name)
 {
 	int i;

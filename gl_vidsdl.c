@@ -51,11 +51,6 @@ static SDL_GLContext	gl_context;
 static bool	vid_locked = false; //johnfitz
 static bool	vid_changed = false;
 
-//typedef void (APIENTRY *lpMTexFUNC) (GLenum, GLfloat, GLfloat);
-//typedef void (APIENTRY *lpSelTexFUNC) (GLenum);
-//lpMTexFUNC             qglMultiTexCoord2f = NULL;
-//lpSelTexFUNC   qglActiveTexture = NULL;
-
 int            texture_mode = GL_LINEAR;
 
 byte           color_white[4] = {255, 255, 255, 255};
@@ -68,7 +63,7 @@ viddef_t vid; // global video state
 modestate_t modestate = MODE_NONE;
 bool scr_skipupdate;
 
-bool gl_mtexable = false;
+bool gl_mtexable = true;
 bool gl_texture_env_combine = false; //johnfitz
 bool gl_texture_env_add = false; //johnfitz
 bool gl_swap_control = false; //johnfitz
@@ -82,16 +77,7 @@ bool gl_glsl_gamma_able = false; //ericw
 bool gl_glsl_alias_able = false; //ericw
 int gl_stencilbits;
 
-//PFNGLMULTITEXCOORD2FARBPROC GL_MTexCoord2fFunc = NULL; //johnfitz
-//PFNGLACTIVETEXTUREARBPROC GL_SelectTextureFunc = NULL; //johnfitz
-//PFNGLCLIENTACTIVETEXTUREARBPROC GL_ClientActiveTextureFunc = NULL; //ericw
-//PFNGLBINDBUFFERARBPROC GL_BindBufferFunc = NULL; //ericw
-//PFNGLBUFFERDATAARBPROC GL_BufferDataFunc = NULL; //ericw
-//PFNGLBUFFERSUBDATAARBPROC GL_BufferSubDataFunc = NULL; //ericw
-//PFNGLDELETEBUFFERSARBPROC GL_DeleteBuffersFunc = NULL; //ericw
-//PFNGLGENBUFFERSARBPROC GL_GenBuffersFunc = NULL; //ericw
-
-float          gldepthmin, gldepthmax;
+float gldepthmin, gldepthmax;
 
 static cvar_t	vid_fullscreen = {"vid_fullscreen", "0", true};
 static cvar_t	vid_width = {"vid_width", "800", true};
@@ -583,71 +569,6 @@ static void GL_CheckExtensions (void)
 //			Con_Warning ("ARB_vertex_buffer_object not available\n");
 //		}
 //	}
-//
-//	// multitexture
-//	//
-//	if (COM_CheckParm("-nomtex"))
-//		Con_Warning ("Mutitexture disabled at command line\n");
-//	else if (GL_ParseExtensionList(gl_extensions, "GL_ARB_multitexture"))
-//	{
-//		GL_MTexCoord2fFunc = (PFNGLMULTITEXCOORD2FARBPROC) SDL_GL_GetProcAddress("glMultiTexCoord2fARB");
-//		GL_SelectTextureFunc = (PFNGLACTIVETEXTUREARBPROC) SDL_GL_GetProcAddress("glActiveTextureARB");
-//		GL_ClientActiveTextureFunc = (PFNGLCLIENTACTIVETEXTUREARBPROC) SDL_GL_GetProcAddress("glClientActiveTextureARB");
-//		if (GL_MTexCoord2fFunc && GL_SelectTextureFunc && GL_ClientActiveTextureFunc)
-//		{
-//			Con_Printf("FOUND: ARB_multitexture\n");
-//			gl_mtexable = true;
-//
-//			glGetIntegerv(GL_MAX_TEXTURE_UNITS, &gl_max_texture_units);
-//			Con_Printf("GL_MAX_TEXTURE_UNITS: %d\n", (int)gl_max_texture_units);
-//		}
-//		else
-//		{
-//			Con_Warning ("Couldn't link to multitexture functions\n");
-//		}
-//	}
-//	else
-//	{
-//		Con_Warning ("multitexture not supported (extension not found)\n");
-//	}
-
-	// texture_env_combine
-	//
-	if (COM_CheckParm("-nocombine"))
-		Con_Warning ("texture_env_combine disabled at command line\n");
-	else if (GL_ParseExtensionList(gl_extensions, "GL_ARB_texture_env_combine"))
-	{
-		Con_Printf("FOUND: ARB_texture_env_combine\n");
-		gl_texture_env_combine = true;
-	}
-	else if (GL_ParseExtensionList(gl_extensions, "GL_EXT_texture_env_combine"))
-	{
-		Con_Printf("FOUND: EXT_texture_env_combine\n");
-		gl_texture_env_combine = true;
-	}
-	else
-	{
-		Con_Warning ("texture_env_combine not supported\n");
-	}
-
-	// texture_env_add
-	//
-	if (COM_CheckParm("-noadd"))
-		Con_Warning ("texture_env_add disabled at command line\n");
-	else if (GL_ParseExtensionList(gl_extensions, "GL_ARB_texture_env_add"))
-	{
-		Con_Printf("FOUND: ARB_texture_env_add\n");
-		gl_texture_env_add = true;
-	}
-	else if (GL_ParseExtensionList(gl_extensions, "GL_EXT_texture_env_add"))
-	{
-		Con_Printf("FOUND: EXT_texture_env_add\n");
-		gl_texture_env_add = true;
-	}
-	else
-	{
-		Con_Warning ("texture_env_add not supported\n");
-	}
 
 	// swap control
 	//

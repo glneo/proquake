@@ -19,10 +19,10 @@
 #include <GLES/glext.h>
 #include <math.h>
 
-#define TEX_NOFLAGS			0 // Baker: I use this to mark the absense of any flags
-#define TEX_MIPMAP			2
-#define TEX_ALPHA			4
-#define	TEX_WORLD			128//R00k
+#define TEX_NOFLAGS     0 // Baker: I use this to mark the absense of any flags
+#define TEX_MIPMAP      2
+#define TEX_ALPHA       4
+#define	TEX_WORLD       128//R00k
 
 #include "gl_texture.h"
 
@@ -110,7 +110,6 @@ extern cvar_t r_interpolate_weapon;
 extern cvar_t gl_clear;
 extern cvar_t gl_cull;
 extern cvar_t gl_poly;
-extern cvar_t gl_texsort;
 extern cvar_t gl_smoothmodels;
 extern cvar_t gl_affinemodels;
 extern cvar_t gl_polyblend;
@@ -179,13 +178,14 @@ void R_InitParticleTexture(void);
 void R_Init_FlashBlend_Bubble(void);
 
 // gl_rpart.c
-
 void R_InitParticles(void);
 void R_DrawParticles(void);
 void R_ClearParticles(void);
 
 // gl_fullbright.c
-void DrawFullBrightTextures(msurface_t *first_surf, int num_surfs);
+int FindFullbrightTexture (byte *pixels, int num_pix);
+void DrawFullBrightTextures (msurface_t *first_surf, int num_surfs);
+void ConvertPixels (byte *pixels, int num_pixels);
 
 // gl_screen.c
 void R_PolyBlend(void);

@@ -84,8 +84,6 @@ void R_DrawSpriteModel(entity_t *ent)
 		right = vright;
 	}
 
-	glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
-
 	GL_DisableMultitexture();
 
 	GL_Bind(frame->gl_texturenum);

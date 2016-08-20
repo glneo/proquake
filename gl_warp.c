@@ -228,11 +228,6 @@ void EmitWaterPolys(msurface_t *fa)
 	}
 }
 
-/*
- =============
- EmitSkyPolys
- =============
- */
 void EmitSkyPolys(msurface_t *fa)
 {
 	glpoly_t *p;
@@ -250,8 +245,7 @@ void EmitSkyPolys(msurface_t *fa)
 			VectorSubtract(v, r_origin, dir);
 			dir[2] *= 3;	// flatten the sphere
 
-			length = dir[0] * dir[0] + dir[1] * dir[1] + dir[2] * dir[2];
-			length = sqrt(length);
+			length = VectorLength(dir);
 			length = 6 * 63 / length;
 
 			dir[0] *= length;
@@ -297,11 +291,6 @@ void EmitBothSkyLayers(msurface_t *fa)
 	glDisable(GL_BLEND);
 }
 
-/*
- =================
- R_DrawSkyChain
- =================
- */
 void R_DrawSkyChain(msurface_t *s)
 {
 	msurface_t *fa;

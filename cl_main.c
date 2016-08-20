@@ -1000,4 +1000,7 @@ void CL_Init (void)
 
 	// JPG 3.02 - added this by request
 	Cvar_RegisterVariable (&pq_smoothcam, NULL);
+
+	Cvar_RegisterVariable(&cl_maxpitch, NULL);
+	Cvar_RegisterVariable(&cl_minpitch, NULL);
 }

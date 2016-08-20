@@ -736,7 +736,8 @@ void R_DrawParticles(void)
 		glDrawArrays(GL_TRIANGLES, 0, 3);
 	}
 
-	glDisable(GL_BLEND);
+	glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
 	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+	glDisable(GL_BLEND);
 }
 

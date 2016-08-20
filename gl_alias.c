@@ -529,48 +529,38 @@ void R_DrawAliasModel(entity_t *ent)
 	glPopMatrix();
 
 	// aguirRe ... no shadows if r_fullbright or unlit world
-	if (r_shadows.value && !r_fullbright.value && cl.worldmodel->brushmodel->lightdata)
-	{
-		//
-		// Test for models that we don't want to shadow. KH
-		// Not a nice way to do it...
-		//
-
-		// Torches. Early-out to avoid the strcmp's. KH
-		if (torch)
-			return;
-		// Grenades. KH
-		if (!strcmp(clmodel->name, "progs/grenade.mdl"))
-			return;
-		// Lightning bolts. KH
-		if (!strncmp(clmodel->name, "progs/bolt", 10))
-			return;
-		glPushMatrix();
-		R_RotateForEntity(ent);
-		glDisable(GL_TEXTURE_2D);
-		glEnable(GL_BLEND);
-
-		// Baker 3.60 - interpolation plus flicker fix
-		// Quick-fix issue with self-overlapping alias triangles.
-		//glColor4f (0,0,0,0.5); // Original.
-		// glColor4f (0.0f, 0.0f, 0.0f, 1.0f); // KH
-		glColor4f(0.0f, 0.0f, 0.0f, 0.5f /* r_shadows.value */); // KH
-
-		// fenix@io.com: model animation interpolation
+//	if (r_shadows.value && !r_fullbright.value && cl.worldmodel->brushmodel->lightdata)
+//	{
+//		//
+//		// Test for models that we don't want to shadow. KH
+//		// Not a nice way to do it...
+//		//
+//
+//		// Torches. Early-out to avoid the strcmp's. KH
+//		if (torch)
+//			return;
+//		// Grenades. KH
+//		if (!strcmp(clmodel->name, "progs/grenade.mdl"))
+//			return;
+//		// Lightning bolts. KH
+//		if (!strncmp(clmodel->name, "progs/bolt", 10))
+//			return;
+//
+//		glPushMatrix();
+//		R_RotateForEntity(ent);
+//		glDisable(GL_TEXTURE_2D);
+//		glEnable(GL_BLEND);
+//		glColor4f(0.0f, 0.0f, 0.0f, 0.5f /* r_shadows.value */); // KH
+//		// fenix@io.com: model animation interpolation
 //		if (r_interpolate_animation.value)
-//		{
 //			GL_DrawAliasBlendedShadow(aliasmodel, lastposenum0, lastposenum, currententity);
-//		}
 //		else
-//		{
 //			GL_DrawAliasShadow(aliasmodel, lastposenum);
-//		}
-
-		glEnable(GL_TEXTURE_2D);
-		glDisable(GL_BLEND);
-		glColor4f(1, 1, 1, 1);
-		glPopMatrix();
-	}
+//		glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+//		glEnable(GL_TEXTURE_2D);
+//		glDisable(GL_BLEND);
+//		glPopMatrix();
+//	}
 }
 
 static void Mod_CalcAliasBounds(model_t *mod, alias_model_t *aliasmodel)

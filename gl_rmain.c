@@ -59,7 +59,6 @@ cvar_t r_drawentities = { "r_drawentities", "1" };
 cvar_t r_speeds = { "r_speeds", "0" };
 cvar_t r_shadows = { "r_shadows", "0" };
 
-
 cvar_t r_mirroralpha = { "r_mirroralpha", "1" };
 cvar_t r_wateralpha = { "r_wateralpha", "1", true };
 cvar_t r_dynamic = { "r_dynamic", "1" };
@@ -75,7 +74,6 @@ cvar_t gl_fadescreen_alpha = { "gl_fadescreen_alpha", "0.7", true };
 
 cvar_t gl_clear = { "gl_clear", "0" };
 cvar_t gl_cull = { "gl_cull", "1" };
-cvar_t gl_texsort = { "gl_texsort", "1" };
 cvar_t gl_smoothmodels = { "gl_smoothmodels", "1" };
 cvar_t gl_affinemodels = { "gl_affinemodels", "0" };
 cvar_t gl_polyblend = { "gl_polyblend", "1", true };
@@ -84,15 +82,14 @@ cvar_t gl_playermip = { "gl_playermip", "0", true };
 cvar_t gl_nocolors = { "gl_nocolors", "0" };
 cvar_t gl_finish = { "gl_finish", "0" };
 
-
 cvar_t r_truegunangle = { "r_truegunangle", "0", true };  // Baker 3.80x - Optional "true" gun positioning on viewmodel
 cvar_t r_drawviewmodel = { "r_drawviewmodel", "1", true };  // Baker 3.80x - Save to config
 cvar_t r_ringalpha = { "r_ringalpha", "0.4", true }; // Baker 3.80x - gl_ringalpha
 cvar_t r_fullbright = { "r_fullbright", "0" };
 cvar_t r_lightmap = { "r_lightmap", "0" };
 
-cvar_t gl_fullbright = { "gl_fullbright", "0", true };
-cvar_t gl_overbright = { "gl_overbright", "0", true };
+cvar_t gl_fullbright = { "gl_fullbright", "1", true };
+cvar_t gl_overbright = { "gl_overbright", "1", true };
 
 /*
  =================
@@ -267,11 +264,6 @@ void R_DrawEntitiesOnList(void)
 	}
 }
 
-/*
- =============
- R_DrawViewModel
- =============
- */
 void R_DrawViewModel(void)
 {
 	float ambient[4], diffuse[4];
@@ -348,11 +340,6 @@ void R_DrawViewModel(void)
 	glDepthRangef(gldepthmin, gldepthmax);
 }
 
-/*
- ============
- R_PolyBlend
- ============
- */
 void R_PolyBlend(void)
 {
 	if (!v_blend[3])	// No blends ... get outta here
@@ -368,10 +355,11 @@ void R_PolyBlend(void)
 	glDisable(GL_DEPTH_TEST);
 	glDisable(GL_TEXTURE_2D);
 
+	glPushMatrix();
 	glLoadIdentity();
 
-	glRotatef(-90, 1, 0, 0);	    // put Z going up
-	glRotatef(90, 0, 0, 1);	    // put Z going up
+	glRotatef(-90, 1, 0, 0); // put Z going up
+	glRotatef(90, 0, 0, 1); // put Z going up
 
 	glColor4f(v_blend[0], v_blend[1], v_blend[2], v_blend[3]);
 
@@ -389,8 +377,13 @@ void R_PolyBlend(void)
 
 	glDisableClientState(GL_VERTEX_ARRAY);
 
-	glDisable(GL_BLEND);
+	glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+
+	glPopMatrix();
+
 	glEnable(GL_TEXTURE_2D);
+	glEnable(GL_DEPTH_TEST);
+	glDisable(GL_BLEND);
 	glEnable(GL_ALPHA_TEST);
 
 }
@@ -577,6 +570,201 @@ void R_SetupGL(void)
 
 cvar_t r_waterwarp = { "r_waterwarp", "0", true }; // Baker 3.60 - Save this to config now
 
+/*
+ ===============
+ R_TranslatePlayerSkin
+
+ Translates a skin texture by the per-player color lookup
+ ===============
+ */
+
+bool recentcolor_isSet[MAX_SCOREBOARD];
+int recentcolor[MAX_SCOREBOARD];
+int recentskinnum[MAX_SCOREBOARD];
+
+void R_TranslatePlayerSkin(int playernum)
+{
+//	int top, bottom, i, j, size;
+//	byte translate[256];
+//	unsigned translate32[256];
+//	model_t *model;
+//	alias_model_t *aliasmodel;
+//	byte *original;
+//
+//	unsigned pixels[512 * 256];
+//
+//	unsigned *out;
+//	unsigned scaled_width, scaled_height;
+//	int inwidth, inheight;
+//	byte *inrow;
+//	unsigned frac, fracstep;
+//
+//	// locate the original skin pixels
+//	currententity = &cl_entities[1 + playernum];
+//	if (!(model = currententity->model))
+//		return;		// player doesn't have a model yet
+//	if (model->type != mod_alias)
+//		return; // only translate skins on alias models
+//	if ((currententity->model->flags & MOD_PLAYER) == 0)
+//		return; // Only translate player model
+//	if (recentcolor_isSet[playernum] && recentcolor[playernum] == cl.scores[playernum].colors && recentskinnum[playernum] == currententity->skinnum)
+//		return; // Same color as before
+//
+//	recentcolor_isSet[playernum] = true;
+//	recentcolor[playernum] = cl.scores[playernum].colors;
+//	recentskinnum[playernum] = currententity->skinnum;
+//
+//	GL_DisableMultitexture();
+//
+//	top = cl.scores[playernum].colors & 0xf0;
+//	bottom = (cl.scores[playernum].colors & 15) << 4;
+//
+//	for (i = 0; i < 256; i++)
+//		translate[i] = i;
+//
+//	for (i = 0; i < 16; i++)
+//	{
+//		// the artists made some backwards ranges. sigh.
+//		translate[TOP_RANGE + i] = (top < 128) ? top + i : top + 15 - i;
+//		translate[BOTTOM_RANGE + i] = (bottom < 128) ? bottom + i : bottom + 15 - i;
+//	}
+//
+//	aliasmodel = (alias_model_t *) Mod_Extradata(model);
+//	size = aliasmodel->skinwidth * aliasmodel->skinheight;
+//	if (currententity->skinnum < 0 || currententity->skinnum >= aliasmodel->numskins)
+//	{
+//		Con_Printf("(%d): Invalid player skin #%d\n", playernum, currententity->skinnum);
+//		original = (byte *) aliasmodel + aliasmodel->texels[0];
+//	}
+//	else
+//	{
+//		original = (byte *) aliasmodel + aliasmodel->texels[currententity->skinnum];
+//	}
+//
+//	if (size & 3)
+//		Sys_Error("R_TranslatePlayerSkin: bad size (%d)", size);
+//
+//	inwidth = aliasmodel->skinwidth;
+//	inheight = aliasmodel->skinheight;
+//
+//	// because this happens during gameplay, do it fast
+//	// instead of sending it through gl_upload 8
+//	GL_Bind(playertextures + playernum);
+//
+//	scaled_width = gl_max_size < 512 ? gl_max_size : 512;
+//	scaled_height = gl_max_size < 256 ? gl_max_size : 256;
+//
+//	// allow users to crunch sizes down even more if they want
+//	scaled_width >>= (int) gl_playermip.value;
+//	scaled_height >>= (int) gl_playermip.value;
+//
+//	for (i = 0; i < 256; i++)
+//		translate32[i] = d_8to24table[translate[i]];
+//
+//	out = pixels;
+//	fracstep = inwidth * 0x10000 / scaled_width;
+//	for (i = 0; i < scaled_height; i++, out += scaled_width)
+//	{
+//		inrow = original + inwidth * (i * inheight / scaled_height);
+//		frac = fracstep >> 1;
+//		for (j = 0; j < scaled_width; j += 4)
+//		{
+//			out[j] = translate32[inrow[frac >> 16]];
+//			frac += fracstep;
+//			out[j + 1] = translate32[inrow[frac >> 16]];
+//			frac += fracstep;
+//			out[j + 2] = translate32[inrow[frac >> 16]];
+//			frac += fracstep;
+//			out[j + 3] = translate32[inrow[frac >> 16]];
+//			frac += fracstep;
+//		}
+//	}
+//	glTexImage2D(GL_TEXTURE_2D, 0, gl_solid_format, scaled_width, scaled_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
+//
+//	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+//	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+//	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+}
+
+void R_NewMap(void)
+{
+	int i;
+
+	for (i = 0; i < 256; i++)
+		d_lightstylevalue[i] = 264;		// normal light value
+
+	// clear out efrags in case the level hasn't been reloaded
+	// FIXME: is this one short?
+	for (i = 0; i < cl.worldmodel->brushmodel->numleafs; i++)
+		cl.worldmodel->brushmodel->leafs[i].efrags = NULL;
+
+	r_viewleaf = NULL;
+	R_ClearParticles();
+
+	GL_BuildLightmaps();
+
+	// identify sky texture
+	skytexturenum = -1;
+	mirrortexturenum = -1;
+
+	for (i = 0; i < cl.worldmodel->brushmodel->numtextures; i++)
+	{
+		if (!cl.worldmodel->brushmodel->textures[i])
+			continue;
+		if (!strncmp(cl.worldmodel->brushmodel->textures[i]->name, "sky", 3))
+			skytexturenum = i;
+		if (!strncmp(cl.worldmodel->brushmodel->textures[i]->name, "window02_1", 10))
+			mirrortexturenum = i;
+		cl.worldmodel->brushmodel->textures[i]->texturechain = NULL;
+	}
+}
+
+/*
+ ====================
+ R_TimeRefresh_f
+
+ For program optimization
+ ====================
+ */
+void R_TimeRefresh_f(void)
+{
+	int i;
+	float start, stop, time;
+
+	if (cls.state != ca_connected)
+		return;
+
+	glDrawBuffer(GL_FRONT);
+	glFinish();
+
+	start = Sys_DoubleTime();
+	for (i = 0; i < 128; i++)
+	{
+		r_refdef.viewangles[1] = i * (360.0 / 128.0);
+		R_RenderView();
+	}
+
+	glFinish();
+	stop = Sys_DoubleTime();
+	time = stop - start;
+	Con_Printf("%f seconds (%f fps)\n", time, 128.0 / time);
+
+	glDrawBuffer(GL_BACK);
+	GL_EndRendering();
+}
+
+void R_SetClearColor_f(void)
+{
+	byte *rgb;
+	int s;
+	extern cvar_t r_clearcolor;
+
+	s = (int) r_clearcolor.value & 0xFF;
+	rgb = (byte*) (d_8to24table + s);
+	glClearColor(rgb[0] / 255.0, rgb[1] / 255.0, rgb[2] / 255.0, 0);
+}
+
 void R_Init(void)
 {
 	extern cvar_t gl_finish;
@@ -588,7 +776,6 @@ void R_Init(void)
 	extern void R_SetClearColor_f(void);
 
 	Cmd_AddCommand("timerefresh", R_TimeRefresh_f);
-	Cmd_AddCommand("envmap", R_Envmap_f);
 	Cmd_AddCommand("pointfile", R_ReadPointFile_f);
 
 	Cvar_RegisterVariable(&r_norefresh, NULL);
@@ -616,12 +803,6 @@ void R_Init(void)
 	Cvar_RegisterVariable(&r_clearcolor, R_SetClearColor_f);
 
 	Cvar_RegisterVariable(&gl_finish, NULL);
-	Cvar_RegisterVariable(&gl_texsort, NULL);
-
-#if 0 // Baker this isn't good at the moment
-	if (gl_mtexable)
-	Cvar_SetValue ("gl_texsort", 0.0);
-#endif
 
 	Cvar_RegisterVariable(&gl_cull, NULL);
 	Cvar_RegisterVariable(&gl_smoothmodels, NULL);
@@ -675,29 +856,22 @@ void R_RenderScene(void)
 
 void R_Clear(void)
 {
-	int clearbits = 0;
+	GLbitfield clearbits = GL_DEPTH_BUFFER_BIT;
 
-	// If gl_clear is 1, we always clear the color buffer
+	// If gl_clear is 1 we always clear the color buffer
 	if (gl_clear.value)
 		clearbits |= GL_COLOR_BUFFER_BIT;
 
 	if (r_mirroralpha.value < 1.0) // Baker 3.99: was != 1.0, changed in event gets set to # higher than 1.0
 	{
-		if (gl_clear.value)
-			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		else
-			glClear(GL_DEPTH_BUFFER_BIT);
+		glClear(clearbits);
 		gldepthmin = 0;
 		gldepthmax = 0.5;
 		glDepthFunc(GL_LEQUAL);
 	}
 	else
 	{
-		if (gl_clear.value)
-			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		else
-			glClear(GL_DEPTH_BUFFER_BIT);
-
+		glClear(clearbits);
 		gldepthmin = 0;
 		gldepthmax = 1;
 		glDepthFunc(GL_LEQUAL);
@@ -764,7 +938,7 @@ void R_Mirror(void)
 
 	glLoadMatrixf(r_base_world_matrix);
 
-	glColor4f(1, 1, 1, r_mirroralpha.value);
+	glColor4f(1.0f, 1.0f, 1.0f, r_mirroralpha.value);
 	s = cl.worldmodel->brushmodel->textures[mirrortexturenum]->texturechain;
 	for (; s; s = s->texturechain)
 		R_RenderBrushPoly(s);
@@ -774,7 +948,7 @@ void R_Mirror(void)
 	if (r_mirroralpha.value < 1) // Baker 3.61 - Only run mirror alpha fix if it is being used; hopefully this may fix a possible crash issue on some video cards
 		glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
 	//mirror fix
-	glColor4f(1, 1, 1, 1);
+	glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
 }
 
 /*
@@ -811,7 +985,6 @@ void R_RenderView(void)
 	R_Clear();
 
 	// render normal view
-
 	R_RenderScene();
 	R_DrawViewModel();
 	R_DrawWaterSurfaces();
