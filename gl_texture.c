@@ -291,11 +291,6 @@ int GL_LoadTexture(char *identifier, int width, int height, byte *data, int mode
 	return glt->texnum;
 }
 
-int GL_LoadPicTexture(qpic_t *pic)
-{
-	return GL_LoadTexture("", pic->width, pic->height, pic->data, TEX_ALPHA);
-}
-
 /****************************************/
 
 int current_texture_num = -1; // to avoid unnecessary texture sets

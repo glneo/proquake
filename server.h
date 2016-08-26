@@ -14,107 +14,108 @@
 
 typedef struct
 {
-	int			maxclients;
-	int			maxclientslimit;
-	struct client_s	*clients;		// [maxclients]
-	int			serverflags;		// episode completion information
-	bool	changelevel_issued;	// cleared when at SV_SpawnServer
+	int maxclients;
+	int maxclientslimit;
+	struct client_s *clients;		// [maxclients]
+	int serverflags;		// episode completion information
+	bool changelevel_issued;	// cleared when at SV_SpawnServer
 } server_static_t;
 
 //=============================================================================
 
-typedef enum {ss_loading, ss_active} server_state_t;
+typedef enum
+{
+	ss_loading, ss_active
+} server_state_t;
 
 typedef struct
 {
-	bool	active;				// false if only a net client
+	bool active;				// false if only a net client
 
-	bool	paused;
-	bool	loadgame;			// handle connections specially
+	bool paused;
+	bool loadgame;			// handle connections specially
 
-	double		time;
-	
-	int			lastcheck;			// used by PF_checkclient
-	double		lastchecktime;
-	
-	char		name[64];			// map name
-	char		modelname[64];		// maps/<name>.bsp, for model_precache[0]
-	struct model_s 	*worldmodel;
-	char		*model_precache[MAX_MODELS];	// NULL terminated
-	struct model_s	*models[MAX_MODELS];
-	char		*sound_precache[MAX_SOUNDS];	// NULL terminated
-	char		*lightstyles[MAX_LIGHTSTYLES];
-	int			num_edicts;
-	int			max_edicts;
-	edict_t		*edicts;			// can NOT be array indexed, because
-									// edict_t is variable sized, but can
-									// be used to reference the world ent
-	server_state_t	state;			// some actions are only valid during load
+	double time;
 
-	sizebuf_t	datagram;
-	byte		datagram_buf[MAX_DATAGRAM];
+	int lastcheck;			// used by PF_checkclient
+	double lastchecktime;
 
-	sizebuf_t	reliable_datagram;	// copied to all clients at end of frame
-	byte		reliable_datagram_buf[MAX_DATAGRAM];
+	char name[64];			// map name
+	char modelname[64];		// maps/<name>.bsp, for model_precache[0]
+	struct model_s *worldmodel;
+	char *model_precache[MAX_MODELS];	// NULL terminated
+	struct model_s *models[MAX_MODELS];
+	char *sound_precache[MAX_SOUNDS];	// NULL terminated
+	char *lightstyles[MAX_LIGHTSTYLES];
+	int num_edicts;
+	int max_edicts;
+	edict_t *edicts;			// can NOT be array indexed, because
+						// edict_t is variable sized, but can
+						// be used to reference the world ent
+	server_state_t state;			// some actions are only valid during load
 
-	sizebuf_t	signon;
-	byte		signon_buf[8192];
+	sizebuf_t datagram;
+	byte datagram_buf[MAX_DATAGRAM];
+
+	sizebuf_t reliable_datagram;	// copied to all clients at end of frame
+	byte reliable_datagram_buf[MAX_DATAGRAM];
+
+	sizebuf_t signon;
+	byte signon_buf[8192];
 
 	// JPG - DON'T MODIFY ANYTHING ABOVE THIS POINT (CRMOD 6.X COMPATIBIILITY)
 
-	unsigned long	model_crc[MAX_MODELS];	// JPG - model checking
+	unsigned long model_crc[MAX_MODELS];	// JPG - model checking
 } server_t;
-
 
 #define	NUM_PING_TIMES		16
 #define	NUM_SPAWN_PARMS		16
 
 typedef struct client_s
 {
-	bool		active;				// false = client is free
-	bool		spawned;			// false = don't send datagrams
-	bool		dropasap;			// has been told to go to another level
-	bool		privileged;			// can execute any host command
-	bool		sendsignon;			// only valid before spawned
+	bool active;				// false = client is free
+	bool spawned;			// false = don't send datagrams
+	bool dropasap;			// has been told to go to another level
+	bool privileged;			// can execute any host command
+	bool sendsignon;			// only valid before spawned
 
-	double			last_message;		// reliable messages must be sent
-										// periodically
+	double last_message;		// reliable messages must be sent
+					// periodically
 
 	struct qsocket_s *netconnection;	// communications handle
 
-	usercmd_t		cmd;				// movement
-	vec3_t			wishdir;			// intended motion calced from cmd
+	usercmd_t cmd;				// movement
+	vec3_t wishdir;			// intended motion calced from cmd
 
-	sizebuf_t		message;			// can be added to at any time,
-										// copied and clear once per frame
-	byte			msgbuf[MAX_MSGLEN];
-	edict_t			*edict;				// EDICT_NUM(clientnum+1)
-	char			name[32];			// for printing to other people
-	int				colors;
-		
-	float			ping_times[NUM_PING_TIMES];
-	int				num_pings;			// ping_times[num_pings%NUM_PING_TIMES]
+	sizebuf_t message;			// can be added to at any time,
+						// copied and clear once per frame
+	byte msgbuf[MAX_MSGLEN];
+	edict_t *edict;				// EDICT_NUM(clientnum+1)
+	char name[32];			// for printing to other people
+	int colors;
+
+	float ping_times[NUM_PING_TIMES];
+	int num_pings;			// ping_times[num_pings%NUM_PING_TIMES]
 
 // spawn parms are carried from level to level
-	float			spawn_parms[NUM_SPAWN_PARMS];
+	float spawn_parms[NUM_SPAWN_PARMS];
 
 // client known data for deltas	
-	int				old_frags;
+	int old_frags;
 
 	// JPG - DON'T MODIFY ANYTHING ABOVE THIS POINT (CRMOD 6.X COMPATIBIILITY)
-	
+
 	// JPG - added spam_time to prevent spamming.  If time < spam_time then
 	// the client is spamming and is silenced.
-	double			spam_time;
+	double spam_time;
 
 	// JPG 3.00 - prevent clients from rapidly changing their name/colour
 	//            and doing a say or say_team
-	double			change_time;
+	double change_time;
 
 	// JPG 3.30 - allow clients to connect if they don't have the map
-	bool		nomap;
+	bool nomap;
 } client_t;
-
 
 //=============================================================================
 
@@ -181,66 +182,63 @@ typedef struct client_s
 
 //============================================================================
 
-extern	cvar_t	teamplay;
-extern	cvar_t	skill;
-extern	cvar_t	deathmatch;
-extern	cvar_t	coop;
-extern	cvar_t	fraglimit;
-extern	cvar_t	timelimit;
-extern  cvar_t  sv_ipmasking;
+extern cvar_t teamplay;
+extern cvar_t skill;
+extern cvar_t deathmatch;
+extern cvar_t coop;
+extern cvar_t fraglimit;
+extern cvar_t timelimit;
+extern cvar_t sv_ipmasking;
 
-extern	cvar_t	pq_fullpitch;	// JPG 2.01
+extern cvar_t pq_fullpitch;	// JPG 2.01
 
-extern	cvar_t	sv_cullentities;
+extern cvar_t sv_cullentities;
 
+extern server_static_t svs;				// persistant server info
+extern server_t sv;					// local server
 
+extern client_t *host_client;
 
-extern	server_static_t	svs;				// persistant server info
-extern	server_t		sv;					// local server
+extern jmp_buf host_abortserver;
 
-extern	client_t	*host_client;
+extern double host_time;
 
-extern	jmp_buf 	host_abortserver;
-
-extern	double		host_time;
-
-extern	edict_t		*sv_player;
-
+extern edict_t *sv_player;
 
 //===========================================================
 
-void SV_Init (void);
+void SV_Init(void);
 
-void SV_StartParticle (vec3_t org, vec3_t dir, int color, int count);
-void SV_StartSound (edict_t *entity, int channel, char *sample, int volume,float attenuation);
+void SV_StartParticle(vec3_t org, vec3_t dir, int color, int count);
+void SV_StartSound(edict_t *entity, int channel, char *sample, int volume, float attenuation);
 
-void SV_DropClient (bool crash);
+void SV_DropClient(bool crash);
 
-void SV_SendClientMessages (void);
-void SV_ClearDatagram (void);
+void SV_SendClientMessages(void);
+void SV_ClearDatagram(void);
 
-int SV_ModelIndex (char *name);
+int SV_ModelIndex(char *name);
 
-void SV_SetIdealPitch (void);
+void SV_SetIdealPitch(void);
 
-void SV_AddUpdates (void);
+void SV_AddUpdates(void);
 
-void SV_ClientThink (void);
-void SV_AddClientToServer (struct qsocket_s	*ret);
+void SV_ClientThink(void);
+void SV_AddClientToServer(struct qsocket_s *ret);
 
-void SV_ClientPrintf (char *fmt, ...);
-void SV_BroadcastPrintf (char *fmt, ...);
+void SV_ClientPrintf(char *fmt, ...);
+void SV_BroadcastPrintf(char *fmt, ...);
 
-void SV_Physics (void);
+void SV_Physics(void);
 
-bool SV_CheckBottom (edict_t *ent);
-bool SV_movestep (edict_t *ent, vec3_t move, bool relink);
+bool SV_CheckBottom(edict_t *ent);
+bool SV_movestep(edict_t *ent, vec3_t move, bool relink);
 
-void SV_WriteClientdataToMessage (edict_t *ent, sizebuf_t *msg);
+void SV_WriteClientdataToMessage(edict_t *ent, sizebuf_t *msg);
 
-void SV_MoveToGoal (void);
+void SV_MoveToGoal(void);
 
-void SV_CheckForNewClients (void);
-void SV_RunClients (void);
-void SV_SaveSpawnparms ();
-void SV_SpawnServer (char *server);
+void SV_CheckForNewClients(void);
+void SV_RunClients(void);
+void SV_SaveSpawnparms();
+void SV_SpawnServer(char *server);

@@ -966,11 +966,6 @@ void CL_ParseProQuakeString(char *string)
 
 #define SHOWNET(x) if(cl_shownet.value==2)Con_Printf ("%3i:%s\n", msg_readcount-1, x);
 
-/*
- =====================
- CL_ParseServerMessage
- =====================
- */
 void Con_LogCenterPrint(char *str);
 void CL_ParseServerMessage(void)
 {

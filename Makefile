@@ -4,7 +4,6 @@ LDFLAGS += -lm -lGL -lSDL2
 all: quake
 
 QUAKE_OBJS = \
-set(PROQUAKE_SOURCES
 	common.o \
 	cvar.o \
 	crc.o \
@@ -63,7 +62,7 @@ set(PROQUAKE_SOURCES
 	snd_sdl.o \
 
 quake : $(QUAKE_OBJS)
-	$(CC) -o $@ $(LDFLAGS) $^
+	$(CC) -o $@ $^ $(LDFLAGS)
 
 %.o : %.c
 	$(CC) -c -o $@ $(CFLAGS) $<

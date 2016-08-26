@@ -2154,9 +2154,9 @@ typedef struct
 } level_t;
 
 level_t levels[] = {
-	{ "start", "Entrance" },	// 0
+	{ "start", "Entrance" }, // 0
 
-	{ "e1m1", "Slipgate Complex" },				// 1
+	{ "e1m1", "Slipgate Complex" }, // 1
 	{ "e1m2", "Castle of the Damned" },
 	{ "e1m3", "The Necropolis" },
 	{ "e1m4", "The Grisly Grotto" },
@@ -2165,7 +2165,7 @@ level_t levels[] = {
 	{ "e1m7", "The House of Chthon" },
 	{ "e1m8", "Ziggurat Vertigo" },
 
-	{ "e2m1", "The Installation" },				// 9
+	{ "e2m1", "The Installation" }, // 9
 	{ "e2m2", "Ogre Citadel" },
 	{ "e2m3", "Crypt of Decay" },
 	{ "e2m4", "The Ebon Fortress" },
@@ -2173,7 +2173,7 @@ level_t levels[] = {
 	{ "e2m6", "The Dismal Oubliette" },
 	{ "e2m7", "Underearth" },
 
-	{ "e3m1", "Termination Central" },			// 16
+	{ "e3m1", "Termination Central" }, // 16
 	{ "e3m2", "The Vaults of Zin" },
 	{ "e3m3", "The Tomb of Terror" },
 	{ "e3m4", "Satan's Dark Delight" },
@@ -2181,7 +2181,7 @@ level_t levels[] = {
 	{ "e3m6", "Chambers of Torment" },
 	{ "e3m7", "The Haunted Halls" },
 
-	{ "e4m1", "The Sewage System" },				// 23
+	{ "e4m1", "The Sewage System" }, // 23
 	{ "e4m2", "The Tower of Despair" },
 	{ "e4m3", "The Elder God Shrine" },
 	{ "e4m4", "The Palace of Hate" },
@@ -2190,9 +2190,9 @@ level_t levels[] = {
 	{ "e4m7", "Azure Agony" },
 	{ "e4m8", "The Nameless City" },
 
-	{ "end", "Shub-Niggurath's Pit" },			// 31
+	{ "end", "Shub-Niggurath's Pit" }, // 31
 
-	{ "dm1", "Place of Two Deaths" },				// 32
+	{ "dm1", "Place of Two Deaths" }, // 32
 	{ "dm2", "Claustrophobopolis" },
 	{ "dm3", "The Abandoned Base" },
 	{ "dm4", "The Bad Place" },
@@ -2202,29 +2202,29 @@ level_t levels[] = {
 
 //MED 01/06/97 added hipnotic levels
 level_t hipnoticlevels[] = {
-	{ "start", "Command HQ" },  // 0
+	{ "start", "Command HQ" }, // 0
 
-	{ "hip1m1", "The Pumping Station" },          // 1
+	{ "hip1m1", "The Pumping Station" }, // 1
 	{ "hip1m2", "Storage Facility" },
 	{ "hip1m3", "The Lost Mine" },
 	{ "hip1m4", "Research Facility" },
 	{ "hip1m5", "Military Complex" },
 
-	{ "hip2m1", "Ancient Realms" },          // 6
+	{ "hip2m1", "Ancient Realms" }, // 6
 	{ "hip2m2", "The Black Cathedral" },
 	{ "hip2m3", "The Catacombs" },
 	{ "hip2m4", "The Crypt" },
 	{ "hip2m5", "Mortum's Keep" },
 	{ "hip2m6", "The Gremlin's Domain" },
 
-	{ "hip3m1", "Tur Torment" },       // 12
+	{ "hip3m1", "Tur Torment" }, // 12
 	{ "hip3m2", "Pandemonium" },
 	{ "hip3m3", "Limbo" },
 	{ "hip3m4", "The Gauntlet" },
 
-	{ "hipend", "Armagon's Lair" },       // 16
+	{ "hipend", "Armagon's Lair" }, // 16
 
-	{ "hipdm1", "The Edge of Oblivion" }           // 17
+	{ "hipdm1", "The Edge of Oblivion" } // 17
 };
 
 //PGM 01/07/97 added rogue levels

@@ -14,6 +14,7 @@
 
 #include "quakedef.h"
 extern bool mtexenabled;
+
 int FindFullbrightTexture (byte *pixels, int num_pix)
 {
     int i;

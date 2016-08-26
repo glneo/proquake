@@ -17,7 +17,14 @@ typedef int func_t;
 typedef int string_t;
 
 typedef enum {
-	ev_void, ev_string, ev_float, ev_vector, ev_entity, ev_field, ev_function, ev_pointer
+	ev_void,
+	ev_string,
+	ev_float,
+	ev_vector,
+	ev_entity,
+	ev_field,
+	ev_function,
+	ev_pointer
 } etype_t;
 
 #define OFS_NULL        0
@@ -116,15 +123,14 @@ typedef struct statement_s {
 } dstatement_t;
 
 typedef struct {
+	#define	DEF_SAVEGLOBAL BIT(15)
 	unsigned short type;		// if DEF_SAVEGLOBGAL bit is set
 					// the variable needs to be saved in savegames
 	unsigned short ofs;
 	int s_name;
 } ddef_t;
-#define	DEF_SAVEGLOBAL	(1<<15)
 
-#define	MAX_PARMS	8
-
+#define	MAX_PARMS 8
 typedef struct {
 	int first_statement; // negative numbers are builtins
 	int parm_start;
@@ -139,7 +145,7 @@ typedef struct {
 	byte parm_size[MAX_PARMS];
 } dfunction_t;
 
-#define	PROG_VERSION	6
+#define	PROG_VERSION 6
 typedef struct {
 	int version;
 	int crc; // check of header file

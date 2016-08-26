@@ -32,7 +32,7 @@ static void Mod_LoadEntities(brush_model_t *brushmodel, lump_t *l, byte *mod_bas
 
 static void Mod_LoadPlanes(brush_model_t *brushmodel, lump_t *l, byte *mod_base, char *mod_name)
 {
-	dplane_t *in = (void *)(mod_base + l->fileofs);
+	dplane_t *in = (void *) (mod_base + l->fileofs);
 	if (l->filelen % sizeof(*in))
 		Sys_Error("funny lump size in %s", mod_name);
 
@@ -66,7 +66,7 @@ static void Mod_LoadTextures(brush_model_t *brushmodel, lump_t *l, byte *mod_bas
 		return;
 	}
 
-	dmiptexlump_t *miptexlump = (dmiptexlump_t *)(mod_base + l->fileofs);
+	dmiptexlump_t *miptexlump = (dmiptexlump_t *) (mod_base + l->fileofs);
 	int nummiptex = LittleLong(miptexlump->nummiptex);
 
 	brushmodel->numtextures = nummiptex;
@@ -78,7 +78,7 @@ static void Mod_LoadTextures(brush_model_t *brushmodel, lump_t *l, byte *mod_bas
 		if (dataofs == -1)
 			continue;
 
-		miptex_t *mt = (miptex_t *)((byte *)miptexlump + dataofs);
+		miptex_t *mt = (miptex_t *) ((byte *) miptexlump + dataofs);
 		unsigned int width = LittleLong(mt->width);
 		unsigned int height = LittleLong(mt->height);
 
@@ -94,7 +94,7 @@ static void Mod_LoadTextures(brush_model_t *brushmodel, lump_t *l, byte *mod_bas
 			Sys_Error("Texture %s's dimensions are not multiples of 16", mt->name);
 
 		unsigned int pixels = width * height / 64 * 85;
-		texture_t *tx = Q_malloc(sizeof(*tx) + pixels);
+		texture_t *tx = Q_calloc(sizeof(*tx), pixels);
 
 		memcpy(tx->name, mt->name, sizeof(tx->name));
 		tx->width = width;
@@ -107,14 +107,14 @@ static void Mod_LoadTextures(brush_model_t *brushmodel, lump_t *l, byte *mod_bas
 
 		// If world model and sky texture and q1 bsp and not dedicated ...
 		if (brushmodel->isworldmodel && ISSKYTEX(tx->name))
-			R_InitSky(tx);
+			R_InitSky(tx, (byte *) mt + tx->offsets[0]);
 
 		// If world model and NOT sky texture
 		int texture_flag = 0;
 		if (brushmodel->isworldmodel && !ISSKYTEX(tx->name))	//R00k
 			texture_flag |= TEX_WORLD;
 
-		tx->gl_texturenum = GL_LoadTexture(mt->name, tx->width, tx->height, (byte *)(tx + 1), texture_flag | TEX_MIPMAP);
+		tx->gl_texturenum = GL_LoadTexture(mt->name, tx->width, tx->height, (byte *) (tx + 1), texture_flag | TEX_MIPMAP);
 
 		tx->fullbright = -1; // because 0 is a potentially valid texture number
 		// check for fullbright pixels in the texture - only if it ain't liquid, etc also
@@ -136,15 +136,14 @@ static void Mod_LoadTextures(brush_model_t *brushmodel, lump_t *l, byte *mod_bas
 		brushmodel->textures[i] = tx;
 	}
 
-
-	texture_t	*tx, *tx2;
-	texture_t	*anims[10];
-	texture_t	*altanims[10];
-	int		pixels, num, maxanim, altmax;
+	texture_t *tx, *tx2;
+	texture_t *anims[10];
+	texture_t *altanims[10];
+	int num, maxanim, altmax;
 	//
 	// sequence the animations
 	//
-	for (int i=0 ; i<nummiptex ; i++)
+	for (int i = 0; i < nummiptex; i++)
 	{
 		tx = brushmodel->textures[i];
 		if (!tx || tx->name[0] != '+')
@@ -152,9 +151,9 @@ static void Mod_LoadTextures(brush_model_t *brushmodel, lump_t *l, byte *mod_bas
 		if (tx->anim_next)
 			continue;	// allready sequenced
 
-	// find the number of frames in the animation
-		memset (anims, 0, sizeof(anims));
-		memset (altanims, 0, sizeof(altanims));
+		// find the number of frames in the animation
+		memset(anims, 0, sizeof(anims));
+		memset(altanims, 0, sizeof(altanims));
 
 		maxanim = tx->name[1];
 		altmax = 0;
@@ -175,14 +174,14 @@ static void Mod_LoadTextures(brush_model_t *brushmodel, lump_t *l, byte *mod_bas
 			altmax++;
 		}
 		else
-			Sys_Error ("Bad animating texture %s", tx->name);
+			Sys_Error("Bad animating texture %s", tx->name);
 
-		for (int j=i+1 ; j<nummiptex ; j++)
+		for (int j = i + 1; j < nummiptex; j++)
 		{
 			tx2 = brushmodel->textures[j];
 			if (!tx2 || tx2->name[0] != '+')
 				continue;
-			if (strcmp (tx2->name+2, tx->name+2))
+			if (strcmp(tx2->name + 2, tx->name + 2))
 				continue;
 
 			num = tx2->name[1];
@@ -192,44 +191,43 @@ static void Mod_LoadTextures(brush_model_t *brushmodel, lump_t *l, byte *mod_bas
 			{
 				num -= '0';
 				anims[num] = tx2;
-				if (num+1 > maxanim)
+				if (num + 1 > maxanim)
 					maxanim = num + 1;
 			}
 			else if (num >= 'A' && num <= 'J')
 			{
 				num = num - 'A';
 				altanims[num] = tx2;
-				if (num+1 > altmax)
-					altmax = num+1;
+				if (num + 1 > altmax)
+					altmax = num + 1;
 			}
 			else
-				Sys_Error ("Bad animating texture %s", tx->name);
+				Sys_Error("Bad animating texture %s", tx->name);
 		}
 
 #define	ANIM_CYCLE	2
-	// link them all together
-		for (int j=0 ; j<maxanim ; j++)
+		// link them all together
+		for (int j = 0; j < maxanim; j++)
 		{
 			tx2 = anims[j];
 			if (!tx2)
-				continue;
-//				Sys_Error ("Missing frame %i of %s",j, tx->name);
+				Sys_Error ("Missing frame %i of %s",j, tx->name);
 			tx2->anim_total = maxanim * ANIM_CYCLE;
 			tx2->anim_min = j * ANIM_CYCLE;
-			tx2->anim_max = (j+1) * ANIM_CYCLE;
-			tx2->anim_next = anims[ (j+1)%maxanim ];
+			tx2->anim_max = (j + 1) * ANIM_CYCLE;
+			tx2->anim_next = anims[(j + 1) % maxanim];
 			if (altmax)
 				tx2->alternate_anims = altanims[0];
 		}
-		for (int j=0 ; j<altmax ; j++)
+		for (int j = 0; j < altmax; j++)
 		{
 			tx2 = altanims[j];
 			if (!tx2)
-				Sys_Error ("Missing frame %i of %s",j, tx->name);
+				Sys_Error("Missing frame %i of %s", j, tx->name);
 			tx2->anim_total = altmax * ANIM_CYCLE;
 			tx2->anim_min = j * ANIM_CYCLE;
-			tx2->anim_max = (j+1) * ANIM_CYCLE;
-			tx2->anim_next = altanims[ (j+1)%altmax ];
+			tx2->anim_max = (j + 1) * ANIM_CYCLE;
+			tx2->anim_next = altanims[(j + 1) % altmax];
 			if (maxanim)
 				tx2->alternate_anims = anims[0];
 		}
@@ -238,7 +236,7 @@ static void Mod_LoadTextures(brush_model_t *brushmodel, lump_t *l, byte *mod_bas
 
 static void Mod_LoadVertexes(brush_model_t *brushmodel, lump_t *l, byte *mod_base, char *mod_name)
 {
-	dvertex_t *in = (void *)(mod_base + l->fileofs);
+	dvertex_t *in = (void *) (mod_base + l->fileofs);
 	if (l->filelen % sizeof(*in))
 		Sys_Error("funny lump size in %s", mod_name);
 
@@ -404,7 +402,7 @@ static void Mod_LoadSurfaces(brush_model_t *brushmodel, lump_t *l, byte *mod_bas
 		if (ISSKYTEX(out->texinfo->texture->name)) // sky
 		{
 			out->flags |= (SURF_DRAWSKY | SURF_DRAWTILED);
-//			GL_SubdivideSurface(out); // cut up polygon for warps
+			GL_SubdivideSurface(brushmodel, out); // cut up polygon for warps
 		}
 		else if (ISTURBTEX(out->texinfo->texture->name)) // turbulent
 		{
@@ -414,7 +412,7 @@ static void Mod_LoadSurfaces(brush_model_t *brushmodel, lump_t *l, byte *mod_bas
 				out->extents[i] = 16384;
 				out->texturemins[i] = -8192;
 			}
-//			GL_SubdivideSurface(out); // cut up polygon for warps
+			GL_SubdivideSurface(brushmodel, out); // cut up polygon for warps
 		}
 	}
 }
@@ -599,7 +597,7 @@ static void Mod_LoadSubmodels(brush_model_t *brushmodel, lump_t *l, byte *mod_ba
 
 	int count = l->filelen / sizeof(*in);
 	if (count > MAX_MODELS)
-		 Sys_Error("model %s has invalid # of vertices: %d", mod_name, count);
+		Sys_Error("model %s has invalid # of vertices: %d", mod_name, count);
 
 	dmodel_t *out = Q_malloc(count * sizeof(*out));
 
@@ -625,11 +623,7 @@ static void Mod_LoadSubmodels(brush_model_t *brushmodel, lump_t *l, byte *mod_ba
 }
 
 /*
- ================
- CalcSurfaceExtents
-
- Fills in s->texturemins[] and s->extents[]
- ================
+ * Fills in s->texturemins[] and s->extents[]
  */
 void CalcSurfaceExtents(brush_model_t *brushmodel, msurface_t *s)
 {
@@ -674,11 +668,7 @@ void CalcSurfaceExtents(brush_model_t *brushmodel, msurface_t *s)
 }
 
 /*
- =================
- Mod_MakeHull0
-
- Duplicate the drawing hull structure as a clipping hull
- =================
+ * Duplicate the drawing hull structure as a clipping hull
  */
 void Mod_MakeHull0(brush_model_t *brushmodel)
 {
@@ -708,7 +698,7 @@ void Mod_MakeHull0(brush_model_t *brushmodel)
 
 void Mod_LoadBrushModel(model_t *mod, void *buffer)
 {
-	dheader_t *header = (dheader_t *)buffer;
+	dheader_t *header = (dheader_t *) buffer;
 	char *mod_name = mod->name;
 
 	brush_model_t *brushmodel = Q_malloc(sizeof(*brushmodel));
@@ -721,24 +711,24 @@ void Mod_LoadBrushModel(model_t *mod, void *buffer)
 
 	// swap all the lumps
 	for (int i = 0; i < sizeof(dheader_t) / 4; i++)
-		((int *)header)[i] = LittleLong(((int *) header)[i]);
+		((int *) header)[i] = LittleLong(((int *) header)[i]);
 
 	// load into heap
-	Mod_LoadEntities(brushmodel, &header->lumps[LUMP_ENTITIES], (byte *)header, mod_name);
-	Mod_LoadPlanes(brushmodel, &header->lumps[LUMP_PLANES], (byte *)header, mod_name);
-	Mod_LoadTextures(brushmodel, &header->lumps[LUMP_TEXTURES], (byte *)header, mod_name);
-	Mod_LoadVertexes(brushmodel, &header->lumps[LUMP_VERTEXES], (byte *)header, mod_name);
-	Mod_LoadVisibility(brushmodel, &header->lumps[LUMP_VISIBILITY], (byte *)header, mod_name);
-	Mod_LoadTexinfo(brushmodel, &header->lumps[LUMP_TEXINFO], (byte *)header, mod_name);
-	Mod_LoadLighting(brushmodel, &header->lumps[LUMP_LIGHTING], (byte *)header, mod_name);
-	Mod_LoadSurfedges(brushmodel, &header->lumps[LUMP_SURFEDGES], (byte *)header, mod_name);
-	Mod_LoadEdges(brushmodel, &header->lumps[LUMP_EDGES], (byte *)header, mod_name);
-	Mod_LoadSurfaces(brushmodel, &header->lumps[LUMP_FACES], (byte *)header, mod_name);
-	Mod_LoadMarksurfaces(brushmodel, &header->lumps[LUMP_MARKSURFACES], (byte *)header, mod_name);
-	Mod_LoadLeafs(brushmodel, &header->lumps[LUMP_LEAFS], (byte *)header, mod_name);
-	Mod_LoadNodes(brushmodel, &header->lumps[LUMP_NODES], (byte *)header, mod_name);
-	Mod_LoadClipnodes(brushmodel, &header->lumps[LUMP_CLIPNODES], (byte *)header, mod_name);
-	Mod_LoadSubmodels(brushmodel, &header->lumps[LUMP_MODELS], (byte *)header, mod_name);
+	Mod_LoadEntities(brushmodel, &header->lumps[LUMP_ENTITIES], (byte *) header, mod_name);
+	Mod_LoadPlanes(brushmodel, &header->lumps[LUMP_PLANES], (byte *) header, mod_name);
+	Mod_LoadTextures(brushmodel, &header->lumps[LUMP_TEXTURES], (byte *) header, mod_name);
+	Mod_LoadVertexes(brushmodel, &header->lumps[LUMP_VERTEXES], (byte *) header, mod_name);
+	Mod_LoadVisibility(brushmodel, &header->lumps[LUMP_VISIBILITY], (byte *) header, mod_name);
+	Mod_LoadTexinfo(brushmodel, &header->lumps[LUMP_TEXINFO], (byte *) header, mod_name);
+	Mod_LoadLighting(brushmodel, &header->lumps[LUMP_LIGHTING], (byte *) header, mod_name);
+	Mod_LoadSurfedges(brushmodel, &header->lumps[LUMP_SURFEDGES], (byte *) header, mod_name);
+	Mod_LoadEdges(brushmodel, &header->lumps[LUMP_EDGES], (byte *) header, mod_name);
+	Mod_LoadSurfaces(brushmodel, &header->lumps[LUMP_FACES], (byte *) header, mod_name);
+	Mod_LoadMarksurfaces(brushmodel, &header->lumps[LUMP_MARKSURFACES], (byte *) header, mod_name);
+	Mod_LoadLeafs(brushmodel, &header->lumps[LUMP_LEAFS], (byte *) header, mod_name);
+	Mod_LoadNodes(brushmodel, &header->lumps[LUMP_NODES], (byte *) header, mod_name);
+	Mod_LoadClipnodes(brushmodel, &header->lumps[LUMP_CLIPNODES], (byte *) header, mod_name);
+	Mod_LoadSubmodels(brushmodel, &header->lumps[LUMP_MODELS], (byte *) header, mod_name);
 
 	Mod_MakeHull0(brushmodel);
 

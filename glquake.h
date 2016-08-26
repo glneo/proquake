@@ -124,7 +124,7 @@ extern cvar_t r_ringalpha;
 extern float r_world_matrix[16];
 
 // gl_warp.c
-void GL_SubdivideSurface(msurface_t *);
+void GL_SubdivideSurface(brush_model_t *brushmodel, msurface_t *fa);
 void EmitBothSkyLayers(msurface_t *);
 void EmitWaterPolys(msurface_t *);
 void EmitSkyPolys(msurface_t *);

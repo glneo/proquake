@@ -71,11 +71,6 @@ void R_RemoveEfrags(entity_t *ent)
 	ent->efrag = NULL;
 }
 
-/*
- ===================
- R_SplitEntityOnNode
- ===================
- */
 void R_SplitEntityOnNode(mnode_t *node)
 {
 	efrag_t *ef;
@@ -140,11 +135,6 @@ void R_SplitEntityOnNode(mnode_t *node)
 		R_SplitEntityOnNode(node->children[1]);
 }
 
-/*
- ===========
- R_AddEfrags
- ===========
- */
 void R_AddEfrags(entity_t *ent)
 {
 	model_t *entmodel;
@@ -208,7 +198,7 @@ void R_StoreEfrags(efrag_t **ppefrag)
 			break;
 
 		default:
-			Sys_Error("R_StoreEfrags: Bad entity type %d\n", clmodel->type);
+			Sys_Error("Bad entity type %d\n", clmodel->type);
 		}
 	}
 }

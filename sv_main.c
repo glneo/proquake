@@ -866,12 +866,6 @@ void SV_SendClientMessages(void)
  ==============================================================================
  */
 
-/*
- ================
- SV_ModelIndex
-
- ================
- */
 int SV_ModelIndex(char *name)
 {
 	int i;
@@ -884,16 +878,11 @@ int SV_ModelIndex(char *name)
 			return i;
 
 	if (i == MAX_MODELS || !sv.model_precache[i])
-		Sys_Error("SV_ModelIndex: model %s not precached", name);
+		Sys_Error("model %s not precached", name);
 
 	return i;
 }
 
-/*
- ================
- SV_CreateBaseline
- ================
- */
 void SV_CreateBaseline(void)
 {
 	int i, entnum;

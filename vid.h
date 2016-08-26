@@ -14,6 +14,9 @@
  * General Public License for more details.
  */
 
+#ifndef __VID_H
+#define __VID_H
+
 #define MAX_MODE_LIST 600
 
 typedef struct vrect_s {
@@ -74,4 +77,4 @@ extern void (*vid_menucmdfn)(void); //johnfitz
 void VID_Init(unsigned char *palette);
 void VID_Shutdown(void);
 
-
+#endif	/* __VID_H */

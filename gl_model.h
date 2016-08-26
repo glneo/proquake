@@ -253,8 +253,8 @@ typedef struct mtriangle_s {
 
 /* some sane limits, these can be changed or removed if needed */
 #define	MAX_SKINS 32
-#define	MAX_SKIN_HEIGHT 480
-#define	MAX_SKIN_WIDTH 480
+#define	MAX_SKIN_HEIGHT 1024
+#define	MAX_SKIN_WIDTH 1024
 #define	MAXALIASVERTS 4096
 #define	MAXALIASFRAMES 256
 #define	MAXALIASTRIS 4096

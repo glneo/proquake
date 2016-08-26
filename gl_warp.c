@@ -152,7 +152,7 @@ static void SubdividePolygon(int numverts, float *verts)
  can be done reasonably.
  ================
  */
-void GL_SubdivideSurface(msurface_t *fa)
+void GL_SubdivideSurface(brush_model_t *brushmodel, msurface_t *fa)
 {
 	vec3_t verts[64];
 	int numverts;
@@ -166,12 +166,12 @@ void GL_SubdivideSurface(msurface_t *fa)
 	numverts = 0;
 	for (i = 0; i < fa->numedges; i++)
 	{
-		lindex = loadmodel->brushmodel->surfedges[fa->firstedge + i];
+		lindex = brushmodel->surfedges[fa->firstedge + i];
 
 		if (lindex > 0)
-			vec = loadmodel->brushmodel->vertexes[loadmodel->brushmodel->edges[lindex].v[0]].position;
+			vec = brushmodel->vertexes[brushmodel->edges[lindex].v[0]].position;
 		else
-			vec = loadmodel->brushmodel->vertexes[loadmodel->brushmodel->edges[-lindex].v[1]].position;
+			vec = brushmodel->vertexes[brushmodel->edges[-lindex].v[1]].position;
 
 		if (numverts >= 64)
 			Sys_Error("GL_SubdivideSurface: excessive numverts %i", numverts);
@@ -202,62 +202,56 @@ float turbsin[] = {
  */
 void EmitWaterPolys(msurface_t *fa)
 {
-	glpoly_t *p;
-	float *v;
-	int i;
-	float s, t, os, ot;
-
-	for (p = fa->polys; p; p = p->next)
+	for (glpoly_t *p = fa->polys; p; p = p->next)
 	{
-		glBegin(GL_TRIANGLE_FAN);
-		for (i = 0, v = p->verts[0]; i < p->numverts; i++, v += VERTEXSIZE)
+		struct {
+			float s, t;
+		} texcord[p->numverts];
+		for (int i = 0; i < p->numverts; i++)
 		{
-			os = v[3];
-			ot = v[4];
+			float os = p->verts[i][3];
+			float ot = p->verts[i][4];
 
-			s = os + turbsin[(int) ((ot * 0.125 + cl.time) * TURBSCALE) & 255];
-			s *= (1.0 / 64);
+			texcord[i].s = os + turbsin[(int) ((ot * 0.125 + cl.time) * TURBSCALE) & 255];
+			texcord[i].s *= (1.0 / 64);
 
-			t = ot + turbsin[(int) ((os * 0.125 + cl.time) * TURBSCALE) & 255];
-			t *= (1.0 / 64);
+			texcord[i].t = ot + turbsin[(int) ((os * 0.125 + cl.time) * TURBSCALE) & 255];
+			texcord[i].t *= (1.0 / 64);
 
-			glTexCoord2f(s, t);
-			glVertex3fv(v);
 		}
-		glEnd();
+
+		glTexCoordPointer(2, GL_FLOAT, 0, texcord);
+		glVertexPointer(3, GL_FLOAT, VERTEXSIZE * sizeof(float), &p->verts[0][0]);
+		glDrawArrays(GL_TRIANGLE_FAN, 0, p->numverts);
 	}
 }
 
 void EmitSkyPolys(msurface_t *fa)
 {
-	glpoly_t *p;
-	float *v;
-	int i;
-	float s, t;
-	vec3_t dir;
-	float length;
-
-	for (p = fa->polys; p; p = p->next)
+	for (glpoly_t *p = fa->polys; p; p = p->next)
 	{
-		glBegin(GL_TRIANGLE_FAN);
-		for (i = 0, v = p->verts[0]; i < p->numverts; i++, v += VERTEXSIZE)
+		struct {
+			float s, t;
+		} texcord[p->numverts];
+		for (int i = 0; i < p->numverts; i++)
 		{
-			VectorSubtract(v, r_origin, dir);
+			vec3_t dir;
+			VectorSubtract(p->verts[i], r_origin, dir);
 			dir[2] *= 3;	// flatten the sphere
 
-			length = VectorLength(dir);
+			float length = VectorLength(dir);
 			length = 6 * 63 / length;
 
 			dir[0] *= length;
 			dir[1] *= length;
 
-			s = (speedscale + dir[0]) * (1.0 / 128);
-			t = (speedscale + dir[1]) * (1.0 / 128);
-
-			glTexCoord2f(s, t);
-			glVertex3fv(v);
+			texcord[i].s = (speedscale + dir[0]) * (1.0 / 128);
+			texcord[i].t = (speedscale + dir[1]) * (1.0 / 128);
 		}
-		glEnd();
+
+		glTexCoordPointer(2, GL_FLOAT, 0, texcord);
+		glVertexPointer(3, GL_FLOAT, VERTEXSIZE * sizeof(float), &p->verts[0][0]);
+		glDrawArrays(GL_TRIANGLE_FAN, 0, p->numverts);
 	}
 }
 
@@ -272,7 +266,6 @@ void EmitSkyPolys(msurface_t *fa)
  */
 void EmitBothSkyLayers(msurface_t *fa)
 {
-
 	GL_DisableMultitexture();
 
 	GL_Bind(solidskytexture);
@@ -327,16 +320,14 @@ void R_DrawSkyChain(msurface_t *s)
  A sky texture is 256*128, with the right side being a masked overlay
  ==============
  */
-void R_InitSky(texture_t *mt)
+void R_InitSky(texture_t *mt, byte *src)
 {
 	int i, j, p, scaledx;
-	byte *src, fixedsky[256 * 128];
+	byte fixedsky[256 * 128];
 	unsigned trans[128 * 128];
 	unsigned transpix;
 	int r, g, b;
 	unsigned *rgba;
-
-	src = (byte *) mt + mt->offsets[0];
 
 	if (mt->width * mt->height != sizeof(fixedsky))
 	{

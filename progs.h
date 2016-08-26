@@ -24,7 +24,7 @@ typedef union eval_s {
 	int edict;
 } eval_t;
 
-#define	MAX_ENT_LEAFS	16
+#define	MAX_ENT_LEAFS 16
 typedef struct edict_s {
 	bool free;
 	link_t area;				// linked to a division node or leaf

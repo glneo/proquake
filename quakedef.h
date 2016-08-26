@@ -55,12 +55,12 @@
 #define	MAX_DATAGRAM		1024	// max length of unreliable message
 
 // per-level limits
-#define	MAX_EDICTS		2048
-#define	MAX_LIGHTSTYLES	64
-#define	MAX_MODELS		256	// these are sent over the net as bytes
-#define	MAX_SOUNDS		256	// so they cannot be blindly increased
+#define	MAX_EDICTS              2048
+#define	MAX_LIGHTSTYLES         64
+#define	MAX_MODELS              2048 // these are sent over the net as bytes
+#define	MAX_SOUNDS              2048 // so they cannot be blindly increased
 
-#define	SAVEGAME_COMMENT_LENGTH	39
+#define	SAVEGAME_COMMENT_LENGTH 39
 
 #define	MAX_STYLESTRING		64
 

@@ -47,7 +47,10 @@ typedef struct
 byte conback_buffer[sizeof(qpic_t) + sizeof(glpic_t)];
 qpic_t *conback = (qpic_t *) &conback_buffer;
 
-extern int GL_LoadPicTexture(qpic_t *pic);
+static int GL_LoadPicTexture(qpic_t *pic)
+{
+	return GL_LoadTexture("", pic->width, pic->height, pic->data, TEX_ALPHA);
+}
 
 #define NUMCROSSHAIRS	5
 int crosshairtextures[NUMCROSSHAIRS];
@@ -248,11 +251,6 @@ qpic_t *Draw_PicFromWad(char *name)
 	return p;
 }
 
-/*
- ================
- Draw_CachePic
- ================
- */
 qpic_t *Draw_CachePic(char *path)
 {
 	cachepic_t *pic;
@@ -269,9 +267,7 @@ qpic_t *Draw_CachePic(char *path)
 	menu_numcachepics++;
 	strcpy(pic->name, path);
 
-//
-// load the pic from disk
-//
+	// load the pic from disk
 	dat = (qpic_t *) COM_LoadTempFile(path);
 	if (!dat)
 		Sys_Error("Draw_CachePic: failed to load %s", path);
@@ -331,11 +327,6 @@ void Draw_LoadPics(void)
 	draw_backtile = Draw_PicFromWad("backtile");
 }
 
-/*
- ===============
- Draw_SmoothFont_f
- ===============
- */
 static bool smoothfont = 1;
 bool smoothfont_init = false;
 
@@ -396,12 +387,51 @@ static void Load_CharSet(void)
 	SetSmoothFont();
 }
 
-/*
- ===============
- Draw_Init
- ===============
- */
-void Draw_InitConback_Old(void);
+void Draw_InitConback_Old(void)
+{
+	qpic_t *cb;
+	int start;
+	byte *dest;
+	char ver[40];
+	glpic_t *gl;
+
+	byte *ncdata;
+
+	start = Hunk_LowMark();
+
+	cb = (qpic_t *) COM_LoadTempFile("gfx/conback.lmp");
+	if (!cb)
+		Sys_Error("Couldn't load gfx/conback.lmp");
+	SwapPic(cb);
+
+	// hack the version number directly into the pic
+
+	snprintf(ver, sizeof(ver), "(ProQuake) %4.2f", (float) PROQUAKE_SERIES_VERSION); // JPG - obvious change
+
+	dest = cb->data + 320 * 186 + 320 - 11 - 8 * strlen(ver);
+	for (int x = 0; x < strlen(ver); x++)
+		Draw_CharToConback(ver[x], dest + (x << 3));
+
+	conback->width = cb->width;
+	conback->height = cb->height;
+	ncdata = cb->data;
+
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+	gl = (glpic_t *) conback->data;
+	gl->texnum = GL_LoadTexture("conback", conback->width, conback->height, ncdata, TEX_NOFLAGS);
+	gl->sl = 0;
+	gl->sh = 1;
+	gl->tl = 0;
+	gl->th = 1;
+	conback->width = vid.width;
+	conback->height = vid.height;
+
+	// free loaded console
+	Hunk_FreeToLowMark(start);
+}
+
 void Draw_Init(void)
 {
 	int i;
@@ -448,54 +478,6 @@ void Draw_Init(void)
 	// load game pics
 	Draw_LoadPics();
 
-}
-
-void Draw_InitConback_Old(void)
-{
-//	int		i;
-	qpic_t *cb;
-	int start;
-	byte *dest;
-	int x, y;
-	char ver[40];
-	glpic_t *gl;
-
-	byte *ncdata;
-
-	start = Hunk_LowMark();
-
-	cb = (qpic_t *) COM_LoadTempFile("gfx/conback.lmp");
-	if (!cb)
-		Sys_Error("Couldn't load gfx/conback.lmp");
-	SwapPic(cb);
-
-	// hack the version number directly into the pic
-
-	snprintf(ver, sizeof(ver), "(ProQuake) %4.2f", (float) PROQUAKE_SERIES_VERSION); // JPG - obvious change
-
-	dest = cb->data + 320 * 186 + 320 - 11 - 8 * strlen(ver);
-	y = strlen(ver);
-	for (x = 0; x < y; x++)
-		Draw_CharToConback(ver[x], dest + (x << 3));
-
-	conback->width = cb->width;
-	conback->height = cb->height;
-	ncdata = cb->data;
-
-	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-
-	gl = (glpic_t *) conback->data;
-	gl->texnum = GL_LoadTexture("conback", conback->width, conback->height, ncdata, TEX_NOFLAGS);
-	gl->sl = 0;
-	gl->sh = 1;
-	gl->tl = 0;
-	gl->th = 1;
-	conback->width = vid.width;
-	conback->height = vid.height;
-
-	// free loaded console
-	Hunk_FreeToLowMark(start);
 }
 
 /*
@@ -672,12 +654,12 @@ void Draw_Crosshair(void)
 		if (!cl_crosshaircentered.value)
 		{
 			// Standard off-center Quake crosshair
-			Draw_Character(scr_vrect.x + scr_vrect.width / 2 + cl_crossx.value, scr_vrect.y + scr_vrect.height / 2 + cl_crossy.value, '+');
+			Draw_Character(scr_vrect.x + (scr_vrect.width / 2) + cl_crossx.value, scr_vrect.y + (scr_vrect.height / 2) + cl_crossy.value, '+');
 		}
 		else
 		{
 			// Baker 3.60 - Centered crosshair (FuhQuake)
-			Draw_Character(scr_vrect.x + scr_vrect.width / 2 - 4 + cl_crossx.value, scr_vrect.y + scr_vrect.height / 2 - 4 + cl_crossy.value, '+');
+			Draw_Character(scr_vrect.x + ((scr_vrect.width / 2) - 4) + cl_crossx.value, scr_vrect.y + ((scr_vrect.height / 2) - 4) + cl_crossy.value, '+');
 		}
 	}
 
@@ -1077,5 +1059,4 @@ void GL_Set2D(void)
 	glDisable(GL_CULL_FACE);
 	glDisable(GL_BLEND);
 	glEnable(GL_ALPHA_TEST);
-//	glDisable(GL_ALPHA_TEST);
 }

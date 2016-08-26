@@ -19,7 +19,7 @@
 #include "quakedef.h"
 
 model_t *loadmodel;
-char loadname[32];	// for hunk tags
+char loadname[32]; // for hunk tags
 
 void Mod_LoadAliasModel(model_t *mod, void *buffer);
 void Mod_LoadSpriteModel(model_t *mod, void *buffer);
@@ -161,13 +161,7 @@ model_t *Mod_FindName(char *name)
 	return mod;
 }
 
-/*
- ==================
- Mod_LoadModel
-
- Loads a model into the cache
- ==================
- */
+/* Loads a model into the cache */
 model_t *Mod_LoadModel(model_t *mod, bool crash)
 {
 	void *buf;
@@ -214,13 +208,7 @@ model_t *Mod_LoadModel(model_t *mod, bool crash)
 	return mod;
 }
 
-/*
- ==================
- Mod_ForName
-
- Loads in a model for the given name
- ==================
- */
+/* Loads in a model for the given name */
 model_t *Mod_ForName(char *name, bool crash)
 {
 	model_t *mod;

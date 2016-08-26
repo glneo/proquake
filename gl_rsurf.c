@@ -213,14 +213,14 @@ texture_t *R_TextureAnimation(texture_t *base)
 	relative = (int) (cl.time * 10) % base->anim_total;
 
 	count = 0;
-//	while (base->anim_min > relative || base->anim_max <= relative)
-//	{
-//		base = base->anim_next;
-//		if (!base)
-//			Sys_Error("R_TextureAnimation: broken cycle");
-//		if (++count > 100)
-//			Sys_Error("R_TextureAnimation: infinite cycle");
-//	}
+	while (base->anim_min > relative || base->anim_max <= relative)
+	{
+		base = base->anim_next;
+		if (!base)
+			Sys_Error("R_TextureAnimation: broken cycle");
+		if (++count > 100)
+			Sys_Error("R_TextureAnimation: infinite cycle");
+	}
 
 	return base;
 }
@@ -300,12 +300,6 @@ void R_BlendLightmaps(void)
 	glDepthMask(GL_TRUE); // back to normal Z buffering
 }
 
-/*
- ================
- R_RenderDynamicLightmaps
- Multitexture
- ================
- */
 void R_RenderDynamicLightmaps(msurface_t *fa)
 {
 	int maps, smax, tmax;

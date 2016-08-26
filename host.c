@@ -777,7 +777,7 @@ void _Host_Frame(double time)
 	}
 
 	// get new key events
-	Sys_SendKeyEvents();
+	IN_SendKeyEvents();
 
 	// polled controllers to add commands
 	IN_Commands();

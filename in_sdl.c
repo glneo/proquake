@@ -23,56 +23,51 @@
 
 #define USE_SDL2
 
-static bool	textmode;
+static bool textmode;
 
-static cvar_t in_debugkeys = {"in_debugkeys", "0", false};
+static cvar_t in_debugkeys = { "in_debugkeys", "0", false };
 
 // SDL2 Game Controller cvars
-cvar_t	joy_deadzone = { "joy_deadzone", "0.175", true };
-cvar_t	joy_deadzone_trigger = { "joy_deadzone_trigger", "0.001", true };
-cvar_t	joy_sensitivity_yaw = { "joy_sensitivity_yaw", "300", true };
-cvar_t	joy_sensitivity_pitch = { "joy_sensitivity_pitch", "150", true };
-cvar_t	joy_invert = { "joy_invert", "0", true };
-cvar_t	joy_exponent = { "joy_exponent", "3", true };
-cvar_t	joy_swapmovelook = { "joy_swapmovelook", "0", true };
-cvar_t	joy_enable = { "joy_enable", "1", true };
+cvar_t joy_deadzone = { "joy_deadzone", "0.175", true };
+cvar_t joy_deadzone_trigger = { "joy_deadzone_trigger", "0.001", true };
+cvar_t joy_sensitivity_yaw = { "joy_sensitivity_yaw", "300", true };
+cvar_t joy_sensitivity_pitch = { "joy_sensitivity_pitch", "150", true };
+cvar_t joy_invert = { "joy_invert", "0", true };
+cvar_t joy_exponent = { "joy_exponent", "3", true };
+cvar_t joy_swapmovelook = { "joy_swapmovelook", "0", true };
+cvar_t joy_enable = { "joy_enable", "1", true };
 
 static SDL_JoystickID joy_active_instaceid = -1;
 static SDL_GameController *joy_active_controller = NULL;
 
-static bool	no_mouse = false;
+static bool no_mouse = false;
 
-bool Key_TextEntry (void);
-void IN_SendKeyEvents (void);
+bool Key_TextEntry(void);
+void IN_SendKeyEvents(void);
 
-static int buttonremap[] =
-{
-	K_MOUSE1,
-	K_MOUSE3,	/* right button		*/
-	K_MOUSE2,	/* middle button	*/
-	K_MOUSE4,
-	K_MOUSE5
-};
+static int buttonremap[] = { K_MOUSE1, K_MOUSE3, /* right button		*/
+K_MOUSE2, /* middle button	*/
+K_MOUSE4, K_MOUSE5 };
 
 /* total accumulated mouse movement since last frame */
-static int	total_dx, total_dy = 0;
+static int total_dx, total_dy = 0;
 
-static int IN_FilterMouseEvents (const SDL_Event *event)
+static int IN_FilterMouseEvents(const SDL_Event *event)
 {
 	switch (event->type)
 	{
 	case SDL_MOUSEMOTION:
-	// case SDL_MOUSEBUTTONDOWN:
-	// case SDL_MOUSEBUTTONUP:
+		// case SDL_MOUSEBUTTONDOWN:
+		// case SDL_MOUSEBUTTONUP:
 		return 0;
 	}
 
 	return 1;
 }
 
-static int IN_SDL2_FilterMouseEvents (void *userdata, SDL_Event *event)
+static int IN_SDL2_FilterMouseEvents(void *userdata, SDL_Event *event)
 {
-	return IN_FilterMouseEvents (event);
+	return IN_FilterMouseEvents(event);
 }
 
 static void IN_BeginIgnoringMouseEvents()
@@ -93,13 +88,13 @@ static void IN_EndIgnoringMouseEvents()
 		SDL_SetEventFilter(NULL, NULL);
 }
 
-void IN_Activate (void)
+void IN_Activate(void)
 {
 	if (no_mouse)
 		return;
 
-//	if (!SDL_SetRelativeMouseMode(SDL_TRUE))
-//		Con_Printf("WARNING: SDL_SetRelativeMouseMode(SDL_TRUE) failed.\n");
+	if (!SDL_SetRelativeMouseMode(SDL_TRUE))
+		Con_Printf("WARNING: SDL_SetRelativeMouseMode(SDL_TRUE) failed.\n");
 
 	IN_EndIgnoringMouseEvents();
 
@@ -107,7 +102,7 @@ void IN_Activate (void)
 	total_dy = 0;
 }
 
-void IN_Deactivate (bool free_cursor)
+void IN_Deactivate(bool free_cursor)
 {
 	if (no_mouse)
 		return;
@@ -119,28 +114,28 @@ void IN_Deactivate (bool free_cursor)
 	IN_BeginIgnoringMouseEvents();
 }
 
-void IN_StartupJoystick (void)
+void IN_StartupJoystick(void)
 {
 	int i;
 	int nummappings;
 	char controllerdb[MAX_OSPATH];
 	SDL_GameController *gamecontroller;
-	
+
 	if (COM_CheckParm("-nojoy"))
 		return;
-	
-	if (SDL_InitSubSystem(SDL_INIT_GAMECONTROLLER) == -1 )
+
+	if (SDL_InitSubSystem(SDL_INIT_GAMECONTROLLER) == -1)
 	{
 		Con_Warning("could not initialize SDL Game Controller\n");
 		return;
 	}
-	
+
 	// Load additional SDL2 controller definitions from gamecontrollerdb.txt
-	snprintf (controllerdb, sizeof(controllerdb), "%s/gamecontrollerdb.txt", com_basedir);
+	snprintf(controllerdb, sizeof(controllerdb), "%s/gamecontrollerdb.txt", com_basedir);
 	nummappings = SDL_GameControllerAddMappingsFromFile(controllerdb);
 	if (nummappings > 0)
 		Con_Printf("%d mappings loaded from gamecontrollerdb.txt\n", nummappings);
-	
+
 	// Also try host_parms->userdir
 //	if (host_parms.userdir != host_parms.basedir)
 //	{
@@ -153,14 +148,14 @@ void IN_StartupJoystick (void)
 	for (i = 0; i < SDL_NumJoysticks(); i++)
 	{
 		const char *joyname = SDL_JoystickNameForIndex(i);
-		if ( SDL_IsGameController(i) )
+		if (SDL_IsGameController(i))
 		{
 			const char *controllername = SDL_GameControllerNameForIndex(i);
 			gamecontroller = SDL_GameControllerOpen(i);
 			if (gamecontroller)
 			{
 				Con_Printf("detected controller: %s\n", controllername != NULL ? controllername : "NULL");
-				
+
 				joy_active_instaceid = SDL_JoystickInstanceID(SDL_GameControllerGetJoystick(gamecontroller));
 				joy_active_controller = gamecontroller;
 				break;
@@ -172,19 +167,17 @@ void IN_StartupJoystick (void)
 		}
 		else
 		{
-			Con_Warning("joystick missing controller mappings: %s\n", joyname != NULL ? joyname : "NULL" );
+			Con_Warning("joystick missing controller mappings: %s\n", joyname != NULL ? joyname : "NULL");
 		}
 	}
 }
 
-void IN_ShutdownJoystick (void)
+void IN_ShutdownJoystick(void)
 {
-#if defined(USE_SDL2)
 	SDL_QuitSubSystem(SDL_INIT_GAMECONTROLLER);
-#endif
 }
 
-void IN_Init (void)
+void IN_Init(void)
 {
 	textmode = Key_TextEntry();
 
@@ -214,7 +207,7 @@ void IN_Init (void)
 	IN_StartupJoystick();
 }
 
-void IN_Shutdown (void)
+void IN_Shutdown(void)
 {
 	IN_Deactivate(true);
 	IN_ShutdownJoystick();
@@ -223,14 +216,12 @@ void IN_Shutdown (void)
 extern cvar_t cl_maxpitch; /* johnfitz -- variable pitch clamping */
 extern cvar_t cl_minpitch; /* johnfitz -- variable pitch clamping */
 
-
 void IN_MouseMotion(int dx, int dy)
 {
 	total_dx += dx;
 	total_dy += dy;
 }
 
-#if defined(USE_SDL2)
 typedef struct joyaxis_s
 {
 	float x;
@@ -254,12 +245,12 @@ static double joy_buttontimer[SDL_CONTROLLER_BUTTON_MAX];
 static double joy_emulatedkeytimer[10];
 
 /*
-================
-IN_AxisMagnitude
+ ================
+ IN_AxisMagnitude
 
-Returns the vector length of the given joystick axis
-================
-*/
+ Returns the vector length of the given joystick axis
+ ================
+ */
 static vec_t IN_AxisMagnitude(joyaxis_t axis)
 {
 	vec_t magnitude = sqrtf((axis.x * axis.x) + (axis.y * axis.y));
@@ -267,46 +258,46 @@ static vec_t IN_AxisMagnitude(joyaxis_t axis)
 }
 
 /*
-================
-IN_ApplyLookEasing
+ ================
+ IN_ApplyLookEasing
 
-assumes axis values are in [-1, 1] and the vector magnitude has been clamped at 1.
-Raises the axis values to the given exponent, keeping signs.
-================
-*/
+ assumes axis values are in [-1, 1] and the vector magnitude has been clamped at 1.
+ Raises the axis values to the given exponent, keeping signs.
+ ================
+ */
 static joyaxis_t IN_ApplyLookEasing(joyaxis_t axis, float exponent)
 {
-	joyaxis_t result = {0};
+	joyaxis_t result = { 0 };
 	vec_t eased_magnitude;
 	vec_t magnitude = IN_AxisMagnitude(axis);
-	
+
 	if (magnitude == 0)
 		return result;
-	
+
 	eased_magnitude = powf(magnitude, exponent);
-	
+
 	result.x = axis.x * (eased_magnitude / magnitude);
 	result.y = axis.y * (eased_magnitude / magnitude);
 	return result;
 }
 
 /*
-================
-IN_ApplyMoveEasing
+ ================
+ IN_ApplyMoveEasing
 
-clamps coordinates to a square with coordinates +/- sqrt(2)/2, then scales them to +/- 1.
-This wastes a bit of stick range, but gives the diagonals coordinates of (+/-1,+/-1),
-so holding the stick on a diagonal gives the same speed boost as holding the forward and strafe keyboard keys.
-================
-*/
+ clamps coordinates to a square with coordinates +/- sqrt(2)/2, then scales them to +/- 1.
+ This wastes a bit of stick range, but gives the diagonals coordinates of (+/-1,+/-1),
+ so holding the stick on a diagonal gives the same speed boost as holding the forward and strafe keyboard keys.
+ ================
+ */
 static joyaxis_t IN_ApplyMoveEasing(joyaxis_t axis)
 {
-	joyaxis_t result = {0};
+	joyaxis_t result = { 0 };
 	const float v = sqrtf(2.0f) / 2.0f;
-	
+
 	result.x = max(-v, min(v, axis.x));
 	result.y = max(-v, min(v, axis.y));
-	
+
 	result.x /= v;
 	result.y /= v;
 
@@ -314,39 +305,35 @@ static joyaxis_t IN_ApplyMoveEasing(joyaxis_t axis)
 }
 
 /*
-================
-IN_ApplyDeadzone
+ ================
+ IN_ApplyDeadzone
 
-in: raw joystick axis values converted to floats in +-1
-out: applies a circular deadzone and clamps the magnitude at 1
-     (my 360 controller is slightly non-circular and the stick travels further on the diagonals)
+ in: raw joystick axis values converted to floats in +-1
+ out: applies a circular deadzone and clamps the magnitude at 1
+ (my 360 controller is slightly non-circular and the stick travels further on the diagonals)
 
-deadzone is expected to satisfy 0 < deadzone < 1
+ deadzone is expected to satisfy 0 < deadzone < 1
 
-from https://github.com/jeremiah-sypult/Quakespasm-Rift
-and adapted from http://www.third-helix.com/2013/04/12/doing-thumbstick-dead-zones-right.html
-================
-*/
+ from https://github.com/jeremiah-sypult/Quakespasm-Rift
+ and adapted from http://www.third-helix.com/2013/04/12/doing-thumbstick-dead-zones-right.html
+ ================
+ */
 static joyaxis_t IN_ApplyDeadzone(joyaxis_t axis, float deadzone)
 {
-	joyaxis_t result = {0};
+	joyaxis_t result = { 0 };
 	vec_t magnitude = IN_AxisMagnitude(axis);
-	
-	if ( magnitude > deadzone ) {
+
+	if (magnitude > deadzone)
+	{
 		const vec_t new_magnitude = min(1.0, (magnitude - deadzone) / (1.0 - deadzone));
 		const vec_t scale = new_magnitude / magnitude;
 		result.x = axis.x * scale;
 		result.y = axis.y * scale;
 	}
-	
+
 	return result;
 }
 
-/*
-================
-IN_KeyForControllerButton
-================
-*/
 static int IN_KeyForControllerButton(SDL_GameControllerButton button)
 {
 	switch (button)
@@ -383,7 +370,7 @@ static void IN_JoyKeyEvent(bool wasdown, bool isdown, int key, double *timer)
 {
 	// we can't use `realtime` for key repeats because it is not monotomic
 	const double currenttime = Sys_DoubleTime();
-	
+
 	if (wasdown)
 	{
 		if (isdown)
@@ -409,7 +396,6 @@ static void IN_JoyKeyEvent(bool wasdown, bool isdown, int key, double *timer)
 		}
 	}
 }
-#endif
 
 /*
 ================
@@ -424,10 +410,10 @@ void IN_Commands (void)
 	int i;
 	const float stickthreshold = 0.9;
 //	const float triggerthreshold = joy_deadzone_trigger.value;
-	
+
 	if (!joy_enable.value)
 		return;
-	
+
 	if (!joy_active_controller)
 		return;
 
@@ -436,18 +422,18 @@ void IN_Commands (void)
 	{
 		bool newstate = SDL_GameControllerGetButton(joy_active_controller, (SDL_GameControllerButton)i);
 		bool oldstate = joy_buttonstate.buttondown[i];
-		
+
 		joy_buttonstate.buttondown[i] = newstate;
-		
+
 		// NOTE: This can cause a reentrant call of IN_Commands, via SCR_ModalMessage when confirming a new game.
 		IN_JoyKeyEvent(oldstate, newstate, IN_KeyForControllerButton((SDL_GameControllerButton)i), &joy_buttontimer[i]);
 	}
-	
+
 	for (i = 0; i < SDL_CONTROLLER_AXIS_MAX; i++)
 	{
 		newaxisstate.axisvalue[i] = SDL_GameControllerGetAxis(joy_active_controller, (SDL_GameControllerAxis)i) / 32768.0f;
 	}
-	
+
 	// emit emulated arrow keys so the analog sticks can be used in the menu
 	if (key_dest != key_game)
 	{
@@ -460,7 +446,7 @@ void IN_Commands (void)
 		IN_JoyKeyEvent(joy_axisstate.axisvalue[SDL_CONTROLLER_AXIS_RIGHTY] < -stickthreshold,newaxisstate.axisvalue[SDL_CONTROLLER_AXIS_RIGHTY] < -stickthreshold, K_UPARROW, &joy_emulatedkeytimer[6]);
 		IN_JoyKeyEvent(joy_axisstate.axisvalue[SDL_CONTROLLER_AXIS_RIGHTY] > stickthreshold, newaxisstate.axisvalue[SDL_CONTROLLER_AXIS_RIGHTY] > stickthreshold, K_DOWNARROW, &joy_emulatedkeytimer[7]);
 	}
-	
+
 	// emit emulated keys for the analog triggers
 //	IN_JoyKeyEvent(joy_axisstate.axisvalue[SDL_CONTROLLER_AXIS_TRIGGERLEFT] > triggerthreshold,  newaxisstate.axisvalue[SDL_CONTROLLER_AXIS_TRIGGERLEFT] > triggerthreshold, K_LTRIGGER, &joy_emulatedkeytimer[8]);
 //	IN_JoyKeyEvent(joy_axisstate.axisvalue[SDL_CONTROLLER_AXIS_TRIGGERRIGHT] > triggerthreshold, newaxisstate.axisvalue[SDL_CONTROLLER_AXIS_TRIGGERRIGHT] > triggerthreshold, K_RTRIGGER, &joy_emulatedkeytimer[9]);
@@ -468,11 +454,6 @@ void IN_Commands (void)
 	joy_axisstate = newaxisstate;
 }
 
-/*
-================
-IN_JoyMove
-================
-*/
 void IN_JoyMove (usercmd_t *cmd)
 {
 	float	speed;
@@ -481,28 +462,28 @@ void IN_JoyMove (usercmd_t *cmd)
 
 	if (!joy_enable.value)
 		return;
-	
+
 	if (!joy_active_controller)
 		return;
-	
+
 	moveRaw.x = joy_axisstate.axisvalue[SDL_CONTROLLER_AXIS_LEFTX];
 	moveRaw.y = joy_axisstate.axisvalue[SDL_CONTROLLER_AXIS_LEFTY];
 	lookRaw.x = joy_axisstate.axisvalue[SDL_CONTROLLER_AXIS_RIGHTX];
 	lookRaw.y = joy_axisstate.axisvalue[SDL_CONTROLLER_AXIS_RIGHTY];
-	
+
 	if (joy_swapmovelook.value)
 	{
 		joyaxis_t temp = moveRaw;
 		moveRaw = lookRaw;
 		lookRaw = temp;
 	}
-	
+
 	moveDeadzone = IN_ApplyDeadzone(moveRaw, joy_deadzone.value);
 	lookDeadzone = IN_ApplyDeadzone(lookRaw, joy_deadzone.value);
 
 	moveEased = IN_ApplyMoveEasing(moveDeadzone);
 	lookEased = IN_ApplyLookEasing(lookDeadzone, joy_exponent.value);
-	
+
 	if (in_speed.state & 1)
 		speed = cl_movespeedkey.value;
 	else
@@ -579,14 +560,10 @@ void IN_UpdateInputMode (void)
 	if (textmode != want_textmode)
 	{
 		textmode = want_textmode;
-#if !defined(USE_SDL2)
-		SDL_EnableUNICODE(textmode);
-#else
 		if (textmode)
 			SDL_StartTextInput();
 		else
 			SDL_StopTextInput();
-#endif
 	}
 }
 
@@ -713,27 +690,18 @@ static inline int IN_SDL2_ScancodeToQuakeKey(SDL_Scancode scancode)
 
 static void IN_DebugTextEvent(SDL_Event *event)
 {
-	Con_Printf ("SDL_TEXTINPUT '%s'\n", event->text.text);
+	Con_Printf("SDL_TEXTINPUT '%s'\n", event->text.text);
 }
 
 static void IN_DebugKeyEvent(SDL_Event *event)
 {
 	const char *eventtype = (event->key.state == SDL_PRESSED) ? "SDL_KEYDOWN" : "SDL_KEYUP";
 
-	Con_Printf ("%s scancode: '%s' keycode: '%s'\n",
-		eventtype,
-		SDL_GetScancodeName(event->key.keysym.scancode),
-		SDL_GetKeyName(event->key.keysym.sym));
+	Con_Printf("%s scancode: '%s' keycode: '%s'\n", eventtype, SDL_GetScancodeName(event->key.keysym.scancode), SDL_GetKeyName(event->key.keysym.sym));
 
 }
 
-void Sys_SendKeyEvents(void)
-{
-	IN_SendKeyEvents();
-	return;
-}
-
-void IN_SendKeyEvents (void)
+void IN_SendKeyEvents(void)
 {
 	SDL_Event event;
 	int key;
@@ -755,9 +723,9 @@ void IN_SendKeyEvents (void)
 			if (in_debugkeys.value)
 				IN_DebugTextEvent(&event);
 
-		// SDL2: We use SDL_TEXTINPUT for typing in the console / chat.
-		// SDL2 uses the local keyboard layout and handles modifiers
-		// (shift for uppercase, etc.) for us.
+			// SDL2: We use SDL_TEXTINPUT for typing in the console / chat.
+			// SDL2 uses the local keyboard layout and handles modifiers
+			// (shift for uppercase, etc.) for us.
 //			{
 //				unsigned char *ch;
 //				for (ch = (unsigned char *)event.text.text; *ch; ch++)
@@ -773,29 +741,21 @@ void IN_SendKeyEvents (void)
 			if (in_debugkeys.value)
 				IN_DebugKeyEvent(&event);
 
-
-		// SDL2: we interpret the keyboard as the US layout, so keybindings
-		// are based on key position, not the label on the key cap.
+			// SDL2: we interpret the keyboard as the US layout, so keybindings
+			// are based on key position, not the label on the key cap.
 			key = IN_SDL2_ScancodeToQuakeKey(event.key.keysym.scancode);
-
-
-			Key_Event (key, 0, down);
-
-
+			Key_Event(key, 0, down);
 			break;
 
 		case SDL_MOUSEBUTTONDOWN:
 		case SDL_MOUSEBUTTONUP:
-			if (event.button.button < 1 ||
-			    event.button.button > sizeof(buttonremap) / sizeof(buttonremap[0]))
+			if (event.button.button < 1 || event.button.button > sizeof(buttonremap) / sizeof(buttonremap[0]))
 			{
-				Con_Printf ("Ignored event for mouse button %d\n",
-							event.button.button);
+				Con_Printf("Ignored event for mouse button %d\n", event.button.button);
 				break;
 			}
 			Key_Event(buttonremap[event.button.button - 1], 0, event.button.state == SDL_PRESSED);
 			break;
-
 
 		case SDL_MOUSEWHEEL:
 			if (event.wheel.y > 0)
@@ -810,11 +770,9 @@ void IN_SendKeyEvents (void)
 			}
 			break;
 
-
 		case SDL_MOUSEMOTION:
 			IN_MouseMotion(event.motion.xrel, event.motion.yrel);
 			break;
-
 
 		case SDL_CONTROLLERDEVICEADDED:
 			if (joy_active_instaceid == -1)
@@ -832,6 +790,7 @@ void IN_SendKeyEvents (void)
 			else
 				Con_DPrintf("Ignoring SDL_CONTROLLERDEVICEADDED\n");
 			break;
+
 		case SDL_CONTROLLERDEVICEREMOVED:
 			if (joy_active_instaceid != -1 && event.cdevice.which == joy_active_instaceid)
 			{
@@ -842,13 +801,14 @@ void IN_SendKeyEvents (void)
 			else
 				Con_DPrintf("Ignoring SDL_CONTROLLERDEVICEREMOVED\n");
 			break;
+
 		case SDL_CONTROLLERDEVICEREMAPPED:
 			Con_DPrintf("Ignoring SDL_CONTROLLERDEVICEREMAPPED\n");
 			break;
-				
+
 		case SDL_QUIT:
-			CL_Disconnect ();
-			Sys_Quit ();
+			CL_Disconnect();
+			Sys_Quit();
 			break;
 
 		default:
@@ -856,4 +816,3 @@ void IN_SendKeyEvents (void)
 		}
 	}
 }
-
