@@ -288,40 +288,40 @@ void Host_InitLocal(void)
 {
 	Host_InitCommands();
 
-	Cvar_RegisterVariable(&host_framerate, NULL);
-	Cvar_RegisterVariable(&host_speeds, NULL);
-	Cvar_RegisterVariable(&host_timescale, NULL); //johnfitz
+	Cvar_RegisterVariable(&host_framerate);
+	Cvar_RegisterVariable(&host_speeds);
+	Cvar_RegisterVariable(&host_timescale); //johnfitz
 
-	Cvar_RegisterVariable(&host_sleep, NULL);
+	Cvar_RegisterVariable(&host_sleep);
 
-	Cvar_RegisterVariable(&sys_ticrate, NULL);
-	Cvar_RegisterVariable(&serverprofile, NULL);
+	Cvar_RegisterVariable(&sys_ticrate);
+	Cvar_RegisterVariable(&serverprofile);
 
-	Cvar_RegisterVariable(&fraglimit, NULL);
-	Cvar_RegisterVariable(&timelimit, NULL);
-	Cvar_RegisterVariable(&teamplay, NULL);
-	Cvar_RegisterVariable(&samelevel, NULL);
-	Cvar_RegisterVariable(&noexit, NULL);
-	Cvar_RegisterVariable(&skill, NULL);
-	Cvar_RegisterVariable(&developer, NULL);
-	Cvar_RegisterVariable(&deathmatch, NULL);
-	Cvar_RegisterVariable(&coop, NULL);
+	Cvar_RegisterVariable(&fraglimit);
+	Cvar_RegisterVariable(&timelimit);
+	Cvar_RegisterVariable(&teamplay);
+	Cvar_RegisterVariable(&samelevel);
+	Cvar_RegisterVariable(&noexit);
+	Cvar_RegisterVariable(&skill);
+	Cvar_RegisterVariable(&developer);
+	Cvar_RegisterVariable(&deathmatch);
+	Cvar_RegisterVariable(&coop);
 
-	Cvar_RegisterVariable(&pausable, NULL);
+	Cvar_RegisterVariable(&pausable);
 
-	Cvar_RegisterVariable(&temp1, NULL);
+	Cvar_RegisterVariable(&temp1);
 
 	Cmd_AddCommand("writeconfig", Host_WriteConfig_f);	// by joe
 
-	Cvar_RegisterVariable(&proquake, NULL);		// JPG - added this so QuakeC can find it
-	Cvar_RegisterVariable(&pq_spam_rate, NULL);	// JPG - spam protection
-	Cvar_RegisterVariable(&pq_spam_grace, NULL);	// JPG - spam protection
-	Cvar_RegisterVariable(&pq_connectmute, NULL);	// Baker 3.99g: from Rook, protection against repeatedly connecting + spamming
-	Cvar_RegisterVariable(&pq_tempmute, NULL);	// JPG 3.20 - temporary muting
-	Cvar_RegisterVariable(&pq_showedict, NULL);	// JPG 3.11 - feature request from Slot Zero
-	Cvar_RegisterVariable(&pq_dequake, NULL);	// JPG 1.05 - translate dedicated console output to plain text
-	Cvar_RegisterVariable(&pq_maxfps, NULL);		// JPG 1.05
-	Cvar_RegisterVariable(&pq_logbinds, NULL);	// JPG 3.20 - log player binds
+	Cvar_RegisterVariable(&proquake);		// JPG - added this so QuakeC can find it
+	Cvar_RegisterVariable(&pq_spam_rate);	// JPG - spam protection
+	Cvar_RegisterVariable(&pq_spam_grace);	// JPG - spam protection
+	Cvar_RegisterVariable(&pq_connectmute);	// Baker 3.99g: from Rook, protection against repeatedly connecting + spamming
+	Cvar_RegisterVariable(&pq_tempmute);	// JPG 3.20 - temporary muting
+	Cvar_RegisterVariable(&pq_showedict);	// JPG 3.11 - feature request from Slot Zero
+	Cvar_RegisterVariable(&pq_dequake);	// JPG 1.05 - translate dedicated console output to plain text
+	Cvar_RegisterVariable(&pq_maxfps);		// JPG 1.05
+	Cvar_RegisterVariable(&pq_logbinds);	// JPG 3.20 - log player binds
 
 	Host_FindMaxClients();
 

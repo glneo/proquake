@@ -32,13 +32,13 @@ static vec3_t chase_dest;
 
 void Chase_Init(void)
 {
-	Cvar_RegisterVariable(&chase_back, NULL);
-	Cvar_RegisterVariable(&chase_up, NULL);
-	Cvar_RegisterVariable(&chase_right, NULL);
-	Cvar_RegisterVariable(&chase_pitch, NULL);
-	Cvar_RegisterVariable(&chase_yaw, NULL);
-	Cvar_RegisterVariable(&chase_roll, NULL);
-	Cvar_RegisterVariable(&chase_active, NULL);
+	Cvar_RegisterVariable(&chase_back);
+	Cvar_RegisterVariable(&chase_up);
+	Cvar_RegisterVariable(&chase_right);
+	Cvar_RegisterVariable(&chase_pitch);
+	Cvar_RegisterVariable(&chase_yaw);
+	Cvar_RegisterVariable(&chase_roll);
+	Cvar_RegisterVariable(&chase_active);
 }
 
 void Chase_Reset(void)

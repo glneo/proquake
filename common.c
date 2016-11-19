@@ -919,8 +919,8 @@ void COM_Init(char *basedir)
 		LittleFloat = FloatSwap;
 	}
 
-	Cvar_RegisterVariable(&registered, NULL);
-	Cvar_RegisterVariable(&cmdline, NULL);  // Baker 3.99c: needed for test2 command
+	Cvar_RegisterVariable(&registered);
+	Cvar_RegisterVariable(&cmdline);  // Baker 3.99c: needed for test2 command
 	Cmd_AddCommand("path", COM_Path_f);
 
 	COM_InitFilesystem();

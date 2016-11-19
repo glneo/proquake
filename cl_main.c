@@ -939,30 +939,30 @@ void CL_Init (void)
 	CL_InitTEnts ();
 
 // register our commands
-	Cvar_RegisterVariable (&cl_name, NULL);
-	Cvar_RegisterVariable (&cl_color, NULL);
-	Cvar_RegisterVariable (&cl_upspeed, NULL);
-	Cvar_RegisterVariable (&cl_forwardspeed, NULL);
-	Cvar_RegisterVariable (&cl_backspeed, NULL);
-	Cvar_RegisterVariable (&cl_sidespeed, NULL);
-	Cvar_RegisterVariable (&cl_movespeedkey, NULL);
-	Cvar_RegisterVariable (&cl_yawspeed, NULL);
-	Cvar_RegisterVariable (&cl_pitchspeed, NULL);
-	Cvar_RegisterVariable (&cl_anglespeedkey, NULL);
-	Cvar_RegisterVariable (&cl_shownet, NULL);
-	Cvar_RegisterVariable (&cl_nolerp, NULL);
-	Cvar_RegisterVariable (&lookspring, NULL);
-	Cvar_RegisterVariable (&lookstrafe, NULL);
-	Cvar_RegisterVariable (&sensitivity, NULL);
-	Cvar_RegisterVariable (&freelook, NULL);   // Baker 3.60 - Freelook cvar support
+	Cvar_RegisterVariable (&cl_name);
+	Cvar_RegisterVariable (&cl_color);
+	Cvar_RegisterVariable (&cl_upspeed);
+	Cvar_RegisterVariable (&cl_forwardspeed);
+	Cvar_RegisterVariable (&cl_backspeed);
+	Cvar_RegisterVariable (&cl_sidespeed);
+	Cvar_RegisterVariable (&cl_movespeedkey);
+	Cvar_RegisterVariable (&cl_yawspeed);
+	Cvar_RegisterVariable (&cl_pitchspeed);
+	Cvar_RegisterVariable (&cl_anglespeedkey);
+	Cvar_RegisterVariable (&cl_shownet);
+	Cvar_RegisterVariable (&cl_nolerp);
+	Cvar_RegisterVariable (&lookspring);
+	Cvar_RegisterVariable (&lookstrafe);
+	Cvar_RegisterVariable (&sensitivity);
+	Cvar_RegisterVariable (&freelook);   // Baker 3.60 - Freelook cvar support
 
-	Cvar_RegisterVariable (&m_pitch, NULL);
-	Cvar_RegisterVariable (&m_yaw, NULL);
-	Cvar_RegisterVariable (&m_forward, NULL);
-	Cvar_RegisterVariable (&m_side, NULL);
+	Cvar_RegisterVariable (&m_pitch);
+	Cvar_RegisterVariable (&m_yaw);
+	Cvar_RegisterVariable (&m_forward);
+	Cvar_RegisterVariable (&m_side);
 
-	Cvar_RegisterVariable (&cl_gameplayhack_monster_lerp, NULL); // Hacks!
-	Cvar_RegisterVariable (&cl_bobbing, NULL);
+	Cvar_RegisterVariable (&cl_gameplayhack_monster_lerp); // Hacks!
+	Cvar_RegisterVariable (&cl_bobbing);
 
 	Cmd_AddCommand ("entities", CL_PrintEntities_f);
 	Cmd_AddCommand ("disconnect", CL_Disconnect_f);
@@ -982,25 +982,25 @@ void CL_Init (void)
 	Cmd_AddCommand ("viewpos", CL_Viewpos_f);
 
 // JPG - added these for %r formatting
-	Cvar_RegisterVariable (&pq_needrl, NULL);
-	Cvar_RegisterVariable (&pq_haverl, NULL);
-	Cvar_RegisterVariable (&pq_needrox, NULL);
+	Cvar_RegisterVariable (&pq_needrl);
+	Cvar_RegisterVariable (&pq_haverl);
+	Cvar_RegisterVariable (&pq_needrox);
 
 	// JPG - added these for %p formatting
-	Cvar_RegisterVariable (&pq_quad, NULL);
-	Cvar_RegisterVariable (&pq_pent, NULL);
-	Cvar_RegisterVariable (&pq_ring, NULL);
+	Cvar_RegisterVariable (&pq_quad);
+	Cvar_RegisterVariable (&pq_pent);
+	Cvar_RegisterVariable (&pq_ring);
 
 	// JPG 3.00 - %w formatting
-	Cvar_RegisterVariable (&pq_weapons, NULL);
-	Cvar_RegisterVariable (&pq_noweapons, NULL);
+	Cvar_RegisterVariable (&pq_weapons);
+	Cvar_RegisterVariable (&pq_noweapons);
 
 	// JPG 1.05 - added this for +jump -> +moveup translation
-	Cvar_RegisterVariable (&pq_moveup, NULL);
+	Cvar_RegisterVariable (&pq_moveup);
 
 	// JPG 3.02 - added this by request
-	Cvar_RegisterVariable (&pq_smoothcam, NULL);
+	Cvar_RegisterVariable (&pq_smoothcam);
 
-	Cvar_RegisterVariable(&cl_maxpitch, NULL);
-	Cvar_RegisterVariable(&cl_minpitch, NULL);
+	Cvar_RegisterVariable(&cl_maxpitch);
+	Cvar_RegisterVariable(&cl_minpitch);
 }

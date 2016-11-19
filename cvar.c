@@ -17,21 +17,8 @@
 #include "quakedef.h"
 
 cvar_t *cvar_vars;
-char *cvar_null_string = "";
+static char *cvar_null_string = "";
 
-//==============================================================================
-//
-//  USER COMMANDS
-//
-//==============================================================================
-
-void Cvar_Reset(char *name); //johnfitz
-
-/*
- ============
- Cvar_List_f -- johnfitz
- ============
- */
 void Cvar_List_f(void)
 {
 	cvar_t *cvar;
@@ -75,11 +62,6 @@ void Cvar_List_f(void)
 	Con_Printf("\n\n");
 }
 
-/*
- ============
- Cvar_Inc_f -- johnfitz
- ============
- */
 void Cvar_Inc_f(void)
 {
 	switch (Cmd_Argc())
@@ -97,11 +79,6 @@ void Cvar_Inc_f(void)
 	}
 }
 
-/*
- ============
- Cvar_Toggle_f -- johnfitz
- ============
- */
 void Cvar_Toggle_f(void)
 {
 	switch (Cmd_Argc())
@@ -119,11 +96,6 @@ void Cvar_Toggle_f(void)
 	}
 }
 
-/*
- ============
- Cvar_Cycle_f -- johnfitz
- ============
- */
 void Cvar_Cycle_f(void)
 {
 	int i;
@@ -163,70 +135,6 @@ void Cvar_Cycle_f(void)
 		Cvar_Set(Cmd_Argv(1), Cmd_Argv(i + 1)); // matched earlier in list
 }
 
-/*
- ============
- Cvar_Reset_f -- johnfitz
- ============
- */
-void Cvar_Reset_f(void)
-{
-	switch (Cmd_Argc())
-	{
-	default:
-	case 1:
-		Con_Printf("reset <cvar> : reset cvar to default\n");
-		break;
-	case 2:
-		Cvar_Reset(Cmd_Argv(1));
-		break;
-	}
-}
-
-/*
- ============
- Cvar_ResetAll_f -- johnfitz
- ============
- */
-void Cvar_ResetAll_f(void)
-{
-	cvar_t *var;
-
-	for (var = cvar_vars; var; var = var->next)
-		Cvar_Reset(var->name);
-}
-
-//==============================================================================
-//
-//  INIT
-//
-//==============================================================================
-
-/*
- ============
- Cvar_Init -- johnfitz
- ============
- */
-
-void Cvar_Init(void)
-{
-	Cmd_AddCommand("cvarlist", Cvar_List_f);
-	Cmd_AddCommand("toggle", Cvar_Toggle_f);
-	Cmd_AddCommand("cycle", Cvar_Cycle_f);
-	Cmd_AddCommand("resetcvar", Cvar_Reset_f);
-	Cmd_AddCommand("resetall", Cvar_ResetAll_f);
-}
-
-//==============================================================================
-//
-//  CVAR FUNCTIONS
-//
-//==============================================================================
-
-/*
- ============
- Cvar_FindVar
- ============
- */
 cvar_t *Cvar_FindVar(char *var_name)
 {
 	cvar_t *var;
@@ -238,11 +146,31 @@ cvar_t *Cvar_FindVar(char *var_name)
 	return NULL;
 }
 
-/*
- ============
- Cvar_VariableValue
- ============
- */
+cvar_t *Cvar_FindVarAfter (const char *prev_name, unsigned int with_flags)
+{
+	cvar_t	*var;
+
+	if (*prev_name)
+	{
+		var = Cvar_FindVar (prev_name);
+		if (!var)
+			return NULL;
+		var = var->next;
+	}
+	else
+		var = cvar_vars;
+
+	// search for the next cvar matching the needed flags
+	while (var)
+	{
+		if ((var->flags & with_flags) || !with_flags)
+			break;
+		var = var->next;
+	}
+
+	return var;
+}
+
 float Cvar_VariableValue(char *var_name)
 {
 	cvar_t *var;
@@ -253,11 +181,6 @@ float Cvar_VariableValue(char *var_name)
 	return atof(var->string);
 }
 
-/*
- ============
- Cvar_VariableString
- ============
- */
 char *Cvar_VariableString(char *var_name)
 {
 	cvar_t *var;
@@ -268,11 +191,6 @@ char *Cvar_VariableString(char *var_name)
 	return var->string;
 }
 
-/*
- ============
- Cvar_CompleteVariable
- ============
- */
 char *Cvar_CompleteVariable(char *partial)
 {
 	cvar_t *cvar;
@@ -291,11 +209,6 @@ char *Cvar_CompleteVariable(char *partial)
 	return NULL;
 }
 
-/*
- ============
- Cvar_Reset -- johnfitz
- ============
- */
 void Cvar_Reset(char *name)
 {
 	cvar_t *var;
@@ -307,11 +220,28 @@ void Cvar_Reset(char *name)
 		Cvar_Set(var->name, var->default_string);
 }
 
-/*
- ============
- Cvar_Set
- ============
- */
+void Cvar_Reset_f(void)
+{
+	switch (Cmd_Argc())
+	{
+	default:
+	case 1:
+		Con_Printf("reset <cvar> : reset cvar to default\n");
+		break;
+	case 2:
+		Cvar_Reset(Cmd_Argv(1));
+		break;
+	}
+}
+
+void Cvar_ResetAll_f(void)
+{
+	cvar_t *var;
+
+	for (var = cvar_vars; var; var = var->next)
+		Cvar_Reset(var->name);
+}
+
 void Cvar_Set(char *var_name, char *value)
 {
 	cvar_t *var;
@@ -341,7 +271,7 @@ void Cvar_Set(char *var_name, char *value)
 	}
 	//johnfitz
 
-	if ((var->server == 1) && changed)  // JPG - so that server = 2 will mute the variable
+	if (changed)  // JPG - so that server = 2 will mute the variable
 	{
 		if (sv.active)
 			SV_BroadcastPrintf("\"%s\" changed to \"%s\"\n", var->name, var->string);
@@ -349,7 +279,7 @@ void Cvar_Set(char *var_name, char *value)
 
 	//johnfitz
 	if (var->callback && changed)
-		var->callback();
+		var->callback(var);
 	//johnfitz
 
 	// JPG 3.00 - rcon (64 doesn't mean anything special, but we need some extra space because NET_MAXMESSAGE == RCON_BUFF_SIZE)
@@ -381,32 +311,22 @@ void Cvar_Set(char *var_name, char *value)
 	}
 }
 
-/*
- ============
- Cvar_SetValue
- ============
- */
 void Cvar_SetValue(char *var_name, float value)
 {
 	Cvar_Set(var_name, COM_NiceFloatString(value));
 }
 
-/*
- ============
- Cvar_RegisterVariable
-
- Adds a freestanding variable to the variable list.
- ============
- */
-void Cvar_RegisterVariable(cvar_t *variable, void *function)
+/* Adds a freestanding variable to the variable list. */
+void Cvar_RegisterVariable(cvar_t *variable)
 {
-	char *oldstr;
+	char value[512], *oldstr;
+	bool set_rom;
 	cvar_t *cursor, *prev; //johnfitz -- sorted list insert
 
 // first check to see if it has already been defined
 	if (Cvar_FindVar(variable->name))
 	{
-		Con_Printf("Can't register variable %s, already defined\n", variable->name);// JPG 3.02 allready->already
+		Con_Printf("Can't register variable %s, already defined\n", variable->name);
 		return;
 	}
 
@@ -417,20 +337,9 @@ void Cvar_RegisterVariable(cvar_t *variable, void *function)
 		return;
 	}
 
-// copy the value off, because future sets will Z_Free it
-	oldstr = variable->string;
-	variable->string = Z_Malloc(strlen(variable->string) + 1);
-	strcpy(variable->string, oldstr);
-	variable->value = atof(variable->string);
-
-	//johnfitz -- save initial value for "reset" command
-	variable->default_string = Z_Malloc(strlen(variable->string) + 1);
-	strcpy(variable->default_string, oldstr);
-	//johnfitz
 // link the variable in
-
 	//johnfitz -- insert each entry in alphabetical order
-	if (cvar_vars == NULL || strcmp(variable->name, cvar_vars->name) < 0) //insert at front
+	if (cvar_vars == NULL || strcmp(variable->name, cvar_vars->name) < 0) // insert at front
 	{
 		variable->next = cvar_vars;
 		cvar_vars = variable;
@@ -448,17 +357,40 @@ void Cvar_RegisterVariable(cvar_t *variable, void *function)
 		prev->next = variable;
 	}
 	//johnfitz
+	variable->flags |= CVAR_REGISTERED;
 
-	variable->callback = function; //johnfitz
+	// copy the value off, because future sets will Z_Free it
+	oldstr = variable->string;
+	variable->string = Z_Malloc(strlen(variable->string) + 1);
+	strcpy(variable->string, oldstr);
+	variable->value = atof(variable->string);
+
+	//johnfitz -- save initial value for "reset" command
+	variable->default_string = Z_Malloc(strlen(variable->string) + 1);
+	strcpy(variable->default_string, oldstr);
+
+	if (!(variable->flags & CVAR_CALLBACK))
+		variable->callback = NULL;
+
+// set it through the function to be consistent
+	set_rom = (variable->flags & CVAR_ROM);
+	variable->flags &= ~CVAR_ROM;
+	Cvar_Set(variable->name, value);
+	if (set_rom)
+		variable->flags |= CVAR_ROM;
 }
 
-/*
- ============
- Cvar_Command
+/* Set a callback function to the var */
+void Cvar_SetCallback(cvar_t *var, cvarcallback_t func)
+{
+	var->callback = func;
+	if (func)
+		var->flags |= CVAR_CALLBACK;
+	else
+		var->flags &= ~CVAR_CALLBACK;
+}
 
- Handles variable inspection and changing from the console
- ============
- */
+/* Handles variable inspection and changing from the console */
 bool Cvar_Command(void)
 {
 	cvar_t *v;
@@ -480,12 +412,8 @@ bool Cvar_Command(void)
 }
 
 /*
- ============
- Cvar_WriteVariables
-
- Writes lines containing "set variable value" for all variables
- with the archive flag set to true.
- ============
+ * Writes lines containing "set variable value" for all variables
+ * with the archive flag set to true.
  */
 void Cvar_WriteVariables(FILE *f)
 {
@@ -493,7 +421,15 @@ void Cvar_WriteVariables(FILE *f)
 
 	fprintf(f, "\n// Variables\n\n");
 	for (var = cvar_vars; var; var = var->next)
-		if (var->archive)
+		if (var->flags & CVAR_ARCHIVE)
 			fprintf(f, "%s \"%s\"\n", var->name, var->string);
 }
 
+void Cvar_Init(void)
+{
+	Cmd_AddCommand("cvarlist", Cvar_List_f);
+	Cmd_AddCommand("toggle", Cvar_Toggle_f);
+	Cmd_AddCommand("cycle", Cvar_Cycle_f);
+	Cmd_AddCommand("resetcvar", Cvar_Reset_f);
+	Cmd_AddCommand("resetall", Cvar_ResetAll_f);
+}

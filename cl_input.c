@@ -515,6 +515,6 @@ void CL_InitInput (void)
 
 	Cmd_AddCommand ("bestweapon", IN_BestWeapon);	// JPG 3.30 - bestweapon from QuakePro+
 
-	Cvar_RegisterVariable (&pq_lag, NULL); // JPG - synthetic lag
-	Cvar_RegisterVariable (&cl_fullpitch, NULL); // JPG 2.01 - get rid of "unknown command"
+	Cvar_RegisterVariable (&pq_lag); // JPG - synthetic lag
+	Cvar_RegisterVariable (&cl_fullpitch); // JPG 2.01 - get rid of "unknown command"
 }

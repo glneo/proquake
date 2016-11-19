@@ -853,12 +853,12 @@ void NET_Init(void)
 	// allocate space for network message buffer
 	SZ_Alloc(&net_message, NET_MAXMESSAGE);
 
-	Cvar_RegisterVariable(&net_messagetimeout, NULL);
-	Cvar_RegisterVariable(&net_connecttimeout, NULL);	// JPG 2.01 - qkick/qflood protection
-	Cvar_RegisterVariable(&hostname, NULL);
-	Cvar_RegisterVariable(&pq_password, NULL);			// JPG 3.00 - password protection
-	Cvar_RegisterVariable(&rcon_password, NULL);			// JPG 3.00 - rcon password
-	Cvar_RegisterVariable(&rcon_server, NULL);			// JPG 3.00 - rcon server
+	Cvar_RegisterVariable(&net_messagetimeout);
+	Cvar_RegisterVariable(&net_connecttimeout);	// JPG 2.01 - qkick/qflood protection
+	Cvar_RegisterVariable(&hostname);
+	Cvar_RegisterVariable(&pq_password);			// JPG 3.00 - password protection
+	Cvar_RegisterVariable(&rcon_password);			// JPG 3.00 - rcon password
+	Cvar_RegisterVariable(&rcon_server);			// JPG 3.00 - rcon server
 
 #ifdef PSP_NETWORKING_CODE
 	if(!host_initialized)

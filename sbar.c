@@ -267,12 +267,13 @@ void Sbar_Init(void)
 	Cmd_AddCommand("+showscores", Sbar_ShowScores_f);
 	Cmd_AddCommand("-showscores", Sbar_DontShowScores_f);
 
-	Cvar_RegisterVariable(&pq_teamscores, NULL); // JPG - status bar teamscores
-	Cvar_RegisterVariable(&pq_timer, NULL); // JPG - status bar timer
-	Cvar_RegisterVariable(&pq_scoreboard_pings, NULL); // JPG - ping times in the scoreboard
+	Cvar_RegisterVariable(&pq_teamscores); // JPG - status bar teamscores
+	Cvar_RegisterVariable(&pq_timer); // JPG - status bar timer
+	Cvar_RegisterVariable(&pq_scoreboard_pings); // JPG - ping times in the scoreboard
 
-	Cvar_RegisterVariable(&cl_sbar, SBAR_cl_sbar_f);
-	Cvar_RegisterVariable(&cl_scoreboard_clean, NULL);
+	Cvar_RegisterVariable(&cl_sbar);
+	Cvar_SetCallback(&cl_sbar, SBAR_cl_sbar_f);
+	Cvar_RegisterVariable(&cl_scoreboard_clean);
 
 	Sbar_LoadPics();
 }

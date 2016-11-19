@@ -53,29 +53,29 @@ void SV_Init(void)
 	extern cvar_t sv_aim;
 	extern cvar_t sv_altnoclip; //johnfitz
 
-	Cvar_RegisterVariable(&sv_maxvelocity, NULL);
-	Cvar_RegisterVariable(&sv_gravity, NULL);
-	Cvar_RegisterVariable(&sv_friction, NULL);
-	Cvar_RegisterVariable(&sv_edgefriction, NULL);
-	Cvar_RegisterVariable(&sv_stopspeed, NULL);
-	Cvar_RegisterVariable(&sv_maxspeed, NULL);
-	Cvar_RegisterVariable(&sv_accelerate, NULL);
-	Cvar_RegisterVariable(&sv_idealpitchscale, NULL);
-	Cvar_RegisterVariable(&sv_aim, NULL);
-	Cvar_RegisterVariable(&sv_nostep, NULL);
-	Cvar_RegisterVariable(&sv_altnoclip, NULL); //johnfitz
-	Cvar_RegisterVariable(&pq_fullpitch, NULL);	// JPG 2.01
+	Cvar_RegisterVariable(&sv_maxvelocity);
+	Cvar_RegisterVariable(&sv_gravity);
+	Cvar_RegisterVariable(&sv_friction);
+	Cvar_RegisterVariable(&sv_edgefriction);
+	Cvar_RegisterVariable(&sv_stopspeed);
+	Cvar_RegisterVariable(&sv_maxspeed);
+	Cvar_RegisterVariable(&sv_accelerate);
+	Cvar_RegisterVariable(&sv_idealpitchscale);
+	Cvar_RegisterVariable(&sv_aim);
+	Cvar_RegisterVariable(&sv_nostep);
+	Cvar_RegisterVariable(&sv_altnoclip); //johnfitz
+	Cvar_RegisterVariable(&pq_fullpitch);	// JPG 2.01
 
-	Cvar_RegisterVariable(&sv_cullentities, NULL);	// JPG 2.01
-	Cvar_RegisterVariable(&sv_cullentities_notify, NULL);	// JPG 2.01
+	Cvar_RegisterVariable(&sv_cullentities);	// JPG 2.01
+	Cvar_RegisterVariable(&sv_cullentities_notify);	// JPG 2.01
 
-	Cvar_RegisterVariable(&sv_defaultmap, NULL); //Baker 3.99b: R00k create a default map to load
-	Cvar_RegisterVariable(&sv_ipmasking, NULL);
+	Cvar_RegisterVariable(&sv_defaultmap); //Baker 3.99b: R00k create a default map to load
+	Cvar_RegisterVariable(&sv_ipmasking);
 
-	Cvar_RegisterVariable(&sv_progs, NULL);
+	Cvar_RegisterVariable(&sv_progs);
 
-//	Cvar_RegisterVariable (&sv_gameplayfix_monster_lerp, NULL);
-	Cvar_RegisterVariable(&sv_allcolors, NULL);
+//	Cvar_RegisterVariable (&sv_gameplayfix_monster_lerp);
+	Cvar_RegisterVariable(&sv_allcolors);
 
 	// Baker: Dedicated server "defaults" - this is ok because quake.rc is executed later, so these "defaults" won't override config.cfg settings, etc.
 	if (COM_CheckParm("-dedicated")) {

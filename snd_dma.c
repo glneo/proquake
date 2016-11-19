@@ -152,19 +152,21 @@ void S_Init(void)
 		return;
 	}
 
-	Cvar_RegisterVariable(&nosound, NULL);
-	Cvar_RegisterVariable(&sfxvolume, SND_Callback_sfxvolume);
-	Cvar_RegisterVariable(&precache, NULL);
-	Cvar_RegisterVariable(&loadas8bit, NULL);
-	Cvar_RegisterVariable(&bgmvolume, NULL);
-	Cvar_RegisterVariable(&ambient_level, NULL);
-	Cvar_RegisterVariable(&ambient_fade, NULL);
-	Cvar_RegisterVariable(&snd_noextraupdate, NULL);
-	Cvar_RegisterVariable(&snd_show, NULL);
-	Cvar_RegisterVariable(&_snd_mixahead, NULL);
-	Cvar_RegisterVariable(&sndspeed, NULL);
-	Cvar_RegisterVariable(&snd_mixspeed, NULL);
-	Cvar_RegisterVariable(&snd_filterquality, SND_Callback_snd_filterquality);
+	Cvar_RegisterVariable(&nosound);
+	Cvar_RegisterVariable(&sfxvolume);
+	Cvar_SetCallback(&sfxvolume, SND_Callback_sfxvolume);
+	Cvar_RegisterVariable(&precache);
+	Cvar_RegisterVariable(&loadas8bit);
+	Cvar_RegisterVariable(&bgmvolume);
+	Cvar_RegisterVariable(&ambient_level);
+	Cvar_RegisterVariable(&ambient_fade);
+	Cvar_RegisterVariable(&snd_noextraupdate);
+	Cvar_RegisterVariable(&snd_show);
+	Cvar_RegisterVariable(&_snd_mixahead);
+	Cvar_RegisterVariable(&sndspeed);
+	Cvar_RegisterVariable(&snd_mixspeed);
+	Cvar_RegisterVariable(&snd_filterquality);
+	Cvar_SetCallback(&snd_filterquality, SND_Callback_snd_filterquality);
 
 	if (COM_CheckParm("-nosound"))
 		return;

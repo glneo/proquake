@@ -834,11 +834,16 @@ void VID_Init(unsigned char *palette)
 
 #define num_readvars	( sizeof(read_vars)/sizeof(read_vars[0]) )
 
-	Cvar_RegisterVariable(&vid_fullscreen, VID_Changed_f);
-	Cvar_RegisterVariable(&vid_width, VID_Changed_f);
-	Cvar_RegisterVariable(&vid_height, VID_Changed_f);
-	Cvar_RegisterVariable(&vid_bpp, VID_Changed_f);
-	Cvar_RegisterVariable(&vid_vsync, VID_Changed_f);
+	Cvar_RegisterVariable(&vid_fullscreen);
+	Cvar_SetCallback(&vid_fullscreen, VID_Changed_f);
+	Cvar_RegisterVariable(&vid_width);
+	Cvar_SetCallback(&vid_width, VID_Changed_f);
+	Cvar_RegisterVariable(&vid_height);
+	Cvar_SetCallback(&vid_height, VID_Changed_f);
+	Cvar_RegisterVariable(&vid_bpp);
+	Cvar_SetCallback(&vid_bpp, VID_Changed_f);
+	Cvar_RegisterVariable(&vid_vsync);
+	Cvar_SetCallback(&vid_vsync, VID_Changed_f);
 
 	Cmd_AddCommand("vid_unlock", VID_Unlock); //johnfitz
 //	Cmd_AddCommand ("vid_restart", VID_Restart); //johnfitz

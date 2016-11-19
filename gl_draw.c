@@ -436,19 +436,21 @@ void Draw_Init(void)
 {
 	int i;
 
-//	Cvar_RegisterVariable (&gl_nobind, NULL);
+//	Cvar_RegisterVariable (&gl_nobind);
 
-	Cvar_RegisterVariable(&gl_picmip, NULL);
-	Cvar_RegisterVariable(&gl_crosshairalpha, NULL);
-	Cvar_RegisterVariable(&crosshaircolor, NULL);
+	Cvar_RegisterVariable(&gl_picmip);
+	Cvar_RegisterVariable(&gl_crosshairalpha);
+	Cvar_RegisterVariable(&crosshaircolor);
 
-	Cvar_RegisterVariable(&crosshairsize, NULL);
+	Cvar_RegisterVariable(&crosshairsize);
 
-	Cvar_RegisterVariable(&gl_free_world_textures, NULL); //R00k
+	Cvar_RegisterVariable(&gl_free_world_textures); //R00k
 
 	glGetIntegerv(GL_MAX_TEXTURE_SIZE, &gl_max_size);
 
-	Cvar_RegisterVariable(&gl_texturemode, &OnChange_gl_texturemode);
+	Cvar_RegisterVariable(&gl_texturemode);
+	Cvar_SetCallback(&gl_texturemode, OnChange_gl_texturemode);
+
 	Cmd_AddCommand("gl_smoothfont", Draw_SmoothFont_f);
 
 	// load the console background and the charset

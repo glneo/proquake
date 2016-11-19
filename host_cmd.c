@@ -2149,5 +2149,5 @@ void Host_InitCommands(void)
 	Cmd_AddCommand("stats_id", Stats_Id_f);
 	Cmd_AddCommand("load_stats_id", Load_Stats_Id_f);
 
-	Cvar_RegisterVariable(&cl_confirmquit, NULL); // Baker 3.60
+	Cvar_RegisterVariable(&cl_confirmquit); // Baker 3.60
 }

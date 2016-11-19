@@ -36,7 +36,7 @@ cvar_t gl_subdivide_size = { "gl_subdivide_size", "128", true };
 
 void Mod_Init(void)
 {
-	Cvar_RegisterVariable(&gl_subdivide_size, NULL);
+	Cvar_RegisterVariable(&gl_subdivide_size);
 	memset(mod_novis, 0xff, sizeof(mod_novis));
 }
 

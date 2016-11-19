@@ -93,8 +93,8 @@ void IN_Activate(void)
 	if (no_mouse)
 		return;
 
-	if (!SDL_SetRelativeMouseMode(SDL_TRUE))
-		Con_Printf("WARNING: SDL_SetRelativeMouseMode(SDL_TRUE) failed.\n");
+//	if (!SDL_SetRelativeMouseMode(SDL_TRUE))
+//		Con_Printf("WARNING: SDL_SetRelativeMouseMode(SDL_TRUE) failed.\n");
 
 	IN_EndIgnoringMouseEvents();
 
@@ -193,15 +193,15 @@ void IN_Init(void)
 		IN_BeginIgnoringMouseEvents();
 	}
 
-	Cvar_RegisterVariable(&in_debugkeys, NULL);
-	Cvar_RegisterVariable(&joy_sensitivity_yaw, NULL);
-	Cvar_RegisterVariable(&joy_sensitivity_pitch, NULL);
-	Cvar_RegisterVariable(&joy_deadzone, NULL);
-	Cvar_RegisterVariable(&joy_deadzone_trigger, NULL);
-	Cvar_RegisterVariable(&joy_invert, NULL);
-	Cvar_RegisterVariable(&joy_exponent, NULL);
-	Cvar_RegisterVariable(&joy_swapmovelook, NULL);
-	Cvar_RegisterVariable(&joy_enable, NULL);
+	Cvar_RegisterVariable(&in_debugkeys);
+	Cvar_RegisterVariable(&joy_sensitivity_yaw);
+	Cvar_RegisterVariable(&joy_sensitivity_pitch);
+	Cvar_RegisterVariable(&joy_deadzone);
+	Cvar_RegisterVariable(&joy_deadzone_trigger);
+	Cvar_RegisterVariable(&joy_invert);
+	Cvar_RegisterVariable(&joy_exponent);
+	Cvar_RegisterVariable(&joy_swapmovelook);
+	Cvar_RegisterVariable(&joy_enable);
 
 	IN_Activate();
 	IN_StartupJoystick();

@@ -815,25 +815,9 @@ void PF_cvar(void)
 void PF_cvar_set(void)
 {
 	char *var, *val;
-	float serv;		// JPG - added this for cvar_set(name, value, serverflag)
-	cvar_t *cvar;		// JPG - added this for cvar_set(name, value, serverflag)
 
 	var = G_STRING(OFS_PARM0);
 	val = G_STRING(OFS_PARM1);
-
-	// JPG - added this for cvar_set(name, value, serverflag)
-	if (pr_argc > 2)
-	{
-		serv = G_FLOAT(OFS_PARM2);
-		cvar = Cvar_FindVar(var);
-		if (!cvar)
-		{	// there is an error in C code if this happens
-			Con_SafePrintf("Cvar_Set: variable %s not found\n", var);
-			return;
-		}
-		cvar->server = (int) serv;
-	}
-	// END JPG
 
 	Cvar_Set(var, val);
 }

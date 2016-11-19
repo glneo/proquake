@@ -466,15 +466,15 @@ void Con_Init (void)
 //
 // register our commands
 //
-	Cvar_RegisterVariable (&con_notifytime, NULL);
-	Cvar_RegisterVariable (&_con_notifylines, NULL);
+	Cvar_RegisterVariable (&con_notifytime);
+	Cvar_RegisterVariable (&_con_notifylines);
 
-	Cvar_RegisterVariable (&con_logcenterprint, NULL);
-	Cvar_RegisterVariable (&con_nocenterprint, NULL); // Rook
+	Cvar_RegisterVariable (&con_logcenterprint);
+	Cvar_RegisterVariable (&con_nocenterprint); // Rook
 
-	Cvar_RegisterVariable (&pq_confilter, NULL);	// JPG 1.05 - make "you got" messages temporary
-	Cvar_RegisterVariable (&pq_timestamp, NULL);	// JPG 1.05 - timestamp player binds during a match
-	Cvar_RegisterVariable (&pq_removecr, NULL);	// JPG 3.20 - timestamp player binds during a match
+	Cvar_RegisterVariable (&pq_confilter);	// JPG 1.05 - make "you got" messages temporary
+	Cvar_RegisterVariable (&pq_timestamp);	// JPG 1.05 - timestamp player binds during a match
+	Cvar_RegisterVariable (&pq_removecr);	// JPG 3.20 - timestamp player binds during a match
 
 	Cmd_AddCommand ("toggleconsole", Con_ToggleConsole_f);
 	Cmd_AddCommand ("messagemode", Con_MessageMode_f);

@@ -385,19 +385,21 @@ void CL_Default_fov_f(void);
 void CL_Fov_f(void);
 void SCR_Init(void)
 {
-	Cvar_RegisterVariable(&default_fov, CL_Default_fov_f);
-	Cvar_RegisterVariable(&scr_fov, CL_Fov_f);
+	Cvar_RegisterVariable(&default_fov);
+	Cvar_SetCallback(&default_fov, CL_Default_fov_f);
+	Cvar_RegisterVariable(&scr_fov);
+	Cvar_SetCallback(&scr_fov, CL_Fov_f);
 
-	Cvar_RegisterVariable(&scr_viewsize, NULL);
-	Cvar_RegisterVariable(&scr_conspeed, NULL);
-	Cvar_RegisterVariable(&scr_showram, NULL);
-	Cvar_RegisterVariable(&scr_showturtle, NULL);
-	Cvar_RegisterVariable(&scr_showpause, NULL);
-	Cvar_RegisterVariable(&scr_centertime, NULL);
-	Cvar_RegisterVariable(&scr_printspeed, NULL);
+	Cvar_RegisterVariable(&scr_viewsize);
+	Cvar_RegisterVariable(&scr_conspeed);
+	Cvar_RegisterVariable(&scr_showram);
+	Cvar_RegisterVariable(&scr_showturtle);
+	Cvar_RegisterVariable(&scr_showpause);
+	Cvar_RegisterVariable(&scr_centertime);
+	Cvar_RegisterVariable(&scr_printspeed);
 
-	Cvar_RegisterVariable(&pq_drawfps, NULL); // JPG - draw frames per second
-	Cvar_RegisterVariable(&show_speed, NULL); // Baker 3.67
+	Cvar_RegisterVariable(&pq_drawfps); // JPG - draw frames per second
+	Cvar_RegisterVariable(&show_speed); // Baker 3.67
 
 	// register our commands
 	Cmd_AddCommand("screenshot", SCR_ScreenShot_f);
