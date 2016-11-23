@@ -735,7 +735,7 @@ void R_TimeRefresh_f(void)
 	if (cls.state != ca_connected)
 		return;
 
-	glDrawBuffer(GL_FRONT);
+//	glDrawBuffer(GL_FRONT);
 	glFinish();
 
 	start = Sys_DoubleTime();
@@ -750,7 +750,7 @@ void R_TimeRefresh_f(void)
 	time = stop - start;
 	Con_Printf("%f seconds (%f fps)\n", time, 128.0 / time);
 
-	glDrawBuffer(GL_BACK);
+//	glDrawBuffer(GL_BACK);
 	GL_EndRendering();
 }
 
@@ -960,7 +960,7 @@ void R_Mirror(void)
 void R_RenderView(void)
 {
 	double time1 = 0.0, time2;
-	GLfloat colors[4] = { (GLfloat) 0.0, (GLfloat) 0.0, (GLfloat) 1, (GLfloat) 0.20 };
+	GLfloat colors[4] = { (GLfloat) 0.0, (GLfloat) 0.0, (GLfloat) 1.0, (GLfloat) 0.20 };
 
 	if (r_norefresh.value)
 		return;

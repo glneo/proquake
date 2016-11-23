@@ -446,46 +446,42 @@ void DrawGLWaterPoly(glpoly_t *p)
 {
 	int i;
 	float *v;
-	vec3_t nv;
+	vec3_t verts[p->numverts];
 
 	GL_DisableMultitexture();
 
-	glBegin(GL_TRIANGLE_FAN);
 	v = p->verts[0];
 	for (i = 0; i < p->numverts; i++, v += VERTEXSIZE)
 	{
-		glTexCoord2f(v[3], v[4]);
-
-		nv[0] = v[0] + 8 * sin(v[1] * 0.05 + realtime) * sin(v[2] * 0.05 + realtime);
-		nv[1] = v[1] + 8 * sin(v[0] * 0.05 + realtime) * sin(v[2] * 0.05 + realtime);
-		nv[2] = v[2];
-
-		glVertex3fv(nv);
+		verts[i][0] = v[0] + 8 * sin(v[1] * 0.05 + realtime) * sin(v[2] * 0.05 + realtime);
+		verts[i][1] = v[1] + 8 * sin(v[0] * 0.05 + realtime) * sin(v[2] * 0.05 + realtime);
+		verts[i][2] = v[2];
 	}
-	glEnd();
+
+	glTexCoordPointer(2, GL_FLOAT, VERTEXSIZE * sizeof(float), &p->verts[0][3]);
+	glVertexPointer(3, GL_FLOAT, 0, &verts[0][0]);
+	glDrawArrays(GL_TRIANGLE_FAN, 0, p->numverts);
 }
 
 void DrawGLWaterPolyLightmap(glpoly_t *p)
 {
 	int i;
 	float *v;
-	vec3_t nv;
+	vec3_t verts[p->numverts];
 
 	GL_DisableMultitexture();
 
-	glBegin(GL_TRIANGLE_FAN);
 	v = p->verts[0];
 	for (i = 0; i < p->numverts; i++, v += VERTEXSIZE)
 	{
-		glTexCoord2f(v[5], v[6]);
-
-		nv[0] = v[0] + 8 * sin(v[1] * 0.05 + realtime) * sin(v[2] * 0.05 + realtime);
-		nv[1] = v[1] + 8 * sin(v[0] * 0.05 + realtime) * sin(v[2] * 0.05 + realtime);
-		nv[2] = v[2];
-
-		glVertex3fv(nv);
+		verts[i][0] = v[0] + 8 * sin(v[1] * 0.05 + realtime) * sin(v[2] * 0.05 + realtime);
+		verts[i][1] = v[1] + 8 * sin(v[0] * 0.05 + realtime) * sin(v[2] * 0.05 + realtime);
+		verts[i][2] = v[2];
 	}
-	glEnd();
+
+	glTexCoordPointer(2, GL_FLOAT, VERTEXSIZE * sizeof(float), &p->verts[0][5]);
+	glVertexPointer(3, GL_FLOAT, 0, &verts[0][0]);
+	glDrawArrays(GL_TRIANGLE_FAN, 0, p->numverts);
 }
 
 void R_RenderBrushPoly(msurface_t *fa)

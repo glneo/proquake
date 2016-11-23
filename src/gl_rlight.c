@@ -77,9 +77,12 @@ void R_Init_FlashBlend_Bubble(void)
 void R_RenderDlight(dlight_t *light)
 {
 	int i, j;
-//	float	a;
-	vec3_t v;
+	vec3_t verts[18], v;
+	vec4_t colors[18];
 	float rad;
+
+	static vec4_t color_start = { 0.2f, 0.1f, 0.0f, 1.0f };
+	static vec4_t color_end   = { 0.0f, 0.0f, 0.0f, 1.0f };
 
 	rad = light->radius * 0.35;
 
@@ -90,20 +93,19 @@ void R_RenderDlight(dlight_t *light)
 		return;
 	}
 
-	glBegin(GL_TRIANGLE_FAN);
-	glColor4f(0.2f, 0.1f, 0.0f, 1.0f);
 	for (i = 0; i < 3; i++)
-		v[i] = light->origin[i] - vpn[i] * rad;
-	glVertex3fv(v);
-	glColor4f(0.0f, 0.0f, 0.0f, 1.0f);
+		verts[0][i] = light->origin[i] - vpn[i] * rad;
+	memcpy(colors[0], color_start, sizeof(color_start));
 	for (i = 16; i >= 0; i--)
 	{
 		for (j = 0; j < 3; j++)
-			v[j] = light->origin[j] + vright[j] * bubble_cos[i] * rad + vup[j] * bubble_sin[i] * rad;
-		glVertex3fv(v);
+			verts[i+1][j] = light->origin[j] + vright[j] * bubble_cos[i] * rad + vup[j] * bubble_sin[i] * rad;
+		memcpy(colors[i+1], color_end, sizeof(color_end));
 	}
-	glEnd();
-	glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+
+	glColorPointer(4, GL_FLOAT, 0, &colors[0][0]);
+	glVertexPointer(3, GL_FLOAT, 0, &verts[0][0]);
+	glDrawArrays(GL_TRIANGLE_FAN, 0, 18);
 }
 
 void R_RenderDlights(void)
