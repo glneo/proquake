@@ -354,7 +354,7 @@ struct
 	{ "GL_LINEAR_MIPMAP_LINEAR", GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR }
 };
 
-void OnChange_gl_texturemode(void)
+void OnChange_gl_texturemode(struct cvar_s *cvar)
 {
 	int i;
 	gltexture_t *glt;

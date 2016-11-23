@@ -88,7 +88,7 @@ cvar_t r_ringalpha = { "r_ringalpha", "0.4", true }; // Baker 3.80x - gl_ringalp
 cvar_t r_fullbright = { "r_fullbright", "0" };
 cvar_t r_lightmap = { "r_lightmap", "0" };
 
-cvar_t gl_fullbright = { "gl_fullbright", "1", true };
+cvar_t gl_fullbright = { "gl_fullbright", "0", true };
 cvar_t gl_overbright = { "gl_overbright", "1", true };
 
 /*
@@ -754,7 +754,7 @@ void R_TimeRefresh_f(void)
 	GL_EndRendering();
 }
 
-void R_SetClearColor_f(void)
+void R_SetClearColor_f(struct cvar_s *cvar)
 {
 	byte *rgb;
 	int s;
@@ -772,8 +772,6 @@ void R_Init(void)
 	extern cvar_t r_farclip;
 	extern cvar_t r_ringalpha;
 	extern cvar_t gl_fullbright;
-	extern void R_Envmap_f(void);
-	extern void R_SetClearColor_f(void);
 
 	Cmd_AddCommand("timerefresh", R_TimeRefresh_f);
 	Cmd_AddCommand("pointfile", R_ReadPointFile_f);

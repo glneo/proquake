@@ -25,7 +25,7 @@ cvar_t cl_sbar = { "cl_sbar", "1", true }; // Baker 3.97: transparent sbar capab
 //cvar_t  cl_scoreboardback = {"cl_scoreboardback", "0", true}; // Baker 3.99n: "easy read scoreboard" derived from Qrack
 cvar_t cl_scoreboard_clean = { "cl_scoreboard_clean", "0", true }; // Baker 3.99q: idea from FitzQuake's don't draw centerprint while paused
 
-void SBAR_cl_sbar_f(void)
+void SBAR_cl_sbar_f(struct cvar_s *cvar)
 {
 	// Baker 3.97: if transparent sbar is turned on/off
 	// we need a vid.recalc

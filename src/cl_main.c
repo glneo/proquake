@@ -784,7 +784,7 @@ void CL_SendCmd (void)
 
 extern cvar_t default_fov;
 
-void CL_Fov_f (void) 
+void CL_Fov_f(struct cvar_s *cvar)
 {
 	if (scr_fov.value == 90.0 && default_fov.value) 
 	{
@@ -796,7 +796,7 @@ void CL_Fov_f (void)
 	}
 }
 
-void CL_Default_fov_f (void) 
+void CL_Default_fov_f(struct cvar_s *cvar)
 {
 
 	if (default_fov.value == 0)

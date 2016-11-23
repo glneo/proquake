@@ -113,7 +113,8 @@ bool Cvar_Command(void);
 // with the archive flag set to true.
 void Cvar_WriteVariables(FILE *f);
 
-cvar_t *Cvar_FindVar(char *var_name);
+cvar_t *Cvar_FindVar(const char *var_name);
+cvar_t *Cvar_FindVarAfter(const char *prev_name, unsigned int with_flags);
 
 void Cvar_Init(void);
 

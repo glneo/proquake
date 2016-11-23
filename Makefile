@@ -64,7 +64,7 @@ QUAKE_OBJS = \
 quake : $(QUAKE_OBJS)
 	$(CC) -o $@ $^ $(LDFLAGS)
 
-%.o : %.c
+%.o : src/%.c
 	$(CC) -c -o $@ $(CFLAGS) $<
 
 .PHONY: clean

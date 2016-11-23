@@ -135,7 +135,7 @@ void Cvar_Cycle_f(void)
 		Cvar_Set(Cmd_Argv(1), Cmd_Argv(i + 1)); // matched earlier in list
 }
 
-cvar_t *Cvar_FindVar(char *var_name)
+cvar_t *Cvar_FindVar(const char *var_name)
 {
 	cvar_t *var;
 
@@ -375,7 +375,7 @@ void Cvar_RegisterVariable(cvar_t *variable)
 // set it through the function to be consistent
 	set_rom = (variable->flags & CVAR_ROM);
 	variable->flags &= ~CVAR_ROM;
-	Cvar_Set(variable->name, value);
+	Cvar_Set(variable->name, variable->string);
 	if (set_rom)
 		variable->flags |= CVAR_ROM;
 }

@@ -2,68 +2,68 @@ cmake_minimum_required(VERSION 2.6)
 project(ProQuake)
 
 set(PROQUAKE_SOURCES
-	common.c
-	cvar.c
-	crc.c
-	host.c
-	host_cmd.c
-	keys.c
-	location.c
-	menu.c
-	mathlib.c
-	zone.c
-	view.c
-	wad.c
-	world.c
-	sys_linux.c
+	src/common.c
+	src/cvar.c
+	src/crc.c
+	src/host.c
+	src/host_cmd.c
+	src/keys.c
+	src/location.c
+	src/menu.c
+	src/mathlib.c
+	src/zone.c
+	src/view.c
+	src/wad.c
+	src/world.c
+	src/sys_linux.c
 # Client
-	cl_demo.c
-	cl_input.c
-	cl_main.c
-	cl_parse.c
-	cl_tent.c
-	chase.c
-	cmd.c
-	console.c
-	in_sdl.c
+	src/cl_demo.c
+	src/cl_input.c
+	src/cl_main.c
+	src/cl_parse.c
+	src/cl_tent.c
+	src/chase.c
+	src/cmd.c
+	src/console.c
+	src/in_sdl.c
 # Graphics
-	gl_alias.c
-	gl_brush.c
-	gl_draw.c
-	gl_fullbright.c
-	gl_model.c
-	gl_refrag.c
-	gl_rlight.c
-	gl_rmain.c
-	gl_rsurf.c
-	gl_screen.c
-	gl_sprite.c
-	gl_texture.c
-	gl_vidsdl.c
-	gl_warp.c
-	sbar.c
+	src/gl_alias.c
+	src/gl_brush.c
+	src/gl_draw.c
+	src/gl_fullbright.c
+	src/gl_model.c
+	src/gl_refrag.c
+	src/gl_rlight.c
+	src/gl_rmain.c
+	src/gl_rsurf.c
+	src/gl_screen.c
+	src/gl_sprite.c
+	src/gl_texture.c
+	src/gl_vidsdl.c
+	src/gl_warp.c
+	src/sbar.c
 # Net
-	net_dgrm.c
-	net_loop.c
-	net_main.c
-	net_vcr.c
-	net_udp.c
-	net_bsd.c
+	src/net_dgrm.c
+	src/net_loop.c
+	src/net_main.c
+	src/net_vcr.c
+	src/net_udp.c
+	src/net_bsd.c
 # Program
-	pr_cmds.c
-	pr_edict.c
-	pr_exec.c
-	r_part.c
+	src/pr_cmds.c
+	src/pr_edict.c
+	src/pr_exec.c
+	src/r_part.c
 # Server
-	sv_main.c
-	sv_phys.c
-	sv_move.c
-	sv_user.c
+	src/sv_main.c
+	src/sv_phys.c
+	src/sv_move.c
+	src/sv_user.c
 # Sound
-	snd_dma.c
-	snd_mem.c
-	snd_mix.c
-	snd_sdl.c
+	src/snd_dma.c
+	src/snd_mem.c
+	src/snd_mix.c
+	src/snd_sdl.c
 )
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake")
@@ -71,8 +71,8 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake")
 find_package(OpenGL REQUIRED)
 find_package(SDL2 REQUIRED)
 
-add_executable(proquake ${PROQUAKE_SOURCES})
+add_executable(proquake ${PROQUAKE_SOURCES} ${PROQUAKE_HEADERS})
 #target_compile_options(proquake PRIVATE -O3;-ffast-math;-Wall)
-target_compile_options(proquake PRIVATE -g;-Wall)
+target_compile_options(proquake PRIVATE -g;-Wall;-std=gnu99)
 target_include_directories(proquake PUBLIC ${OPENGL_INCLUDE_DIRS} ${SDL2_INCLUDE_DIR})
 target_link_libraries(proquake m ${OPENGL_LIBRARIES} ${SDL2_LIBRARY})

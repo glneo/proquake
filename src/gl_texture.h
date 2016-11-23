@@ -70,6 +70,6 @@ int GL_LoadTexture(char *identifier, int width, int height, byte *data, int mode
 int GL_FindTexture(char *identifier);
 int GL_LoadTexture32(char *identifier, int width, int height, byte *data, int mode);
 
-void OnChange_gl_texturemode(void);
+void OnChange_gl_texturemode(struct cvar_s *cvar);
 
 #endif /* __GL_TEXTURE_H */
