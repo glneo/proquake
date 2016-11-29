@@ -220,9 +220,7 @@ model_t *Mod_ForName(char *name, bool crash)
 
 void Mod_TouchModel(char *name)
 {
-	model_t *mod;
-
-	mod = Mod_FindName(name);
+	Mod_FindName(name);
 }
 
 //=============================================================================

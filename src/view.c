@@ -862,7 +862,7 @@ void SCR_DrawVolume(void)
 	int yofs;
 	char bar[11];
 	static float volume_time = 0;
-	extern bool volume_changed;
+//	extern bool volume_changed;
 
 	if (realtime < volume_time - 2.0)
 	{

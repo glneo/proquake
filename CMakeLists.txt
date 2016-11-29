@@ -68,14 +68,15 @@ set(PROQUAKE_SOURCES
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake")
 
-#find_package(OpenGLES REQUIRED)
-find_package(OpenGL REQUIRED)
+find_package(OpenGLES REQUIRED)
+#find_package(OpenGL REQUIRED)
 find_package(SDL2 REQUIRED)
 
 add_executable(proquake ${PROQUAKE_SOURCES} ${PROQUAKE_HEADERS})
 #target_compile_options(proquake PRIVATE -O3;-ffast-math;-Wall)
 target_compile_options(proquake PRIVATE -g;-Wall;-std=gnu99)
-#target_include_directories(proquake PUBLIC ${OPENGLES_INCLUDE_DIR} ${SDL2_INCLUDE_DIR})
-#target_link_libraries(proquake m ${OPENGLES_LIBRARIES} ${SDL2_LIBRARY})
-target_include_directories(proquake PUBLIC ${OPENGL_INCLUDE_DIRS} ${SDL2_INCLUDE_DIR})
-target_link_libraries(proquake m ${OPENGL_LIBRARIES} ${SDL2_LIBRARY})
+target_include_directories(proquake PUBLIC ${OPENGLES_INCLUDE_DIR} ${SDL2_INCLUDE_DIR})
+target_link_libraries(proquake m ${OPENGLES_LIBRARIES} ${SDL2_LIBRARY})
+#target_include_directories(proquake PUBLIC ${OPENGL_INCLUDE_DIRS} ${SDL2_INCLUDE_DIR})
+#target_link_libraries(proquake m ${OPENGL_LIBRARIES} ${SDL2_LIBRARY})
+install(TARGETS proquake RUNTIME DESTINATION bin)

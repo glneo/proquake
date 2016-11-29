@@ -1254,7 +1254,8 @@ void M_UnbindCommand(char *command)
 
 void M_Keys_Draw(void)
 {
-	int i, l;
+	int i;
+//	int l;
 	int keys[2];
 	char *name;
 	int x, y;
@@ -1275,7 +1276,7 @@ void M_Keys_Draw(void)
 
 		M_Print(16, y, bindnames[i][1]);
 
-		l = strlen(bindnames[i][0]);
+//		l = strlen(bindnames[i][0]);
 
 		M_FindKeysForCommand(bindnames[i][0], keys);
 

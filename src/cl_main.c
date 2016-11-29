@@ -798,7 +798,6 @@ void CL_Fov_f(struct cvar_s *cvar)
 
 void CL_Default_fov_f(struct cvar_s *cvar)
 {
-
 	if (default_fov.value == 0)
 		return; // Baker: this is totally permissible and happens with Reset to defaults.
 

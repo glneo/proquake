@@ -395,21 +395,21 @@ static void R_SetupAliasFrame(int frame, alias_model_t *aliasmodel)
 void R_DrawAliasModel(entity_t *ent)
 {
 	int client_no = currententity - cl_entities;
-	bool isPlayer = (client_no >= 1 && client_no <= cl.maxclients) ? true : false;
+	bool isPlayer = (client_no >= 1 && client_no <= cl.maxclients);
 	int lnum;
 	vec3_t dist;
 	float add;
 	model_t *clmodel = currententity->model;
-	vec3_t mins, maxs;
+//	vec3_t mins, maxs;
 	alias_model_t *aliasmodel;
 	float an;
 	int anim;
 
-	bool torch = false; // Flags is this model is a torch
+//	bool torch = false; // Flags is this model is a torch
 
-	VectorAdd(currententity->origin, clmodel->mins, mins);
-	VectorAdd(currententity->origin, clmodel->maxs, maxs);
-
+//	VectorAdd(currententity->origin, clmodel->mins, mins);
+//	VectorAdd(currententity->origin, clmodel->maxs, maxs);
+//
 //	if (R_CullBox (mins, maxs))
 //		return;
 
@@ -450,7 +450,7 @@ void R_DrawAliasModel(entity_t *ent)
 
 	// ZOID: never allow players to go totally black
 	//client_no = currententity - cl_entities;
-	if (isPlayer /*client_no >= 1 && client_no<=cl.maxclients /* && !strcmp (currententity->model->name, "progs/player.mdl") */)
+	if (isPlayer /* client_no >= 1 && client_no<=cl.maxclients */ /* && !strcmp (currententity->model->name, "progs/player.mdl") */)
 		if (ambientlight < 8)
 			ambientlight = shadelight = 8;
 
@@ -458,7 +458,7 @@ void R_DrawAliasModel(entity_t *ent)
 	if (!strcmp(clmodel->name, "progs/flame2.mdl") || !strcmp(clmodel->name, "progs/flame.mdl") || !strcmp(clmodel->name, "progs/bolt2.mdl"))// JPG 3.20 - LG should be fullbright too
 	{
 		ambientlight = shadelight = 255;	// JPG 3.02 - was 256
-		torch = true; // This model is a torch. KH
+//		torch = true; // This model is a torch. KH
 	}
 
 	ambientlight = gammatable[(int) ambientlight];	// JPG 3.02 - gamma correction
@@ -740,7 +740,7 @@ static void *Mod_LoadAllSkins(alias_model_t *aliasmodel, daliasskintype_t *pskin
 	int skinsize = aliasmodel->skinwidth * aliasmodel->skinheight;
 	int groupskins;
 	char name[32];
-	byte *skin, *texels;
+	byte *skin;
 	daliasskingroup_t *pinskingroup;
 	daliasskininterval_t *pinskinintervals;
 

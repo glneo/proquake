@@ -364,6 +364,51 @@ static void Mod_LoadEdges(brush_model_t *brushmodel, lump_t *l, byte *mod_base, 
 	}
 }
 
+/*
+ * Fills in s->texturemins[] and s->extents[]
+ */
+static void CalcSurfaceExtents(brush_model_t *brushmodel, msurface_t *s)
+{
+	float mins[2], maxs[2], val;
+	int i, j, e, bmins[2], bmaxs[2];
+	mvertex_t *v;
+	mtexinfo_t *tex;
+
+	mins[0] = mins[1] = 999999;
+	maxs[0] = maxs[1] = -99999;
+
+	tex = s->texinfo;
+
+	for (i = 0; i < s->numedges; i++)
+	{
+		e = brushmodel->surfedges[s->firstedge + i];
+		if (e >= 0)
+			v = &brushmodel->vertexes[brushmodel->edges[e].v[0]];
+		else
+			v = &brushmodel->vertexes[brushmodel->edges[-e].v[1]];
+
+		for (j = 0; j < 2; j++)
+		{
+			val = v->position[0] * tex->vecs[j][0] + v->position[1] * tex->vecs[j][1] + v->position[2] * tex->vecs[j][2] + tex->vecs[j][3];
+			if (val < mins[j])
+				mins[j] = val;
+			if (val > maxs[j])
+				maxs[j] = val;
+		}
+	}
+
+	for (i = 0; i < 2; i++)
+	{
+		bmins[i] = floor(mins[i] / 16);
+		bmaxs[i] = ceil(maxs[i] / 16);
+
+		s->texturemins[i] = bmins[i] * 16;
+		s->extents[i] = (bmaxs[i] - bmins[i]) * 16;
+		if (!(tex->flags & TEX_SPECIAL) && s->extents[i] > 512)
+			Host_Error("CalcSurfaceExtents: Bad surface extents");
+	}
+}
+
 static void Mod_LoadSurfaces(brush_model_t *brushmodel, lump_t *l, byte *mod_base, char *mod_name)
 {
 	dface_t *in = (void *) (mod_base + l->fileofs);
@@ -619,51 +664,6 @@ static void Mod_LoadSubmodels(brush_model_t *brushmodel, lump_t *l, byte *mod_ba
 		out->visleafs = LittleLong(in->visleafs);
 		out->firstface = LittleLong(in->firstface);
 		out->numfaces = LittleLong(in->numfaces);
-	}
-}
-
-/*
- * Fills in s->texturemins[] and s->extents[]
- */
-void CalcSurfaceExtents(brush_model_t *brushmodel, msurface_t *s)
-{
-	float mins[2], maxs[2], val;
-	int i, j, e, bmins[2], bmaxs[2];
-	mvertex_t *v;
-	mtexinfo_t *tex;
-
-	mins[0] = mins[1] = 999999;
-	maxs[0] = maxs[1] = -99999;
-
-	tex = s->texinfo;
-
-	for (i = 0; i < s->numedges; i++)
-	{
-		e = brushmodel->surfedges[s->firstedge + i];
-		if (e >= 0)
-			v = &brushmodel->vertexes[brushmodel->edges[e].v[0]];
-		else
-			v = &brushmodel->vertexes[brushmodel->edges[-e].v[1]];
-
-		for (j = 0; j < 2; j++)
-		{
-			val = v->position[0] * tex->vecs[j][0] + v->position[1] * tex->vecs[j][1] + v->position[2] * tex->vecs[j][2] + tex->vecs[j][3];
-			if (val < mins[j])
-				mins[j] = val;
-			if (val > maxs[j])
-				maxs[j] = val;
-		}
-	}
-
-	for (i = 0; i < 2; i++)
-	{
-		bmins[i] = floor(mins[i] / 16);
-		bmaxs[i] = ceil(maxs[i] / 16);
-
-		s->texturemins[i] = bmins[i] * 16;
-		s->extents[i] = (bmaxs[i] - bmins[i]) * 16;
-		if (!(tex->flags & TEX_SPECIAL) && s->extents[i] > 512)
-			Host_Error("CalcSurfaceExtents: Bad surface extents");
 	}
 }
 

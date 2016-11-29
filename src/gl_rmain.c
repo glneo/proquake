@@ -960,7 +960,6 @@ void R_Mirror(void)
 void R_RenderView(void)
 {
 	double time1 = 0.0, time2;
-	GLfloat colors[4] = { (GLfloat) 0.0, (GLfloat) 0.0, (GLfloat) 1.0, (GLfloat) 0.20 };
 
 	if (r_norefresh.value)
 		return;

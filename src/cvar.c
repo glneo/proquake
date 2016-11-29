@@ -319,7 +319,7 @@ void Cvar_SetValue(char *var_name, float value)
 /* Adds a freestanding variable to the variable list. */
 void Cvar_RegisterVariable(cvar_t *variable)
 {
-	char value[512], *oldstr;
+	char *oldstr;
 	bool set_rom;
 	cvar_t *cursor, *prev; //johnfitz -- sorted list insert
 

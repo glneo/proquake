@@ -556,7 +556,7 @@ static void Test_Poll(void)
 	int		colors;
 	int		frags;
 	int		connectTime;
-	byte	playerNumber;
+//	byte	playerNumber;
 
 	net_landriverlevel = testDriver;
 
@@ -584,7 +584,8 @@ static void Test_Poll(void)
 			break;
 		}
 
-		playerNumber = MSG_ReadByte();
+		//playerNumber = MSG_ReadByte();
+		MSG_ReadByte();
 		strcpy(name, MSG_ReadString());
 		colors = MSG_ReadLong();
 		frags = MSG_ReadLong();

@@ -303,7 +303,7 @@ void CL_EntityInterpolateOrigins(entity_t *ent)
 	{
 		float timepassed = cl.time - ent->translate_start_time;
 		float blend = 0;
-		vec3_t delta = { 0, 0, 0 };
+//		vec3_t delta = { 0, 0, 0 };
 
 		if (ent->translate_start_time == 0 || timepassed > 1)
 		{
@@ -330,7 +330,7 @@ void CL_EntityInterpolateOrigins(entity_t *ent)
 				blend = 1;
 		}
 
-		VectorSubtract(ent->currorigin, ent->lastorigin, delta);
+//		VectorSubtract(ent->currorigin, ent->lastorigin, delta);
 
 		// use cubic interpolation
 		{

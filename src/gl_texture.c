@@ -28,6 +28,31 @@ int texels;
 gltexture_t gltextures[MAX_GLTEXTURES];
 int numgltextures;
 
+static void GL_ResampleTexture(unsigned *in, int inwidth, int inheight, unsigned *out, int outwidth, int outheight)
+{
+	int i, j;
+	unsigned *inrow;
+	unsigned frac, fracstep;
+
+	fracstep = inwidth * 0x10000 / outwidth;
+	for (i = 0; i < outheight; i++, out += outwidth)
+	{
+		inrow = in + inwidth * (i * inheight / outheight);
+		frac = fracstep >> 1;
+		for (j = 0; j < outwidth; j += 4)
+		{
+			out[j] = inrow[frac >> 16];
+			frac += fracstep;
+			out[j + 1] = inrow[frac >> 16];
+			frac += fracstep;
+			out[j + 2] = inrow[frac >> 16];
+			frac += fracstep;
+			out[j + 3] = inrow[frac >> 16];
+			frac += fracstep;
+		}
+	}
+}
+
 void GL_MipMap(byte *in, int width, int height)
 {
 	int i, j;
@@ -51,7 +76,7 @@ void GL_MipMap(byte *in, int width, int height)
 void GL_Upload32(unsigned *data, int width, int height, int mode)
 {
 	GLint samples;
-	static unsigned scaled[1024 * 512];	// [512*256];
+	unsigned *scaled;
 	int scaled_width, scaled_height;
 
 	for (scaled_width = 1; scaled_width < width; scaled_width <<= 1)
@@ -67,12 +92,11 @@ void GL_Upload32(unsigned *data, int width, int height, int mode)
 	if (scaled_height > gl_max_size)
 		scaled_height = gl_max_size;
 
-	if (scaled_width * scaled_height > sizeof(scaled) / 4)
-		Sys_Error("GL_LoadTexture: too big");
-
 	samples = (mode & TEX_ALPHA) ? GL_RGBA : GL_RGB;
 
 	texels += scaled_width * scaled_height;
+
+	scaled = Q_malloc(texels * sizeof(*scaled));
 
 	if (scaled_width == width && scaled_height == height)
 	{
@@ -107,7 +131,7 @@ void GL_Upload32(unsigned *data, int width, int height, int mode)
 			glTexImage2D(GL_TEXTURE_2D, miplevel, samples, scaled_width, scaled_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, scaled);
 		}
 	}
-	done:
+done:
 
 	if ((mode & TEX_MIPMAP))
 	{
@@ -119,6 +143,8 @@ void GL_Upload32(unsigned *data, int width, int height, int mode)
 		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, gl_filter_max);
 		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, gl_filter_max);
 	}
+
+	free(scaled);
 }
 
 void GL_Upload8(byte *data, int width, int height, int mode)
@@ -173,36 +199,6 @@ int GL_FindTexture(char *identifier)
 	}
 
 	return -1;
-}
-
-/*
- ================
- GL_ResampleTexture
- ================
- */
-void GL_ResampleTexture(unsigned *in, int inwidth, int inheight, unsigned *out, int outwidth, int outheight)
-{
-	int i, j;
-	unsigned *inrow;
-	unsigned frac, fracstep;
-
-	fracstep = inwidth * 0x10000 / outwidth;
-	for (i = 0; i < outheight; i++, out += outwidth)
-	{
-		inrow = in + inwidth * (i * inheight / outheight);
-		frac = fracstep >> 1;
-		for (j = 0; j < outwidth; j += 4)
-		{
-			out[j] = inrow[frac >> 16];
-			frac += fracstep;
-			out[j + 1] = inrow[frac >> 16];
-			frac += fracstep;
-			out[j + 2] = inrow[frac >> 16];
-			frac += fracstep;
-			out[j + 3] = inrow[frac >> 16];
-			frac += fracstep;
-		}
-	}
 }
 
 void GL_FreeTextures(void)

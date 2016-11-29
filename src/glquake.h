@@ -139,6 +139,7 @@ void SmoothFontSet(bool smoothfont_choice);
 
 // gl_rmain.c
 bool R_CullBox(vec3_t, vec3_t);
+bool R_CullForEntity(const entity_t *ent);
 #ifdef SUPPORTS_AUTOID_HARDWARE
 bool R_CullSphere (vec3_t centre, float radius);
 #endif
@@ -181,6 +182,8 @@ void R_Init_FlashBlend_Bubble(void);
 void R_InitParticles(void);
 void R_DrawParticles(void);
 void R_ClearParticles(void);
+
+void R_DrawAliasModel(entity_t *ent);
 
 // gl_fullbright.c
 int FindFullbrightTexture (byte *pixels, int num_pix);

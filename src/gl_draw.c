@@ -794,14 +794,12 @@ void Draw_SubPic(int x, int y, qpic_t *pic, int srcx, int srcy, int width, int h
  */
 void Draw_TransPicTranslate(int x, int y, qpic_t *pic, byte *translation)
 {
-	int v, u, c;
+	int v, u;
 	unsigned trans[64 * 64], *dest;
 	byte *src;
 	int p;
 
 	GL_Bind(translate_texture);
-
-	c = pic->width * pic->height;
 
 	dest = trans;
 	for (v = 0; v < 64; v++, dest += 64)

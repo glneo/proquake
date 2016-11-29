@@ -75,8 +75,6 @@ float scr_conlines;		// lines of console to display
 float oldscreensize, oldfov;
 
 cvar_t scr_viewsize = { "viewsize", "100", true };
-cvar_t scr_fov = { "fov", "90", true };	// 10 - 170
-cvar_t default_fov = { "default_fov", "0", true };	// Default_fov from FuhQuake
 cvar_t scr_conspeed = { "scr_conspeed", "99999", true };  // Baker 3.60 - Save to config
 cvar_t scr_centertime = { "scr_centertime", "2" };
 cvar_t scr_showram = { "showram", "0" };
@@ -88,6 +86,9 @@ cvar_t vid_consize = { "vid_consize", "-1", true }; //Baker 3.97
 
 cvar_t pq_drawfps = { "pq_drawfps", "0", true }; // JPG - draw frames per second
 cvar_t show_speed = { "show_speed", "0", false }; // JPG - draw frames per second
+
+cvar_t scr_fov = { "fov", "90", true };	// 10 - 170
+cvar_t default_fov = { "default_fov", "0", true };	// Default_fov from FuhQuake
 
 bool scr_initialized;		// ready to draw
 
@@ -376,43 +377,6 @@ void SCR_SizeDown_f(void)
 
 //============================================================================
 
-/*
- ==================
- SCR_Init
- ==================
- */
-void CL_Default_fov_f(void);
-void CL_Fov_f(void);
-void SCR_Init(void)
-{
-	Cvar_RegisterVariable(&default_fov);
-	Cvar_SetCallback(&default_fov, CL_Default_fov_f);
-	Cvar_RegisterVariable(&scr_fov);
-	Cvar_SetCallback(&scr_fov, CL_Fov_f);
-
-	Cvar_RegisterVariable(&scr_viewsize);
-	Cvar_RegisterVariable(&scr_conspeed);
-	Cvar_RegisterVariable(&scr_showram);
-	Cvar_RegisterVariable(&scr_showturtle);
-	Cvar_RegisterVariable(&scr_showpause);
-	Cvar_RegisterVariable(&scr_centertime);
-	Cvar_RegisterVariable(&scr_printspeed);
-
-	Cvar_RegisterVariable(&pq_drawfps); // JPG - draw frames per second
-	Cvar_RegisterVariable(&show_speed); // Baker 3.67
-
-	// register our commands
-	Cmd_AddCommand("screenshot", SCR_ScreenShot_f);
-	Cmd_AddCommand("sizeup", SCR_SizeUp_f);
-	Cmd_AddCommand("sizedown", SCR_SizeDown_f);
-
-	scr_ram = Draw_PicFromWad("ram");
-	scr_net = Draw_PicFromWad("net");
-	scr_turtle = Draw_PicFromWad("turtle");
-
-	scr_initialized = true;
-}
-
 void SCR_DrawRam(void)
 {
 	if (!scr_showram.value)
@@ -494,7 +458,8 @@ void SCR_DrawSpeed(void)
 	int x;
 	char buff[10];
 	char *ch;
-	float speed, vspeed;
+	float speed;
+//	float vspeed;
 	vec3_t vel;
 	static float maxspeed = 0, display_speed = -1;
 	static double lastrealtime = 0;
@@ -510,7 +475,7 @@ void SCR_DrawSpeed(void)
 	}
 
 	VectorCopy(cl.velocity, vel);
-	vspeed = vel[2];
+//	vspeed = vel[2];
 	vel[2] = 0;
 	speed = VectorLength(vel);
 
@@ -994,4 +959,37 @@ void SCR_UpdateScreen(void)
 	V_UpdatePalette_Static(false);
 
 	GL_EndRendering();
+}
+
+void CL_Fov_f(struct cvar_s *cvar);
+void CL_Default_fov_f(struct cvar_s *cvar);
+
+void SCR_Init(void)
+{
+	Cvar_RegisterVariable(&scr_viewsize);
+	Cvar_RegisterVariable(&scr_conspeed);
+	Cvar_RegisterVariable(&scr_showram);
+	Cvar_RegisterVariable(&scr_showturtle);
+	Cvar_RegisterVariable(&scr_showpause);
+	Cvar_RegisterVariable(&scr_centertime);
+	Cvar_RegisterVariable(&scr_printspeed);
+
+	Cvar_RegisterVariable(&pq_drawfps); // JPG - draw frames per second
+	Cvar_RegisterVariable(&show_speed); // Baker 3.67
+
+	Cvar_RegisterVariable(&default_fov);
+	Cvar_SetCallback(&default_fov, CL_Default_fov_f);
+	Cvar_RegisterVariable(&scr_fov);
+	Cvar_SetCallback(&scr_fov, CL_Fov_f);
+
+	// register our commands
+	Cmd_AddCommand("screenshot", SCR_ScreenShot_f);
+	Cmd_AddCommand("sizeup", SCR_SizeUp_f);
+	Cmd_AddCommand("sizedown", SCR_SizeDown_f);
+
+	scr_ram = Draw_PicFromWad("ram");
+	scr_net = Draw_PicFromWad("net");
+	scr_turtle = Draw_PicFromWad("turtle");
+
+	scr_initialized = true;
 }

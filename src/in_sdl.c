@@ -43,7 +43,6 @@ static SDL_GameController *joy_active_controller = NULL;
 static bool no_mouse = false;
 
 bool Key_TextEntry(void);
-void IN_SendKeyEvents(void);
 
 static int buttonremap[] = { K_MOUSE1, K_MOUSE3, /* right button		*/
 K_MOUSE2, /* middle button	*/

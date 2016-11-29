@@ -39,4 +39,6 @@ void IN_Keyboard_Unacquire(void);
 void IN_Deactivate(bool free_cursor);
 void IN_Activate(void);
 
+void IN_SendKeyEvents(void);
+
 #endif /* __INPUT_H */

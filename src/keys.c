@@ -124,7 +124,7 @@ keyname_t keynames[] = { { "TAB", K_TAB }, { "ENTER", K_ENTER }, { "ESCAPE", K_E
  */
 void Key_Console(int key, int ascii)
 {
-	char *cmd;
+//	char *cmd;
 	bool passed = false;
 
 	//Con_Printf ("Key Console ... k is %d a is %d\n", key, ascii);
