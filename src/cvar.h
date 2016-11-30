@@ -22,18 +22,18 @@
  * directly in C code.
  *
  * it is sufficient to initialize a cvar_t with just the first two fields, or
- * you can add a ,true flag for variables that you want saved to the
+ * you can add a CVAR_ARCHIVE flag for variables that you want saved to the
  * configuration file when the game is quit:
  *
- *   cvar_t r_draworder = {"r_draworder","1"};
- *   cvar_t scr_screensize = {"screensize","1",true};
+ *   cvar_t r_draworder = { "r_draworder", "1" };
+ *   cvar_t scr_screensize = { "screensize", "1", CVAR_ARCHIVE };
  *
  * Cvars must be registered before use, or they will have a 0 value instead of
  * the float interpretation of the string. Generally, all cvar_t declarations
- * should be registered in the apropriate init function before any console
+ * should be registered in the appropriate init function before any console
  * commands are executed:
  *
- *   Cvar_RegisterVariable (&host_framerate);
+ *   Cvar_RegisterVariable (&r_draworder);
  *
  * C code usually just references a cvar in place:
  *
@@ -64,7 +64,7 @@
 #define	CVAR_SERVERINFO		BIT(2) // added to serverinfo will be sent to clients (q1/net_dgrm.c and qwsv)
 #define	CVAR_USERINFO		BIT(3) // added to userinfo, will be sent to server (qwcl)
 #define	CVAR_CHANGED		BIT(4)
-#define	CVAR_ROM		BIT(6)
+#define	CVAR_ROM		BIT(6) // read-only
 #define	CVAR_LOCKED		BIT(8) // locked temporarily
 #define	CVAR_REGISTERED		BIT(10) // the var is added to the list of variables
 #define	CVAR_CALLBACK		BIT(16) // var has a callback
@@ -82,27 +82,31 @@ typedef struct cvar_s
 	struct cvar_s *next;
 } cvar_t;
 
-// registers a cvar that already has the name, string, and optionally the
-// flags set.
-void Cvar_RegisterVariable(cvar_t *variable);
-
-void Cvar_SetCallback(cvar_t *var, cvarcallback_t func);
-
-// equivelant to "<name> <variable>" typed at the console
-void Cvar_Set(char *var_name, char *value);
-
-// expands value to a string and calls Cvar_Set
-void Cvar_SetValue(char *var_name, float value);
+cvar_t *Cvar_FindVar(const char *var_name);
+cvar_t *Cvar_FindVarAfter(const char *prev_name, unsigned int with_flags);
 
 // returns 0 if not defined or non numeric
-float Cvar_VariableValue(char *var_name);
+float Cvar_VariableValue(const char *var_name);
 
 // returns an empty string if not defined
-char *Cvar_VariableString(char *var_name);
+char *Cvar_VariableString(const char *var_name);
 
 // attempts to match a partial variable name for command line completion
 // returns NULL if nothing fits
-char *Cvar_CompleteVariable(char *partial);
+char *Cvar_CompleteVariable(const char *partial);
+
+// equivelant to "<name> <variable>" typed at the console
+void Cvar_Set(const char *var_name, const char *value);
+void Cvar_SetQuick (cvar_t *var, const char *value);
+
+// expands value to a string and calls Cvar_Set
+void Cvar_SetValue(const char *var_name, float value);
+void Cvar_SetValueQuick (cvar_t *var, float value);
+
+// registers a cvar that already has the name, string, and optionally the
+// flags set.
+void Cvar_RegisterVariable(cvar_t *variable);
+void Cvar_SetCallback(cvar_t *var, cvarcallback_t func);
 
 // called by Cmd_ExecuteString when Cmd_Argv(0) doesn't match a known
 // command.  Returns true if the command was a variable reference that
@@ -112,9 +116,6 @@ bool Cvar_Command(void);
 // Writes lines containing "set variable value" for all variables
 // with the archive flag set to true.
 void Cvar_WriteVariables(FILE *f);
-
-cvar_t *Cvar_FindVar(const char *var_name);
-cvar_t *Cvar_FindVarAfter(const char *prev_name, unsigned int with_flags);
 
 void Cvar_Init(void);
 
