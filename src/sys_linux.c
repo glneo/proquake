@@ -102,34 +102,6 @@ void Sys_Init(void)
 {
 }
 
-void Sys_Error(char *error, ...)
-{
-	va_list argptr;
-	char string[1024];
-
-	// change stdin to non blocking
-	fcntl(0, F_SETFL, fcntl(0, F_GETFL, 0) & ~FNDELAY);
-
-	va_start(argptr, error);
-	vsnprintf(string, sizeof(string), error, argptr);
-	va_end(argptr);
-	fprintf(stderr, "Error: %s\n", string);
-
-	Host_Shutdown();
-	exit(1);
-}
-
-void Sys_Warn(char *warning, ...)
-{
-	va_list argptr;
-	char string[1024];
-
-	va_start(argptr, warning);
-	vsnprintf(string, sizeof(string), warning, argptr);
-	va_end(argptr);
-	fprintf(stderr, "Warning: %s", string);
-}
-
 double Sys_DoubleTime (void)
 {
 	return SDL_GetTicks() / 1000.0;

@@ -24,7 +24,6 @@ static GLFWwindow* window;
 void window_close_callback(GLFWwindow* window)
 {
 	Sys_Quit();
-	exit(0);
 }
 
 void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)

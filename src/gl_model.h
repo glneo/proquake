@@ -364,7 +364,7 @@ typedef struct
 	int nummodelsurfaces;
 } brush_model_t;
 
-typedef struct model_s
+struct model_s
 {
 	char name[MAX_QPATH];
 	bool needload; // bmodels and sprites don't cache normally
@@ -388,7 +388,7 @@ typedef struct model_s
 		sprite_model_t *spritemodel;
 		brush_model_t *brushmodel;
 	};
-} model_t;
+};
 
 //============================================================================
 

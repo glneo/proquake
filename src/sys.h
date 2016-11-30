@@ -36,7 +36,15 @@ void Sys_mkdir(char *path);
 // system IO
 //
 void Sys_DebugLog(char *file, char *fmt, ...);
-void Sys_Error(char *error, ...); // an error will cause the entire program to exit
+
+#define Sys_Error(...) do { \
+	fprintf(stderr, "Error: %s: ", __func__); \
+	fprintf(stderr, __VA_ARGS__); \
+	fprintf(stderr, "\n"); \
+	Host_Shutdown(); \
+	exit(1); \
+} while ( 0 )
+
 void Sys_Printf(char *fmt, ...); // send text to the console
 void Sys_Quit(void);
 double Sys_DoubleTime(void);

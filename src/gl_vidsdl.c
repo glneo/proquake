@@ -227,6 +227,8 @@ static bool VID_SetMode(int width, int height, int bpp, bool fullscreen)
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 1);
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 1);
 
+//	SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_DEBUG_FLAG);
+
 	/* Create the window if needed, hidden */
 	if (!draw_context)
 	{
