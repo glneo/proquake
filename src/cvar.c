@@ -107,7 +107,7 @@ void Cvar_SetQuick (cvar_t *var, const char *value)
 	var->value = atof(var->string);
 
 	// during initialization, update default too
-	if (!host_initialized)
+	if (!host_initialized && strcmp(var->default_string, value))
 	{
 		free(var->default_string);
 		var->default_string = Q_strdup(value);
