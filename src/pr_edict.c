@@ -635,16 +635,16 @@ void ED_ParseGlobals(char *data)
 		if (com_token[0] == '}')
 			break;
 		if (!data)
-			Sys_Error("ED_ParseEntity: EOF without closing brace");
+			Sys_Error("EOF without closing brace");
 
 		strcpy(keyname, com_token);
 
 		// parse value
 		if (!(data = COM_Parse(data)))
-			Sys_Error("ED_ParseEntity: EOF without closing brace");
+			Sys_Error("EOF without closing brace");
 
 		if (com_token[0] == '}')
-			Sys_Error("ED_ParseEntity: closing brace without data");
+			Sys_Error("closing brace without data");
 
 		if (!(key = ED_FindGlobal(keyname)))
 		{
@@ -782,7 +782,7 @@ char *ED_ParseEdict(char *data, edict_t *ent)
 		if (com_token[0] == '}')
 			break;
 		if (!data)
-			Sys_Error("ED_ParseEntity: EOF without closing brace");
+			Sys_Error("EOF without closing brace");
 
 		// anglehack is to allow QuakeEd to write single scalar angles
 		// and allow them to be turned into vectors. (FIXME...)
@@ -810,10 +810,10 @@ char *ED_ParseEdict(char *data, edict_t *ent)
 
 		// parse value
 		if (!(data = COM_Parse(data)))
-			Sys_Error("ED_ParseEntity: EOF without closing brace");
+			Sys_Error("EOF without closing brace");
 
 		if (com_token[0] == '}')
-			Sys_Error("ED_ParseEntity: closing brace without data");
+			Sys_Error("closing brace without data");
 
 		init = true;
 
@@ -880,7 +880,7 @@ void ED_LoadFromFile(char *data)
 		if (!data)
 			break;
 		if (com_token[0] != '{')
-			Sys_Error("ED_LoadFromFile: found %s when expecting {", com_token);
+			Sys_Error("found %s when expecting {", com_token);
 
 		ent = (!ent) ? EDICT_NUM(0) : ED_Alloc();
 		data = ED_ParseEdict(data, ent);
@@ -945,7 +945,7 @@ void PR_LoadProgs(char *progsname)
 	CRC_Init(&pr_crc);
 
 	if (!(progs = (dprograms_t *) COM_LoadHunkFile(progsname)))
-		Sys_Error("PR_LoadProgs: couldn't load %s", progsname);
+		Sys_Error("couldn't load %s", progsname);
 
 	Con_DPrintf("Programs occupy %iK.\n", com_filesize / 1024);
 
@@ -1015,7 +1015,7 @@ void PR_LoadProgs(char *progsname)
 	{
 		pr_fielddefs[i].type = LittleShort(pr_fielddefs[i].type);
 		if (pr_fielddefs[i].type & DEF_SAVEGLOBAL)
-			Sys_Error("PR_LoadProgs: pr_fielddefs[i].type & DEF_SAVEGLOBAL");
+			Sys_Error("pr_fielddefs[i].type & DEF_SAVEGLOBAL");
 		pr_fielddefs[i].ofs = LittleShort(pr_fielddefs[i].ofs);
 		pr_fielddefs[i].s_name = LittleLong(pr_fielddefs[i].s_name);
 	}

@@ -143,13 +143,13 @@ void SV_StartSound(edict_t *entity, int channel, char *sample, int volume, float
 	int sound_num, field_mask, i, ent;
 
 	if (volume < 0 || volume > 255)
-		Sys_Error("SV_StartSound: volume = %i", volume);
+		Sys_Error("volume = %i", volume);
 
 	if (attenuation < 0 || attenuation > 4)
-		Sys_Error("SV_StartSound: attenuation = %f", attenuation);
+		Sys_Error("attenuation = %f", attenuation);
 
 	if (channel < 0 || channel > 7)
-		Sys_Error("SV_StartSound: channel = %i", channel);
+		Sys_Error("channel = %i", channel);
 
 	if (sv.datagram.cursize > MAX_DATAGRAM - 16)
 		return;
@@ -342,7 +342,7 @@ void SV_CheckForNewClients(void)
 			if (!svs.clients[i].active)
 				break;
 		if (i == svs.maxclients)
-			Sys_Error("SV_CheckForNewClients: no free clients");
+			Sys_Error("no free clients");
 
 		svs.clients[i].netconnection = ret;
 		SV_ConnectClient(i);

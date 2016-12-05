@@ -541,13 +541,15 @@ static void Mod_LoadNodes(brush_model_t *brushmodel, lump_t *l, byte *mod_base, 
 		Sys_Error("funny lump size in %s", mod_name);
 
 	int count = l->filelen / sizeof(*in);
-	mnode_t *out = Q_malloc(count * sizeof(*out));
+	mnode_t *out = Q_calloc(count, sizeof(*out));
 
 	brushmodel->nodes = out;
 	brushmodel->numnodes = count;
 
 	for (int i = 0; i < count; i++, in++, out++)
 	{
+		out->contents = 0;
+
 		for (int j = 0; j < 3; j++)
 		{
 			out->minmaxs[j] = LittleShort(in->mins[j]);

@@ -16,8 +16,6 @@
 
 #include "quakedef.h"
 
-extern model_t *loadmodel;
-
 int skytexturenum;
 
 int solidskytexture;
@@ -62,10 +60,10 @@ static void SubdividePolygon(int numverts, float *verts)
 	float s, t, subdivide;
 
 	if (++RecursLevel > 128) // 16 seems enough and 512 might create stack overflow
-		Sys_Error("SubdividePolygon: excessive tree depth");
+		Sys_Error("excessive tree depth");
 
 	if (numverts > 60)
-		Sys_Error("SubdividePolygon: excessive numverts %i", numverts);
+		Sys_Error("excessive numverts %i", numverts);
 
 	subdivide = gl_subdivide_size.value;
 
@@ -174,7 +172,7 @@ void GL_SubdivideSurface(brush_model_t *brushmodel, msurface_t *fa)
 			vec = brushmodel->vertexes[brushmodel->edges[-lindex].v[1]].position;
 
 		if (numverts >= 64)
-			Sys_Error("GL_SubdivideSurface: excessive numverts %i", numverts);
+			Sys_Error("excessive numverts %i", numverts);
 
 		VectorCopy(vec, verts[numverts]);
 		numverts++;

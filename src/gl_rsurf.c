@@ -40,8 +40,6 @@ static glRect_t lightmap_rectchange[MAX_LIGHTMAPS];
 
 static int allocated[MAX_LIGHTMAPS][BLOCK_WIDTH];
 
-int poly_count;
-
 // the lightmap texture data needs to be kept in
 // main memory so texsubimage can update properly
 byte lightmaps[4 * MAX_LIGHTMAPS * BLOCK_WIDTH * BLOCK_HEIGHT];
@@ -50,8 +48,6 @@ void R_RenderDynamicLightmaps(msurface_t *fa);
 
 void DrawGLPoly(glpoly_t *p, int tex_offset)
 {
-	poly_count++;
-
 	glTexCoordPointer(2, GL_FLOAT, VERTEXSIZE * sizeof(float), &p->verts[0][tex_offset]);
 	glVertexPointer(3, GL_FLOAT, VERTEXSIZE * sizeof(float), &p->verts[0][0]);
 	glDrawArrays(GL_TRIANGLE_FAN, 0, p->numverts);
@@ -217,9 +213,9 @@ texture_t *R_TextureAnimation(texture_t *base)
 	{
 		base = base->anim_next;
 		if (!base)
-			Sys_Error("R_TextureAnimation: broken cycle");
+			Sys_Error("broken cycle");
 		if (++count > 100)
-			Sys_Error("R_TextureAnimation: infinite cycle");
+			Sys_Error("infinite cycle");
 	}
 
 	return base;
@@ -289,7 +285,7 @@ void R_BlendLightmaps(void)
 		{
 			// JPG - added r_waterwarp
 			if ((p->flags & SURF_UNDERWATER) && r_waterwarp.value)
-				DrawGLWaterPolyLightmap(p);
+				DrawGLWaterPoly(p, 5);
 			else
 				DrawGLPoly(p, 5);
 		}
@@ -402,30 +398,32 @@ void R_DrawWaterSurfaces(void)
 	}
 }
 
-void DrawTextureChains(void)
+void DrawTextureChains(brush_model_t *brushmodel)
 {
 	int i;
 	msurface_t *s;
 	texture_t *t;
 
-	for (i = 0; i < cl.worldmodel->brushmodel->numtextures; i++)
+	for (i = 0; i < brushmodel->numtextures; i++)
 	{
-		t = cl.worldmodel->brushmodel->textures[i];
+		t = brushmodel->textures[i];
 		if (!t)
 			continue;
+
 		s = t->texturechain;
 		if (!s)
 			continue;
+
 		if (i == skytexturenum)
 			R_DrawSkyChain(s);
-		else if (i == mirrortexturenum && r_mirroralpha.value < 1.0) // Baker 3.99: changed, max value is 1
+		else if (i == mirrortexturenum && r_mirroralpha.value < 1.0)
 		{
 			R_MirrorChain(s);
 			continue;
 		}
 		else
 		{
-			if ((s->flags & SURF_DRAWTURB) && r_wateralpha.value < 1.0) // Baker 3.99: changed in event r_wateralpha is above max value of 1
+			if ((s->flags & SURF_DRAWTURB) && r_wateralpha.value < 1.0)
 				continue;	// draw translucent water later
 			for (; s; s = s->texturechain)
 				R_RenderBrushPoly(s);
@@ -435,14 +433,8 @@ void DrawTextureChains(void)
 	}
 }
 
-/*
- ================
- DrawGLWaterPoly
-
- Warp the vertex coordinates
- ================
- */
-void DrawGLWaterPoly(glpoly_t *p)
+/* Warp the vertex coordinates */
+void DrawGLWaterPoly(glpoly_t *p, int tex_offset)
 {
 	int i;
 	float *v;
@@ -458,28 +450,7 @@ void DrawGLWaterPoly(glpoly_t *p)
 		verts[i][2] = v[2];
 	}
 
-	glTexCoordPointer(2, GL_FLOAT, VERTEXSIZE * sizeof(float), &p->verts[0][3]);
-	glVertexPointer(3, GL_FLOAT, 0, &verts[0][0]);
-	glDrawArrays(GL_TRIANGLE_FAN, 0, p->numverts);
-}
-
-void DrawGLWaterPolyLightmap(glpoly_t *p)
-{
-	int i;
-	float *v;
-	vec3_t verts[p->numverts];
-
-	GL_DisableMultitexture();
-
-	v = p->verts[0];
-	for (i = 0; i < p->numverts; i++, v += VERTEXSIZE)
-	{
-		verts[i][0] = v[0] + 8 * sin(v[1] * 0.05 + realtime) * sin(v[2] * 0.05 + realtime);
-		verts[i][1] = v[1] + 8 * sin(v[0] * 0.05 + realtime) * sin(v[2] * 0.05 + realtime);
-		verts[i][2] = v[2];
-	}
-
-	glTexCoordPointer(2, GL_FLOAT, VERTEXSIZE * sizeof(float), &p->verts[0][5]);
+	glTexCoordPointer(2, GL_FLOAT, VERTEXSIZE * sizeof(float), &p->verts[0][tex_offset]);
 	glVertexPointer(3, GL_FLOAT, 0, &verts[0][0]);
 	glDrawArrays(GL_TRIANGLE_FAN, 0, p->numverts);
 }
@@ -510,7 +481,7 @@ void R_RenderBrushPoly(msurface_t *fa)
 	}
 
 	if ((fa->flags & SURF_UNDERWATER) && r_waterwarp.value) // JPG - added r_waterwarp
-		DrawGLWaterPoly(fa->polys);
+		DrawGLWaterPoly(fa->polys, 3);
 	else
 		DrawGLPoly(fa->polys, 3);
 
@@ -782,7 +753,7 @@ void R_DrawWorld(void)
 
 	R_RecursiveWorldNode(cl.worldmodel->brushmodel->nodes);
 
-	DrawTextureChains();
+	DrawTextureChains(cl.worldmodel->brushmodel);
 
 	R_BlendLightmaps();
 
@@ -895,7 +866,7 @@ int AllocBlock(int w, int h, int *x, int *y)
 		return texnum;
 	}
 
-//	Sys_Error("AllocBlock: full");
+//	Sys_Error("full");
 	return 0;
 }
 

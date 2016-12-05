@@ -170,7 +170,7 @@ int Scrap_AllocBlock(int w, int h, int *x, int *y)
 		return texnum;
 	}
 
-	Sys_Error("Scrap_AllocBlock: full");
+	Sys_Error("full");
 	return (0);
 }
 
@@ -270,7 +270,7 @@ qpic_t *Draw_CachePic(char *path)
 	// load the pic from disk
 	dat = (qpic_t *) COM_LoadTempFile(path);
 	if (!dat)
-		Sys_Error("Draw_CachePic: failed to load %s", path);
+		Sys_Error("failed to load %s", path);
 	SwapPic(dat);
 
 	// HACK HACK HACK --- we need to keep the bytes for
@@ -740,7 +740,7 @@ void Draw_Pic(int x, int y, qpic_t *pic)
 void Draw_TransPic(int x, int y, qpic_t *pic)
 {
 	if (x < 0 || (unsigned) (x + pic->width) > vid.width || y < 0 || (unsigned) (y + pic->height) > vid.height)
-		Sys_Error("Draw_TransPic: bad coordinates");
+		Sys_Error("bad coordinates");
 
 	Draw_Pic(x, y, pic);
 }

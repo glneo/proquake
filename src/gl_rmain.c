@@ -28,7 +28,8 @@ int particletexture; // little dot for particles
 int playertextures; // up to 16 color translated skins
 bool envmap; // true during envmap command capture
 
-int cnttextures[2] = { -1, -1 }; // cached
+// current texture in each texture unit cache
+int cnttextures[2] = { -1, -1 };
 
 int skyboxtextures;
 
@@ -80,7 +81,6 @@ cvar_t gl_polyblend = { "gl_polyblend", "1", true };
 cvar_t gl_flashblend = { "gl_flashblend", "1", true };
 cvar_t gl_playermip = { "gl_playermip", "0", true };
 cvar_t gl_nocolors = { "gl_nocolors", "0" };
-cvar_t gl_finish = { "gl_finish", "0" };
 
 cvar_t r_truegunangle = { "r_truegunangle", "0", true };  // Baker 3.80x - Optional "true" gun positioning on viewmodel
 cvar_t r_drawviewmodel = { "r_drawviewmodel", "1", true };  // Baker 3.80x - Save to config
@@ -214,101 +214,59 @@ bool R_CullForEntity(const entity_t *ent/*, vec3_t returned_center*/)
 void R_DrawEntitiesOnList(void)
 {
 	int i;
-	void SortEntitiesByTransparency(void);
 
 	if (!r_drawentities.value)
 		return;
 
-	// Baker: http://forums.inside3d.com/viewtopic.php?p=13458
-	//        Transparent entities need sorted to ensure items behind transparent objects get drawn (z-buffer)
-
-	// draw sprites seperately, because of alpha blending
 	for (i = 0; i < cl_numvisedicts; i++)
 	{
 		currententity = cl_visedicts[i];
 
 		switch (currententity->model->type)
 		{
-		case mod_alias:
-			R_DrawAliasModel(currententity);
-			break;
-
-		case mod_brush:
-
-			// Get rid of Z-fighting for textures by offsetting the
-			// drawing of entity models compared to normal polygons.
-			glEnable(GL_POLYGON_OFFSET_FILL);
-			R_DrawBrushModel(currententity);
-			glDisable(GL_POLYGON_OFFSET_FILL);
-
-			break;
-
-		default:
-			break;
-		}
-	}
-
-	for (i = 0; i < cl_numvisedicts; i++)
-	{
-		currententity = cl_visedicts[i];
-
-		switch (currententity->model->type)
-		{
-		case mod_sprite:
-			R_DrawSpriteModel(currententity);
-			break;
-
-		default:
-			break;
+			case mod_alias:
+				R_DrawAliasModel (currententity);
+				break;
+			case mod_brush:
+				R_DrawBrushModel (currententity);
+				break;
+			case mod_sprite:
+				R_DrawSpriteModel (currententity);
+				break;
 		}
 	}
 }
 
-void R_DrawViewModel(void)
+static void R_DrawViewModel(void)
 {
 	float ambient[4], diffuse[4];
-	int j;
 	int lnum;
 	vec3_t dist;
 	float add;
 	dlight_t *dl;
 	int ambientlight, shadelight;
 
-	if (!r_drawviewmodel.value)
-		return;
-
-	if (chase_active.value)
-		return;
-
-	if (envmap)
-		return;
-
-	if (!r_drawentities.value)
-		return;
-
-	if ((cl.items & IT_INVISIBILITY) && (r_ringalpha.value == 1.0f))
-		return;
-
-	if (cl.stats[STAT_HEALTH] <= 0)
+	if (!r_drawviewmodel.value || /* view model disabled */
+	    chase_active.value || /* in chase view */
+	    envmap || /* creating an environment map */
+	    !r_drawentities.value || /* entities disabled */
+	    ((cl.items & IT_INVISIBILITY) && (r_ringalpha.value == 1.0f)) || /* invisible */
+	    (cl.stats[STAT_HEALTH] <= 0)) /* dead */
 		return;
 
 	currententity = &cl.viewent;
 	if (!currententity->model)
 		return;
 
-	j = R_LightPoint(currententity->origin);
+	shadelight = R_LightPoint(currententity->origin);
+	if (shadelight < 24)
+		shadelight = 24; // always give some light on gun
+	ambientlight = shadelight;
 
-	if (j < 24)
-		j = 24;		// allways give some light on gun
-	ambientlight = j;
-	shadelight = j;
-
-// add dynamic lights
+	// add dynamic lights
 	for (lnum = 0; lnum < MAX_DLIGHTS; lnum++)
 	{
 		dl = &cl_dlights[lnum];
-		if (!dl->radius)
-			continue;
 		if (!dl->radius)
 			continue;
 		if (dl->die < cl.time)
@@ -320,7 +278,6 @@ void R_DrawViewModel(void)
 			ambientlight += add;
 	}
 
-	// JPG 3.02 - gamma correction
 	if (ambientlight > 255)
 		ambientlight = 255;
 	if (shadelight > 255)
@@ -329,8 +286,8 @@ void R_DrawViewModel(void)
 	ambientlight = gammatable[ambientlight];
 	shadelight = gammatable[shadelight];
 
-	ambient[0] = ambient[1] = ambient[2] = ambient[3] = (float) ambientlight / 128;
-	diffuse[0] = diffuse[1] = diffuse[2] = diffuse[3] = (float) shadelight / 128;
+	ambient[0] = ambient[1] = ambient[2] = ambient[3] = (float)ambientlight / 128;
+	diffuse[0] = diffuse[1] = diffuse[2] = diffuse[3] = (float)shadelight / 128;
 
 	// hack the depth range to prevent view model from poking into walls
 	glDepthRangef(gldepthmin, gldepthmin + 0.3 * (gldepthmax - gldepthmin));
@@ -364,18 +321,14 @@ void R_PolyBlend(void)
 	glColor4f(v_blend[0], v_blend[1], v_blend[2], v_blend[3]);
 
 	GLfloat verts[] = {
-		10, 100, 100,
-		10, -100, 100,
+		10,  100,  100,
+		10, -100,  100,
 		10, -100, -100,
-		10, 100, -100,
+		10,  100, -100,
 	};
-
-	glEnableClientState(GL_VERTEX_ARRAY);
 
 	glVertexPointer(3, GL_FLOAT, 0, verts);
 	glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
-
-	glDisableClientState(GL_VERTEX_ARRAY);
 
 	glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
 
@@ -425,7 +378,7 @@ void TurnVector(vec3_t out, vec3_t forward, vec3_t side, float angle)
 	out[2] = scale_forward * forward[2] + scale_side * side[2];
 }
 
-void R_SetFrustum(void)
+static void R_SetFrustum(void)
 {
 	int i;
 
@@ -442,10 +395,10 @@ void R_SetFrustum(void)
 	}
 }
 
-void R_SetupFrame(void)
+static void R_SetupFrame(void)
 {
 	// don't allow cheats in multiplayer
-	if (cl.maxclients > 1)
+	if (cl.maxclients > 1 && r_fullbright.value != 0)
 		Cvar_Set("r_fullbright", "0");
 
 	R_AnimateLight();
@@ -454,7 +407,6 @@ void R_SetupFrame(void)
 
 	// build the transformation matrix for the given view angles
 	VectorCopy(r_refdef.vieworg, r_origin);
-
 	AngleVectors(r_refdef.viewangles, vpn, vright, vup);
 
 	// current viewleaf
@@ -471,12 +423,9 @@ void R_SetupFrame(void)
 
 void Q_glFrustumf(GLfloat left, GLfloat right, GLfloat bottom, GLfloat top, GLfloat zNear, GLfloat zFar)
 {
-	GLfloat matrix[] = {
-		(2.0f * zNear)/(right-left), 0.0f, 0.0f, 0.0f,
-		0.0f, (2.0f * zNear)/(top-bottom), 0.0f, 0.0f,
-		(right + left) / (right - left), (top + bottom) / (top - bottom), -(zFar + zNear) / (zFar - zNear), -1.0f,
-		0.0f, 0.0f, -(2 * zFar * zNear) / (zFar - zNear), 0.0f,
-	};
+	GLfloat matrix[] = { (2.0f * zNear) / (right - left), 0.0f, 0.0f, 0.0f, 0.0f, (2.0f * zNear) / (top - bottom), 0.0f, 0.0f, (right + left)
+			/ (right - left), (top + bottom) / (top - bottom), -(zFar + zNear) / (zFar - zNear), -1.0f, 0.0f, 0.0f, -(2 * zFar * zNear)
+			/ (zFar - zNear), 0.0f, };
 
 	glMultMatrixf(matrix);
 }
@@ -642,7 +591,7 @@ void R_TranslatePlayerSkin(int playernum)
 //	}
 //
 //	if (size & 3)
-//		Sys_Error("R_TranslatePlayerSkin: bad size (%d)", size);
+//		Sys_Error("bad size (%d)", size);
 //
 //	inwidth = aliasmodel->skinwidth;
 //	inheight = aliasmodel->skinheight;
@@ -720,39 +669,7 @@ void R_NewMap(void)
 	}
 }
 
-/*
- ====================
- R_TimeRefresh_f
 
- For program optimization
- ====================
- */
-void R_TimeRefresh_f(void)
-{
-	int i;
-	float start, stop, time;
-
-	if (cls.state != ca_connected)
-		return;
-
-//	glDrawBuffer(GL_FRONT);
-	glFinish();
-
-	start = Sys_DoubleTime();
-	for (i = 0; i < 128; i++)
-	{
-		r_refdef.viewangles[1] = i * (360.0 / 128.0);
-		R_RenderView();
-	}
-
-	glFinish();
-	stop = Sys_DoubleTime();
-	time = stop - start;
-	Con_Printf("%f seconds (%f fps)\n", time, 128.0 / time);
-
-//	glDrawBuffer(GL_BACK);
-	GL_EndRendering();
-}
 
 void R_SetClearColor_f(struct cvar_s *cvar)
 {
@@ -765,86 +682,13 @@ void R_SetClearColor_f(struct cvar_s *cvar)
 	glClearColor(rgb[0] / 255.0, rgb[1] / 255.0, rgb[2] / 255.0, 0);
 }
 
-void R_Init(void)
-{
-	extern cvar_t gl_finish;
-	extern cvar_t r_truegunangle;
-	extern cvar_t r_farclip;
-	extern cvar_t r_ringalpha;
-	extern cvar_t gl_fullbright;
-
-	Cmd_AddCommand("timerefresh", R_TimeRefresh_f);
-	Cmd_AddCommand("pointfile", R_ReadPointFile_f);
-
-	Cvar_RegisterVariable(&r_norefresh);
-	Cvar_RegisterVariable(&r_lightmap);
-	Cvar_RegisterVariable(&r_fullbright);
-	Cvar_RegisterVariable(&r_drawentities);
-	Cvar_RegisterVariable(&r_drawviewmodel);
-	Cvar_RegisterVariable(&r_ringalpha);
-	Cvar_RegisterVariable(&r_truegunangle);
-
-	Cvar_RegisterVariable(&r_shadows);
-	Cvar_RegisterVariable(&r_mirroralpha);
-	Cvar_RegisterVariable(&r_wateralpha);
-	Cvar_RegisterVariable(&r_dynamic);
-	Cvar_RegisterVariable(&r_novis);
-	Cvar_RegisterVariable(&r_colored_dead_bodies);
-	Cvar_RegisterVariable(&r_speeds);
-	Cvar_RegisterVariable(&r_waterwarp);
-	Cvar_RegisterVariable(&r_farclip);
-
-	// fenix@io.com: register new cvar for model interpolation
-	Cvar_RegisterVariable(&r_interpolate_animation);
-	Cvar_RegisterVariable(&r_interpolate_transform);
-	Cvar_RegisterVariable(&r_interpolate_weapon);
-	Cvar_RegisterVariable(&r_clearcolor);
-	Cvar_SetCallback(&r_clearcolor, R_SetClearColor_f);
-
-	Cvar_RegisterVariable(&gl_finish);
-
-	Cvar_RegisterVariable(&gl_cull);
-	Cvar_RegisterVariable(&gl_smoothmodels);
-	Cvar_RegisterVariable(&gl_affinemodels);
-	Cvar_RegisterVariable(&gl_polyblend);
-	Cvar_RegisterVariable(&gl_flashblend);
-	Cvar_RegisterVariable(&gl_playermip);
-	Cvar_RegisterVariable(&gl_nocolors);
-
-//	Cvar_RegisterVariable (&gl_keeptjunctions);
-//	Cvar_RegisterVariable (&gl_reporttjunctions);
-	Cvar_RegisterVariable(&gl_fullbright);
-	Cvar_RegisterVariable(&gl_overbright);
-
-//	Cvar_RegisterVariable (&gl_doubleeyes);
-
-	Cvar_RegisterVariable(&gl_nearwater_fix);
-	Cvar_RegisterVariable(&gl_fadescreen_alpha);
-
-	R_InitTextures();
-	R_InitParticles();
-	R_InitParticleTexture();
-
-	playertextures = texture_extension_number;
-	texture_extension_number += MAX_SCOREBOARD;
-
-	skyboxtextures = texture_extension_number;
-	texture_extension_number += 6;
-}
-
-/*
- ================
- R_RenderScene
-
- r_refdef must be set before the first call
- ================
- */
-void R_RenderScene(void)
+/* r_refdef must be set before the first call */
+static void R_RenderScene(void)
 {
 	R_SetupFrame();
 	R_SetFrustum();
 	R_SetupGL();
-	R_MarkLeaves(); // done here so we know if we're in water
+	R_MarkLeaves();
 	R_DrawWorld(); // adds static entities to the list
 	S_ExtraUpdate(); // don't let sound get messed up if going slow
 	R_DrawEntitiesOnList();
@@ -853,40 +697,11 @@ void R_RenderScene(void)
 	R_DrawParticles();
 }
 
-void R_Clear(void)
-{
-	GLbitfield clearbits = GL_DEPTH_BUFFER_BIT;
-
-	// If gl_clear is 1 we always clear the color buffer
-	if (gl_clear.value)
-		clearbits |= GL_COLOR_BUFFER_BIT;
-
-	if (r_mirroralpha.value < 1.0) // Baker 3.99: was != 1.0, changed in event gets set to # higher than 1.0
-	{
-		glClear(clearbits);
-		gldepthmin = 0;
-		gldepthmax = 0.5;
-		glDepthFunc(GL_LEQUAL);
-	}
-	else
-	{
-		glClear(clearbits);
-		gldepthmin = 0;
-		gldepthmax = 1;
-		glDepthFunc(GL_LEQUAL);
-	}
-
-	glDepthRangef(gldepthmin, gldepthmax);
-}
-
-void R_Mirror(void)
+static void R_Mirror(void)
 {
 	float d;
 	msurface_t *s;
 	entity_t *ent;
-
-	if (!mirror)
-		return;
 
 	memcpy(r_base_world_matrix, r_world_matrix, sizeof(r_base_world_matrix));
 
@@ -950,22 +765,37 @@ void R_Mirror(void)
 	glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
 }
 
-/*
- ================
- R_RenderView
+static void R_Clear(void)
+{
+	GLbitfield clearbits = GL_DEPTH_BUFFER_BIT;
 
- r_refdef must be set before the first call
- ================
- */
+	// If gl_clear is 1 we clear the color buffer
+	if (gl_clear.value)
+		clearbits |= GL_COLOR_BUFFER_BIT;
+
+	glClear(clearbits);
+
+	glDepthFunc(GL_LEQUAL);
+
+	gldepthmin = 0;
+	if (r_mirroralpha.value < 1.0) // Baker 3.99: was != 1.0, changed in event gets set to # higher than 1.0
+		gldepthmax = 0.5;
+	else
+		gldepthmax = 1;
+
+	glDepthRangef(gldepthmin, gldepthmax);
+}
+
+/* r_refdef must be set before the first call */
 void R_RenderView(void)
 {
-	double time1 = 0.0, time2;
+	double time1, time2;
 
 	if (r_norefresh.value)
 		return;
 
 	if (!cl.worldmodel)
-		Sys_Error("R_RenderView: NULL worldmodel");
+		Sys_Error("NULL worldmodel");
 
 	if (r_speeds.value)
 	{
@@ -977,9 +807,6 @@ void R_RenderView(void)
 
 	mirror = false;
 
-	if (gl_finish.value)
-		glFinish();
-
 	R_Clear();
 
 	// render normal view
@@ -987,14 +814,95 @@ void R_RenderView(void)
 	R_DrawViewModel();
 	R_DrawWaterSurfaces();
 
-	// render mirror view
-	R_Mirror();
+	// if mirror is not still false, render mirror view
+	if (mirror)
+		R_Mirror();
 
 	R_PolyBlend();
 
 	if (r_speeds.value)
 	{
+		glFinish();
 		time2 = Sys_DoubleTime();
 		Con_Printf("%3i ms  %4i wpoly %4i epoly\n", (int) ((time2 - time1) * 1000), c_brush_polys, c_alias_polys);
 	}
+}
+
+/* For program optimization */
+void R_TimeRefresh_f(void)
+{
+	int i;
+	float start, stop, time;
+
+	if (cls.state != ca_connected)
+		return;
+
+	glFinish();
+
+	start = Sys_DoubleTime();
+	for (i = 0; i < 128; i++)
+	{
+		r_refdef.viewangles[1] = i * (360.0 / 128.0);
+		R_RenderView();
+	}
+
+	glFinish();
+	stop = Sys_DoubleTime();
+	time = stop - start;
+	Con_Printf("%f seconds (%f fps)\n", time, 128.0 / time);
+
+	GL_EndRendering();
+}
+
+void R_Init(void)
+{
+	Cmd_AddCommand("timerefresh", R_TimeRefresh_f);
+
+	Cvar_RegisterVariable(&r_norefresh);
+	Cvar_RegisterVariable(&r_lightmap);
+	Cvar_RegisterVariable(&r_fullbright);
+	Cvar_RegisterVariable(&r_drawentities);
+	Cvar_RegisterVariable(&r_drawviewmodel);
+	Cvar_RegisterVariable(&r_ringalpha);
+	Cvar_RegisterVariable(&r_truegunangle);
+
+	Cvar_RegisterVariable(&r_shadows);
+	Cvar_RegisterVariable(&r_mirroralpha);
+	Cvar_RegisterVariable(&r_wateralpha);
+	Cvar_RegisterVariable(&r_dynamic);
+	Cvar_RegisterVariable(&r_novis);
+	Cvar_RegisterVariable(&r_colored_dead_bodies);
+	Cvar_RegisterVariable(&r_speeds);
+	Cvar_RegisterVariable(&r_waterwarp);
+	Cvar_RegisterVariable(&r_farclip);
+
+	Cvar_RegisterVariable(&r_interpolate_animation);
+	Cvar_RegisterVariable(&r_interpolate_transform);
+	Cvar_RegisterVariable(&r_interpolate_weapon);
+
+	Cvar_RegisterVariable(&gl_clear);
+	Cvar_RegisterVariable(&r_clearcolor);
+	Cvar_SetCallback(&r_clearcolor, R_SetClearColor_f);
+
+	Cvar_RegisterVariable(&gl_cull);
+	Cvar_RegisterVariable(&gl_smoothmodels);
+	Cvar_RegisterVariable(&gl_affinemodels);
+	Cvar_RegisterVariable(&gl_polyblend);
+	Cvar_RegisterVariable(&gl_flashblend);
+	Cvar_RegisterVariable(&gl_playermip);
+	Cvar_RegisterVariable(&gl_nocolors);
+	Cvar_RegisterVariable(&gl_fullbright);
+	Cvar_RegisterVariable(&gl_overbright);
+	Cvar_RegisterVariable(&gl_nearwater_fix);
+	Cvar_RegisterVariable(&gl_fadescreen_alpha);
+
+	R_InitTextures();
+	R_InitParticles();
+	R_InitParticleTexture();
+
+	playertextures = texture_extension_number;
+	texture_extension_number += MAX_SCOREBOARD;
+
+	skyboxtextures = texture_extension_number;
+	texture_extension_number += 6;
 }

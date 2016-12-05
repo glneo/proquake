@@ -166,8 +166,7 @@ void R_DrawWaterSurfaces(void);
 void R_MarkLeaves(void);
 void R_MirrorChain(msurface_t *s);
 void DrawGLPoly(glpoly_t *p, int tex_offset);
-void DrawGLWaterPoly(glpoly_t *p);
-void DrawGLWaterPolyLightmap(glpoly_t *p);
+void DrawGLWaterPoly(glpoly_t *p, int tex_offset);
 void GL_BuildLightmaps(void);
 texture_t *R_TextureAnimation(texture_t *base);
 

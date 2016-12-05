@@ -423,7 +423,7 @@ int SV_HullPointContents(hull_t *hull, int num, vec3_t p)
 	while (num >= 0)
 	{
 		if (num < hull->firstclipnode || num > hull->lastclipnode)
-			Sys_Error("SV_HullPointContents: bad node number");
+			Sys_Error("bad node number");
 
 		node = hull->clipnodes + num;
 		plane = hull->planes + node->planenum;
@@ -518,7 +518,7 @@ bool SV_RecursiveHullCheck(hull_t *hull, int num, float p1f, float p2f, vec3_t p
 	}
 
 	if (num < hull->firstclipnode || num > hull->lastclipnode)
-		Sys_Error("SV_RecursiveHullCheck: bad node number");
+		Sys_Error("bad node number");
 
 // find the point distances
 	node = hull->clipnodes + num;

@@ -72,6 +72,8 @@ typedef struct entity_s
 	vec3_t lastangles, currangles;
 
 	bool monsterstep;
+
+	float alpha;
 } entity_t;
 
 typedef struct

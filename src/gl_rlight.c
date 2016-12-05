@@ -20,8 +20,8 @@ void R_AnimateLight(void)
 {
 	int i, j, k;
 
-// light animations
-// 'm' is normal light, 'a' is no light, 'z' is double bright
+	// light animations
+	// 'm' is normal light, 'a' is no light, 'z' is double bright
 	i = (int) (cl.time * 10);
 	for (j = 0; j < MAX_LIGHTSTYLES; j++)
 	{
@@ -330,4 +330,3 @@ int R_LightPoint(vec3_t p)
 
 	return r;
 }
-

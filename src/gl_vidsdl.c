@@ -229,6 +229,8 @@ static bool VID_SetMode(int width, int height, int bpp, bool fullscreen)
 
 //	SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_DEBUG_FLAG);
 
+	snprintf(caption, sizeof(caption), "QuickQuake %1.2f", (float)PROQUAKE_SERIES_VERSION);
+
 	/* Create the window if needed, hidden */
 	if (!draw_context)
 	{
@@ -714,26 +716,15 @@ void GL_BeginRendering(int *x, int *y, int *width, int *height)
 	*width = vid.width;
 	*height = vid.height;
 
-	extern int poly_count;
-
-	poly_count = 0;
-
 	glEnableClientState(GL_VERTEX_ARRAY);
 	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-//	glEnableClientState(GL_NORMAL_ARRAY);
 }
 
 void GL_EndRendering(void)
 {
-//	extern int poly_count;
-
-//	printf("%d\n", poly_count);
-
 	glDisableClientState(GL_VERTEX_ARRAY);
 	glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-//	glDisableClientState(GL_NORMAL_ARRAY);
 
-	glFlush();
 	SDL_GL_SwapWindow(draw_context);
 }
 

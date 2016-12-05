@@ -299,48 +299,48 @@ void CL_ParseServerInfo(void)
 extern cvar_t r_interpolate_transform;
 void CL_EntityInterpolateOrigins(entity_t *ent)
 {
-	if (r_interpolate_transform.value)
+	if (!r_interpolate_transform.value)
+		return;
+
+	float timepassed = cl.time - ent->translate_start_time;
+	float blend = 0;
+//	vec3_t delta = { 0, 0, 0 };
+
+	if (ent->translate_start_time == 0 || timepassed > 1)
 	{
-		float timepassed = cl.time - ent->translate_start_time;
-		float blend = 0;
-//		vec3_t delta = { 0, 0, 0 };
+		ent->translate_start_time = cl.time;
 
-		if (ent->translate_start_time == 0 || timepassed > 1)
-		{
-			ent->translate_start_time = cl.time;
+		VectorCopy(ent->origin, ent->lastorigin);
+		VectorCopy(ent->origin, ent->currorigin);
+	}
 
-			VectorCopy(ent->origin, ent->lastorigin);
-			VectorCopy(ent->origin, ent->currorigin);
-		}
+	if (!VectorCompare(ent->origin, ent->currorigin))
+	{
+		ent->translate_start_time = cl.time;
 
-		if (!VectorCompare(ent->origin, ent->currorigin))
-		{
-			ent->translate_start_time = cl.time;
+		VectorCopy(ent->currorigin, ent->lastorigin);
+		VectorCopy(ent->origin, ent->currorigin);
 
-			VectorCopy(ent->currorigin, ent->lastorigin);
-			VectorCopy(ent->origin, ent->currorigin);
+		blend = 0;
+	}
+	else
+	{
+		blend = timepassed / 0.1;
 
-			blend = 0;
-		}
-		else
-		{
-			blend = timepassed / 0.1;
-
-			if (cl.paused || blend > 1)
-				blend = 1;
-		}
+		if (cl.paused || blend > 1)
+			blend = 1;
+	}
 
 //		VectorSubtract(ent->currorigin, ent->lastorigin, delta);
 
-		// use cubic interpolation
-		{
-			float lastlerp = 2 * (blend * blend * blend) - 3 * (blend * blend) + 1;
-			float currlerp = 3 * (blend * blend) - 2 * (blend * blend * blend);
+	// use cubic interpolation
+	{
+		float lastlerp = 2 * (blend * blend * blend) - 3 * (blend * blend) + 1;
+		float currlerp = 3 * (blend * blend) - 2 * (blend * blend * blend);
 
-			ent->origin[0] = ent->lastorigin[0] * lastlerp + ent->currorigin[0] * currlerp;
-			ent->origin[1] = ent->lastorigin[1] * lastlerp + ent->currorigin[1] * currlerp;
-			ent->origin[2] = ent->lastorigin[2] * lastlerp + ent->currorigin[2] * currlerp;
-		}
+		ent->origin[0] = ent->lastorigin[0] * lastlerp + ent->currorigin[0] * currlerp;
+		ent->origin[1] = ent->lastorigin[1] * lastlerp + ent->currorigin[1] * currlerp;
+		ent->origin[2] = ent->lastorigin[2] * lastlerp + ent->currorigin[2] * currlerp;
 	}
 }
 

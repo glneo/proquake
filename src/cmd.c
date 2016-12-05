@@ -912,7 +912,7 @@ int Cmd_CheckParm(char *parm)
 	int i;
 
 	if (!parm)
-		Sys_Error("Cmd_CheckParm: NULL");
+		Sys_Error("NULL parameter");
 
 	for (i = 1; i < Cmd_Argc(); i++)
 		if (!strcasecmp(parm, Cmd_Argv(i)))

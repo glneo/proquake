@@ -206,7 +206,7 @@ int BoxOnPlaneSide(vec3_t emins, vec3_t emaxs, mplane_t *p)
 		break;
 	default:
 		dist1 = dist2 = 0;		// shut up compiler
-		Sys_Error("BoxOnPlaneSide:  Bad signbits");
+		Sys_Error("Bad signbits");
 		break;
 	}
 
@@ -245,7 +245,7 @@ int BoxOnPlaneSide(vec3_t emins, vec3_t emaxs, mplane_t *p)
 
 #ifdef PARANOID
 	if (sides == 0)
-	Sys_Error ("BoxOnPlaneSide: sides==0");
+	Sys_Error ("sides==0");
 #endif
 
 	return sides;
@@ -391,10 +391,10 @@ void FloorDivMod(double numer, double denom, int *quotient, int *rem)
 
 #ifndef PARANOID
 	if (denom <= 0.0)
-		Sys_Error("FloorDivMod: bad denominator %d\n", denom);
+		Sys_Error("bad denominator %d\n", denom);
 
 //	if ((floor(numer) != numer) || (floor(denom) != denom))
-//		Sys_Error ("FloorDivMod: non-integer numer or denom %f %f\n",
+//		Sys_Error ("non-integer numer or denom %f %f\n",
 //				numer, denom);
 #endif
 
@@ -460,7 +460,7 @@ int ParseFloats(char *s, float *f, int *f_size)
 	int i, argc;
 
 	if (!s || !f || !f_size)
-		Sys_Error("ParseFloats() wrong params");
+		Sys_Error("wrong params");
 
 	if (f_size[0] <= 0)
 		return (f_size[0] = 0); // array have no size, unusual but no crime

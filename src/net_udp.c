@@ -70,16 +70,14 @@ int UDP_Init (void)
 			strcpy(buff, com_argv[i+1]);
 		}
 		else
-			Sys_Error ("NET_Init: you must specify an IP address after -ip");
+			Sys_Error ("you must specify an IP address after -ip");
 	}
 	else
 	{
 		// JPG 3.00 from CSR
-		/*
 		gethostname(buff, MAXHOSTNAMELEN);
 		struct hostent *local = gethostbyname(buff);
 		myAddr = *(int *)local->h_addr_list[0];
-		*/
 		myAddr = INADDR_ANY;
 	}
 
@@ -91,7 +89,7 @@ int UDP_Init (void)
 	}
 
 	if ((net_controlsocket = UDP_OpenSocket (0)) == -1)
-		Sys_Error("UDP_Init: Unable to open control socket\n");
+		Sys_Error("Unable to open control socket\n");
 
 	((struct sockaddr_in *)&broadcastaddr)->sin_family = AF_INET;
 	((struct sockaddr_in *)&broadcastaddr)->sin_addr.s_addr = INADDR_BROADCAST;
@@ -126,7 +124,7 @@ void UDP_Listen (bool state)
 		if (net_acceptsocket != -1)
 			return;
 		if ((net_acceptsocket = UDP_OpenSocket (net_hostport)) == -1)
-			Sys_Error ("UDP_Listen: Unable to open accept socket\n");
+			Sys_Error ("Unable to open accept socket\n");
 		return;
 	}
 

@@ -125,7 +125,7 @@ void Host_EndGame(char *message, ...)
 		Host_ShutdownServer(false);
 
 	if (cls.state == ca_dedicated)
-		Sys_Error("Host_EndGame: %s\n", string);	// dedicated servers exit
+		Sys_Error("%s\n", string);	// dedicated servers exit
 
 	if (cls.demonum != -1)
 	{
@@ -153,7 +153,7 @@ void Host_Error(char *error, ...)
 	static bool inerror = false;
 
 	if (inerror)
-		Sys_Error("Host_Error: recursively entered");
+		Sys_Error("recursively entered");
 	inerror = true;
 
 	SCR_EndLoadingPlaque();		// reenable screen updates
@@ -167,7 +167,7 @@ void Host_Error(char *error, ...)
 		Host_ShutdownServer(false);
 
 	if (cls.state == ca_dedicated)
-		Sys_Error("Host_Error: %s\n", string);	// dedicated servers exit
+		Sys_Error("%s\n", string);	// dedicated servers exit
 
 	CL_Disconnect();
 	cls.demonum = -1;

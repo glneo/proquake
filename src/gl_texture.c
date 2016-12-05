@@ -174,7 +174,7 @@ void GL_Upload8(byte *data, int width, int height, int mode)
 	else
 	{
 		if (s & 3)
-			Sys_Error("GL_Upload8: s&3");
+			Sys_Error("s & 3");
 		for (i = 0; i < s; i += 4)
 		{
 			trans[i] = d_8to24table[data[i]];
@@ -295,8 +295,9 @@ void GL_Bind(int texnum)
 	if (current_texture_num == texnum)
 		return;
 
-	current_texture_num = texnum;
 	glBindTexture(GL_TEXTURE_2D, texnum);
+
+	current_texture_num = texnum;
 }
 
 static GLenum currenttarget = GL_TEXTURE0;
@@ -310,11 +311,15 @@ void GL_SelectTexture(GLenum target)
 	if (target == currenttarget)
 		return;
 
+	// cache current texture number for this texture unit
+	cnttextures[currenttarget - GL_TEXTURE0] = current_texture_num;
+
 	glActiveTexture(target);
 
-	cnttextures[currenttarget - GL_TEXTURE0] = current_texture_num;
-	current_texture_num = cnttextures[target - GL_TEXTURE0];
 	currenttarget = target;
+
+	// restore current texture number for new texture unit
+	current_texture_num = cnttextures[target - GL_TEXTURE0];
 }
 
 void GL_DisableMultitexture(void)

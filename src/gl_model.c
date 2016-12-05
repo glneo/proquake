@@ -18,7 +18,6 @@
 // on the same machine.
 #include "quakedef.h"
 
-model_t *loadmodel;
 char loadname[32]; // for hunk tags
 
 void Mod_LoadAliasModel(model_t *mod, void *buffer);
@@ -139,7 +138,7 @@ model_t *Mod_FindName(char *name)
 	model_t *mod;
 
 	if (!name[0])
-		Sys_Error("Mod_FindName: NULL name");
+		Sys_Error("NULL name");
 
 	// search the currently loaded models
 	for (i = 0, mod = mod_known; i < mod_numknown; i++, mod++)
@@ -176,15 +175,13 @@ model_t *Mod_LoadModel(model_t *mod, bool crash)
 	if (!buf)
 	{
 		if (crash)
-			Sys_Error("Mod_LoadModel: %s not found", mod->name);
+			Sys_Error("%s not found", mod->name);
 
 		return NULL;
 	}
 
 	// allocate a new model
 	COM_FileBase(mod->name, loadname);
-
-	loadmodel = mod;
 
 	mod->needload = false;
 

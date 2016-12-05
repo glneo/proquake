@@ -64,8 +64,6 @@ cvar_t pq_suitblend = { "pq_suitblend", "0.3", true };
 
 float v_dmg_time, v_dmg_roll, v_dmg_pitch;
 
-extern int in_forward, in_forward2, in_back;
-
 /*
  ===============
  V_CalcRoll
@@ -354,13 +352,6 @@ static void V_BonusFlash_f(void)
  */
 void V_SetContentsColor(int contents)
 {
-	// Baker: scenarios
-	//        glpro with gl_hwblend 1
-	//		  glpro with gl_hwblend 0
-	//		  glpro with -gamma
-	//        d3dpro
-	//        wqpro
-
 	switch (contents)
 	{
 	case CONTENTS_EMPTY:

@@ -651,6 +651,7 @@ void Con_Print (char *txt)
 				cr = 1;
 				break;
 			}
+			/* no break */
 
 		default:	// display character and advance
 			y = con_current % con_totallines;

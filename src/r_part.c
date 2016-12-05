@@ -22,6 +22,9 @@ static int ramp1[8] = { 0x6f, 0x6d, 0x6b, 0x69, 0x67, 0x65, 0x63, 0x61 };
 static int ramp2[8] = { 0x6f, 0x6e, 0x6d, 0x6c, 0x6b, 0x6a, 0x68, 0x66 };
 static int ramp3[8] = { 0x6d, 0x6b, 6, 5, 4, 3 };
 
+cvar_t r_particles = { "r_particles", "1", true };
+cvar_t r_particles_alpha = { "r_particles_alpha", "1", true };
+
 particle_t *active_particles, *free_particles;
 
 particle_t *particles;
@@ -49,6 +52,11 @@ void R_InitParticles(void)
 	}
 
 	particles = (particle_t *) Hunk_AllocName(r_numparticles * sizeof(particle_t), "particles");
+
+	Cmd_AddCommand("pointfile", R_ReadPointFile_f);
+
+	Cvar_RegisterVariable(&r_particles);
+	Cvar_RegisterVariable(&r_particles_alpha);
 }
 
 /*
@@ -722,14 +730,19 @@ void R_DrawParticles(void)
 
 	for (p = active_particles; p; p = p->next)
 	{
-		// hack a scale up to keep particles from disapearing
+		byte p_red = ((byte *)&d_8to24table[(int) p->color])[0];
+		byte p_green = ((byte *)&d_8to24table[(int) p->color])[1];
+		byte p_blue = ((byte *)&d_8to24table[(int) p->color])[2];
+		byte p_alpha = CLAMP(0, r_particles_alpha.value, 1) * 255;
+
+		// hack a scale up to keep particles from disappearing
 		scale = (p->org[0] - r_origin[0]) * vpn[0] + (p->org[1] - r_origin[1]) * vpn[1] + (p->org[2] - r_origin[2]) * vpn[2];
 		if (scale < 20)
 			scale = 1;
 		else
 			scale = 1 + scale * 0.004;
 
-		glColor4ub(((byte *)&d_8to24table[(int) p->color])[0], ((byte *)&d_8to24table[(int) p->color])[1], ((byte *)&d_8to24table[(int) p->color])[2], 255);
+		glColor4ub(p_red, p_green, p_blue, p_alpha);
 		verts[0] = p->org[0]; verts[1] = p->org[1]; verts[2] = p->org[2];
 		verts[3] = p->org[0] + up[0] * scale; verts[4] = p->org[1] + up[1] * scale; verts[5] = p->org[2] + up[2] * scale;
 		verts[6] = p->org[0] + right[0] * scale; verts[7] = p->org[1] + right[1] * scale; verts[8] = p->org[2] + right[2] * scale;
@@ -740,4 +753,3 @@ void R_DrawParticles(void)
 	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
 	glDisable(GL_BLEND);
 }
-
