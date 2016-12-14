@@ -15,7 +15,6 @@
 #include "quakedef.h"
 
 vec3_t modelorg;
-entity_t *currententity;
 
 int r_visframecount; // bumped when going to a new PVS
 int r_framecount; // used for dlight push checking
@@ -220,18 +219,18 @@ void R_DrawEntitiesOnList(void)
 
 	for (i = 0; i < cl_numvisedicts; i++)
 	{
-		currententity = cl_visedicts[i];
+		entity_t *entity = cl_visedicts[i];
 
-		switch (currententity->model->type)
+		switch (entity->model->type)
 		{
 			case mod_alias:
-				R_DrawAliasModel (currententity);
+				R_DrawAliasModel(entity);
 				break;
 			case mod_brush:
-				R_DrawBrushModel (currententity);
+				R_DrawBrushModel(entity);
 				break;
 			case mod_sprite:
-				R_DrawSpriteModel (currententity);
+				R_DrawSpriteModel(entity);
 				break;
 		}
 	}
@@ -239,13 +238,6 @@ void R_DrawEntitiesOnList(void)
 
 static void R_DrawViewModel(void)
 {
-	float ambient[4], diffuse[4];
-	int lnum;
-	vec3_t dist;
-	float add;
-	dlight_t *dl;
-	int ambientlight, shadelight;
-
 	if (!r_drawviewmodel.value || /* view model disabled */
 	    chase_active.value || /* in chase view */
 	    envmap || /* creating an environment map */
@@ -254,45 +246,14 @@ static void R_DrawViewModel(void)
 	    (cl.stats[STAT_HEALTH] <= 0)) /* dead */
 		return;
 
-	currententity = &cl.viewent;
-	if (!currententity->model)
+	entity_t *entity = &cl.viewent;
+	if (!entity->model)
 		return;
-
-	shadelight = R_LightPoint(currententity->origin);
-	if (shadelight < 24)
-		shadelight = 24; // always give some light on gun
-	ambientlight = shadelight;
-
-	// add dynamic lights
-	for (lnum = 0; lnum < MAX_DLIGHTS; lnum++)
-	{
-		dl = &cl_dlights[lnum];
-		if (!dl->radius)
-			continue;
-		if (dl->die < cl.time)
-			continue;
-
-		VectorSubtract(currententity->origin, dl->origin, dist);
-		add = dl->radius - VectorLength(dist);
-		if (add > 0)
-			ambientlight += add;
-	}
-
-	if (ambientlight > 255)
-		ambientlight = 255;
-	if (shadelight > 255)
-		shadelight = 255;
-
-	ambientlight = gammatable[ambientlight];
-	shadelight = gammatable[shadelight];
-
-	ambient[0] = ambient[1] = ambient[2] = ambient[3] = (float)ambientlight / 128;
-	diffuse[0] = diffuse[1] = diffuse[2] = diffuse[3] = (float)shadelight / 128;
 
 	// hack the depth range to prevent view model from poking into walls
 	glDepthRangef(gldepthmin, gldepthmin + 0.3 * (gldepthmax - gldepthmin));
 
-	R_DrawAliasModel(currententity);
+	R_DrawAliasModel(entity);
 
 	glDepthRangef(gldepthmin, gldepthmax);
 }
@@ -304,8 +265,6 @@ void R_PolyBlend(void)
 
 	if (!gl_polyblend.value)
 		return;
-
-	GL_DisableMultitexture();
 
 	glDisable(GL_ALPHA_TEST);
 	glEnable(GL_BLEND);
@@ -692,7 +651,6 @@ static void R_RenderScene(void)
 	R_DrawWorld(); // adds static entities to the list
 	S_ExtraUpdate(); // don't let sound get messed up if going slow
 	R_DrawEntitiesOnList();
-	GL_DisableMultitexture();
 	R_RenderDlights();
 	R_DrawParticles();
 }

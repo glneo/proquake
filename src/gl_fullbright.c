@@ -13,7 +13,6 @@
  */
 
 #include "quakedef.h"
-extern bool mtexenabled;
 
 int FindFullbrightTexture (byte *pixels, int num_pix)
 {
@@ -34,25 +33,23 @@ void ConvertPixels (byte *pixels, int num_pixels)
             pixels[i] = 255;
 }
 
-void DrawFullBrightTextures (msurface_t *first_surf, int num_surfs)
+void DrawFullBrightTextures(entity_t *ent)
 {
     // gl_texsort 1 version
     int i;
     msurface_t *fa;
     texture_t *t;
 
+    msurface_t *first_surf = ent->model->brushmodel->surfaces;
+    int num_surfs = ent->model->brushmodel->numsurfaces;
+
     if (r_fullbright.value)
         return;
-
-    if (mtexenabled)
-        return;
-
-    GL_DisableMultitexture ();
 
     for (fa = first_surf, i = 0; i < num_surfs; fa++, i++)
     {
         // find the correct texture
-        t = R_TextureAnimation (fa->texinfo->texture);
+        t = R_TextureAnimation(ent->frame, fa->texinfo->texture);
 
         if (t->fullbright != -1 && fa->draw_this_frame)
         {

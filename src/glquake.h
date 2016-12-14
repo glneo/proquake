@@ -67,7 +67,6 @@ typedef struct particle_s
 //====================================================
 
 extern vec3_t modelorg;
-extern entity_t *currententity;
 extern int r_visframecount;
 extern int r_framecount;
 extern int c_brush_polys, c_alias_polys;
@@ -168,7 +167,7 @@ void R_MirrorChain(msurface_t *s);
 void DrawGLPoly(glpoly_t *p, int tex_offset);
 void DrawGLWaterPoly(glpoly_t *p, int tex_offset);
 void GL_BuildLightmaps(void);
-texture_t *R_TextureAnimation(texture_t *base);
+texture_t *R_TextureAnimation(int frameb, texture_t *base);
 
 // gl_rmisc.c
 void R_TimeRefresh_f(void);
@@ -185,9 +184,9 @@ void R_ClearParticles(void);
 void R_DrawAliasModel(entity_t *ent);
 
 // gl_fullbright.c
-int FindFullbrightTexture (byte *pixels, int num_pix);
-void DrawFullBrightTextures (msurface_t *first_surf, int num_surfs);
-void ConvertPixels (byte *pixels, int num_pixels);
+int FindFullbrightTexture(byte *pixels, int num_pix);
+void DrawFullBrightTextures(entity_t *ent);
+void ConvertPixels(byte *pixels, int num_pixels);
 
 // gl_screen.c
 void R_PolyBlend(void);

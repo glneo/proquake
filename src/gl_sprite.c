@@ -68,12 +68,12 @@ void R_DrawSpriteModel(entity_t *ent)
 	// don't even bother culling, because it's just a single
 	// polygon without a surface cache
 	mspriteframe_t *frame = R_GetSpriteFrame(ent);
-	sprite_model_t *spritemodel = currententity->model->spritemodel;
+	sprite_model_t *spritemodel = ent->model->spritemodel;
 
 	if (spritemodel->type == SPR_ORIENTED)
 	{
 		// bullet marks on walls
-		AngleVectors(currententity->angles, v_forward, v_right, v_up);
+		AngleVectors(ent->angles, v_forward, v_right, v_up);
 		up = v_up;
 		right = v_right;
 	}
@@ -83,8 +83,6 @@ void R_DrawSpriteModel(entity_t *ent)
 		up = vup;
 		right = vright;
 	}
-
-	GL_DisableMultitexture();
 
 	GL_Bind(frame->gl_texturenum);
 

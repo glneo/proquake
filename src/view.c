@@ -481,59 +481,18 @@ void V_UpdatePalette_Static(bool forced)
 			}
 	}
 
-// drop the damage value
+	// drop the damage value
 	cl.cshifts[CSHIFT_DAMAGE].percent -= host_frametime * 150;
 	if (cl.cshifts[CSHIFT_DAMAGE].percent <= 0)
 		cl.cshifts[CSHIFT_DAMAGE].percent = 0;
 
-// drop the bonus value
+	// drop the bonus value
 	cl.cshifts[CSHIFT_BONUS].percent -= host_frametime * 100;
 	if (cl.cshifts[CSHIFT_BONUS].percent <= 0)
 		cl.cshifts[CSHIFT_BONUS].percent = 0;
 
 	if (!blend_changed && !forced)
 		return;
-
-	a = v_blend[3];
-	r = 255 * v_blend[0] * a;
-	g = 255 * v_blend[1] * a;
-	b = 255 * v_blend[2] * a;
-
-	a = 1 - a;
-	for (i = 0; i < 256; i++)
-	{
-		ir = i * a + r;
-		ig = i * a + g;
-		ib = i * a + b;
-		if (ir > 255)
-			ir = 255;
-		if (ig > 255)
-			ig = 255;
-		if (ib > 255)
-			ib = 255;
-
-		rampsold[0][i] = gammatable[ir];
-		rampsold[1][i] = gammatable[ig];
-		rampsold[2][i] = gammatable[ib];
-	}
-
-	basepal = host_basepal;
-	newpal = pal;
-
-	for (i = 0; i < 256; i++)
-	{
-		ir = basepal[0];
-		ig = basepal[1];
-		ib = basepal[2];
-		basepal += 3;
-
-		newpal[0] = rampsold[0][ir];
-		newpal[1] = rampsold[1][ig];
-		newpal[2] = rampsold[2][ib];
-		newpal += 3;
-	}
-
-//	VID_ShiftPaletteOld(pal);
 }
 
 /*

@@ -35,6 +35,7 @@ set(PROQUAKE_SOURCES
 	src/gl_refrag.c
 	src/gl_rlight.c
 	src/gl_rmain.c
+	src/gl_rpart.c
 	src/gl_rsurf.c
 	src/gl_screen.c
 	src/gl_sprite.c
@@ -53,7 +54,6 @@ set(PROQUAKE_SOURCES
 	src/pr_cmds.c
 	src/pr_edict.c
 	src/pr_exec.c
-	src/r_part.c
 # Server
 	src/sv_main.c
 	src/sv_phys.c

@@ -303,11 +303,8 @@ void GL_Bind(int texnum)
 static GLenum currenttarget = GL_TEXTURE0;
 bool mtexenabled = false;
 
-void GL_SelectTexture(GLenum target)
+void GL_SelectTextureUnit(GLenum target)
 {
-	if (!gl_mtexable)
-		return;
-
 	if (target == currenttarget)
 		return;
 
@@ -322,23 +319,25 @@ void GL_SelectTexture(GLenum target)
 	current_texture_num = cnttextures[target - GL_TEXTURE0];
 }
 
+void GL_EnableMultitexture(void)
+{
+	if (!mtexenabled)
+	{
+		GL_SelectTextureUnit(GL_TEXTURE1);
+		glClientActiveTexture(GL_TEXTURE1);
+		glEnable(GL_TEXTURE_2D);
+		mtexenabled = true;
+	}
+}
+
 void GL_DisableMultitexture(void)
 {
 	if (mtexenabled)
 	{
 		glDisable(GL_TEXTURE_2D);
-		GL_SelectTexture(GL_TEXTURE0);
+		glClientActiveTexture(GL_TEXTURE0);
+		GL_SelectTextureUnit(GL_TEXTURE0);
 		mtexenabled = false;
-	}
-}
-
-void GL_EnableMultitexture(void)
-{
-	if (gl_mtexable)
-	{
-		GL_SelectTexture(GL_TEXTURE1);
-		glEnable(GL_TEXTURE_2D);
-		mtexenabled = true;
 	}
 }
 

@@ -174,6 +174,59 @@ typedef struct {
 	int available;
 } hull_t;
 
+typedef struct
+{
+	int bspversion;
+	bool isworldmodel;
+
+	char *entities;
+
+	int numplanes;
+	mplane_t *planes;
+
+	int numtextures;
+	texture_t **textures;
+
+	int numvertexes;
+	mvertex_t *vertexes;
+
+	byte *visdata;
+
+	int numnodes;
+	mnode_t *nodes;
+
+	int numtexinfo;
+	mtexinfo_t *texinfo;
+
+	int numsurfaces;
+	msurface_t *surfaces;
+
+	byte *lightdata;
+
+	int numclipnodes;
+	dclipnode_t *clipnodes;
+
+	int numleafs; // number of visible leafs, not counting 0
+	mleaf_t *leafs;
+
+	int nummarksurfaces;
+	msurface_t **marksurfaces;
+
+	int numedges;
+	medge_t *edges;
+
+	int numsurfedges;
+	int *surfedges;
+
+	int numsubmodels;
+	dmodel_t *submodels;
+
+	hull_t hulls[MAX_MAP_HULLS];
+
+	int firstmodelsurface;
+	int nummodelsurfaces;
+} brush_model_t;
+
 /*
  ==============================================================================
 
@@ -239,7 +292,8 @@ typedef struct {
 
 typedef struct {
 	vec3_t v;
-	vec3_t normal;
+	byte normalindex;
+//	vec3_t normal;
 } mtrivertx_t;
 
 typedef struct {
@@ -299,77 +353,25 @@ typedef enum
 	mod_alias
 } modtype_t;
 
-#define	EF_ROCKET	1			// leave a trail
-#define	EF_GRENADE	2			// leave a trail
-#define	EF_GIB		4			// leave a trail
-#define	EF_ROTATE	8			// rotate (bonus items)
-#define	EF_TRACER	16			// green split trail
-#define	EF_ZOMGIB	32			// small blood trail
-#define	EF_TRACER2	64			// orange split trail + rotate
-#define	EF_TRACER3	128			// purple trail
+#define	EF_ROCKET       BIT(0)  // leave a trail
+#define	EF_GRENADE      BIT(1)  // leave a trail
+#define	EF_GIB          BIT(2)  // leave a trail
+#define	EF_ROTATE       BIT(3)  // rotate (bonus items)
+#define	EF_TRACER       BIT(4)  // green split trail
+#define	EF_ZOMGIB       BIT(5)  // small blood trail
+#define	EF_TRACER2      BIT(6)  // orange split trail + rotate
+#define	EF_TRACER3      BIT(7)  // purple trail
 
-#define NOCOLORMAP	256
-#define MOD_PLAYER	512
-
-typedef struct
-{
-	int bspversion;
-	bool isworldmodel;
-
-	char *entities;
-
-	int numplanes;
-	mplane_t *planes;
-
-	int numtextures;
-	texture_t **textures;
-
-	int numvertexes;
-	mvertex_t *vertexes;
-
-	byte *visdata;
-
-	int numnodes;
-	mnode_t *nodes;
-
-	int numtexinfo;
-	mtexinfo_t *texinfo;
-
-	int numsurfaces;
-	msurface_t *surfaces;
-
-	byte *lightdata;
-
-	int numclipnodes;
-	dclipnode_t *clipnodes;
-
-	int numleafs; // number of visible leafs, not counting 0
-	mleaf_t *leafs;
-
-	int nummarksurfaces;
-	msurface_t **marksurfaces;
-
-	int numedges;
-	medge_t *edges;
-
-	int numsurfedges;
-	int *surfedges;
-
-	int numsubmodels;
-	dmodel_t *submodels;
-
-	hull_t hulls[MAX_MAP_HULLS];
-
-	int firstmodelsurface;
-	int nummodelsurfaces;
-} brush_model_t;
+#define	MOD_NOLERP      BIT(8)  //don't lerp when animating
+#define	MOD_NOSHADOW    BIT(9)  //don't cast a shadow
+#define	MOD_FBRIGHT     BIT(10) //when fullbrights are disabled render this model brighter
+#define MOD_PLAYER      BIT(11)
 
 struct model_s
 {
 	char name[MAX_QPATH];
 	bool needload; // bmodels and sprites don't cache normally
 
-	modtype_t type;
 	int numframes;
 	synctype_t synctype;
 
@@ -383,6 +385,7 @@ struct model_s
 	bool clipbox;
 	vec3_t clipmins, clipmaxs;
 
+	modtype_t type;
 	union {
 		alias_model_t *aliasmodel;
 		sprite_model_t *spritemodel;

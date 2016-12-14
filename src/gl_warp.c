@@ -20,7 +20,8 @@ int skytexturenum;
 
 int solidskytexture;
 int alphaskytexture;
-float speedscale;		// for top sky and bottom sky
+float speedscale;  // for top sky
+float speedscale2; // and bottom sky
 
 static msurface_t *warpface;
 
@@ -226,11 +227,18 @@ void EmitWaterPolys(msurface_t *fa)
 
 void EmitSkyPolys(msurface_t *fa)
 {
+	speedscale = cl.time * 8;
+	speedscale -= (int)speedscale & ~127;
+
+	speedscale2 = cl.time * 16;
+	speedscale2 -= (int)speedscale2 & ~127;
+
 	for (glpoly_t *p = fa->polys; p; p = p->next)
 	{
 		struct {
 			float s, t;
-		} texcord[p->numverts];
+		} texcord[2][p->numverts];
+
 		for (int i = 0; i < p->numverts; i++)
 		{
 			vec3_t dir;
@@ -243,70 +251,53 @@ void EmitSkyPolys(msurface_t *fa)
 			dir[0] *= length;
 			dir[1] *= length;
 
-			texcord[i].s = (speedscale + dir[0]) * (1.0 / 128);
-			texcord[i].t = (speedscale + dir[1]) * (1.0 / 128);
+			texcord[0][i].s = (speedscale + dir[0]) * (1.0 / 128);
+			texcord[0][i].t = (speedscale + dir[1]) * (1.0 / 128);
+
+			texcord[1][i].s = (speedscale2 + dir[0]) * (1.0 / 128);
+			texcord[1][i].t = (speedscale2 + dir[1]) * (1.0 / 128);
 		}
 
-		glTexCoordPointer(2, GL_FLOAT, 0, texcord);
+		glClientActiveTexture(GL_TEXTURE0);
+		glTexCoordPointer(2, GL_FLOAT, 0, texcord[0]);
+		glClientActiveTexture(GL_TEXTURE1);
+		glTexCoordPointer(2, GL_FLOAT, 0, texcord[1]);
+
 		glVertexPointer(3, GL_FLOAT, VERTEXSIZE * sizeof(float), &p->verts[0][0]);
 		glDrawArrays(GL_TRIANGLE_FAN, 0, p->numverts);
 	}
 }
 
 /*
- ===============
- EmitBothSkyLayers
-
- Does a sky warp on the pre-fragmented glpoly_t chain
- This will be called for brushmodels, the world
- will have them chained together.
- ===============
+ * Does a sky warp on the pre-fragmented glpoly_t chain
+ * This will be called for brushmodels, the world
+ * will have them chained together.
  */
 void EmitBothSkyLayers(msurface_t *fa)
 {
-	GL_DisableMultitexture();
-
 	GL_Bind(solidskytexture);
-	speedscale = cl.time * 8;
-	speedscale -= (int) speedscale & ~127;
-
-	EmitSkyPolys(fa);
-
-	glEnable(GL_BLEND);
+	GL_EnableMultitexture();
+	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+	glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_DECAL);
 	GL_Bind(alphaskytexture);
-	speedscale = cl.time * 16;
-	speedscale -= (int) speedscale & ~127;
 
 	EmitSkyPolys(fa);
 
-	glDisable(GL_BLEND);
+	GL_DisableMultitexture();
 }
 
-void R_DrawSkyChain(msurface_t *s)
+void R_DrawSkyChain(msurface_t *fa)
 {
-	msurface_t *fa;
+	GL_Bind(solidskytexture);
+	GL_EnableMultitexture();
+	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+	glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_DECAL);
+	GL_Bind(alphaskytexture);
+
+	for (; fa; fa = fa->texturechain)
+		EmitSkyPolys(fa);
 
 	GL_DisableMultitexture();
-
-	// used when gl_texsort is on
-	GL_Bind(solidskytexture);
-	speedscale = cl.time * 8;
-	speedscale -= (int) speedscale & ~127;
-
-	for (fa = s; fa; fa = fa->texturechain)
-		EmitSkyPolys(fa);
-
-	glEnable(GL_BLEND);
-
-	GL_Bind(alphaskytexture);
-	speedscale = cl.time * 16;
-	speedscale -= (int) speedscale & ~127;
-
-	for (fa = s; fa; fa = fa->texturechain)
-		EmitSkyPolys(fa);
-
-	glDisable(GL_BLEND);
-
 }
 
 //===============================================================
