@@ -448,10 +448,6 @@ void V_UpdatePalette_Static(bool forced)
 {
 	int i, j;
 	bool blend_changed;
-	byte *basepal, *newpal;
-	byte pal[768];
-	float r, g, b, a;
-	int ir, ig, ib;
 
 //	Baker: eliminate shifts when disconnected
 	if (cls.state != ca_connected)

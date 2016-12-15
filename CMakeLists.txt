@@ -59,12 +59,24 @@ set(PROQUAKE_SOURCES
 	src/sv_phys.c
 	src/sv_move.c
 	src/sv_user.c
-# Sound
-	src/snd_dma.c
-	src/snd_mem.c
-	src/snd_mix.c
-	src/snd_sdl.c
 )
+
+# Sound
+option(DISABLE_SOUND "Disable sound support" OFF)
+if(DISABLE_SOUND)
+	set(PROQUAKE_SOURCES
+		${PROQUAKE_SOURCES}
+		src/snd_null.c
+	)
+else(DISABLE_SOUND)
+	set(PROQUAKE_SOURCES
+		${PROQUAKE_SOURCES}
+		src/snd_dma.c
+		src/snd_mem.c
+		src/snd_mix.c
+		src/snd_sdl.c
+	)
+endif(DISABLE_SOUND)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake")
 

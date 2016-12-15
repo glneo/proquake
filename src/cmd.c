@@ -921,13 +921,7 @@ int Cmd_CheckParm(char *parm)
 	return 0;
 }
 
-/*
- ====================
- Cmd_CmdList_f
-
- List all console commands
- ====================
- */
+/* List all console commands */
 void Cmd_CmdList_f(void)
 {
 	cmd_function_t *cmd;
@@ -965,11 +959,6 @@ void Cmd_CmdList_f(void)
 	Con_Printf("\n\n");
 }
 
-/*
- ============
- Cmd_Init
- ============
- */
 void Cmd_Init(void)
 {
 	// register our commands
@@ -979,6 +968,6 @@ void Cmd_Init(void)
 	Cmd_AddCommand("alias", Cmd_Alias_f);
 	Cmd_AddCommand("cmd", Cmd_ForwardToServer_f);
 	Cmd_AddCommand("wait", Cmd_Wait_f);
-	Cmd_AddCommand("unalias", Cmd_Unalias_f); //johnfitz
+	Cmd_AddCommand("unalias", Cmd_Unalias_f);
 	Cmd_AddCommand("cmdlist", Cmd_CmdList_f);
 }
