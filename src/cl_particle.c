@@ -66,7 +66,11 @@ void R_InitParticles(void)
  */
 
 #define NUMVERTEXNORMALS	162
-extern const float r_avertexnormals[NUMVERTEXNORMALS][3];
+
+const float r_avertexnormals[NUMVERTEXNORMALS][3] = {
+	#include "anorms.h"
+};
+
 vec3_t avelocities[NUMVERTEXNORMALS];
 float beamlength = 16;
 
@@ -590,12 +594,6 @@ void R_RocketTrail(vec3_t start, vec3_t end, int type)
 	}
 }
 
-/*
- ===============
- CL_RunParticles
- ===============
- */
-
 void CL_RunParticles(void)
 {
 	particle_t *p, *kill;
@@ -695,61 +693,4 @@ void CL_RunParticles(void)
 			break;
 		}
 	}
-}
-
-/*
- ===============
- R_DrawParticles -- johnfitz -- moved all non-drawing code to CL_RunParticles
- ===============
- */
-void R_DrawParticles(void)
-{
-	particle_t *p;
-	float scale;
-//	particle_t 		*kill;
-
-	vec3_t up, right;
-
-	VectorScale(vup, 1.5, up);
-	VectorScale(vright, 1.5, right);
-
-	GL_Bind(particletexture);
-	glEnable(GL_BLEND);
-	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
-
-	GLfloat texts[] = {
-		0, 0,
-		1, 0,
-		0, 1,
-	};
-
-	GLfloat verts[3*3];
-
-	glTexCoordPointer(2, GL_FLOAT, 0, texts);
-	glVertexPointer(3, GL_FLOAT, 0, verts);
-
-	for (p = active_particles; p; p = p->next)
-	{
-		byte p_red = ((byte *)&d_8to24table[(int) p->color])[0];
-		byte p_green = ((byte *)&d_8to24table[(int) p->color])[1];
-		byte p_blue = ((byte *)&d_8to24table[(int) p->color])[2];
-		byte p_alpha = CLAMP(0, r_particles_alpha.value, 1) * 255;
-
-		// hack a scale up to keep particles from disappearing
-		scale = (p->org[0] - r_origin[0]) * vpn[0] + (p->org[1] - r_origin[1]) * vpn[1] + (p->org[2] - r_origin[2]) * vpn[2];
-		if (scale < 20)
-			scale = 1;
-		else
-			scale = 1 + scale * 0.004;
-
-		glColor4ub(p_red, p_green, p_blue, p_alpha);
-		verts[0] = p->org[0]; verts[1] = p->org[1]; verts[2] = p->org[2];
-		verts[3] = p->org[0] + up[0] * scale; verts[4] = p->org[1] + up[1] * scale; verts[5] = p->org[2] + up[2] * scale;
-		verts[6] = p->org[0] + right[0] * scale; verts[7] = p->org[1] + right[1] * scale; verts[8] = p->org[2] + right[2] * scale;
-		glDrawArrays(GL_TRIANGLES, 0, 3);
-	}
-
-	glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
-	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
-	glDisable(GL_BLEND);
 }

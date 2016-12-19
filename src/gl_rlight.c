@@ -44,6 +44,9 @@ int r_dlightframecount;
 
 extern cvar_t gl_overbright;
 
+byte color_white[4] = { 255, 255, 255, 255 };
+byte color_black[4] = { 0, 0, 0, 255 };
+
 /*
  ===============
  R_UploadLightmap -- uploads the modified lightmap to opengl if necessary

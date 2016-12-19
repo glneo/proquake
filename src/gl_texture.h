@@ -42,7 +42,7 @@ extern texture_t *r_notexture_mip;
 extern int d_lightstylevalue[256]; // 8.8 fraction of base light value
 
 extern bool envmap;
-extern int cnttextures[2];
+
 extern int current_texture_num;
 extern int particletexture;
 extern int playertextures;

@@ -21,8 +21,9 @@
 #define	BLOCK_WIDTH		128
 #define	BLOCK_HEIGHT	128
 
-
 #define	MAX_LIGHTMAPS	64
+
+vec3_t modelorg;
 
 extern int lightmap_bytes;
 extern byte lightmaps[4 * MAX_LIGHTMAPS * BLOCK_WIDTH * BLOCK_HEIGHT];
@@ -357,6 +358,8 @@ void R_DrawBrushModel(entity_t *ent)
 
  ===============================================================================
  */
+
+int r_visframecount; // bumped when going to a new PVS
 
 void R_RecursiveWorldNode(mnode_t *node)
 {

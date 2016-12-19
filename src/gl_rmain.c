@@ -14,9 +14,6 @@
 
 #include "quakedef.h"
 
-vec3_t modelorg;
-
-int r_visframecount; // bumped when going to a new PVS
 int r_framecount; // used for dlight push checking
 
 static mplane_t frustum[4];
@@ -27,20 +24,12 @@ int particletexture; // little dot for particles
 int playertextures; // up to 16 color translated skins
 bool envmap; // true during envmap command capture
 
-// current texture in each texture unit cache
-int cnttextures[2] = { -1, -1 };
-
-int skyboxtextures;
-
 int mirrortexturenum; // quake texturenum, not gltexturenum
 bool mirror;
 mplane_t *mirror_plane;
 
-// view origin
-vec3_t vup;
-vec3_t vpn;
-vec3_t vright;
-vec3_t r_origin;
+// view origin and direction
+vec3_t r_origin, vright, vpn, vup;
 
 float r_world_matrix[16];
 float r_base_world_matrix[16];
@@ -50,9 +39,9 @@ refdef_t r_refdef;
 
 mleaf_t *r_viewleaf, *r_oldviewleaf;
 
-texture_t *r_notexture_mip;
-
 int d_lightstylevalue[256]; // 8.8 fraction of base light value
+
+float gldepthmin, gldepthmax;
 
 cvar_t r_norefresh = { "r_norefresh", "0" };
 cvar_t r_drawentities = { "r_drawentities", "1" };
@@ -628,8 +617,6 @@ void R_NewMap(void)
 	}
 }
 
-
-
 void R_SetClearColor_f(struct cvar_s *cvar)
 {
 	byte *rgb;
@@ -860,7 +847,4 @@ void R_Init(void)
 
 	playertextures = texture_extension_number;
 	texture_extension_number += MAX_SCOREBOARD;
-
-	skyboxtextures = texture_extension_number;
-	texture_extension_number += 6;
 }

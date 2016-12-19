@@ -850,6 +850,56 @@ void SCR_TileClear(void)
 	}
 }
 
+void SCR_DrawCoords(void)
+{
+	if (developer.value < 2)
+		return;
+
+	Draw_String(16, 16,
+			va("Position xyz = %i %i %i", (int) cl_entities[cl.viewentity].origin[0], (int) cl_entities[cl.viewentity].origin[1],
+					(int) cl_entities[cl.viewentity].origin[2]));
+
+}
+
+/*
+ ===============
+ SCR_DrawVolume - Baker 3.80x -- from JoeQuake
+ ===============
+ */
+void SCR_DrawVolume(void)
+{
+	int yofs;
+	char bar[11];
+	static float volume_time = 0;
+	// extern bool volume_changed;
+
+	if (realtime < volume_time - 2.0)
+	{
+		volume_time = 0;
+		return;
+	}
+
+//     if (volume_changed)
+//     {
+//             volume_time = realtime + 2.0;
+//             volume_changed = false;
+//     }
+//     else if (realtime > volume_time)
+//     {
+//             return;
+//     }
+
+//     for (int i = 1, float j = 0.1; i <= 10; i++, j += 0.1)
+//             bar[i - 1] = ((volume.value + 0.05) >= j) ? 139 : 11; // Baker 3.60 + 0.0.5 hack for now
+
+	bar[10] = 0;
+
+	yofs = 8;
+
+	Draw_String(vid.width - 88, yofs, bar);
+	Draw_String(vid.width - 88, yofs + 8, "volume");
+}
+
 /*
  ==================
  SCR_UpdateScreen
@@ -944,8 +994,8 @@ void SCR_UpdateScreen(void)
 			SCR_DrawFPS();					// JPG - draw FPS
 			SCR_DrawSpeed();				// Baker 3.67 - Drawspeed
 			SCR_CheckDrawCenterString();
-			SCR_DrawCoords();				// Baker: draw coords if developer 2 or higher
-			SCR_DrawVolume();				// Baker 3.60 - JoeQuake 0.15
+//			SCR_DrawCoords();				// Baker: draw coords if developer 2 or higher
+//			SCR_DrawVolume();				// Baker 3.60 - JoeQuake 0.15
 			Sbar_Draw();
 		}
 

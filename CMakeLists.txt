@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 2.6)
 project(ProQuake)
 
 set(PROQUAKE_SOURCES
+# Common
 	src/common.c
 	src/cvar.c
 	src/crc.c
@@ -9,40 +10,28 @@ set(PROQUAKE_SOURCES
 	src/host_cmd.c
 	src/keys.c
 	src/location.c
-	src/menu.c
 	src/mathlib.c
 	src/zone.c
-	src/view.c
 	src/wad.c
 	src/world.c
 	src/sys_linux.c
 # Client
 	src/cl_demo.c
+	src/cl_efrag.c
 	src/cl_input.c
 	src/cl_main.c
 	src/cl_parse.c
+	src/cl_particle.c
 	src/cl_tent.c
 	src/chase.c
 	src/cmd.c
 	src/console.c
 	src/in_sdl.c
-# Graphics
-	src/gl_alias.c
-	src/gl_brush.c
-	src/gl_draw.c
-	src/gl_fullbright.c
-	src/gl_model.c
-	src/gl_refrag.c
-	src/gl_rlight.c
-	src/gl_rmain.c
-	src/gl_rpart.c
-	src/gl_rsurf.c
-	src/gl_screen.c
-	src/gl_sprite.c
-	src/gl_texture.c
-	src/gl_vidsdl.c
-	src/gl_warp.c
-	src/sbar.c
+# Models
+	src/mod_main.c
+	src/mod_alias.c
+	src/mod_brush.c
+	src/mod_sprite.c
 # Net
 	src/net_dgrm.c
 	src/net_loop.c
@@ -61,14 +50,42 @@ set(PROQUAKE_SOURCES
 	src/sv_user.c
 )
 
+# Graphics
+option(DISABLE_VIDEO "Disable graphics support" OFF)
+if(DISABLE_VIDEO)
+	set(PROQUAKE_SOURCES
+		${PROQUAKE_SOURCES}
+		src/gl_vidnull.c
+	)
+else(DISABLE_VIDEO)
+	set(PROQUAKE_SOURCES
+		${PROQUAKE_SOURCES}
+		src/gl_alias.c
+		src/gl_draw.c
+		src/gl_fullbright.c
+		src/gl_rlight.c
+		src/gl_rmain.c
+		src/gl_particle.c
+		src/gl_rsurf.c
+		src/gl_screen.c
+		src/gl_sprite.c
+		src/gl_texture.c
+		src/gl_vidsdl.c
+		src/gl_warp.c
+		src/menu.c
+		src/sbar.c
+		src/view.c
+	)
+endif(DISABLE_VIDEO)
+
 # Sound
-option(DISABLE_SOUND "Disable sound support" OFF)
-if(DISABLE_SOUND)
+option(DISABLE_AUDIO "Disable sound support" OFF)
+if(DISABLE_AUDIO)
 	set(PROQUAKE_SOURCES
 		${PROQUAKE_SOURCES}
 		src/snd_null.c
 	)
-else(DISABLE_SOUND)
+else(DISABLE_AUDIO)
 	set(PROQUAKE_SOURCES
 		${PROQUAKE_SOURCES}
 		src/snd_dma.c
@@ -76,7 +93,7 @@ else(DISABLE_SOUND)
 		src/snd_mix.c
 		src/snd_sdl.c
 	)
-endif(DISABLE_SOUND)
+endif(DISABLE_AUDIO)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake")
 

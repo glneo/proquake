@@ -28,6 +28,11 @@ int texels;
 gltexture_t gltextures[MAX_GLTEXTURES];
 int numgltextures;
 
+// current texture in each texture unit cache
+int cnttextures[2] = { -1, -1 };
+
+texture_t *r_notexture_mip;
+
 static void GL_ResampleTexture(unsigned *in, int inwidth, int inheight, unsigned *out, int outwidth, int outheight)
 {
 	int i, j;

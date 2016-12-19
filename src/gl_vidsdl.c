@@ -53,9 +53,6 @@ static bool vid_changed = false;
 
 int texture_mode = GL_LINEAR;
 
-byte color_white[4] = { 255, 255, 255, 255 };
-byte color_black[4] = { 0, 0, 0, 255 };
-
 static void GL_Init(void);
 static void GL_SetupState(void); //johnfitz
 
@@ -63,21 +60,12 @@ viddef_t vid; // global video state
 modestate_t modestate = MODE_NONE;
 bool scr_skipupdate;
 
-bool gl_mtexable = true;
-bool gl_texture_env_combine = false; //johnfitz
-bool gl_texture_env_add = false; //johnfitz
-bool gl_swap_control = false; //johnfitz
-bool gl_anisotropy_able = false; //johnfitz
-float gl_max_anisotropy; //johnfitz
-bool gl_texture_NPOT = false; //ericw
-bool gl_vbo_able = false; //ericw
-bool gl_glsl_able = false; //ericw
-GLint gl_max_texture_units = 0; //ericw
-bool gl_glsl_gamma_able = false; //ericw
-bool gl_glsl_alias_able = false; //ericw
-int gl_stencilbits;
-
-float gldepthmin, gldepthmax;
+static bool gl_swap_control = false;
+static bool gl_anisotropy_able = false;
+static float gl_max_anisotropy;
+static bool gl_texture_NPOT = false; //ericw
+static bool gl_vbo_able = false; //ericw
+static int gl_stencilbits;
 
 static cvar_t vid_fullscreen = { "vid_fullscreen", "0", true };
 static cvar_t vid_width = { "vid_width", "800", true };
@@ -1065,11 +1053,3 @@ void VID_SetPaletteOld(unsigned char *palette)
 	d_8to24table[255] = 0;  // 255 is transparent "MH: says this fixes pink edges"
 	//d_8to24table[255] &= 0xffffff;        // 255 is transparent
 }
-
-void VID_ShiftPaletteOld(unsigned char *palette)
-{
-//     extern  byte rampsold[3][256];
-//     VID_SetPaletteOld (palette);
-//     gammaworks = SetDeviceGammaRamp (maindc, ramps);
-}
-

@@ -351,12 +351,12 @@ void SV_ClientThink(void)
 
 	DropPunchAngle();
 
-// if dead, behave differently
+	// if dead, behave differently
 	if (sv_player->v.health <= 0)
 		return;
 
-// angles
-// show 1/3 the pitch angle and all the roll angle
+	// angles
+	// show 1/3 the pitch angle and all the roll angle
 	cmd = host_client->cmd;
 	angles = sv_player->v.angles;
 
@@ -373,7 +373,7 @@ void SV_ClientThink(void)
 		SV_WaterJump();
 		return;
 	}
-// walk
+	// walk
 	//johnfitz -- alternate noclip
 	if (sv_player->v.movetype == MOVETYPE_NOCLIP && sv_altnoclip.value)
 		SV_NoclipMove();

@@ -66,8 +66,6 @@ typedef struct particle_s
 
 //====================================================
 
-extern vec3_t modelorg;
-extern int r_visframecount;
 extern int r_framecount;
 extern int c_brush_polys, c_alias_polys;
 
@@ -202,9 +200,5 @@ void Check_GammaOld(unsigned char *pal);
 bool VID_Is8bit(void);
 bool CheckExtension(const char *extension);
 
-// move this to vid_glcommon.c?
-
-extern float gldepthmin, gldepthmax;
-extern byte color_white[4], color_black[4];
 
 #endif /* __GLQUAKE_H */

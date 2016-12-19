@@ -1,5 +1,5 @@
 /*
- * Brush model loading and rendering
+ * Brush model loading
  *
  * Copyright (C) 1996-1997 Id Software, Inc.
  *
