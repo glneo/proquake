@@ -15,18 +15,16 @@
  */
 
 #include "quakedef.h"
-
-#include "gl_model.h"
+#include "glquake.h"
+#include "model.h"
 
 float shadelight, ambientlight;
 
 // precalculated dot products for quantized angles
 #define SHADEDOT_QUANT 16
-float r_avertexnormal_dots[SHADEDOT_QUANT][256] = {
+const float r_avertexnormal_dots[SHADEDOT_QUANT][256] = {
 	#include "anorm_dots.h"
 };
-
-float *shadedots = r_avertexnormal_dots[0];
 
 static void GL_DrawAliasFrame(entity_t *ent, alias_model_t *aliasmodel, int pose)
 {
@@ -45,13 +43,10 @@ static void GL_DrawAliasFrame(entity_t *ent, alias_model_t *aliasmodel, int pose
 	if (alpha < 1.0f)
 		glEnable(GL_BLEND);
 
+	int quantizedangle = ((int)(ent->angles[1] * (SHADEDOT_QUANT / 360.0))) & (SHADEDOT_QUANT - 1);
+	const float *shadedots = r_avertexnormal_dots[quantizedangle];
 	float l = shadedots[aliasmodel->poseverts[pose]->normalindex] * shadelight;
 	glColor4f(l, l, l, alpha);
-
-//	glBindTexture(GL_TEXTURE_2D, aliasmodel->gl_texturenum[0][0]);
-//	glEnable(GL_TEXTURE_2D);
-
-//	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	glVertexPointer(3, GL_FLOAT, sizeof(*(aliasmodel->poseverts[0])), &aliasmodel->poseverts[pose]->v);
 //	glNormalPointer(GL_FLOAT, sizeof(*(aliasmodel->poseverts[0])), &aliasmodel->poseverts[pose]->normal);
@@ -184,9 +179,6 @@ void R_DrawAliasModel(entity_t *ent)
 	if (ent->model->flags & MOD_FBRIGHT)
 		ambientlight = shadelight = 255;
 
-	int quantizedangle = ((int)(ent->angles[1] * (SHADEDOT_QUANT / 360.0))) & (SHADEDOT_QUANT - 1);
-
-	shadedots = r_avertexnormal_dots[quantizedangle];
 	shadelight = shadelight / 200.0;
 
 	// locate the proper data

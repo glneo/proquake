@@ -13,6 +13,22 @@
  */
 
 #include "quakedef.h"
+#include "glquake.h"
+
+static const char *gl_vendor;
+static const char *gl_renderer;
+static const char *gl_version;
+static int gl_version_major;
+static int gl_version_minor;
+static const char *gl_extensions;
+static char *gl_extensions_nice;
+
+bool gl_swap_control = false;
+static bool gl_anisotropy_able = false;
+static float gl_max_anisotropy;
+static bool gl_texture_NPOT = false; //ericw
+bool gl_vbo_able = false;
+int gl_stencilbits;
 
 int r_framecount; // used for dlight push checking
 
@@ -79,13 +95,18 @@ cvar_t r_lightmap = { "r_lightmap", "0" };
 cvar_t gl_fullbright = { "gl_fullbright", "0", true };
 cvar_t gl_overbright = { "gl_overbright", "1", true };
 
-/*
- =================
- R_CullBox
+cvar_t r_waterwarp = { "r_waterwarp", "0", true }; // Baker 3.60 - Save this to config now
 
- Returns true if the box is completely outside the frustum
- =================
- */
+void R_RotateForEntity(entity_t *ent)
+{
+	glTranslatef(ent->origin[0], ent->origin[1], ent->origin[2]);
+
+	glRotatef(ent->angles[1], 0, 0, 1);
+	glRotatef(-ent->angles[0], 0, 1, 0);
+	glRotatef(ent->angles[2], 1, 0, 0);
+}
+
+/* Returns true if the box is completely outside the frustum */
 bool R_CullBox(vec3_t mins, vec3_t maxs)
 {
 	int i;
@@ -97,23 +118,8 @@ bool R_CullBox(vec3_t mins, vec3_t maxs)
 	return false;
 }
 
-void R_RotateForEntity(entity_t *ent)
-{
-	glTranslatef(ent->origin[0], ent->origin[1], ent->origin[2]);
-
-	glRotatef(ent->angles[1], 0, 0, 1);
-	glRotatef(-ent->angles[0], 0, 1, 0);
-	glRotatef(ent->angles[2], 1, 0, 0);
-}
-
-/*
- =================
- R_CullBox -- replaced with new function from lordhavoc
-
- Returns true if the box is completely outside the frustum
- =================
- */
-bool R_CullBoxA(const vec3_t emins, const vec3_t emaxs)
+/* Returns true if the box is completely outside the frustum */
+static bool R_CullBoxA(const vec3_t emins, const vec3_t emaxs)
 {
 	int i;
 	mplane_t *p;
@@ -160,15 +166,9 @@ bool R_CullBoxA(const vec3_t emins, const vec3_t emaxs)
 	return false;
 }
 
-/*
- =================
- R_CullSphere
-
- Returns true if the sphere is completely outside the frustum
- =================
- */
+/* Returns true if the sphere is completely outside the frustum */
 #define PlaneDiff(point, plane) (((plane)->type < 3 ? (point)[(plane)->type] : DotProduct((point), (plane)->normal)) - (plane)->dist)
-bool R_CullSphere(const vec3_t centre, const float radius)
+static bool R_CullSphere(const vec3_t centre, const float radius)
 {
 	int i;
 	mplane_t *p;
@@ -195,11 +195,11 @@ bool R_CullForEntity(const entity_t *ent/*, vec3_t returned_center*/)
 
 //	if (returned_center)
 //		LerpVector (mins, maxs, 0.5, returned_center);
-	return R_CullBoxA(mins, maxs);
 
+	return R_CullBoxA(mins, maxs);
 }
 
-void R_DrawEntitiesOnList(void)
+static void R_DrawEntitiesOnList(void)
 {
 	int i;
 
@@ -247,7 +247,7 @@ static void R_DrawViewModel(void)
 	glDepthRangef(gldepthmin, gldepthmax);
 }
 
-void R_PolyBlend(void)
+static void R_PolyBlend(void)
 {
 	if (!v_blend[3])	// No blends ... get outta here
 		return;
@@ -289,7 +289,7 @@ void R_PolyBlend(void)
 
 }
 
-int SignbitsForPlane(mplane_t *out)
+static int SignbitsForPlane(mplane_t *out)
 {
 	int bits, j;
 
@@ -314,7 +314,7 @@ int SignbitsForPlane(mplane_t *out)
  to turn away from side, use a negative angle
  ===============
  */
-void TurnVector(vec3_t out, vec3_t forward, vec3_t side, float angle)
+static void TurnVector(vec3_t out, vec3_t forward, vec3_t side, float angle)
 {
 	float scale_forward, scale_side;
 
@@ -369,7 +369,7 @@ static void R_SetupFrame(void)
 	c_alias_polys = 0;
 }
 
-void Q_glFrustumf(GLfloat left, GLfloat right, GLfloat bottom, GLfloat top, GLfloat zNear, GLfloat zFar)
+static void Q_glFrustumf(GLfloat left, GLfloat right, GLfloat bottom, GLfloat top, GLfloat zNear, GLfloat zFar)
 {
 	GLfloat matrix[] = { (2.0f * zNear) / (right - left), 0.0f, 0.0f, 0.0f, 0.0f, (2.0f * zNear) / (top - bottom), 0.0f, 0.0f, (right + left)
 			/ (right - left), (top + bottom) / (top - bottom), -(zFar + zNear) / (zFar - zNear), -1.0f, 0.0f, 0.0f, -(2 * zFar * zNear)
@@ -378,7 +378,7 @@ void Q_glFrustumf(GLfloat left, GLfloat right, GLfloat bottom, GLfloat top, GLfl
 	glMultMatrixf(matrix);
 }
 
-void Q_gluPerspective(GLfloat fovy, GLfloat aspect, GLfloat zNear, GLfloat zFar)
+static void Q_gluPerspective(GLfloat fovy, GLfloat aspect, GLfloat zNear, GLfloat zFar)
 {
 	GLfloat xmin, xmax, ymin, ymax;
 
@@ -391,7 +391,7 @@ void Q_gluPerspective(GLfloat fovy, GLfloat aspect, GLfloat zNear, GLfloat zFar)
 	Q_glFrustumf(xmin, xmax, ymin, ymax, zNear, zFar);
 }
 
-void R_SetupGL(void)
+static void R_SetupGL(void)
 {
 	float screenaspect;
 	extern int glwidth, glheight;
@@ -464,8 +464,6 @@ void R_SetupGL(void)
 	glDisable(GL_ALPHA_TEST);
 	glEnable(GL_DEPTH_TEST);
 }
-
-cvar_t r_waterwarp = { "r_waterwarp", "0", true }; // Baker 3.60 - Save this to config now
 
 /*
  ===============
@@ -617,7 +615,7 @@ void R_NewMap(void)
 	}
 }
 
-void R_SetClearColor_f(struct cvar_s *cvar)
+static void R_SetClearColor_f(struct cvar_s *cvar)
 {
 	byte *rgb;
 	int s;
@@ -774,7 +772,7 @@ void R_RenderView(void)
 }
 
 /* For program optimization */
-void R_TimeRefresh_f(void)
+static void R_TimeRefresh_f(void)
 {
 	int i;
 	float start, stop, time;
@@ -847,4 +845,243 @@ void R_Init(void)
 
 	playertextures = texture_extension_number;
 	texture_extension_number += MAX_SCOREBOARD;
+}
+
+//==============================================================================
+//
+//	OPENGL STUFF
+//
+//==============================================================================
+
+/*
+ ===============
+ GL_MakeNiceExtensionsList -- johnfitz
+ ===============
+ */
+static char *GL_MakeNiceExtensionsList(const char *in)
+{
+	char *copy, *token, *out;
+	int i, count;
+
+	if (!in)
+		return (char *) strdup("(none)");
+
+	//each space will be replaced by 4 chars, so count the spaces before we malloc
+	for (i = 0, count = 1; i < (int) strlen(in); i++)
+	{
+		if (in[i] == ' ')
+			count++;
+	}
+
+	out = (char *) Z_Malloc(strlen(in) + count * 3 + 1); //usually about 1-2k
+	out[0] = 0;
+
+	copy = (char *) strdup(in);
+	for (token = strtok(copy, " "); token; token = strtok(NULL, " "))
+	{
+		strcat(out, "\n   ");
+		strcat(out, token);
+	}
+
+	free(copy);
+	return out;
+}
+
+/*
+ ===============
+ GL_Info_f -- johnfitz
+ ===============
+ */
+static void GL_Info_f(void)
+{
+	Con_SafePrintf("GL_VENDOR: %s\n", gl_vendor);
+	Con_SafePrintf("GL_RENDERER: %s\n", gl_renderer);
+	Con_SafePrintf("GL_VERSION: %s\n", gl_version);
+	Con_Printf("GL_EXTENSIONS: %s\n", gl_extensions_nice);
+}
+
+/*
+ ===============
+ GL_CheckExtensions
+ ===============
+ */
+static bool GL_ParseExtensionList(const char *list, const char *name)
+{
+	const char *start;
+	const char *where, *terminator;
+
+	if (!list || !name || !*name)
+		return false;
+	if (strchr(name, ' ') != NULL)
+		return false;	// extension names must not have spaces
+
+	start = list;
+	while (1)
+	{
+		where = strstr(start, name);
+		if (!where)
+			break;
+		terminator = where + strlen(name);
+		if (where == start || where[-1] == ' ')
+			if (*terminator == ' ' || *terminator == '\0')
+				return true;
+		start = terminator;
+	}
+	return false;
+}
+
+extern cvar_t vid_vsync;
+
+static void GL_CheckExtensions(void)
+{
+	int swap_control;
+
+	// swap control
+	if (!gl_swap_control)
+	{
+		Con_Warning("vertical sync not supported (SDL_GL_SetSwapInterval failed)\n");
+	}
+	else if ((swap_control = SDL_GL_GetSwapInterval()) == -1)
+	{
+		gl_swap_control = false;
+		Con_Warning("vertical sync not supported (SDL_GL_GetSwapInterval failed)\n");
+	}
+	else if ((vid_vsync.value && swap_control != 1) || (!vid_vsync.value && swap_control != 0))
+	{
+		gl_swap_control = false;
+		Con_Warning("vertical sync not supported (swap_control doesn't match vid_vsync)\n");
+	}
+	else
+	{
+		Con_Printf("FOUND: SDL_GL_SetSwapInterval\n");
+	}
+
+	// anisotropic filtering
+	//
+	if (GL_ParseExtensionList(gl_extensions, "GL_EXT_texture_filter_anisotropic"))
+	{
+		float test1, test2;
+		GLuint tex;
+
+		// test to make sure we really have control over it
+		// 1.0 and 2.0 should always be legal values
+		glGenTextures(1, &tex);
+		glBindTexture(GL_TEXTURE_2D, tex);
+		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, 1.0f);
+		glGetTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, &test1);
+		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, 2.0f);
+		glGetTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, &test2);
+		glDeleteTextures(1, &tex);
+
+		if (test1 == 1 && test2 == 2)
+		{
+			Con_Printf("FOUND: EXT_texture_filter_anisotropic\n");
+			gl_anisotropy_able = true;
+		}
+		else
+		{
+			Con_Warning("anisotropic filtering locked by driver. Current driver setting is %f\n", test1);
+		}
+
+		//get max value either way, so the menu and stuff know it
+		glGetFloatv(GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, &gl_max_anisotropy);
+		if (gl_max_anisotropy < 2)
+		{
+			gl_anisotropy_able = false;
+			gl_max_anisotropy = 1;
+			Con_Warning("anisotropic filtering broken: disabled\n");
+		}
+	}
+	else
+	{
+		gl_max_anisotropy = 1;
+		Con_Warning("texture_filter_anisotropic not supported\n");
+	}
+
+	// texture_non_power_of_two
+	//
+	if (COM_CheckParm("-notexturenpot"))
+		Con_Warning("texture_non_power_of_two disabled at command line\n");
+	else if (GL_ParseExtensionList(gl_extensions, "GL_ARB_texture_non_power_of_two"))
+	{
+		Con_Printf("FOUND: ARB_texture_non_power_of_two\n");
+		gl_texture_NPOT = true;
+	}
+	else
+	{
+		Con_Warning("texture_non_power_of_two not supported\n");
+	}
+}
+
+/*
+ ===============
+ GL_SetupState -- johnfitz
+
+ does all the stuff from GL_Init that needs to be done every time a new GL render context is created
+ ===============
+ */
+static void GL_SetupState(void)
+{
+	glClearColor(0.15, 0.15, 0.15, 0);
+	glCullFace(GL_FRONT);
+	glEnable(GL_TEXTURE_2D);
+	glEnable(GL_ALPHA_TEST);
+	glAlphaFunc(GL_GREATER, 0.666);
+//	glPolygonMode (GL_FRONT_AND_BACK, GL_FILL);
+	glShadeModel(GL_FLAT);
+	glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	glDepthRangef(0.0f, 1.0f);
+	glDepthFunc(GL_LEQUAL);
+}
+
+void GL_BeginRendering(int *x, int *y, int *width, int *height)
+{
+	*x = *y = 0;
+	*width = vid.width;
+	*height = vid.height;
+
+	glEnableClientState(GL_VERTEX_ARRAY);
+	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+}
+
+void GL_EndRendering(void)
+{
+	glDisableClientState(GL_VERTEX_ARRAY);
+	glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+
+	VID_Swap();
+}
+
+void GL_Init(void)
+{
+	gl_vendor = (const char *) glGetString(GL_VENDOR);
+	gl_renderer = (const char *) glGetString(GL_RENDERER);
+	gl_version = (const char *) glGetString(GL_VERSION);
+	gl_extensions = (const char *) glGetString(GL_EXTENSIONS);
+
+	Con_SafePrintf("GL_VENDOR: %s\n", gl_vendor);
+	Con_SafePrintf("GL_RENDERER: %s\n", gl_renderer);
+	Con_SafePrintf("GL_VERSION: %s\n", gl_version);
+
+	Cmd_AddCommand("gl_info", GL_Info_f);
+
+	if (gl_version == NULL || sscanf(gl_version, "%d.%d", &gl_version_major, &gl_version_minor) < 2)
+	{
+		gl_version_major = 0;
+		gl_version_minor = 0;
+	}
+
+	if (gl_extensions_nice != NULL)
+		Z_Free(gl_extensions_nice);
+	gl_extensions_nice = GL_MakeNiceExtensionsList(gl_extensions);
+
+	GL_CheckExtensions();
+
+	GL_SetupState();
 }

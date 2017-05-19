@@ -26,6 +26,7 @@
 #include <string.h>
 #include <stdarg.h>
 #include <stdio.h>
+#include <stdint.h>
 #include <stdlib.h>
 #include <setjmp.h>
 #include <ctype.h>
@@ -172,8 +173,8 @@ typedef struct
 } entity_state_t;
 
 #include "wad.h"
-#include "draw.h"
 #include "cvar.h"
+#include "host.h"
 #include "screen.h"
 #include "net.h"
 #include "protocol.h"
@@ -184,9 +185,7 @@ typedef struct
 #include "client.h"
 #include "progs.h"
 #include "server.h"
-
-#include "gl_model.h"
-
+#include "model.h"
 #include "input.h"
 #include "world.h"
 #include "keys.h"
@@ -194,93 +193,4 @@ typedef struct
 #include "view.h"
 #include "menu.h"
 #include "crc.h"
-
-extern double Sys_DoubleTime(void);
-
-#include "glquake.h"
-
-#include "location.h"	// JPG - for %l formatting speficier
-
-//=============================================================================
-
-// the host system specifies the base of the directory tree, the
-// command line parms passed to the program, and the amount of memory
-// available for the program to use
-
-typedef struct
-{
-	char *basedir;
-	char *cachedir; // for development over ISDN lines
-	int argc;
-	char **argv;
-	void *membase;
-	int memsize;
-} quakeparms_t;
-
-//=============================================================================
-
-// host
-extern quakeparms_t host_parms;
-
-extern cvar_t sys_ticrate;
-extern cvar_t sys_nostdout;
-extern cvar_t developer;
-
-extern bool host_initialized;		// true if into command execution
-extern double host_frametime;
-extern byte *host_basepal;
-extern byte *host_colormap;
-extern int host_framecount;		// incremented every frame, never reset
-extern double realtime;			// not bounded in any way, changed at
-// start of every frame, never reset
-
-extern char host_worldname[MAX_QPATH];
-
-extern byte *host_colormap;
-
-#ifdef SUPPORTS_DEMO_AUTOPLAY
-extern bool nostartdemos; // Baker 3.76 - for demo autoplay support
-#endif
-
-// JPG 3.20
-#ifdef _WIN32
-extern char *argv[MAX_NUM_ARGVS];
-#elif defined(LINUX)
-extern char **argv;
-#endif
-
-void Host_ClearMemory(void);
-void Host_ServerFrame(void);
-void Host_InitCommands(void);
-void Host_Init(quakeparms_t *parms);
-void Host_Shutdown(void);
-void Host_Error(char *error, ...);
-void Host_EndGame(char *message, ...);
-void Host_Frame(double time);
-void Host_Quit_f(void);
-void Host_ClientCommands(char *fmt, ...);
-void Host_ShutdownServer(bool crash);
-void Host_WriteConfiguration(void);
-
-void Host_Stopdemo_f(void);
-void Host_Quit(void); // Get out, no questions asked
-
-extern bool msg_suppress_1;			// suppresses resolution and cache size console output
-//  a fullscreen DIB focus gain/loss
-extern int current_skill;			// skill level for currently loaded level (in case
-//  the user changes the cvar while the level is
-//  running, this reflects the level actually in use)
-
-extern bool isDedicated;
-
-extern int minimum_memory;
-
-// chase
-extern cvar_t chase_active;
-
-void Chase_Init(void);
-void Chase_Reset(void);
-void Chase_Update(void);
-
-extern char dequake[256];	// JPG 1.05 - dedicated console translation
-extern cvar_t pq_dequake;	// JPG 1.05 - dedicated console translation
+#include "chase.h"

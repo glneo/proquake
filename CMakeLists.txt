@@ -9,7 +9,6 @@ set(PROQUAKE_SOURCES
 	src/host.c
 	src/host_cmd.c
 	src/keys.c
-	src/location.c
 	src/mathlib.c
 	src/zone.c
 	src/wad.c
@@ -27,6 +26,10 @@ set(PROQUAKE_SOURCES
 	src/cmd.c
 	src/console.c
 	src/in_sdl.c
+	src/menu.c
+	src/sbar.c
+	src/screen.c
+	src/view.c
 # Models
 	src/mod_main.c
 	src/mod_alias.c
@@ -57,26 +60,24 @@ if(DISABLE_VIDEO)
 		${PROQUAKE_SOURCES}
 		src/gl_vidnull.c
 	)
-else(DISABLE_VIDEO)
+else()
 	set(PROQUAKE_SOURCES
 		${PROQUAKE_SOURCES}
 		src/gl_alias.c
 		src/gl_draw.c
 		src/gl_fullbright.c
-		src/gl_rlight.c
-		src/gl_rmain.c
+		src/gl_light.c
+		src/gl_main.c
 		src/gl_particle.c
-		src/gl_rsurf.c
-		src/gl_screen.c
+		src/gl_surface.c
 		src/gl_sprite.c
 		src/gl_texture.c
 		src/gl_vidsdl.c
 		src/gl_warp.c
-		src/menu.c
-		src/sbar.c
-		src/view.c
 	)
-endif(DISABLE_VIDEO)
+	set(GRAPHICS_LIBRARY "OpenGL" CACHE STRING "Select graphics library")
+	set_property(CACHE GRAPHICS_LIBRARY PROPERTY STRINGS "OpenGL" "OpenGL ES")
+endif()
 
 # Sound
 option(DISABLE_AUDIO "Disable sound support" OFF)
@@ -85,7 +86,7 @@ if(DISABLE_AUDIO)
 		${PROQUAKE_SOURCES}
 		src/snd_null.c
 	)
-else(DISABLE_AUDIO)
+else()
 	set(PROQUAKE_SOURCES
 		${PROQUAKE_SOURCES}
 		src/snd_dma.c
@@ -93,19 +94,28 @@ else(DISABLE_AUDIO)
 		src/snd_mix.c
 		src/snd_sdl.c
 	)
-endif(DISABLE_AUDIO)
+endif()
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake")
 
-find_package(OpenGLES REQUIRED)
-#find_package(OpenGL REQUIRED)
-find_package(SDL2 REQUIRED)
-
 add_executable(proquake ${PROQUAKE_SOURCES} ${PROQUAKE_HEADERS})
-#target_compile_options(proquake PRIVATE -O3;-ffast-math;-Wall)
-target_compile_options(proquake PRIVATE -g;-Wall;-std=gnu99)
-target_include_directories(proquake PUBLIC ${OPENGLES_INCLUDE_DIR} ${SDL2_INCLUDE_DIR})
-target_link_libraries(proquake m ${OPENGLES_LIBRARIES} ${SDL2_LIBRARY})
-#target_include_directories(proquake PUBLIC ${OPENGL_INCLUDE_DIRS} ${SDL2_INCLUDE_DIR})
-#target_link_libraries(proquake m ${OPENGL_LIBRARIES} ${SDL2_LIBRARY})
+
+if(GRAPHICS_LIBRARY STREQUAL "OpenGL")
+	find_package(OpenGL REQUIRED)
+	target_include_directories(proquake PUBLIC ${OPENGL_INCLUDE_DIRS})
+	target_link_libraries(proquake ${OPENGL_LIBRARIES})
+elseif(GRAPHICS_LIBRARY STREQUAL "OpenGL ES")
+	find_package(OpenGLES REQUIRED)
+	target_include_directories(proquake PUBLIC ${OPENGLES_INCLUDE_DIR})
+	target_link_libraries(proquake ${OPENGLES_LIBRARIES})
+	target_compile_definitions(proquake PRIVATE OPENGLES=1)
+elseif(NOT DISABLE_VIDEO)
+	message(FATAL_ERROR "Please select a graphics library" ${GRAPHICS_LIBRARY})
+endif()
+
+find_package(SDL2 REQUIRED)
+target_include_directories(proquake PUBLIC ${SDL2_INCLUDE_DIR})
+target_link_libraries(proquake m ${SDL2_LIBRARY})
+
+target_compile_options(proquake PRIVATE -g;-ffast-math;-Wall)
 install(TARGETS proquake RUNTIME DESTINATION bin)

@@ -13,6 +13,7 @@
  */
 
 #include "quakedef.h"
+#include "glquake.h"
 
 extern cvar_t r_particles_alpha;
 

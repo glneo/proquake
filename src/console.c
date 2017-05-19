@@ -19,7 +19,7 @@
 #include <fcntl.h>
 #include <errno.h>
 #include "quakedef.h"
-
+#include "glquake.h"
 
 #include <time.h> // JPG - needed for console log
 
@@ -901,7 +901,7 @@ Con_DrawInput
 The input line scrolls horizontally if typing goes beyond the right edge
 ================
 */
-void Con_DrawInput (void)
+static void Con_DrawInput (void)
 {
 //	int		y;
 	int		i;

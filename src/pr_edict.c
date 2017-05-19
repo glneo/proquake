@@ -1158,4 +1158,3 @@ int PR_AllocString(int size, char **ptr)
 		*ptr = (char *) pr_knownstrings[i];
 	return -1 - i;
 }
-

@@ -15,8 +15,13 @@
 #ifndef __GLQUAKE_H
 #define __GLQUAKE_H
 
+#ifdef OPENGLES
 #include <GLES/gl.h>
 #include <GLES/glext.h>
+#else
+#include <GL/gl.h>
+#include <GL/glext.h>
+#endif
 #include <math.h>
 
 #define TEX_NOFLAGS     0 // Baker: I use this to mark the absense of any flags
@@ -24,10 +29,43 @@
 #define TEX_ALPHA       4
 #define	TEX_WORLD       128//R00k
 
-#include "gl_texture.h"
+#define	MAX_GLTEXTURES 1024
 
-void GL_BeginRendering(int *x, int *y, int *width, int *height);
-void GL_EndRendering(void);
+typedef struct
+{
+	unsigned int texnum;
+	char identifier[MAX_QPATH];
+	int width, height;
+//	bool mipmap;
+	unsigned short crc;  // Baker 3.80x - part of GL_LoadTexture: cache mismatch fix
+	int texmode;	// Baker: 4.26 to all clearing of world textures
+} gltexture_t;
+
+// Engine internal vars
+extern bool gl_mtexable;
+
+extern gltexture_t gltextures[MAX_GLTEXTURES];
+extern int numgltextures;
+
+extern int texture_extension_number;
+
+extern texture_t *r_notexture_mip;
+extern int d_lightstylevalue[256]; // 8.8 fraction of base light value
+
+extern bool envmap;
+
+extern int current_texture_num;
+extern int particletexture;
+extern int playertextures;
+
+extern int skytexturenum; // index in cl.loadmodel, not gl texture object
+
+extern int mirrortexturenum; // quake texturenum, not gltexturenum
+extern bool mirror;
+extern mplane_t *mirror_plane;
+
+extern int texture_mode;
+extern int gl_lightmap_format;
 
 typedef struct
 {
@@ -120,85 +158,96 @@ extern cvar_t r_ringalpha;
 
 extern float r_world_matrix[16];
 
-// gl_warp.c
-void GL_SubdivideSurface(brush_model_t *brushmodel, msurface_t *fa);
-void EmitBothSkyLayers(msurface_t *);
-void EmitWaterPolys(msurface_t *);
-void EmitSkyPolys(msurface_t *);
-void R_DrawSkyChain(msurface_t *);
-void R_Sky_NewMap(void);
+extern qpic_t *draw_disc;
 
-// gl_draw.c
-void GL_Set2D(void);
-void Draw_Crosshair(void);
-void Build_Gamma_Table(void);
-void SmoothFontSet(bool smoothfont_choice);
-
-// gl_rmain.c
-bool R_CullBox(vec3_t, vec3_t);
-bool R_CullForEntity(const entity_t *ent);
-#ifdef SUPPORTS_AUTOID_HARDWARE
-bool R_CullSphere (vec3_t centre, float radius);
-#endif
-
-void R_RotateForEntity(entity_t *);
-
-void R_PolyBlend(void);
-void R_BrightenScreen(void);
-
-// gl_rlight.c
-void R_MarkLights(dlight_t *, int, mnode_t *);
-void R_AnimateLight(void);
-void R_RenderDlights(void);
-int R_LightPoint(vec3_t p);
-
-// gl_refrag.c
-void R_StoreEfrags(efrag_t **);
-
-// gl_rsurf.c
-void R_RenderBrushPoly(msurface_t *fa);
-void R_DrawBrushModel(entity_t *e);
-void R_DrawWorld(void);
-void R_DrawWaterSurfaces(void);
-void R_MarkLeaves(void);
-void R_MirrorChain(msurface_t *s);
-void DrawGLPoly(glpoly_t *p, int tex_offset);
-void DrawGLWaterPoly(glpoly_t *p, int tex_offset);
-void GL_BuildLightmaps(void);
-texture_t *R_TextureAnimation(int frameb, texture_t *base);
-
-// gl_rmisc.c
-void R_TimeRefresh_f(void);
-void R_ReadPointFile_f(void);
-void R_TranslatePlayerSkin(int playernum);
-void R_InitParticleTexture(void);
-void R_Init_FlashBlend_Bubble(void);
-
-// gl_rpart.c
-void R_InitParticles(void);
-void R_DrawParticles(void);
-void R_ClearParticles(void);
-
+// gl_alias.c
 void R_DrawAliasModel(entity_t *ent);
 
+// gl_draw.c
+qpic_t *Draw_PicFromWad(char *name);
+qpic_t *Draw_CachePic(char *path);
+void Draw_Character(int x, int y, int num);
+void Draw_String(int x, int y, char *str);
+void Draw_Crosshair(void);
+void Draw_AlphaPic(int x, int y, qpic_t *pic, float alpha);
+void Draw_Pic(int x, int y, qpic_t *pic);
+void Draw_TransPic(int x, int y, qpic_t *pic);
+void Draw_SubPic(int x, int y, qpic_t *pic, int srcx, int srcy, int width, int height);
+void Draw_TransPicTranslate(int x, int y, qpic_t *pic, byte *translation);
+void Draw_ConsoleBackground(int lines);
+void Draw_TileClear(int x, int y, int w, int h);
+void Draw_AlphaFill(int x, int y, int w, int h, int c, float alpha);
+void Draw_Fill(int x, int y, int w, int h, int c);
+void Draw_FadeScreen(void);
+void GL_Set2D(void);
+void Draw_Init(void);
+
 // gl_fullbright.c
-int FindFullbrightTexture(byte *pixels, int num_pix);
+int FindFullbrightTexture (byte *pixels, int num_pix);
+void ConvertPixels (byte *pixels, int num_pixels);
 void DrawFullBrightTextures(entity_t *ent);
-void ConvertPixels(byte *pixels, int num_pixels);
 
-// gl_screen.c
-void R_PolyBlend(void);
+// gl_light.c
+void R_BlendLightmaps(void);
+void R_BuildLightMap(msurface_t *surf, byte *dest, int stride);
+void R_RenderDynamicLightmaps(msurface_t *fa);
+void R_AnimateLight(void);
+void R_RenderDlights(void);
+void R_MarkLights(dlight_t *light, int bit, mnode_t *node);
+void R_PushDlights(void);
+int R_LightPoint(vec3_t p);
+void GL_BuildLightmaps(void);
 
-// matrix.c - move it
-void Mat_Update(void);
+// gl_main.c
+void R_RotateForEntity(entity_t *ent);
+bool R_CullBox(vec3_t mins, vec3_t maxs);
+bool R_CullForEntity(const entity_t *ent);
+void R_TranslatePlayerSkin(int playernum);
+void R_NewMap(void);
+void R_RenderView(void);
+void GL_Init(void);
+void GL_BeginRendering(int *x, int *y, int *width, int *height);
+void GL_EndRendering(void);
+void R_Init(void);
 
-void GL_CheckTextureRAM(GLenum theTarget, GLint theLevel, GLint theInternalFormat, GLsizei theWidth, GLsizei theHeight, GLsizei theDepth, GLint theBorder,
-		GLenum theFormat, GLenum theType);
+// gl_particle.c
+void R_DrawParticles(void);
 
-void Check_GammaOld(unsigned char *pal);
-//vid_wgl.c :( and may osx ... needs moved to ^^
-bool VID_Is8bit(void);
-bool CheckExtension(const char *extension);
+// gl_sprite.c
+void R_DrawSpriteModel(entity_t *ent);
 
+// gl_surface.c
+void DrawGLPoly(glpoly_t *p, int tex_offset);
+texture_t *R_TextureAnimation(int frame, texture_t *base);
+void R_DrawWaterSurfaces(void);
+void DrawGLWaterPoly(glpoly_t *p, int tex_offset);
+void R_RenderBrushPoly(msurface_t *fa);
+void R_DrawBrushModel(entity_t *ent);
+void R_DrawWorld(void);
+void R_MarkLeaves(void);
+
+// gl_texture.c
+void GL_Upload8(byte *data, int width, int height, int mode);
+int GL_FindTexture(char *identifier);
+void GL_FreeTextures(void);
+int GL_LoadTexture(char *identifier, int width, int height, byte *data, int mode);
+void GL_Bind(int texnum);
+void GL_EnableMultitexture(void);
+void GL_DisableMultitexture(void);
+void R_InitTextures(void);
+void R_InitParticleTexture(void);
+
+// gl_vidsdl.c/*
+void VID_Swap(void);
+void VID_Init(unsigned char *palette);
+void VID_Shutdown(void);
+
+// gl_warp.c
+void GL_SubdivideSurface(brush_model_t *brushmodel, msurface_t *fa);
+void EmitWaterPolys(msurface_t *fa);
+void EmitSkyPolys(msurface_t *fa);
+void EmitBothSkyLayers(msurface_t *fa);
+void R_DrawSkyChain(msurface_t *fa);
+void R_InitSky(texture_t *mt, byte *src);
 
 #endif /* __GLQUAKE_H */

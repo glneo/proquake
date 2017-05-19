@@ -15,6 +15,7 @@
  */
 
 #include "quakedef.h"
+#include "glquake.h"
 
 /*
 
@@ -99,7 +100,7 @@ qpic_t *scr_turtle;
 int clearconsole;
 int clearnotify;
 
-viddef_t vid;				// global video state
+viddef_t vid; // global video state
 
 vrect_t scr_vrect;
 
@@ -1024,8 +1025,8 @@ void SCR_Init(void)
 	Cvar_RegisterVariable(&scr_centertime);
 	Cvar_RegisterVariable(&scr_printspeed);
 
-	Cvar_RegisterVariable(&pq_drawfps); // JPG - draw frames per second
-	Cvar_RegisterVariable(&show_speed); // Baker 3.67
+	Cvar_RegisterVariable(&pq_drawfps);
+	Cvar_RegisterVariable(&show_speed);
 
 	Cvar_RegisterVariable(&default_fov);
 	Cvar_SetCallback(&default_fov, CL_Default_fov_f);

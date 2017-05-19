@@ -13,6 +13,7 @@
  */
 
 #include "quakedef.h"
+#include "glquake.h"
 
 #define DEFAULT_NUM_PARTICLES	2048
 #define ABSOLUTE_MIN_PARTICLES	512
@@ -31,33 +32,6 @@ particle_t *particles;
 int r_numparticles;
 
 vec3_t r_pright, r_pup, r_ppn;
-
-/*
- ===============
- R_InitParticles
- ===============
- */
-void R_InitParticles(void)
-{
-	int i;
-
-	if ((i = COM_CheckParm("-particles")) && i + 1 < com_argc)
-	{
-		r_numparticles = atoi(com_argv[i + 1]);
-		r_numparticles = CLAMP(ABSOLUTE_MIN_PARTICLES, r_numparticles, ABSOLUTE_MAX_PARTICLES);
-	}
-	else
-	{
-		r_numparticles = DEFAULT_NUM_PARTICLES;
-	}
-
-	particles = (particle_t *) Hunk_AllocName(r_numparticles * sizeof(particle_t), "particles");
-
-	Cmd_AddCommand("pointfile", R_ReadPointFile_f);
-
-	Cvar_RegisterVariable(&r_particles);
-	Cvar_RegisterVariable(&r_particles_alpha);
-}
 
 /*
  ===============
@@ -581,7 +555,6 @@ void R_RocketTrail(vec3_t start, vec3_t end, int type)
 			break;
 
 		case ROCKET_TRAIL:
-
 			p->ramp = (rand() & 3);
 			p->color = ramp3[(int) p->ramp];
 			p->type = pt_fire;
@@ -693,4 +666,26 @@ void CL_RunParticles(void)
 			break;
 		}
 	}
+}
+
+void R_InitParticles(void)
+{
+	int i;
+
+	if ((i = COM_CheckParm("-particles")) && i + 1 < com_argc)
+	{
+		r_numparticles = atoi(com_argv[i + 1]);
+		r_numparticles = CLAMP(ABSOLUTE_MIN_PARTICLES, r_numparticles, ABSOLUTE_MAX_PARTICLES);
+	}
+	else
+	{
+		r_numparticles = DEFAULT_NUM_PARTICLES;
+	}
+
+	particles = (particle_t *) Hunk_AllocName(r_numparticles * sizeof(particle_t), "particles");
+
+	Cmd_AddCommand("pointfile", R_ReadPointFile_f);
+
+	Cvar_RegisterVariable(&r_particles);
+	Cvar_RegisterVariable(&r_particles_alpha);
 }

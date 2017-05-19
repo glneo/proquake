@@ -15,6 +15,8 @@
  */
 
 #include "quakedef.h"
+#include "glquake.h"
+
 #ifdef PSP
 #include <pspgu.h>
 #endif
@@ -54,6 +56,8 @@ qpic_t *sb_face_invis;
 qpic_t *sb_face_quad;
 qpic_t *sb_face_invuln;
 qpic_t *sb_face_invis_invuln;
+
+qpic_t *draw_disc;
 
 bool sb_showscores;
 
@@ -198,6 +202,8 @@ void Sbar_LoadPics(void)
 	sb_face_invuln = Draw_PicFromWad("face_invul2");
 	sb_face_invis_invuln = Draw_PicFromWad("face_inv2");
 	sb_face_quad = Draw_PicFromWad("face_quad");
+
+	draw_disc = Draw_PicFromWad("disc");
 
 	sb_sbar = Draw_PicFromWad("sbar");
 	sb_ibar = Draw_PicFromWad("ibar");
@@ -1052,7 +1058,7 @@ void Sbar_DrawFace(void)
 	}
 // PGM 01/19/97 - team color drawing
 
-	if ((cl.items & (IT_INVISIBILITY | IT_INVULNERABILITY)) == (IT_INVISIBILITY | IT_INVULNERABILITY))
+	if ((cl.items & IT_INVISIBILITY) && (cl.items & IT_INVISIBILITY))
 	{
 		Sbar_DrawPic(112, 0, sb_face_invis_invuln);
 		return;
@@ -1160,7 +1166,7 @@ void Sbar_Draw(void)
 		if (cl.items & IT_INVULNERABILITY)
 		{
 			Sbar_DrawNum(24, 0, 666, 3, 1);
-			Sbar_DrawPic(0, 0, draw_disc);
+			Sbar_DrawPic (0, 0, draw_disc);
 		}
 		else
 		{

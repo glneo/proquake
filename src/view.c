@@ -47,12 +47,9 @@ cvar_t v_ipitch_level = { "v_ipitch_level", "0.3", false };
 
 cvar_t v_idlescale = { "v_idlescale", "0", false };
 
-cvar_t crosshair = { "crosshair", "1", true };
 cvar_t r_viewmodeloffset = { "r_viewmodeloffset", "0", true };
-cvar_t cl_crosshaircentered = { "cl_crosshaircentered", "1", true }; // Baker 3.60 - Optional centered crosshair
 cvar_t cl_colorshow = { "cl_colorshow", "0", true }; // Baker 3.99n - Show pants color @ top of screen
-cvar_t cl_crossx = { "cl_crossx", "0", true };  // Baker 3.80x - Save to config
-cvar_t cl_crossy = { "cl_crossy", "0", true };  // Baker 3.80x - Save to config
+
 cvar_t gl_cshiftpercent = { "gl_cshiftpercent", "100", false };
 
 // JPG 1.05 - palette changes
@@ -63,6 +60,11 @@ cvar_t pq_pentblend = { "pq_pentblend", "0.3", true };
 cvar_t pq_suitblend = { "pq_suitblend", "0.3", true };
 
 float v_dmg_time, v_dmg_roll, v_dmg_pitch;
+
+refdef_t r_refdef;
+
+// view origin and direction
+vec3_t r_origin, vright, vpn, vup;
 
 /*
  ===============
@@ -835,12 +837,8 @@ void V_Init(void)
 	Cvar_RegisterVariable(&v_ipitch_level);
 
 	Cvar_RegisterVariable(&v_idlescale);
-	Cvar_RegisterVariable(&crosshair);
 	Cvar_RegisterVariable(&r_viewmodeloffset);
 
-	Cvar_RegisterVariable(&cl_crossx);
-	Cvar_RegisterVariable(&cl_crossy);
-	Cvar_RegisterVariable(&cl_crosshaircentered); // Baker 3.60 - centered crosshair
 	Cvar_RegisterVariable(&cl_colorshow);
 	Cvar_RegisterVariable(&gl_cshiftpercent);
 

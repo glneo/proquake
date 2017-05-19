@@ -13,6 +13,7 @@
  */
 
 #include "quakedef.h"
+#include "glquake.h"
 
 int FindFullbrightTexture (byte *pixels, int num_pix)
 {
@@ -35,7 +36,6 @@ void ConvertPixels (byte *pixels, int num_pixels)
 
 void DrawFullBrightTextures(entity_t *ent)
 {
-    // gl_texsort 1 version
     int i;
     msurface_t *fa;
     texture_t *t;

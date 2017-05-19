@@ -501,17 +501,9 @@ void CL_PlayDemo_f(void)
 
 	COM_FOpenFile(name, &cls.demofile);
 	if (!cls.demofile) {
-#ifdef SUPPORTS_DEMO_AUTOPLAY
-		// Baker 3.76 - Check outside the demos folder!
-		cls.demofile = fopen(name, "rb");// Baker 3.76 - check DarkPlaces file system
-
-		if (!cls.demofile)// Baker 3.76 - still failed
-#endif
-		{
-			Con_Printf("ERROR: couldn't open %s\n", name);
-			cls.demonum = -1;		// stop demo loop
-			return;
-		}
+		Con_Printf("ERROR: couldn't open %s\n", name);
+		cls.demonum = -1;		// stop demo loop
+		return;
 	}
 
 	snprintf(cls.demoname, sizeof(cls.demoname), "%s", name);

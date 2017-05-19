@@ -1958,16 +1958,6 @@ void Host_Startdemos_f(void)
 {
 	int i, c;
 
-#ifdef SUPPORTS_DEMO_AUTOPLAY
-	if (nostartdemos)
-	{
-		// Baker 3.76
-		// This is hack to prevent demo auto-play from having demos in queue play
-		// after a file associated demo plays
-		return;
-	}
-#endif
-
 	if (cls.state == ca_dedicated)
 	{
 		if (!sv.active)

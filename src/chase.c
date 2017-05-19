@@ -19,27 +19,18 @@
 cvar_t chase_back = { "chase_back", "100" };
 cvar_t chase_up = { "chase_up", "16" };
 cvar_t chase_right = { "chase_right", "0" };
-cvar_t chase_active = { "chase_active", "0" };
+
 cvar_t chase_yaw = { "chase_yaw", "0" };
 cvar_t chase_roll = { "chase_roll", "0" };
 cvar_t chase_pitch = { "chase_pitch", "45" };
+
+cvar_t chase_active = { "chase_active", "0" };
 
 //static vec3_t chase_pos;
 //static vec3_t chase_angles;
 
 static vec3_t chase_dest;
 //static vec3_t chase_dest_angles;
-
-void Chase_Init(void)
-{
-	Cvar_RegisterVariable(&chase_back);
-	Cvar_RegisterVariable(&chase_up);
-	Cvar_RegisterVariable(&chase_right);
-	Cvar_RegisterVariable(&chase_pitch);
-	Cvar_RegisterVariable(&chase_yaw);
-	Cvar_RegisterVariable(&chase_roll);
-	Cvar_RegisterVariable(&chase_active);
-}
 
 void Chase_Reset(void)
 {
@@ -120,3 +111,13 @@ void Chase_Update(void)
 	}
 }
 
+void Chase_Init(void)
+{
+	Cvar_RegisterVariable(&chase_back);
+	Cvar_RegisterVariable(&chase_up);
+	Cvar_RegisterVariable(&chase_right);
+	Cvar_RegisterVariable(&chase_pitch);
+	Cvar_RegisterVariable(&chase_yaw);
+	Cvar_RegisterVariable(&chase_roll);
+	Cvar_RegisterVariable(&chase_active);
+}

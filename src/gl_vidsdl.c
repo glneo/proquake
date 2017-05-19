@@ -18,6 +18,7 @@
  */
 
 #include "quakedef.h"
+#include "glquake.h"
 
 #include <SDL2/SDL.h>
 
@@ -27,14 +28,6 @@
 #define WARP_HEIGHT	200
 #define MAXWIDTH	10000
 #define MAXHEIGHT	10000
-
-static const char *gl_vendor;
-static const char *gl_renderer;
-static const char *gl_version;
-static int gl_version_major;
-static int gl_version_minor;
-static const char *gl_extensions;
-static char *gl_extensions_nice;
 
 static vmode_t modelist[MAX_MODE_LIST];
 static int nummodes;
@@ -53,32 +46,19 @@ static bool vid_changed = false;
 
 int texture_mode = GL_LINEAR;
 
-static void GL_Init(void);
-static void GL_SetupState(void); //johnfitz
-
 viddef_t vid; // global video state
 modestate_t modestate = MODE_NONE;
 bool scr_skipupdate;
-
-static bool gl_swap_control = false;
-static bool gl_anisotropy_able = false;
-static float gl_max_anisotropy;
-static bool gl_texture_NPOT = false; //ericw
-static bool gl_vbo_able = false; //ericw
-static int gl_stencilbits;
 
 static cvar_t vid_fullscreen = { "vid_fullscreen", "0", true };
 static cvar_t vid_width = { "vid_width", "800", true };
 static cvar_t vid_height = { "vid_height", "600", true };
 static cvar_t vid_bpp = { "vid_bpp", "16", true };
-static cvar_t vid_vsync = { "vid_vsync", "0", true };
+cvar_t vid_vsync = { "vid_vsync", "0", true };
 static cvar_t vid_desktopfullscreen = { "vid_desktopfullscreen", "0", true };
 
 cvar_t vid_gamma = { "gamma", "1", true }; //johnfitz -- moved here from view.c
 cvar_t vid_contrast = { "contrast", "1", true }; //QuakeSpasm, MarkV
-
-void VID_SyncCvars(void);
-void VID_SetPaletteOld(unsigned char *palette);
 
 static int VID_GetCurrentWidth(void)
 {
@@ -177,6 +157,10 @@ static bool VID_ValidMode(int width, int height, int bpp, bool fullscreen)
 	return true;
 }
 
+extern bool gl_swap_control;
+extern bool gl_vbo_able;
+extern int gl_stencilbits;
+
 /*
  ================
  VID_SetMode
@@ -211,9 +195,15 @@ static bool VID_SetMode(int width, int height, int bpp, bool fullscreen)
 	SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, depthbits);
 	SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, stencilbits);
 
+#ifdef OPENGLES
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 1);
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 1);
+#else
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 1);
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 1);
+#endif
 
 //	SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_DEBUG_FLAG);
 
@@ -436,6 +426,28 @@ static void VID_Test(void)
 
 /*
  ================
+ VID_SyncCvars -- johnfitz -- set vid cvars to match current video mode
+ ================
+ */
+static void VID_SyncCvars(void)
+{
+	if (draw_context)
+	{
+		if (!VID_GetDesktopFullscreen())
+		{
+			Cvar_SetValue("vid_width", VID_GetCurrentWidth());
+			Cvar_SetValue("vid_height", VID_GetCurrentHeight());
+		}
+		Cvar_SetValue("vid_bpp", VID_GetCurrentBPP());
+		Cvar_Set("vid_fullscreen", VID_GetFullscreen() ? "1" : "0");
+		Cvar_Set("vid_vsync", VID_GetVSync() ? "1" : "0");
+	}
+
+	vid_changed = false;
+}
+
+/*
+ ================
  VID_Unlock -- johnfitz
  ================
  */
@@ -445,286 +457,9 @@ static void VID_Unlock(void)
 	VID_SyncCvars();
 }
 
-//==============================================================================
-//
-//	OPENGL STUFF
-//
-//==============================================================================
-
-/*
- ===============
- GL_MakeNiceExtensionsList -- johnfitz
- ===============
- */
-static char *GL_MakeNiceExtensionsList(const char *in)
+void VID_Swap(void)
 {
-	char *copy, *token, *out;
-	int i, count;
-
-	if (!in)
-		return (char *) strdup("(none)");
-
-	//each space will be replaced by 4 chars, so count the spaces before we malloc
-	for (i = 0, count = 1; i < (int) strlen(in); i++)
-	{
-		if (in[i] == ' ')
-			count++;
-	}
-
-	out = (char *) Z_Malloc(strlen(in) + count * 3 + 1); //usually about 1-2k
-	out[0] = 0;
-
-	copy = (char *) strdup(in);
-	for (token = strtok(copy, " "); token; token = strtok(NULL, " "))
-	{
-		strcat(out, "\n   ");
-		strcat(out, token);
-	}
-
-	free(copy);
-	return out;
-}
-
-/*
- ===============
- GL_Info_f -- johnfitz
- ===============
- */
-static void GL_Info_f(void)
-{
-	Con_SafePrintf("GL_VENDOR: %s\n", gl_vendor);
-	Con_SafePrintf("GL_RENDERER: %s\n", gl_renderer);
-	Con_SafePrintf("GL_VERSION: %s\n", gl_version);
-	Con_Printf("GL_EXTENSIONS: %s\n", gl_extensions_nice);
-}
-
-/*
- ===============
- GL_CheckExtensions
- ===============
- */
-static bool GL_ParseExtensionList(const char *list, const char *name)
-{
-	const char *start;
-	const char *where, *terminator;
-
-	if (!list || !name || !*name)
-		return false;
-	if (strchr(name, ' ') != NULL)
-		return false;	// extension names must not have spaces
-
-	start = list;
-	while (1)
-	{
-		where = strstr(start, name);
-		if (!where)
-			break;
-		terminator = where + strlen(name);
-		if (where == start || where[-1] == ' ')
-			if (*terminator == ' ' || *terminator == '\0')
-				return true;
-		start = terminator;
-	}
-	return false;
-}
-
-static void GL_CheckExtensions(void)
-{
-	int swap_control;
-
-	// ARB_vertex_buffer_object
-	//
-//	if (COM_CheckParm("-novbo"))
-//		Con_Warning ("Vertex buffer objects disabled at command line\n");
-//	else if (gl_version_major < 1 || (gl_version_major == 1 && gl_version_minor < 5))
-//		Con_Warning ("OpenGL version < 1.5, skipping ARB_vertex_buffer_object check\n");
-//	else
-//	{
-//		GL_BindBufferFunc = (PFNGLBINDBUFFERARBPROC) SDL_GL_GetProcAddress("glBindBufferARB");
-//		GL_BufferDataFunc = (PFNGLBUFFERDATAARBPROC) SDL_GL_GetProcAddress("glBufferDataARB");
-//		GL_BufferSubDataFunc = (PFNGLBUFFERSUBDATAARBPROC) SDL_GL_GetProcAddress("glBufferSubDataARB");
-//		GL_DeleteBuffersFunc = (PFNGLDELETEBUFFERSARBPROC) SDL_GL_GetProcAddress("glDeleteBuffersARB");
-//		GL_GenBuffersFunc = (PFNGLGENBUFFERSARBPROC) SDL_GL_GetProcAddress("glGenBuffersARB");
-//		if (GL_BindBufferFunc && GL_BufferDataFunc && GL_BufferSubDataFunc && GL_DeleteBuffersFunc && GL_GenBuffersFunc)
-//		{
-//			Con_Printf("FOUND: ARB_vertex_buffer_object\n");
-//			gl_vbo_able = true;
-//		}
-//		else
-//		{
-//			Con_Warning ("ARB_vertex_buffer_object not available\n");
-//		}
-//	}
-
-	// swap control
-	//
-	if (!gl_swap_control)
-	{
-		Con_Warning("vertical sync not supported (SDL_GL_SetSwapInterval failed)\n");
-	}
-	else if ((swap_control = SDL_GL_GetSwapInterval()) == -1)
-	{
-		gl_swap_control = false;
-		Con_Warning("vertical sync not supported (SDL_GL_GetSwapInterval failed)\n");
-	}
-	else if ((vid_vsync.value && swap_control != 1) || (!vid_vsync.value && swap_control != 0))
-	{
-		gl_swap_control = false;
-		Con_Warning("vertical sync not supported (swap_control doesn't match vid_vsync)\n");
-	}
-	else
-	{
-		Con_Printf("FOUND: SDL_GL_SetSwapInterval\n");
-	}
-
-	// anisotropic filtering
-	//
-	if (GL_ParseExtensionList(gl_extensions, "GL_EXT_texture_filter_anisotropic"))
-	{
-		float test1, test2;
-		GLuint tex;
-
-		// test to make sure we really have control over it
-		// 1.0 and 2.0 should always be legal values
-		glGenTextures(1, &tex);
-		glBindTexture(GL_TEXTURE_2D, tex);
-		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, 1.0f);
-		glGetTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, &test1);
-		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, 2.0f);
-		glGetTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, &test2);
-		glDeleteTextures(1, &tex);
-
-		if (test1 == 1 && test2 == 2)
-		{
-			Con_Printf("FOUND: EXT_texture_filter_anisotropic\n");
-			gl_anisotropy_able = true;
-		}
-		else
-		{
-			Con_Warning("anisotropic filtering locked by driver. Current driver setting is %f\n", test1);
-		}
-
-		//get max value either way, so the menu and stuff know it
-		glGetFloatv(GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, &gl_max_anisotropy);
-		if (gl_max_anisotropy < 2)
-		{
-			gl_anisotropy_able = false;
-			gl_max_anisotropy = 1;
-			Con_Warning("anisotropic filtering broken: disabled\n");
-		}
-	}
-	else
-	{
-		gl_max_anisotropy = 1;
-		Con_Warning("texture_filter_anisotropic not supported\n");
-	}
-
-	// texture_non_power_of_two
-	//
-	if (COM_CheckParm("-notexturenpot"))
-		Con_Warning("texture_non_power_of_two disabled at command line\n");
-	else if (GL_ParseExtensionList(gl_extensions, "GL_ARB_texture_non_power_of_two"))
-	{
-		Con_Printf("FOUND: ARB_texture_non_power_of_two\n");
-		gl_texture_NPOT = true;
-	}
-	else
-	{
-		Con_Warning("texture_non_power_of_two not supported\n");
-	}
-}
-
-/*
- ===============
- GL_SetupState -- johnfitz
-
- does all the stuff from GL_Init that needs to be done every time a new GL render context is created
- ===============
- */
-static void GL_SetupState(void)
-{
-	glClearColor(0.15, 0.15, 0.15, 0);
-	glCullFace(GL_FRONT);
-	glEnable(GL_TEXTURE_2D);
-	glEnable(GL_ALPHA_TEST);
-	glAlphaFunc(GL_GREATER, 0.666);
-//	glPolygonMode (GL_FRONT_AND_BACK, GL_FILL);
-	glShadeModel(GL_FLAT);
-	glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
-	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-	glDepthRangef(0.0f, 1.0f);
-	glDepthFunc(GL_LEQUAL);
-}
-
-/*
- ===============
- GL_Init
- ===============
- */
-static void GL_Init(void)
-{
-	gl_vendor = (const char *) glGetString(GL_VENDOR);
-	gl_renderer = (const char *) glGetString(GL_RENDERER);
-	gl_version = (const char *) glGetString(GL_VERSION);
-	gl_extensions = (const char *) glGetString(GL_EXTENSIONS);
-
-	Con_SafePrintf("GL_VENDOR: %s\n", gl_vendor);
-	Con_SafePrintf("GL_RENDERER: %s\n", gl_renderer);
-	Con_SafePrintf("GL_VERSION: %s\n", gl_version);
-
-	if (gl_version == NULL || sscanf(gl_version, "%d.%d", &gl_version_major, &gl_version_minor) < 2)
-	{
-		gl_version_major = 0;
-		gl_version_minor = 0;
-	}
-
-	if (gl_extensions_nice != NULL)
-		Z_Free(gl_extensions_nice);
-	gl_extensions_nice = GL_MakeNiceExtensionsList(gl_extensions);
-
-	GL_CheckExtensions();
-
-//	GLAlias_CreateShaders ();
-//	GL_ClearBufferBindings ();
-}
-
-/*
- =================
- GL_BeginRendering -- sets values of glx, gly, glwidth, glheight
- =================
- */
-void GL_BeginRendering(int *x, int *y, int *width, int *height)
-{
-	*x = *y = 0;
-	*width = vid.width;
-	*height = vid.height;
-
-	glEnableClientState(GL_VERTEX_ARRAY);
-	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-}
-
-void GL_EndRendering(void)
-{
-	glDisableClientState(GL_VERTEX_ARRAY);
-	glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-
 	SDL_GL_SwapWindow(draw_context);
-}
-
-void VID_Shutdown(void)
-{
-	if (!vid_initialized)
-		return;
-
-	SDL_QuitSubSystem(SDL_INIT_VIDEO);
-	draw_context = NULL;
-	gl_context = NULL;
-//	PL_VID_Shutdown();
 }
 
 //==========================================================================
@@ -801,6 +536,33 @@ static void VID_InitModelist(void)
 	}
 }
 
+static void VID_SetPaletteOld(unsigned char *palette)
+{
+	byte *pal = palette;
+	unsigned r, g, b, v;
+	int i;
+	unsigned *table = d_8to24table;
+
+// 8 8 8 encoding
+
+	pal = palette;
+	table = d_8to24table;
+	for (i = 0; i < 256; i++, pal += 3)
+	{
+		r = pal[0];
+		g = pal[1];
+		b = pal[2];
+
+		v = (255 << 24) + (r << 0) + (g << 8) + (b << 16);
+		*table++ = v;
+	}
+
+	d_8to24table[255] = 0;  // 255 is transparent "MH: says this fixes pink edges"
+	//d_8to24table[255] &= 0xffffff;        // 255 is transparent
+}
+
+#define num_readvars	( sizeof(read_vars)/sizeof(read_vars[0]) )
+
 void VID_Init(unsigned char *palette)
 {
 	int p, width, height, bpp, display_width, display_height, display_bpp;
@@ -812,8 +574,6 @@ void VID_Init(unsigned char *palette)
 //		"vid_bpp",
 //		"vid_vsync",
 //	};
-
-#define num_readvars	( sizeof(read_vars)/sizeof(read_vars[0]) )
 
 	Cvar_RegisterVariable(&vid_fullscreen);
 	Cvar_SetCallback(&vid_fullscreen, VID_Changed_f);
@@ -925,8 +685,6 @@ void VID_Init(unsigned char *palette)
 	VID_SetMode(width, height, bpp, fullscreen);
 
 	GL_Init();
-	GL_SetupState();
-	Cmd_AddCommand("gl_info", GL_Info_f); //johnfitz
 
 	//johnfitz -- removed code creating "glquake" subdirectory
 
@@ -943,6 +701,17 @@ void VID_Init(unsigned char *palette)
 	//QuakeSpasm: current vid settings should override config file settings.
 	//so we have to lock the vid mode from now until after all config files are read.
 	vid_locked = true;
+}
+
+void VID_Shutdown(void)
+{
+	if (!vid_initialized)
+		return;
+
+	SDL_QuitSubSystem(SDL_INIT_VIDEO);
+	draw_context = NULL;
+	gl_context = NULL;
+//	PL_VID_Shutdown();
 }
 
 // new proc by S.A., called by alt-return key binding.
@@ -1005,51 +774,4 @@ void VID_Toggle(void)
 		vrestart: Cvar_Set("vid_fullscreen", VID_GetFullscreen() ? "0" : "1");
 		Cbuf_AddText("vid_restart\n");
 	}
-}
-
-/*
- ================
- VID_SyncCvars -- johnfitz -- set vid cvars to match current video mode
- ================
- */
-void VID_SyncCvars(void)
-{
-	if (draw_context)
-	{
-		if (!VID_GetDesktopFullscreen())
-		{
-			Cvar_SetValue("vid_width", VID_GetCurrentWidth());
-			Cvar_SetValue("vid_height", VID_GetCurrentHeight());
-		}
-		Cvar_SetValue("vid_bpp", VID_GetCurrentBPP());
-		Cvar_Set("vid_fullscreen", VID_GetFullscreen() ? "1" : "0");
-		Cvar_Set("vid_vsync", VID_GetVSync() ? "1" : "0");
-	}
-
-	vid_changed = false;
-}
-
-void VID_SetPaletteOld(unsigned char *palette)
-{
-	byte *pal = palette;
-	unsigned r, g, b, v;
-	int i;
-	unsigned *table = d_8to24table;
-
-// 8 8 8 encoding
-
-	pal = palette;
-	table = d_8to24table;
-	for (i = 0; i < 256; i++, pal += 3)
-	{
-		r = pal[0];
-		g = pal[1];
-		b = pal[2];
-
-		v = (255 << 24) + (r << 0) + (g << 8) + (b << 16);
-		*table++ = v;
-	}
-
-	d_8to24table[255] = 0;  // 255 is transparent "MH: says this fixes pink edges"
-	//d_8to24table[255] &= 0xffffff;        // 255 is transparent
 }

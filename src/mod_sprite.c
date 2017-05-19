@@ -15,8 +15,8 @@
  */
 
 #include "quakedef.h"
-
-#include "gl_model.h"
+#include "glquake.h"
+#include "model.h"
 
 static void *Mod_LoadSpriteFrame(mspriteframe_t *pspriteframe, dspriteframe_t *pinframe, int framenum, char *mod_name)
 {

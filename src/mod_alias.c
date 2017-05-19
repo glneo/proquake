@@ -15,8 +15,8 @@
  */
 
 #include "quakedef.h"
-
-#include "gl_model.h"
+#include "glquake.h"
+#include "model.h"
 
 static void Mod_CalcAliasBounds(model_t *mod, alias_model_t *aliasmodel)
 {

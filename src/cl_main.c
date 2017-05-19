@@ -276,14 +276,8 @@ void CL_NextDemo (void)
 		cls.demonum = 0;
 		if (!cls.demos[cls.demonum][0])
 		{
-#ifdef SUPPORTS_DEMO_AUTOPLAY
-			if (nostartdemos)
-				nostartdemos = false; // Baker 3.76 -- part of hack to avoid start demos with dem autoplay
-			else
-#endif  // ^^ Uses Windows specific functionality
 			Con_DPrintf ("No demos listed with startdemos\n");
 
-			
 			cls.demonum = -1;
 			CL_Disconnect();	// JPG 1.05 - patch by CSR to fix crash
 			return;

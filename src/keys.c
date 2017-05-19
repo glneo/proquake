@@ -863,7 +863,6 @@ bool Key_TextEntry(void)
  Should NOT be called during an interrupt!
  ===================
  */
-extern bool cl_inconsole; // Baker 3.76 - from Qrack
 void Key_Event(int key, int ascii, bool down)
 {
 	char *kb;

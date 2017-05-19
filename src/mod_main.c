@@ -124,7 +124,7 @@ void Mod_ClearAll(void)
 	if (!Done)
 	{
 		// Some 3dfx miniGLs don't support glDeleteTextures (i.e. do nothing)
-		NoFree = isDedicated || COM_CheckParm("-nofreetex");
+		NoFree = COM_CheckParm("-nofreetex");
 		Done = true;
 	}
 

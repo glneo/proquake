@@ -13,28 +13,22 @@
  */
 
 #include "quakedef.h"
+#include "glquake.h"
 
-//cvar_t		gl_nobind = {"gl_nobind", "0"};
-
-int gl_max_size = 1024;
-
-cvar_t gl_picmip = { "gl_picmip", "0", true };
+cvar_t crosshair = { "crosshair", "1", true };
+cvar_t cl_crossx = { "cl_crossx", "0", true };
+cvar_t cl_crossy = { "cl_crossy", "0", true };
+cvar_t cl_crosshaircentered = { "cl_crosshaircentered", "1", true };
 cvar_t gl_crosshairalpha = { "crosshairalpha", "1", true };
-cvar_t gl_texturemode = { "gl_texturemode", "GL_LINEAR_MIPMAP_NEAREST", false }; // Let's not save to config
-
-cvar_t gl_free_world_textures = { "gl_free_world_textures", "1", true }; //R00k
-
 cvar_t crosshaircolor = { "crosshaircolor", "15", true };
 cvar_t crosshairsize = { "crosshairsize", "1", true };
+cvar_t gl_smoothfont = { "gl_smoothfont", "1", true };
 
 byte *draw_chars;				// 8*8 graphic characters
-qpic_t *draw_disc;
 qpic_t *draw_backtile;
 
 int translate_texture;
 int char_texture;
-
-extern cvar_t crosshair, cl_crosshaircentered, cl_crossx, cl_crossy;
 
 qpic_t crosshairpic;
 
@@ -52,7 +46,7 @@ static int GL_LoadPicTexture(qpic_t *pic)
 	return GL_LoadTexture("", pic->width, pic->height, pic->data, TEX_ALPHA);
 }
 
-#define NUMCROSSHAIRS	5
+#define NUMCROSSHAIRS 5
 int crosshairtextures[NUMCROSSHAIRS];
 
 static byte crosshairdata[NUMCROSSHAIRS][64] = {
@@ -123,23 +117,23 @@ static byte crosshairdata[NUMCROSSHAIRS][64] = {
 // some cards have low quality of alpha pics, so load the pics
 // without transparent pixels into a different scrap block.
 // scrap 0 is solid pics, 1 is transparent
-#define	MAX_SCRAPS		2
-#define	BLOCK_WIDTH		256
-#define	BLOCK_HEIGHT	256
+#define	MAX_SCRAPS      2
+#define	BLOCK_WIDTH     256
+#define	BLOCK_HEIGHT    256
 
-int scrap_allocated[MAX_SCRAPS][BLOCK_WIDTH];
+
 byte scrap_texels[MAX_SCRAPS][BLOCK_WIDTH * BLOCK_HEIGHT * 4];
 bool scrap_dirty;
 int scrap_texnum;
 
 // returns a texture number and the position inside it
-int Scrap_AllocBlock(int w, int h, int *x, int *y)
+static int Scrap_AllocBlock(int w, int h, int *x, int *y)
 {
 	int i, j;
 	int best, best2;
-	int texnum;
+	static int scrap_allocated[MAX_SCRAPS][BLOCK_WIDTH];
 
-	for (texnum = 0; texnum < MAX_SCRAPS; texnum++)
+	for (int texnum = 0; texnum < MAX_SCRAPS; texnum++)
 	{
 		best = BLOCK_HEIGHT;
 
@@ -176,7 +170,7 @@ int Scrap_AllocBlock(int w, int h, int *x, int *y)
 
 int scrap_uploads;
 
-void Scrap_Upload(void)
+static void Scrap_Upload(void)
 {
 	int texnum;
 
@@ -201,18 +195,16 @@ typedef struct cachepic_s
 } cachepic_t;
 
 #define	MAX_CACHED_PICS		128
-cachepic_t menu_cachepics[MAX_CACHED_PICS];
-int menu_numcachepics;
 
 byte menuplyr_pixels[4096];
-
-int pic_texels;
-int pic_count;
 
 qpic_t *Draw_PicFromWad(char *name)
 {
 	qpic_t *p;
 	glpic_t *gl;
+	static int pic_texels;
+	static int pic_count;
+
 
 	p = W_GetLumpName(name);
 	gl = (glpic_t *) p->data;
@@ -248,6 +240,7 @@ qpic_t *Draw_PicFromWad(char *name)
 		gl->tl = 0;
 		gl->th = 1;
 	}
+
 	return p;
 }
 
@@ -257,6 +250,8 @@ qpic_t *Draw_CachePic(char *path)
 	int i;
 	qpic_t *dat;
 	glpic_t *gl;
+	static cachepic_t menu_cachepics[MAX_CACHED_PICS];
+	static int menu_numcachepics;
 
 	for (pic = menu_cachepics, i = 0; i < menu_numcachepics; pic++, i++)
 		if (!strcmp(path, pic->name))
@@ -292,194 +287,11 @@ qpic_t *Draw_CachePic(char *path)
 	return &pic->pic;
 }
 
-void Draw_CharToConback(int num, byte *dest)
+static void OnChange_gl_smoothfont(struct cvar_s *cvar)
 {
-	int row, col;
-	byte *source;
-	int drawline;
-	int x;
-
-	row = num >> 4;
-	col = num & 15;
-	source = draw_chars + (row << 10) + (col << 3);
-
-	drawline = 8;
-
-	while (drawline--)
-	{
-		for (x = 0; x < 8; x++)
-			if (source[x] != 255)
-				dest[x] = 0x60 + source[x];
-		source += 128;
-		dest += 320;
-	}
-
-}
-
-/*
- ===============
- Draw_LoadPics -- johnfitz
- ===============
- */
-void Draw_LoadPics(void)
-{
-	draw_disc = Draw_PicFromWad("disc");
-	draw_backtile = Draw_PicFromWad("backtile");
-}
-
-static bool smoothfont = 1;
-bool smoothfont_init = false;
-
-static void SetSmoothFont(void)
-{
-	smoothfont_init = true; // This is now available
 	GL_Bind(char_texture);
-	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, smoothfont ? GL_LINEAR : GL_NEAREST);
-	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, smoothfont ? GL_LINEAR : GL_NEAREST);
-}
-
-void SmoothFontSet(bool smoothfont_choice)
-{
-	smoothfont = smoothfont_choice;
-	if (smoothfont_init)
-		SetSmoothFont();
-}
-
-void Draw_SmoothFont_f(void)
-{
-	if (Cmd_Argc() == 1)
-	{
-		Con_Printf("gl_smoothfont is %d\n", smoothfont);
-		return;
-	}
-
-	smoothfont = atoi(Cmd_Argv(1));
-	SetSmoothFont();
-}
-
-static void Load_CharSet(void)
-{
-	int i;
-	byte *dest, *src;
-
-	// load the console background and the charset
-	// by hand, because we need to write the version
-	// string into the background before turning
-	// it into a texture
-	draw_chars = W_GetLumpName("conchars");
-	for (i = 0; i < 256 * 64; i++)
-		if (draw_chars[i] == 0)
-			draw_chars[i] = 255;	// proper transparent color
-
-	// Expand charset texture with blank lines in between to avoid in-line distortion
-	dest = Q_malloc(128 * 256);
-	memset(dest, 0, 128 * 256);
-	src = draw_chars;
-
-	for (i = 0; i < 16; ++i)
-		memcpy(&dest[8 * 128 * 2 * i], &src[8 * 128 * i], 8 * 128); // Copy each line
-
-	// now turn them into textures
-	char_texture = GL_LoadTexture("charset", 128, 256, dest, TEX_ALPHA);
-
-	free(dest);
-
-	SetSmoothFont();
-}
-
-void Draw_InitConback_Old(void)
-{
-	qpic_t *cb;
-	int start;
-	byte *dest;
-	char ver[40];
-	glpic_t *gl;
-
-	byte *ncdata;
-
-	start = Hunk_LowMark();
-
-	cb = (qpic_t *) COM_LoadTempFile("gfx/conback.lmp");
-	if (!cb)
-		Sys_Error("Couldn't load gfx/conback.lmp");
-	SwapPic(cb);
-
-	// hack the version number directly into the pic
-
-	snprintf(ver, sizeof(ver), "(ProQuake) %4.2f", (float) PROQUAKE_SERIES_VERSION); // JPG - obvious change
-
-	dest = cb->data + 320 * 186 + 320 - 11 - 8 * strlen(ver);
-	for (int x = 0; x < strlen(ver); x++)
-		Draw_CharToConback(ver[x], dest + (x << 3));
-
-	conback->width = cb->width;
-	conback->height = cb->height;
-	ncdata = cb->data;
-
-	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-
-	gl = (glpic_t *) conback->data;
-	gl->texnum = GL_LoadTexture("conback", conback->width, conback->height, ncdata, TEX_NOFLAGS);
-	gl->sl = 0;
-	gl->sh = 1;
-	gl->tl = 0;
-	gl->th = 1;
-	conback->width = vid.width;
-	conback->height = vid.height;
-
-	// free loaded console
-	Hunk_FreeToLowMark(start);
-}
-
-void Draw_Init(void)
-{
-	int i;
-
-//	Cvar_RegisterVariable (&gl_nobind);
-
-	Cvar_RegisterVariable(&gl_picmip);
-	Cvar_RegisterVariable(&gl_crosshairalpha);
-	Cvar_RegisterVariable(&crosshaircolor);
-
-	Cvar_RegisterVariable(&crosshairsize);
-
-	Cvar_RegisterVariable(&gl_free_world_textures); //R00k
-
-	glGetIntegerv(GL_MAX_TEXTURE_SIZE, &gl_max_size);
-
-	Cvar_RegisterVariable(&gl_texturemode);
-	Cvar_SetCallback(&gl_texturemode, OnChange_gl_texturemode);
-
-	Cmd_AddCommand("gl_smoothfont", Draw_SmoothFont_f);
-
-	// load the console background and the charset
-	// by hand, because we need to write the version
-	// string into the background before turning
-	// it into a texture
-
-	Load_CharSet();
-
-	Draw_InitConback_Old();
-
-	// save a texture slot for translated picture
-	translate_texture = texture_extension_number++;
-
-	// save slots for scraps
-	scrap_texnum = texture_extension_number;
-	texture_extension_number += MAX_SCRAPS;
-
-	// Load the crosshair pics
-	for (i = 0; i < NUMCROSSHAIRS; i++)
-	{
-		crosshairtextures[i] = GL_LoadTexture("", 8, 8, crosshairdata[i], TEX_ALPHA);
-		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	}
-
-	// load game pics
-	Draw_LoadPics();
-
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, cvar->value ? GL_LINEAR : GL_NEAREST);
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, cvar->value ? GL_LINEAR : GL_NEAREST);
 }
 
 /*
@@ -561,7 +373,7 @@ void Draw_String(int x, int y, char *str)
 	}
 }
 
-byte *StringToRGB(char *s)
+static byte *StringToRGB(char *s)
 {
 	byte *col;
 	static byte rgb[4];
@@ -987,45 +799,7 @@ void Draw_FadeScreen(void)
 
 //=============================================================================
 
-/*
- ================
- Draw_BeginDisc
-
- Draws the little blue disc in the corner of the screen.
- Call before beginning any disc IO.
- ================
- */
-void Draw_BeginDisc(void)
-{
-	if (!draw_disc)
-		return;
-
-	//if (mod_conhide==true && (key_dest != key_console && key_dest != key_message)) {
-	if (key_dest != key_console && key_dest != key_message)
-	{
-		// No draw this either
-		return;
-	}
-
-//	glDrawBuffer(GL_FRONT);
-	Draw_Pic(vid.width - 24, 0, draw_disc);
-//	glDrawBuffer(GL_BACK);
-}
-
-/*
- ================
- Draw_EndDisc
-
- Erases the disc icon.
- Call after completing any disc IO
- ================
- */
-void Draw_EndDisc(void)
-{
-}
-
-
-void Q_glOrthof(GLfloat left, GLfloat right, GLfloat bottom, GLfloat top, GLfloat zNear, GLfloat zFar)
+static void Q_glOrthof(GLfloat left, GLfloat right, GLfloat bottom, GLfloat top, GLfloat zNear, GLfloat zFar)
 {
 	GLfloat matrix[] = {
 		2.0f/(right-left), 0.0f, 0.0f, 0.0f,
@@ -1037,13 +811,6 @@ void Q_glOrthof(GLfloat left, GLfloat right, GLfloat bottom, GLfloat top, GLfloa
 	glMultMatrixf(matrix);
 }
 
-/*
- ================
- GL_Set2D
-
- Setup as if the screen was 320*200
- ================
- */
 void GL_Set2D(void)
 {
 	glViewport(glx, gly, glwidth, glheight);
@@ -1059,4 +826,147 @@ void GL_Set2D(void)
 	glDisable(GL_CULL_FACE);
 	glDisable(GL_BLEND);
 	glEnable(GL_ALPHA_TEST);
+}
+
+static void Load_CharSet(void)
+{
+	int i;
+	byte *dest, *src;
+
+	// load the console background and the charset
+	// by hand, because we need to write the version
+	// string into the background before turning
+	// it into a texture
+	draw_chars = W_GetLumpName("conchars");
+	for (i = 0; i < 256 * 64; i++)
+		if (draw_chars[i] == 0)
+			draw_chars[i] = 255;	// proper transparent color
+
+	// Expand charset texture with blank lines in between to avoid in-line distortion
+	dest = Q_malloc(128 * 256);
+	memset(dest, 0, 128 * 256);
+	src = draw_chars;
+
+	for (i = 0; i < 16; ++i)
+		memcpy(&dest[8 * 128 * 2 * i], &src[8 * 128 * i], 8 * 128); // Copy each line
+
+	// now turn them into textures
+	char_texture = GL_LoadTexture("charset", 128, 256, dest, TEX_ALPHA);
+
+	free(dest);
+
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+}
+
+static void Draw_CharToConback(int num, byte *dest)
+{
+	int row, col;
+	byte *source;
+	int drawline;
+	int x;
+
+	row = num >> 4;
+	col = num & 15;
+	source = draw_chars + (row << 10) + (col << 3);
+
+	drawline = 8;
+
+	while (drawline--)
+	{
+		for (x = 0; x < 8; x++)
+			if (source[x] != 255)
+				dest[x] = 0x60 + source[x];
+		source += 128;
+		dest += 320;
+	}
+
+}
+
+static void Draw_InitConback_Old(void)
+{
+	qpic_t *cb;
+	int start;
+	byte *dest;
+	char ver[40];
+	glpic_t *gl;
+
+	byte *ncdata;
+
+	start = Hunk_LowMark();
+
+	cb = (qpic_t *) COM_LoadTempFile("gfx/conback.lmp");
+	if (!cb)
+		Sys_Error("Couldn't load gfx/conback.lmp");
+	SwapPic(cb);
+
+	// hack the version number directly into the pic
+
+	snprintf(ver, sizeof(ver), "(QuickQuake) %4.2f", (float) PROQUAKE_SERIES_VERSION);
+
+	dest = cb->data + 320 * 186 + 320 - 11 - 8 * strlen(ver);
+	for (int x = 0; x < strlen(ver); x++)
+		Draw_CharToConback(ver[x], dest + (x << 3));
+
+	conback->width = cb->width;
+	conback->height = cb->height;
+	ncdata = cb->data;
+
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+	gl = (glpic_t *) conback->data;
+	gl->texnum = GL_LoadTexture("conback", conback->width, conback->height, ncdata, TEX_NOFLAGS);
+	gl->sl = 0;
+	gl->sh = 1;
+	gl->tl = 0;
+	gl->th = 1;
+	conback->width = vid.width;
+	conback->height = vid.height;
+
+	// free loaded console
+	Hunk_FreeToLowMark(start);
+}
+
+void Draw_Init(void)
+{
+	int i;
+
+	Cvar_RegisterVariable(&crosshair);
+	Cvar_RegisterVariable(&cl_crossx);
+	Cvar_RegisterVariable(&cl_crossy);
+	Cvar_RegisterVariable(&cl_crosshaircentered);
+	Cvar_RegisterVariable(&gl_crosshairalpha);
+	Cvar_RegisterVariable(&crosshaircolor);
+	Cvar_RegisterVariable(&crosshairsize);
+
+	Cvar_RegisterVariable(&gl_smoothfont);
+	Cvar_SetCallback(&gl_smoothfont, OnChange_gl_smoothfont);
+
+	// load the console background and the charset
+	// by hand, because we need to write the version
+	// string into the background before turning
+	// it into a texture
+
+	Load_CharSet();
+
+	Draw_InitConback_Old();
+
+	// save a texture slot for translated picture
+	translate_texture = texture_extension_number++;
+
+	// save slots for scraps
+	scrap_texnum = texture_extension_number;
+	texture_extension_number += MAX_SCRAPS;
+
+	// Load the crosshair pics
+	for (i = 0; i < NUMCROSSHAIRS; i++)
+	{
+		crosshairtextures[i] = GL_LoadTexture("", 8, 8, crosshairdata[i], TEX_ALPHA);
+		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	}
+
+	// load game pics
+	draw_backtile = Draw_PicFromWad("backtile");
 }

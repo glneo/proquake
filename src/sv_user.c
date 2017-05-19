@@ -495,45 +495,26 @@ bool SV_ReadClientMessage(void)
 					ret = 2;
 				else
 					ret = 0;
-				if (strncasecmp(s, "status", 6) == 0)
-					ret = 1;
-				else if (strncasecmp(s, "god", 3) == 0)
-					ret = 1;
-				else if (strncasecmp(s, "notarget", 8) == 0)
-					ret = 1;
-				else if (strncasecmp(s, "fly", 3) == 0)
-					ret = 1;
-				else if (strncasecmp(s, "name", 4) == 0)
-					ret = 1;
-				else if (strncasecmp(s, "noclip", 6) == 0)
-					ret = 1;
-				else if (strncasecmp(s, "say", 3) == 0)
-					ret = 1;
-				else if (strncasecmp(s, "say_team", 8) == 0)
-					ret = 1;
-				else if (strncasecmp(s, "tell", 4) == 0)
-					ret = 1;
-				else if (strncasecmp(s, "color", 5) == 0)
-					ret = 1;
-				else if (strncasecmp(s, "kill", 4) == 0)
-					ret = 1;
-				else if (strncasecmp(s, "pause", 5) == 0)
-					ret = 1;
-				else if (strncasecmp(s, "spawn", 5) == 0)
-					ret = 1;
-				else if (strncasecmp(s, "begin", 5) == 0)
-					ret = 1;
-				else if (strncasecmp(s, "prespawn", 8) == 0)
-					ret = 1;
-				else if (strncasecmp(s, "kick", 4) == 0)
-					ret = 1;
-				else if (strncasecmp(s, "ping", 4) == 0)
-					ret = 1;
-				else if (strncasecmp(s, "give", 4) == 0)
-					ret = 1;
-				else if (strncasecmp(s, "ban", 3) == 0)
-					ret = 1;
-				else if (strncasecmp(s, "qcexec", 6) == 0)
+				if (!strncasecmp(s, "status", 6) ||
+				    !strncasecmp(s, "god", 3) ||
+				    !strncasecmp(s, "notarget", 8) ||
+				    !strncasecmp(s, "fly", 3) ||
+				    !strncasecmp(s, "name", 4) ||
+				    !strncasecmp(s, "noclip", 6) ||
+				    !strncasecmp(s, "say", 3) ||
+				    !strncasecmp(s, "say_team", 8) ||
+				    !strncasecmp(s, "tell", 4) ||
+				    !strncasecmp(s, "color", 5) ||
+				    !strncasecmp(s, "kill", 4) ||
+				    !strncasecmp(s, "pause", 5) ||
+				    !strncasecmp(s, "spawn", 5) ||
+				    !strncasecmp(s, "begin", 5) ||
+				    !strncasecmp(s, "prespawn", 8) ||
+				    !strncasecmp(s, "kick", 4) ||
+				    !strncasecmp(s, "ping", 4) ||
+				    !strncasecmp(s, "give", 4) ||
+				    !strncasecmp(s, "ban", 3) ||
+				    !strncasecmp(s, "qcexec", 6))
 					ret = 1;
 
 				if (ret == 2)

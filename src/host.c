@@ -49,9 +49,6 @@ jmp_buf host_abortserver;
 
 byte *host_basepal;
 byte *host_colormap;
-#ifdef SUPPORTS_DEMO_AUTOPLAY
-bool nostartdemos = false;
-#endif
 
 cvar_t host_framerate = { "host_framerate", "0" };	// set for slow motion
 cvar_t host_speeds = { "host_speeds", "0" };			// set for running times
@@ -105,6 +102,8 @@ cvar_t pq_showedict = { "pq_showedict", "0" };
 // JPG 1.05 - translate dedicated server console output to plain text
 cvar_t pq_dequake = { "pq_dequake", "1" };
 cvar_t pq_maxfps = { "pq_maxfps", "72.0", true };	// Baker 3.80x - save this to config
+
+bool isDedicated = false;
 
 /*
  ================

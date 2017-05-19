@@ -15,6 +15,7 @@
  */
 
 #include "quakedef.h"
+#include "glquake.h"
 
 int skytexturenum;
 
@@ -381,4 +382,3 @@ void R_InitSky(texture_t *mt, byte *src)
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 }
-

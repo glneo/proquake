@@ -15,15 +15,16 @@
  */
 
 #include "quakedef.h"
+#include "glquake.h"
 
-extern cvar_t gl_picmip;
-extern cvar_t gl_texturemode;
-extern cvar_t gl_free_world_textures;
+static int gl_max_size = 1024;
+
+cvar_t gl_picmip = { "gl_picmip", "0", true };
+cvar_t gl_texturemode = { "gl_texturemode", "GL_LINEAR_MIPMAP_NEAREST", true };
+cvar_t gl_free_world_textures = { "gl_free_world_textures", "1", true };
 
 int gl_filter_min = GL_LINEAR_MIPMAP_NEAREST;
 int gl_filter_max = GL_LINEAR;
-
-int texels;
 
 gltexture_t gltextures[MAX_GLTEXTURES];
 int numgltextures;
@@ -58,7 +59,7 @@ static void GL_ResampleTexture(unsigned *in, int inwidth, int inheight, unsigned
 	}
 }
 
-void GL_MipMap(byte *in, int width, int height)
+static void GL_MipMap(byte *in, int width, int height)
 {
 	int i, j;
 	byte *out;
@@ -78,11 +79,12 @@ void GL_MipMap(byte *in, int width, int height)
 	}
 }
 
-void GL_Upload32(unsigned *data, int width, int height, int mode)
+static void GL_Upload32(unsigned *data, int width, int height, int mode)
 {
 	GLint samples;
 	unsigned *scaled;
 	int scaled_width, scaled_height;
+	int texels;
 
 	for (scaled_width = 1; scaled_width < width; scaled_width <<= 1)
 		;
@@ -256,9 +258,11 @@ int GL_LoadTexture(char *identifier, int width, int height, byte *data, int mode
 		{
 			if (!strcmp(identifier, glt->identifier))
 			{
+//				Con_Printf("\n\nSAME NAME IDENT: %s", identifier);
 				// Baker 3.60 - LoadTexture fix LordHavoc provided by Reckless
 				if (width != glt->width || height != glt->height || crc != glt->crc)
 					goto setup;
+//				Con_Printf("OLD\n");
 				return gltextures[i].texnum;
 			}
 		}
@@ -308,7 +312,7 @@ void GL_Bind(int texnum)
 static GLenum currenttarget = GL_TEXTURE0;
 bool mtexenabled = false;
 
-void GL_SelectTextureUnit(GLenum target)
+static void GL_SelectTextureUnit(GLenum target)
 {
 	if (target == currenttarget)
 		return;
@@ -359,7 +363,7 @@ struct
 	{ "GL_LINEAR_MIPMAP_LINEAR", GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR }
 };
 
-void OnChange_gl_texturemode(struct cvar_s *cvar)
+static void OnChange_gl_texturemode(struct cvar_s *cvar)
 {
 	int i;
 	gltexture_t *glt;
@@ -415,6 +419,15 @@ void R_InitTextures(void)
 	int x, y, m;
 	byte *dest;
 
+	glGetIntegerv(GL_MAX_TEXTURE_SIZE, &gl_max_size);
+
+	Cvar_RegisterVariable(&gl_picmip);
+	Cvar_RegisterVariable(&gl_free_world_textures);
+
+
+	Cvar_RegisterVariable(&gl_texturemode);
+	Cvar_SetCallback(&gl_texturemode, OnChange_gl_texturemode);
+
 	// create a simple checkerboard texture for the default
 	r_notexture_mip = Hunk_AllocName(sizeof(texture_t) + (16 * 16) + (8 * 8) + (4 * 4) + (2 * 2), "notexture");
 
@@ -436,8 +449,6 @@ void R_InitTextures(void)
 					*dest++ = 0xff;
 			}
 	}
-
-	R_Init_FlashBlend_Bubble();
 }
 
 static byte dottexture[8][8] =

@@ -13,6 +13,7 @@
  */
 
 #include "quakedef.h"
+#include "glquake.h"
 
 #define	BLOCK_WIDTH		128
 #define	BLOCK_HEIGHT	128
@@ -54,7 +55,7 @@ byte color_black[4] = { 0, 0, 0, 255 };
  assumes lightmap texture is already bound
  ===============
  */
-void R_UploadLightmap(int lmap)
+static void R_UploadLightmap(int lmap)
 {
 	glRect_t *theRect;
 
@@ -111,10 +112,11 @@ void R_BlendLightmaps(void)
 
 	glDisable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
 	glDepthMask(GL_TRUE); // back to normal Z buffering
 }
 
-void R_AddDynamicLights(msurface_t *surf)
+static void R_AddDynamicLights(msurface_t *surf)
 {
 	int lnum, i, smax, tmax, s, t, sd, td;
 	float dist, rad, minlight;
@@ -170,14 +172,7 @@ void R_AddDynamicLights(msurface_t *surf)
 	}
 }
 
-/*
- ===============
- R_BuildLightMap
-
- Combine and scale multiple lightmaps into the 8.8 format in blocklights
- ===============
- */
-
+/* Combine and scale multiple lightmaps into the 8.8 format in blocklights */
 void R_BuildLightMap(msurface_t *surf, byte *dest, int stride)
 {
 	int smax, tmax, t, i, j, size, maps;
@@ -333,7 +328,7 @@ void R_AnimateLight(void)
  =============================================================================
  */
 
-void AddLightBlend(float r, float g, float b, float a2)
+static void AddLightBlend(float r, float g, float b, float a2)
 {
 	float a;
 
@@ -348,7 +343,7 @@ void AddLightBlend(float r, float g, float b, float a2)
 
 static float bubble_sin[17], bubble_cos[17];
 
-void R_Init_FlashBlend_Bubble(void)
+static void R_Init_FlashBlend_Bubble(void)
 {
 	int i;
 	float a;
@@ -361,7 +356,7 @@ void R_Init_FlashBlend_Bubble(void)
 	}
 }
 
-void R_RenderDlight(dlight_t *light)
+static void R_RenderDlight(dlight_t *light)
 {
 	int i, j;
 	vec3_t verts[18], v;
@@ -505,7 +500,7 @@ void R_PushDlights(void)
 mplane_t *lightplane;
 vec3_t lightspot;
 
-int RecursiveLightPoint(mnode_t *node, vec3_t start, vec3_t end)
+static int RecursiveLightPoint(mnode_t *node, vec3_t start, vec3_t end)
 {
 	int i, r, s, t, ds, dt, side, maps;
 	unsigned scale;
@@ -797,4 +792,6 @@ void GL_BuildLightmaps(void)
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, BLOCK_WIDTH, BLOCK_HEIGHT, 0, GL_LUMINANCE, GL_UNSIGNED_BYTE,
 				lightmaps + i * BLOCK_WIDTH * BLOCK_HEIGHT * lightmap_bytes);
 	}
+
+	R_Init_FlashBlend_Bubble();
 }

@@ -39,16 +39,14 @@ cvar_t sv_gravity = { "sv_gravity", "800", false, true };
 cvar_t sv_maxvelocity = { "sv_maxvelocity", "2000" };
 cvar_t sv_nostep = { "sv_nostep", "0" };
 
-#define	MOVE_EPSILON	0.01
-
-void SV_Physics_Toss(edict_t *ent);
+#define	MOVE_EPSILON 0.01
 
 /*
  ================
  SV_CheckAllEnts
  ================
  */
-void SV_CheckAllEnts(void)
+static void SV_CheckAllEnts(void)
 {
 	int e;
 	edict_t *check;
@@ -71,7 +69,7 @@ void SV_CheckAllEnts(void)
 	}
 }
 
-void SV_CheckVelocity(edict_t *ent)
+static void SV_CheckVelocity(edict_t *ent)
 {
 	int i;
 
@@ -105,7 +103,7 @@ void SV_CheckVelocity(edict_t *ent)
  Returns false if the entity removed itself.
  =============
  */
-bool SV_RunThink(edict_t *ent)
+static bool SV_RunThink(edict_t *ent)
 {
 	float thinktime;
 
@@ -132,7 +130,7 @@ bool SV_RunThink(edict_t *ent)
  Two entities have touched, so run their touch functions
  ==================
  */
-void SV_Impact(edict_t *e1, edict_t *e2)
+static void SV_Impact(edict_t *e1, edict_t *e2)
 {
 	int old_self, old_other;
 
@@ -168,7 +166,7 @@ void SV_Impact(edict_t *e1, edict_t *e2)
  */
 #define	STOP_EPSILON	0.1
 
-int ClipVelocity(vec3_t in, vec3_t normal, vec3_t out, float overbounce)
+static int ClipVelocity(vec3_t in, vec3_t normal, vec3_t out, float overbounce)
 {
 	float backoff, change;
 	int i, blocked;
@@ -205,7 +203,7 @@ int ClipVelocity(vec3_t in, vec3_t normal, vec3_t out, float overbounce)
  ============
  */
 #define	MAX_CLIP_PLANES	5
-int SV_FlyMove(edict_t *ent, float time, trace_t *steptrace)
+static int SV_FlyMove(edict_t *ent, float time, trace_t *steptrace)
 {
 	int i, j, bumpcount, numbumps, numplanes, blocked;
 	vec3_t dir, planes[MAX_CLIP_PLANES], primal_velocity, original_velocity, new_velocity, end;
@@ -332,7 +330,7 @@ int SV_FlyMove(edict_t *ent, float time, trace_t *steptrace)
 
  ============
  */
-void SV_AddGravity(edict_t *ent)
+static void SV_AddGravity(edict_t *ent)
 {
 	float ent_gravity;
 
@@ -347,21 +345,13 @@ void SV_AddGravity(edict_t *ent)
 }
 
 /*
- ===============================================================================
-
- PUSHMOVE
-
- ===============================================================================
- */
-
-/*
  ============
  SV_PushEntity
 
  Does not change the entities velocity at all
  ============
  */
-trace_t SV_PushEntity(edict_t *ent, vec3_t push)
+static trace_t SV_PushEntity(edict_t *ent, vec3_t push)
 {
 	trace_t trace;
 	vec3_t end;
@@ -390,7 +380,7 @@ trace_t SV_PushEntity(edict_t *ent, vec3_t push)
  SV_PushMove
  ============
  */
-void SV_PushMove(edict_t *pusher, float movetime)
+static void SV_PushMove(edict_t *pusher, float movetime)
 {
 	int i, e;
 	edict_t *check, *block;
@@ -503,7 +493,7 @@ void SV_PushMove(edict_t *pusher, float movetime)
 
  ============
  */
-void SV_PushRotate(edict_t *pusher, float movetime)
+static void SV_PushRotate(edict_t *pusher, float movetime)
 {
 	int i, e;
 	edict_t *check, *block;
@@ -627,13 +617,7 @@ void SV_PushRotate(edict_t *pusher, float movetime)
 
 }
 
-/*
- ================
- SV_Physics_Pusher
-
- ================
- */
-void SV_Physics_Pusher(edict_t *ent)
+static void SV_Physics_Pusher(edict_t *ent)
 {
 	float thinktime;
 	float oldltime;
@@ -653,12 +637,10 @@ void SV_Physics_Pusher(edict_t *ent)
 
 	if (movetime)
 	{
-//ROTATE START
 		if ((ent->v.avelocity[0] || ent->v.avelocity[1] || ent->v.avelocity[2]) && ent->v.solid == SOLID_BSP)
 			SV_PushRotate(ent, host_frametime);
 		else
-//ROTATE END
-			SV_PushMove(ent, movetime);	// advances ent->v.ltime if not blocked
+			SV_PushMove(ent, movetime); // advances ent->v.ltime if not blocked
 	}
 
 	if (thinktime > oldltime && thinktime <= ent->v.ltime)
@@ -673,13 +655,151 @@ void SV_Physics_Pusher(edict_t *ent)
 	}
 }
 
+
+/* Non moving objects can only think */
+static void SV_Physics_None(edict_t *ent)
+{
+	// regular thinking
+	SV_RunThink(ent);
+}
+
+/* A moving object that doesn't obey physics */
+static void SV_Physics_Noclip(edict_t *ent)
+{
+	// regular thinking
+	if (!SV_RunThink(ent))
+		return;
+
+	VectorMA(ent->v.angles, host_frametime, ent->v.avelocity, ent->v.angles);
+	VectorMA(ent->v.origin, host_frametime, ent->v.velocity, ent->v.origin);
+
+	SV_LinkEdict(ent, false);
+}
+
+static void SV_CheckWaterTransition(edict_t *ent)
+{
+	int cont;
+
+	cont = SV_PointContents(ent->v.origin);
+	if (!ent->v.watertype)
+	{	// just spawned here
+		ent->v.watertype = cont;
+		ent->v.waterlevel = 1;
+		return;
+	}
+
+	if (cont <= CONTENTS_WATER)
+	{
+		if (ent->v.watertype == CONTENTS_EMPTY)
+		{	// just crossed into water
+			SV_StartSound(ent, 0, "misc/h2ohit1.wav", 255, 1);
+		}
+		ent->v.watertype = cont;
+		ent->v.waterlevel = 1;
+	}
+	else
+	{
+		if (ent->v.watertype != CONTENTS_EMPTY)
+		{	// just crossed into water
+			SV_StartSound(ent, 0, "misc/h2ohit1.wav", 255, 1);
+		}
+		ent->v.watertype = CONTENTS_EMPTY;
+		ent->v.waterlevel = cont;
+	}
+}
+
+/* Toss, bounce, and fly movement.  When onground, do nothing. */
+static void SV_Physics_Toss(edict_t *ent)
+{
+	trace_t trace;
+	vec3_t move;
+	float backoff;
+
+	// regular thinking
+	if (!SV_RunThink(ent))
+		return;
+
+	// if onground, return without moving
+	if (((int) ent->v.flags & FL_ONGROUND))
+		return;
+
+	SV_CheckVelocity(ent);
+
+	// add gravity
+	if (ent->v.movetype != MOVETYPE_FLY && ent->v.movetype != MOVETYPE_FLYMISSILE)
+		SV_AddGravity(ent);
+
+	// move angles
+	VectorMA(ent->v.angles, host_frametime, ent->v.avelocity, ent->v.angles);
+
+	// move origin
+	VectorScale(ent->v.velocity, host_frametime, move);
+	trace = SV_PushEntity(ent, move);
+	if (trace.fraction == 1)
+		return;
+	if (ent->free)
+		return;
+
+	backoff = (ent->v.movetype == MOVETYPE_BOUNCE) ? 1.5 : 1;
+
+	ClipVelocity(ent->v.velocity, trace.plane.normal, ent->v.velocity, backoff);
+
+	// stop if on ground
+	if (trace.plane.normal[2] > 0.7)
+	{
+		if (ent->v.velocity[2] < 60 || ent->v.movetype != MOVETYPE_BOUNCE)
+		{
+			ent->v.flags = (int) ent->v.flags | FL_ONGROUND;
+			ent->v.groundentity = EDICT_TO_PROG(trace.ent);
+			VectorCopy(vec3_origin, ent->v.velocity);
+			VectorCopy(vec3_origin, ent->v.avelocity);
+		}
+	}
+
+	// check for in water
+	SV_CheckWaterTransition(ent);
+}
+
 /*
- ===============================================================================
+ =============
+ SV_Physics_Step
 
- CLIENT MOVEMENT
+ Monsters freefall when they don't have a ground entity, otherwise
+ all movement is done with discrete steps.
 
- ===============================================================================
+ This is also used for objects that have become still on the ground, but
+ will fall if the floor is pulled out from under them.
+ =============
  */
+static void SV_Physics_Step(edict_t *ent)
+{
+	bool hitsound;
+
+	// freefall if not onground
+	if (!((int) ent->v.flags & (FL_ONGROUND | FL_FLY | FL_SWIM)))
+	{
+		if (ent->v.velocity[2] < sv_gravity.value * -0.1)
+			hitsound = true;
+		else
+			hitsound = false;
+
+		SV_AddGravity(ent);
+		SV_CheckVelocity(ent);
+		SV_FlyMove(ent, host_frametime, NULL);
+		SV_LinkEdict(ent, true);
+
+		if ((int) ent->v.flags & FL_ONGROUND)	// just hit ground
+		{
+			if (hitsound)
+				SV_StartSound(ent, 0, "demon/dland2.wav", 255, 1);
+		}
+	}
+
+	// regular thinking
+	SV_RunThink(ent);
+
+	SV_CheckWaterTransition(ent);
+}
 
 /*
  =============
@@ -689,7 +809,7 @@ void SV_Physics_Pusher(edict_t *ent)
  clipping hull.
  =============
  */
-void SV_CheckStuck(edict_t *ent)
+static void SV_CheckStuck(edict_t *ent)
 {
 	int i, j;
 	int z;
@@ -729,12 +849,7 @@ void SV_CheckStuck(edict_t *ent)
 	//Con_DPrintf ("player is stuck.\n");    // JPG - commented this out
 }
 
-/*
- =============
- SV_CheckWater
- =============
- */
-bool SV_CheckWater(edict_t *ent)
+static bool SV_CheckWater(edict_t *ent)
 {
 	vec3_t point;
 	int cont;
@@ -765,13 +880,7 @@ bool SV_CheckWater(edict_t *ent)
 	return ent->v.waterlevel > 1;
 }
 
-/*
- ============
- SV_WallFriction
-
- ============
- */
-void SV_WallFriction(edict_t *ent, trace_t *trace)
+static void SV_WallFriction(edict_t *ent, trace_t *trace)
 {
 	vec3_t forward, right, up;
 	float d, i;
@@ -784,7 +893,7 @@ void SV_WallFriction(edict_t *ent, trace_t *trace)
 	if (d >= 0)
 		return;
 
-// cut the tangential velocity
+	// cut the tangential velocity
 	i = DotProduct(trace->plane.normal, ent->v.velocity);
 	VectorScale(trace->plane.normal, i, into);
 	VectorSubtract(ent->v.velocity, into, side);
@@ -805,7 +914,7 @@ void SV_WallFriction(edict_t *ent, trace_t *trace)
  This is a hack, but in the interest of good gameplay...
  ======================
  */
-int SV_TryUnstick(edict_t *ent, vec3_t oldvel)
+static int SV_TryUnstick(edict_t *ent, vec3_t oldvel)
 {
 	int i;
 	vec3_t oldorg;
@@ -885,7 +994,7 @@ int SV_TryUnstick(edict_t *ent, vec3_t oldvel)
  ======================
  */
 #define	STEPSIZE	18
-void SV_WalkMove(edict_t *ent)
+static void SV_WalkMove(edict_t *ent)
 {
 	vec3_t upmove, downmove, oldorg, oldvel, nosteporg, nostepvel;
 	int clip, oldonground;
@@ -970,27 +1079,21 @@ void SV_WalkMove(edict_t *ent)
 	}
 }
 
-/*
- ================
- SV_Physics_Client
-
- Player character actions
- ================
- */
-void SV_Physics_Client(edict_t *ent, int num)
+/* Player character actions */
+static void SV_Physics_Client(edict_t *ent, int num)
 {
 	if (!svs.clients[num - 1].active)
 		return;		// unconnected slot
 
-// call standard client pre-think
+	// call standard client pre-think
 	pr_global_struct->time = sv.time;
 	pr_global_struct->self = EDICT_TO_PROG(ent);
 	PR_ExecuteProgram(pr_global_struct->PlayerPreThink);
 
-// do a move
+	// do a move
 	SV_CheckVelocity(ent);
 
-// decide which move function to call
+	// decide which move function to call
 	switch ((int) ent->v.movetype)
 	{
 	case MOVETYPE_NONE:
@@ -1029,7 +1132,7 @@ void SV_Physics_Client(edict_t *ent, int num)
 		Sys_Error("bad movetype %i", (int) ent->v.movetype);
 	}
 
-// call standard player post-think
+	// call standard player post-think
 	SV_LinkEdict(ent, true);
 
 	pr_global_struct->time = sv.time;
@@ -1037,210 +1140,20 @@ void SV_Physics_Client(edict_t *ent, int num)
 	PR_ExecuteProgram(pr_global_struct->PlayerPostThink);
 }
 
-//============================================================================
-
-/*
- =============
- SV_Physics_None
-
- Non moving objects can only think
- =============
- */
-void SV_Physics_None(edict_t *ent)
-{
-// regular thinking
-	SV_RunThink(ent);
-}
-
-/*
- =============
- SV_Physics_Noclip
-
- A moving object that doesn't obey physics
- =============
- */
-void SV_Physics_Noclip(edict_t *ent)
-{
-// regular thinking
-	if (!SV_RunThink(ent))
-		return;
-
-	VectorMA(ent->v.angles, host_frametime, ent->v.avelocity, ent->v.angles);
-	VectorMA(ent->v.origin, host_frametime, ent->v.velocity, ent->v.origin);
-
-	SV_LinkEdict(ent, false);
-}
-
-/*
- ==============================================================================
-
- TOSS / BOUNCE
-
- ==============================================================================
- */
-
-/*
- =============
- SV_CheckWaterTransition
-
- =============
- */
-void SV_CheckWaterTransition(edict_t *ent)
-{
-	int cont;
-
-	cont = SV_PointContents(ent->v.origin);
-	if (!ent->v.watertype)
-	{	// just spawned here
-		ent->v.watertype = cont;
-		ent->v.waterlevel = 1;
-		return;
-	}
-
-	if (cont <= CONTENTS_WATER)
-	{
-		if (ent->v.watertype == CONTENTS_EMPTY)
-		{	// just crossed into water
-			SV_StartSound(ent, 0, "misc/h2ohit1.wav", 255, 1);
-		}
-		ent->v.watertype = cont;
-		ent->v.waterlevel = 1;
-	}
-	else
-	{
-		if (ent->v.watertype != CONTENTS_EMPTY)
-		{	// just crossed into water
-			SV_StartSound(ent, 0, "misc/h2ohit1.wav", 255, 1);
-		}
-		ent->v.watertype = CONTENTS_EMPTY;
-		ent->v.waterlevel = cont;
-	}
-}
-
-/*
- =============
- SV_Physics_Toss
-
- Toss, bounce, and fly movement.  When onground, do nothing.
- =============
- */
-void SV_Physics_Toss(edict_t *ent)
-{
-	trace_t trace;
-	vec3_t move;
-	float backoff;
-
-	// regular thinking
-	if (!SV_RunThink(ent))
-		return;
-
-// if onground, return without moving
-	if (((int) ent->v.flags & FL_ONGROUND))
-		return;
-
-	SV_CheckVelocity(ent);
-
-// add gravity
-	if (ent->v.movetype != MOVETYPE_FLY && ent->v.movetype != MOVETYPE_FLYMISSILE)
-		SV_AddGravity(ent);
-
-// move angles
-	VectorMA(ent->v.angles, host_frametime, ent->v.avelocity, ent->v.angles);
-
-// move origin
-	VectorScale(ent->v.velocity, host_frametime, move);
-	trace = SV_PushEntity(ent, move);
-	if (trace.fraction == 1)
-		return;
-	if (ent->free)
-		return;
-
-	backoff = (ent->v.movetype == MOVETYPE_BOUNCE) ? 1.5 : 1;
-
-	ClipVelocity(ent->v.velocity, trace.plane.normal, ent->v.velocity, backoff);
-
-// stop if on ground
-	if (trace.plane.normal[2] > 0.7)
-	{
-		if (ent->v.velocity[2] < 60 || ent->v.movetype != MOVETYPE_BOUNCE)
-		{
-			ent->v.flags = (int) ent->v.flags | FL_ONGROUND;
-			ent->v.groundentity = EDICT_TO_PROG(trace.ent);
-			VectorCopy(vec3_origin, ent->v.velocity);
-			VectorCopy(vec3_origin, ent->v.avelocity);
-		}
-	}
-
-// check for in water
-	SV_CheckWaterTransition(ent);
-}
-
-/*
- ===============================================================================
-
- STEPPING MOVEMENT
-
- ===============================================================================
- */
-
-/*
- =============
- SV_Physics_Step
-
- Monsters freefall when they don't have a ground entity, otherwise
- all movement is done with discrete steps.
-
- This is also used for objects that have become still on the ground, but
- will fall if the floor is pulled out from under them.
- =============
- */
-
-void SV_Physics_Step(edict_t *ent)
-{
-	bool hitsound;
-
-// freefall if not onground
-	if (!((int) ent->v.flags & (FL_ONGROUND | FL_FLY | FL_SWIM)))
-	{
-		if (ent->v.velocity[2] < sv_gravity.value * -0.1)
-			hitsound = true;
-		else
-			hitsound = false;
-
-		SV_AddGravity(ent);
-		SV_CheckVelocity(ent);
-		SV_FlyMove(ent, host_frametime, NULL);
-		SV_LinkEdict(ent, true);
-
-		if ((int) ent->v.flags & FL_ONGROUND)	// just hit ground
-		{
-			if (hitsound)
-				SV_StartSound(ent, 0, "demon/dland2.wav", 255, 1);
-		}
-	}
-
-// regular thinking
-	SV_RunThink(ent);
-
-	SV_CheckWaterTransition(ent);
-}
-
-//============================================================================
-
 void SV_Physics(void)
 {
 	int i;
 	edict_t *ent;
 
-// let the progs know that a new frame has started
+	// let the progs know that a new frame has started
 	pr_global_struct->self = EDICT_TO_PROG(sv.edicts);
 	pr_global_struct->other = EDICT_TO_PROG(sv.edicts);
 	pr_global_struct->time = sv.time;
 	PR_ExecuteProgram(pr_global_struct->StartFrame);
 
-//SV_CheckAllEnts ();
+//	SV_CheckAllEnts ();
 
-// treat each object in turn
+	// treat each object in turn
 	ent = sv.edicts;
 	for (i = 0; i < sv.num_edicts; i++, ent = NEXT_EDICT(ent))
 	{
@@ -1248,7 +1161,7 @@ void SV_Physics(void)
 			continue;
 
 		if (pr_global_struct->force_retouch)
-			SV_LinkEdict(ent, true);	// force retouch even for stationary
+			SV_LinkEdict(ent, true); // force retouch even for stationary
 
 		if (i > 0 && i <= svs.maxclients)
 			SV_Physics_Client(ent, i);
@@ -1260,8 +1173,10 @@ void SV_Physics(void)
 			SV_Physics_Noclip(ent);
 		else if (ent->v.movetype == MOVETYPE_STEP)
 			SV_Physics_Step(ent);
-		else if (ent->v.movetype == MOVETYPE_TOSS || ent->v.movetype == MOVETYPE_BOUNCE || ent->v.movetype == MOVETYPE_FLY
-				|| ent->v.movetype == MOVETYPE_FLYMISSILE)
+		else if (ent->v.movetype == MOVETYPE_TOSS ||
+		         ent->v.movetype == MOVETYPE_BOUNCE ||
+		         ent->v.movetype == MOVETYPE_FLY ||
+		         ent->v.movetype == MOVETYPE_FLYMISSILE)
 			SV_Physics_Toss(ent);
 		else
 			Sys_Error("bad movetype %i", (int) ent->v.movetype);

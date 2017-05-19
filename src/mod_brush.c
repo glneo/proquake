@@ -15,6 +15,7 @@
  */
 
 #include "quakedef.h"
+#include "glquake.h"
 
 #define ISTURBTEX(name) ((name)[0] == '*')
 #define ISSKYTEX(name) ((name)[0] == 's' && (name)[1] == 'k' && (name)[2] == 'y')

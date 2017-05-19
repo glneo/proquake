@@ -15,8 +15,8 @@
  */
 
 #include "quakedef.h"
-
-#include "gl_model.h"
+#include "glquake.h"
+#include "model.h"
 
 static mspriteframe_t *R_GetSpriteFrame(entity_t *ent)
 {

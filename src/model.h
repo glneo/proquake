@@ -12,8 +12,8 @@
  * General Public License for more details.
  */
 
-#ifndef __GL_MODEL_H
-#define __GL_MODEL_H
+#ifndef __MODEL_H
+#define __MODEL_H
 
 #include "modelgen.h"
 #include "spritegen.h"
@@ -362,9 +362,9 @@ typedef enum
 #define	EF_TRACER2      BIT(6)  // orange split trail + rotate
 #define	EF_TRACER3      BIT(7)  // purple trail
 
-#define	MOD_NOLERP      BIT(8)  //don't lerp when animating
-#define	MOD_NOSHADOW    BIT(9)  //don't cast a shadow
-#define	MOD_FBRIGHT     BIT(10) //when fullbrights are disabled render this model brighter
+#define	MOD_NOLERP      BIT(8)  // don't lerp when animating
+#define	MOD_NOSHADOW    BIT(9)  // don't cast a shadow
+#define	MOD_FBRIGHT     BIT(10) // when fullbrights are disabled render this model brighter
 #define MOD_PLAYER      BIT(11)
 
 struct model_s
@@ -403,4 +403,4 @@ model_t *Mod_FindName(char *name);
 mleaf_t *Mod_PointInLeaf(vec3_t p, brush_model_t *model);
 byte *Mod_LeafPVS(mleaf_t *leaf, brush_model_t *model);
 
-#endif	/* __GL_MODEL_H */
+#endif	/* __MODEL_H */

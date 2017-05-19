@@ -89,7 +89,7 @@ typedef enum {
 
 //
 // client_state_t should hold all pieces of the client state
-// the client_static_t structure is persistant through an arbitrary number
+// the client_static_t structure is persistent through an arbitrary number
 // of server connections
 //
 typedef struct {

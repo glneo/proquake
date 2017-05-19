@@ -35,8 +35,6 @@
 
 #include <SDL2/SDL.h>
 
-bool isDedicated = false;
-
 int extmousex, extmousey;
 cvar_t cl_keypad = { "cl_keypad", "0", true };
 

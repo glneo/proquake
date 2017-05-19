@@ -15,8 +15,8 @@
  */
 
 #include "quakedef.h"
-
-#include "gl_model.h"
+#include "glquake.h"
+#include "model.h"
 
 #define	BLOCK_WIDTH		128
 #define	BLOCK_HEIGHT	128
@@ -119,7 +119,15 @@ void R_DrawWaterSurfaces(void)
 	}
 }
 
-void DrawTextureChains(brush_model_t *brushmodel)
+static void R_MirrorChain(msurface_t *s)
+{
+	if (mirror)
+		return;
+	mirror = true;
+	mirror_plane = s->plane;
+}
+
+static void DrawTextureChains(brush_model_t *brushmodel)
 {
 	int i;
 	msurface_t *s;
@@ -256,14 +264,6 @@ void R_RenderBrushPoly(msurface_t *fa)
 	}
 }
 
-void R_MirrorChain(msurface_t *s)
-{
-	if (mirror)
-		return;
-	mirror = true;
-	mirror_plane = s->plane;
-}
-
 void R_DrawBrushModel(entity_t *ent)
 {
 	int i, k;
@@ -345,7 +345,7 @@ void R_DrawBrushModel(entity_t *ent)
 	R_BlendLightmaps();
 
 	if (gl_fullbright.value)
-		DrawFullBrightTextures(&ent);
+		DrawFullBrightTextures(ent);
 
 	glPopMatrix();
 
@@ -361,7 +361,7 @@ void R_DrawBrushModel(entity_t *ent)
 
 int r_visframecount; // bumped when going to a new PVS
 
-void R_RecursiveWorldNode(mnode_t *node)
+static void R_RecursiveWorldNode(mnode_t *node)
 {
 	int c, side;
 	mplane_t *plane;
