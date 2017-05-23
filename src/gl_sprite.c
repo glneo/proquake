@@ -84,7 +84,7 @@ void R_DrawSpriteModel(entity_t *ent)
 		right = vright;
 	}
 
-	GL_Bind(frame->gl_texturenum);
+	GL_Bind(frame->gltexture);
 
 	glEnable(GL_ALPHA_TEST);
 

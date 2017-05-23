@@ -38,8 +38,11 @@ static void *Mod_LoadSpriteFrame(mspriteframe_t *pspriteframe, dspriteframe_t *p
 	pspriteframe->left = origin[0];
 	pspriteframe->right = origin[0] + width;
 
+	pspriteframe->smax = (float)width/(float)TexMgr_PadConditional(width);
+	pspriteframe->tmax = (float)height/(float)TexMgr_PadConditional(height);
+
 	snprintf(name, sizeof(name), "%s_%i", mod_name, framenum);
-	pspriteframe->gl_texturenum = GL_LoadTexture(name, width, height, frame, TEX_MIPMAP | TEX_ALPHA);
+	pspriteframe->gltexture = TexMgr_LoadImage (name, width, height, SRC_INDEXED, frame, TEX_PAD | TEX_ALPHA | TEX_NOPICMIP);
 
 	return (void *)(frame + size);
 }

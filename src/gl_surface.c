@@ -18,10 +18,12 @@
 #include "glquake.h"
 #include "model.h"
 
-#define	BLOCK_WIDTH		128
-#define	BLOCK_HEIGHT	128
+#define	BLOCK_WIDTH     128
+#define	BLOCK_HEIGHT    128
 
-#define	MAX_LIGHTMAPS	64
+#define	MAX_LIGHTMAPS   64
+
+#define BACKFACE_EPSILON 0.01
 
 vec3_t modelorg;
 
@@ -103,7 +105,7 @@ void R_DrawWaterSurfaces(void)
 		if (!(s->flags & SURF_DRAWTURB))
 			continue;
 
-		GL_Bind(t->gl_texturenum);
+		GL_Bind(t->gltexture);
 
 		for (; s; s = s->texturechain)
 			EmitWaterPolys(s);
@@ -199,7 +201,7 @@ void R_RenderBrushPoly(msurface_t *fa)
 	}
 
 	t = R_TextureAnimation(0, fa->texinfo->texture);
-	GL_Bind(t->gl_texturenum);
+	GL_Bind(t->gltexture);
 
 	if (fa->flags & SURF_DRAWTURB)
 	{	// warp texture, no lightmaps
@@ -273,8 +275,6 @@ void R_DrawBrushModel(entity_t *ent)
 	mplane_t *pplane;
 	model_t *clmodel = ent->model;
 	bool rotated;
-
-	current_texture_num = -1;
 
 	if (ent->angles[0] || ent->angles[1] || ent->angles[2])
 	{
@@ -360,6 +360,9 @@ void R_DrawBrushModel(entity_t *ent)
  */
 
 int r_visframecount; // bumped when going to a new PVS
+
+//FIXME: move to header
+void R_StoreEfrags(efrag_t **ppefrag);
 
 static void R_RecursiveWorldNode(mnode_t *node)
 {
@@ -466,8 +469,6 @@ void R_DrawWorld(void)
 	ent.model = cl.worldmodel;
 
 	VectorCopy(r_refdef.vieworg, modelorg);
-
-	current_texture_num = -1;
 
 	memset(lightmap_polys, 0, sizeof(lightmap_polys));
 

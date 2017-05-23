@@ -19,8 +19,8 @@
 
 int skytexturenum;
 
-int solidskytexture;
-int alphaskytexture;
+gltexture_t *solidskytexture;
+gltexture_t *alphaskytexture;
 float speedscale;  // for top sky
 float speedscale2; // and bottom sky
 
@@ -312,6 +312,7 @@ void R_DrawSkyChain(msurface_t *fa)
  */
 void R_InitSky(texture_t *mt, byte *src)
 {
+	char texturename[64];
 	int i, j, p, scaledx;
 	byte fixedsky[256 * 128];
 	unsigned trans[128 * 128];
@@ -358,12 +359,8 @@ void R_InitSky(texture_t *mt, byte *src)
 	((byte *) &transpix)[2] = b / (128 * 128);
 	((byte *) &transpix)[3] = 0;
 
-	if (!solidskytexture)
-		solidskytexture = texture_extension_number++;
-	GL_Bind(solidskytexture);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 128, 128, 0, GL_RGBA, GL_UNSIGNED_BYTE, trans);
-	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	snprintf(texturename, sizeof(texturename), "%s_back", mt->name);
+	solidskytexture = TexMgr_LoadImage(texturename, 128, 128, SRC_INDEXED, (byte *)trans, TEX_NOFLAGS);
 
 	for (i = 0; i < 128; i++)
 		for (j = 0; j < 128; j++)
@@ -375,10 +372,6 @@ void R_InitSky(texture_t *mt, byte *src)
 				trans[(i * 128) + j] = d_8to24table[p];
 		}
 
-	if (!alphaskytexture)
-		alphaskytexture = texture_extension_number++;
-	GL_Bind(alphaskytexture);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 128, 128, 0, GL_RGBA, GL_UNSIGNED_BYTE, trans);
-	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	snprintf(texturename, sizeof(texturename), "%s_front", mt->name);
+	solidskytexture = TexMgr_LoadImage(texturename, 128, 128, SRC_INDEXED, (byte *)trans, TEX_NOFLAGS);
 }

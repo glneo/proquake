@@ -12,42 +12,44 @@
  * General Public License for more details.
  */
 
+#ifndef __BSPFILE_H
+#define __BSPFILE_H
+
 // upper design bounds
-#define	MAX_MAP_HULLS		4
+#define	MAX_MAP_HULLS           4
 
-#define	MAX_MAP_MODELS		256
-#define	MAX_MAP_BRUSHES		4096
-#define	MAX_MAP_ENTITIES	1024
-#define	MAX_MAP_ENTSTRING	65536
+#define	MAX_MAP_MODELS          256
+#define	MAX_MAP_BRUSHES         4096
+#define	MAX_MAP_ENTITIES        1024
+#define	MAX_MAP_ENTSTRING       65536
 
-#define	MAX_MAP_PLANES		32767
-#define	MAX_MAP_NODES		32767		// because negative shorts are contents
-#define	MAX_MAP_CLIPNODES	32767
-#define	MAX_MAP_LEAFS		8192
-#define	MAX_MAP_VERTS		65535
-#define	MAX_MAP_FACES		65535
-#define	MAX_MAP_MARKSURFACES	65535
-#define	MAX_MAP_TEXINFO		4096
-#define	MAX_MAP_EDGES		256000
-#define	MAX_MAP_SURFEDGES	512000
-#define	MAX_MAP_MIPTEX		0x200000
-#define	MAX_MAP_LIGHTING	0x100000
-#define	MAX_MAP_VISIBILITY	0x100000
+#define	MAX_MAP_PLANES          32767
+#define	MAX_MAP_NODES           32767 // because negative shorts are contents
+#define	MAX_MAP_CLIPNODES       32767
+#define	MAX_MAP_LEAFS           8192
+#define	MAX_MAP_VERTS           65535
+#define	MAX_MAP_FACES           65535
+#define	MAX_MAP_MARKSURFACES    65535
+#define	MAX_MAP_TEXINFO         4096
+#define	MAX_MAP_EDGES           256000
+#define	MAX_MAP_SURFEDGES       512000
+#define	MAX_MAP_MIPTEX          0x200000
+#define	MAX_MAP_LIGHTING        0x100000
+#define	MAX_MAP_VISIBILITY      0x100000
 
 // key / value pair sizes
-
-#define	MAX_KEY		32
-#define	MAX_VALUE	1024
+#define	MAX_KEY         32
+#define	MAX_VALUE       1024
 
 //=============================================================================
 
-#define BSPVERSION	29
+#define BSPVERSION      29
 
 typedef struct {
 	float mins[3], maxs[3];
 	float origin[3];
 	int headnode[MAX_MAP_HULLS];
-	int visleafs;		// not including the solid leaf 0
+	int visleafs; // not including the solid leaf 0
 	int firstface, numfaces;
 } dmodel_t;
 
@@ -175,15 +177,15 @@ typedef struct {
 #define	AMBIENT_SLIME	2
 #define	AMBIENT_LAVA	3
 
-#define	NUM_AMBIENTS			4		// automatic ambient sounds
+#define	NUM_AMBIENTS    4 // automatic ambient sounds
 
 // leaf 0 is the generic CONTENTS_SOLID leaf, used for all solid areas
 // all other leafs need visibility info
 typedef struct {
 	int contents;
-	int visofs;				// -1 = no visibility info
+	int visofs; // -1 = no visibility info
 
-	short mins[3];			// for frustum culling
+	short mins[3]; // for frustum culling
 	short maxs[3];
 
 	unsigned short firstmarksurface;
@@ -191,3 +193,5 @@ typedef struct {
 
 	byte ambient_level[NUM_AMBIENTS];
 } dleaf_t;
+
+#endif	/* __BSPFILE_H */

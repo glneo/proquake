@@ -74,7 +74,7 @@ extern void (*vid_menudrawfn)(void);
 extern void (*vid_menukeyfn)(int key);
 extern void (*vid_menucmdfn)(void); //johnfitz
 
-void VID_Init(unsigned char *palette);
+void VID_Init(void);
 void VID_Shutdown(void);
 
 #endif	/* __VID_H */

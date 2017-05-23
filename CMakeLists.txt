@@ -71,7 +71,7 @@ else()
 		src/gl_particle.c
 		src/gl_surface.c
 		src/gl_sprite.c
-		src/gl_texture.c
+		src/gl_texmgr.c
 		src/gl_vidsdl.c
 		src/gl_warp.c
 	)
@@ -116,6 +116,5 @@ endif()
 find_package(SDL2 REQUIRED)
 target_include_directories(proquake PUBLIC ${SDL2_INCLUDE_DIR})
 target_link_libraries(proquake m ${SDL2_LIBRARY})
-
-target_compile_options(proquake PRIVATE -g;-ffast-math;-Wall)
+target_compile_options(proquake PRIVATE -g;-ffast-math;-Wall;-Werror)
 install(TARGETS proquake RUNTIME DESTINATION bin)

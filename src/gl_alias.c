@@ -62,7 +62,7 @@ static void GL_DrawAliasFrame(entity_t *ent, alias_model_t *aliasmodel, int pose
 	glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
 }
 
-extern vec3_t lightspot;
+vec3_t lightspot;
 
 static void GL_DrawAliasShadow(entity_t *ent, alias_model_t *aliasmodel, int pose)
 {
@@ -129,7 +129,7 @@ void R_DrawAliasModel(entity_t *ent)
 
 	bool isPlayer = ent > cl_entities &&
 			ent <= (cl_entities + cl.maxclients);
-	int tx;
+	gltexture_t *tx;
 
 //	vec3_t mins, maxs;
 //

@@ -15,6 +15,7 @@
  */
 
 #include "quakedef.h"
+#include "glquake.h"
 
 char host_worldname[MAX_QPATH];
 
@@ -47,7 +48,6 @@ client_t *host_client;			// current client
 
 jmp_buf host_abortserver;
 
-byte *host_basepal;
 byte *host_colormap;
 
 cvar_t host_framerate = { "host_framerate", "0" };	// set for slow motion
@@ -999,9 +999,6 @@ void Host_Init(quakeparms_t *parms)
 
 	if (cls.state != ca_dedicated)
 	{
-		host_basepal = (byte *) COM_LoadHunkFile("gfx/palette.lmp");
-		if (!host_basepal)
-			Sys_Error("Couldn't load gfx/palette.lmp");
 		host_colormap = (byte *) COM_LoadHunkFile("gfx/colormap.lmp");
 		if (!host_colormap)
 			Sys_Error("Couldn't load gfx/colormap.lmp");
@@ -1009,11 +1006,12 @@ void Host_Init(quakeparms_t *parms)
 #ifndef _WIN32 // on non win32, mouse comes before video for security reasons
 		IN_Init();
 #endif
-		VID_Init(host_basepal);
+		VID_Init();
+
+		R_Init();
 
 		Draw_Init();
 		SCR_Init();
-		R_Init();
 
 		S_Init();
 

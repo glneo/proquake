@@ -15,10 +15,10 @@
 #include "quakedef.h"
 #include "glquake.h"
 
-#define	BLOCK_WIDTH		128
-#define	BLOCK_HEIGHT	128
+#define	BLOCK_WIDTH     128
+#define	BLOCK_HEIGHT    128
 
-#define	MAX_LIGHTMAPS	64
+#define	MAX_LIGHTMAPS   64
 
 typedef struct glRect_s
 {
@@ -27,7 +27,7 @@ typedef struct glRect_s
 
 int lightmap_bytes;		// 1, 2, or 4
 
-int lightmap_textures;
+gltexture_t *lightmap_textures[MAX_LIGHTMAPS];
 unsigned blocklights[18 * 18];
 int active_lightmaps;
 
@@ -90,17 +90,9 @@ void R_BlendLightmaps(void)
 
 	for (int i = 0; i < MAX_LIGHTMAPS; i++)
 	{
-		glpoly_t *p = lightmap_polys[i];
-		if (!p)
-			continue;
-
-		GL_Bind(lightmap_textures + i);
-
-		// BengtQuake uploads lightmap here
-
-		R_UploadLightmap(i); // BengtQuake way
-
-		for (; p; p = p->chain)
+		GL_Bind(lightmap_textures[i]);
+		R_UploadLightmap(i);
+		for (glpoly_t *p = lightmap_polys[i]; p; p = p->chain)
 		{
 			// JPG - added r_waterwarp
 			if ((p->flags & SURF_UNDERWATER) && r_waterwarp.value)
@@ -746,16 +738,16 @@ void GL_BuildLightmaps(void)
 {
 	int i, j;
 	model_t *m;
+	char name[16];
+	byte *data;
 
 	memset(allocated, 0, sizeof(allocated));
 
 	r_framecount = 1; // no dlightcache
 
-	if (!lightmap_textures)
-	{
-		lightmap_textures = texture_extension_number;
-		texture_extension_number += MAX_LIGHTMAPS;
-	}
+	/* null out array (the gltexture objects themselves were already freed by Mod_ClearAll) */
+	for (i = 0; i < MAX_LIGHTMAPS; i++)
+		lightmap_textures[i] = NULL;
 
 	lightmap_bytes = 1;
 
@@ -776,7 +768,9 @@ void GL_BuildLightmaps(void)
 		}
 	}
 
+	//
 	// upload all lightmaps that were filled
+	//
 	for (i = 0; i < MAX_LIGHTMAPS; i++)
 	{
 		if (!allocated[i][0])
@@ -786,12 +780,16 @@ void GL_BuildLightmaps(void)
 		lightmap_rectchange[i].t = BLOCK_HEIGHT;
 		lightmap_rectchange[i].w = 0;
 		lightmap_rectchange[i].h = 0;
-		GL_Bind(lightmap_textures + i);
-		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, BLOCK_WIDTH, BLOCK_HEIGHT, 0, GL_LUMINANCE, GL_UNSIGNED_BYTE,
-				lightmaps + i * BLOCK_WIDTH * BLOCK_HEIGHT * lightmap_bytes);
+
+		sprintf(name, "lightmap%03i",i);
+		data = lightmaps + i * BLOCK_WIDTH * BLOCK_HEIGHT;
+		lightmap_textures[i] = TexMgr_LoadImage (name, BLOCK_WIDTH, BLOCK_HEIGHT,
+			 SRC_LIGHTMAP, data, TEX_LINEAR | TEX_NOPICMIP);
 	}
+
+	//johnfitz -- warn about exceeding old limits
+	if (i >= 64)
+		Con_Warning("%i lightmaps exceeds standard limit of 64 (max = %d).\n", i, MAX_LIGHTMAPS);
 
 	R_Init_FlashBlend_Bubble();
 }

@@ -50,27 +50,28 @@ typedef struct mplane_s
 	byte pad[2];
 } mplane_t;
 
+typedef struct gltexture_s gltexture_t;
 typedef struct texture_s
 {
 	char name[16];
 	unsigned width, height;
-	int gl_texturenum;
+	gltexture_t *gltexture;
 	struct msurface_s *texturechain;        // for gl_texsort drawing
 	int anim_total;                         // total tenths in sequence ( 0 = no)
 	int anim_min, anim_max;                 // time for this frame min <=time< max
 	struct texture_s *anim_next;            // in the animation sequence
 	struct texture_s *alternate_anims;      // bmodels in frame 1 use these
 	unsigned offsets[MIPLEVELS];            // four mip maps stored
-	int fullbright;
+	gltexture_t *fullbright;
 } texture_t;
 
-#define	SURF_PLANEBACK          2
-#define	SURF_DRAWSKY            4
-#define SURF_DRAWSPRITE         8
-#define SURF_DRAWTURB           0x10
-#define SURF_DRAWTILED          0x20
-#define SURF_DRAWBACKGROUND     0x40
-#define SURF_UNDERWATER         0x80
+#define	SURF_PLANEBACK          BIT(2)
+#define	SURF_DRAWSKY            BIT(3)
+#define SURF_DRAWSPRITE         BIT(4)
+#define SURF_DRAWTURB           BIT(5)
+#define SURF_DRAWTILED          BIT(6)
+#define SURF_DRAWBACKGROUND     BIT(7)
+#define SURF_UNDERWATER         BIT(8)
 
 typedef struct {
 	unsigned short v[2];
@@ -239,7 +240,8 @@ typedef struct
 	int width;
 	int height;
 	float up, down, left, right;
-	int gl_texturenum;
+	struct gltexture_s *gltexture;
+	float smax, tmax;
 	float interval;
 } mspriteframe_t;
 
@@ -323,7 +325,7 @@ typedef struct
 	int numskins;
 	int skinwidth;
 	int skinheight;
-	int (*gl_texturenum)[4];
+	gltexture_t * (*gl_texturenum)[4];
 
 	int numverts;
 	mstvert_t *stverts[2];

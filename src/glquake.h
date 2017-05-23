@@ -24,68 +24,31 @@
 #endif
 #include <math.h>
 
-#define TEX_NOFLAGS     0 // Baker: I use this to mark the absense of any flags
-#define TEX_MIPMAP      2
-#define TEX_ALPHA       4
-#define	TEX_WORLD       128//R00k
+#include "gl_texmgr.h"
 
-#define	MAX_GLTEXTURES 1024
-
-typedef struct
-{
-	unsigned int texnum;
-	char identifier[MAX_QPATH];
-	int width, height;
-//	bool mipmap;
-	unsigned short crc;  // Baker 3.80x - part of GL_LoadTexture: cache mismatch fix
-	int texmode;	// Baker: 4.26 to all clearing of world textures
-} gltexture_t;
-
-// Engine internal vars
-extern bool gl_mtexable;
-
-extern gltexture_t gltextures[MAX_GLTEXTURES];
-extern int numgltextures;
-
-extern int texture_extension_number;
-
-extern texture_t *r_notexture_mip;
 extern int d_lightstylevalue[256]; // 8.8 fraction of base light value
 
-extern bool envmap;
-
-extern int current_texture_num;
-extern int particletexture;
-extern int playertextures;
-
 extern int skytexturenum; // index in cl.loadmodel, not gl texture object
-
 extern int mirrortexturenum; // quake texturenum, not gltexturenum
+
 extern bool mirror;
 extern mplane_t *mirror_plane;
 
-extern int texture_mode;
-extern int gl_lightmap_format;
-
-typedef struct
-{
-	float x, y, z;
-	float s, t;
-	float r, g, b;
-} glvert_t;
-
-extern glvert_t glv;
+extern float gl_max_anisotropy;
+extern bool gl_texture_NPOT;
 
 extern int glx, gly, glwidth, glheight;
 
-#define ALIAS_BASE_SIZE_RATIO		(1.0 / 11.0) //normalizing factor so player model works out to about 1 pixel per triangle
-#define	MAX_LBM_HEIGHT		480
-
-#define BACKFACE_EPSILON	0.01
-
 typedef enum
 {
-	pt_static, pt_grav, pt_slowgrav, pt_fire, pt_explode, pt_explode2, pt_blob, pt_blob2
+	pt_static,
+	pt_grav,
+	pt_slowgrav,
+	pt_fire,
+	pt_explode,
+	pt_explode2,
+	pt_blob,
+	pt_blob2,
 } ptype_t;
 
 // !!! if this is changed, it must be changed in d_ifacea.h too !!!
@@ -116,9 +79,6 @@ extern vec3_t r_origin;
 // screen size info
 extern refdef_t r_refdef;
 extern mleaf_t *r_viewleaf, *r_oldviewleaf;
-
-extern int gl_solid_format;
-extern int gl_alpha_format;
 
 // rendering cvar stuffs
 extern cvar_t r_norefresh;
@@ -164,7 +124,7 @@ extern qpic_t *draw_disc;
 void R_DrawAliasModel(entity_t *ent);
 
 // gl_draw.c
-qpic_t *Draw_PicFromWad(char *name);
+qpic_t *Draw_PicFromWad(const char *name);
 qpic_t *Draw_CachePic(char *path);
 void Draw_Character(int x, int y, int num);
 void Draw_String(int x, int y, char *str);
@@ -212,6 +172,7 @@ void R_Init(void);
 
 // gl_particle.c
 void R_DrawParticles(void);
+void R_InitParticleTexture(void);
 
 // gl_sprite.c
 void R_DrawSpriteModel(entity_t *ent);
@@ -226,20 +187,9 @@ void R_DrawBrushModel(entity_t *ent);
 void R_DrawWorld(void);
 void R_MarkLeaves(void);
 
-// gl_texture.c
-void GL_Upload8(byte *data, int width, int height, int mode);
-int GL_FindTexture(char *identifier);
-void GL_FreeTextures(void);
-int GL_LoadTexture(char *identifier, int width, int height, byte *data, int mode);
-void GL_Bind(int texnum);
-void GL_EnableMultitexture(void);
-void GL_DisableMultitexture(void);
-void R_InitTextures(void);
-void R_InitParticleTexture(void);
-
 // gl_vidsdl.c/*
 void VID_Swap(void);
-void VID_Init(unsigned char *palette);
+void VID_Init(void);
 void VID_Shutdown(void);
 
 // gl_warp.c

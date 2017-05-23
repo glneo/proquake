@@ -215,7 +215,7 @@ static void *Mod_LoadAllSkins(alias_model_t *aliasmodel, daliasskintype_t *pskin
 			aliasmodel->gl_texturenum[i][0] =
 			aliasmodel->gl_texturenum[i][1] =
 			aliasmodel->gl_texturenum[i][2] =
-			aliasmodel->gl_texturenum[i][3] = GL_LoadTexture(name, aliasmodel->skinwidth, aliasmodel->skinheight, skin, TEX_MIPMAP);
+			aliasmodel->gl_texturenum[i][3] = TexMgr_LoadImage(name, aliasmodel->skinwidth, aliasmodel->skinheight, SRC_INDEXED, skin, TEX_MIPMAP);
 			pskintype = (daliasskintype_t *)(skin + skinsize);
 		}
 		else
@@ -231,7 +231,7 @@ static void *Mod_LoadAllSkins(alias_model_t *aliasmodel, daliasskintype_t *pskin
 			{
 				Mod_FloodFillSkin(skin, aliasmodel->skinwidth, aliasmodel->skinheight);
 				snprintf(name, sizeof(name), "%s_%i_%i", mod_name, i, j);
-				aliasmodel->gl_texturenum[i][j & 3] = GL_LoadTexture(name, aliasmodel->skinwidth, aliasmodel->skinheight, skin, TEX_MIPMAP);
+				aliasmodel->gl_texturenum[i][j & 3] = TexMgr_LoadImage(name, aliasmodel->skinwidth, aliasmodel->skinheight, SRC_INDEXED, skin, TEX_MIPMAP);
 				skin += skinsize;
 			}
 			pskintype = (daliasskintype_t *)skin;

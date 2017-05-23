@@ -19,6 +19,8 @@ extern cvar_t r_particles_alpha;
 
 extern particle_t *active_particles;
 
+gltexture_t *particletexture; // little dot for particles
+
 void R_DrawParticles(void)
 {
 	particle_t *p;
@@ -69,4 +71,34 @@ void R_DrawParticles(void)
 	glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
 	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
 	glDisable(GL_BLEND);
+}
+
+static byte dottexture[8][8] =
+{
+	{0,1,1,0,0,0,0,0},
+	{1,1,1,1,0,0,0,0},
+	{1,1,1,1,0,0,0,0},
+	{0,1,1,0,0,0,0,0},
+	{0,0,0,0,0,0,0,0},
+	{0,0,0,0,0,0,0,0},
+	{0,0,0,0,0,0,0,0},
+	{0,0,0,0,0,0,0,0},
+};
+
+void R_InitParticleTexture(void)
+{
+	int x, y;
+	byte data[8][8][4];
+
+	for (x = 0; x < 8; x++)
+	{
+		for (y = 0; y < 8; y++)
+		{
+			data[y][x][0] = 255;
+			data[y][x][1] = 255;
+			data[y][x][2] = 255;
+			data[y][x][3] = dottexture[x][y] * 255;
+		}
+	}
+	particletexture = TexMgr_LoadImage("particle", 8, 8, SRC_RGBA, (byte *)data, TEX_PERSIST | TEX_ALPHA | TEX_LINEAR);
 }

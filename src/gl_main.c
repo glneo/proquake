@@ -25,8 +25,8 @@ static char *gl_extensions_nice;
 
 bool gl_swap_control = false;
 static bool gl_anisotropy_able = false;
-static float gl_max_anisotropy;
-static bool gl_texture_NPOT = false; //ericw
+float gl_max_anisotropy;
+bool gl_texture_NPOT = false;
 bool gl_vbo_able = false;
 int gl_stencilbits;
 
@@ -35,10 +35,6 @@ int r_framecount; // used for dlight push checking
 static mplane_t frustum[4];
 
 int c_brush_polys, c_alias_polys;
-
-int particletexture; // little dot for particles
-int playertextures; // up to 16 color translated skins
-bool envmap; // true during envmap command capture
 
 int mirrortexturenum; // quake texturenum, not gltexturenum
 bool mirror;
@@ -229,7 +225,6 @@ static void R_DrawViewModel(void)
 {
 	if (!r_drawviewmodel.value || /* view model disabled */
 	    chase_active.value || /* in chase view */
-	    envmap || /* creating an environment map */
 	    !r_drawentities.value || /* entities disabled */
 	    ((cl.items & IT_INVISIBILITY) && (r_ringalpha.value == 1.0f)) || /* invisible */
 	    (cl.stats[STAT_HEALTH] <= 0)) /* dead */
@@ -240,11 +235,17 @@ static void R_DrawViewModel(void)
 		return;
 
 	// hack the depth range to prevent view model from poking into walls
+#ifdef OPENGLES
 	glDepthRangef(gldepthmin, gldepthmin + 0.3 * (gldepthmax - gldepthmin));
-
+#else
+	glDepthRange(gldepthmin, gldepthmin + 0.3 * (gldepthmax - gldepthmin));
+#endif
 	R_DrawAliasModel(entity);
-
+#ifdef OPENGLES
 	glDepthRangef(gldepthmin, gldepthmax);
+#else
+	glDepthRange(gldepthmin, gldepthmax);
+#endif
 }
 
 static void R_PolyBlend(void)
@@ -417,12 +418,6 @@ static void R_SetupGL(void)
 
 	w = x2 - x;
 	h = y - y2;
-
-	if (envmap)
-	{
-		x = y2 = 0;
-		w = h = 256;
-	}
 
 	glViewport(glx + x, gly + y2, w, h);
 	screenaspect = (float) r_refdef.vrect.width / r_refdef.vrect.height;
@@ -667,7 +662,11 @@ static void R_Mirror(void)
 
 	gldepthmin = 0.5;
 	gldepthmax = 1;
+#ifdef OPENGLES
 	glDepthRangef(gldepthmin, gldepthmax);
+#else
+	glDepthRange(gldepthmin, gldepthmax);
+#endif
 	glDepthFunc(GL_LEQUAL);
 
 	R_RenderScene();
@@ -675,7 +674,11 @@ static void R_Mirror(void)
 
 	gldepthmin = 0;
 	gldepthmax = 0.5;
+#ifdef OPENGLES
 	glDepthRangef(gldepthmin, gldepthmax);
+#else
+	glDepthRange(gldepthmin, gldepthmax);
+#endif
 	glDepthFunc(GL_LEQUAL);
 
 	// blend on top
@@ -726,7 +729,11 @@ static void R_Clear(void)
 	else
 		gldepthmax = 1;
 
+#ifdef OPENGLES
 	glDepthRangef(gldepthmin, gldepthmax);
+#else
+	glDepthRange(gldepthmin, gldepthmax);
+#endif
 }
 
 /* r_refdef must be set before the first call */
@@ -839,12 +846,9 @@ void R_Init(void)
 	Cvar_RegisterVariable(&gl_nearwater_fix);
 	Cvar_RegisterVariable(&gl_fadescreen_alpha);
 
-	R_InitTextures();
+	TexMgr_Init();
 	R_InitParticles();
 	R_InitParticleTexture();
-
-	playertextures = texture_extension_number;
-	texture_extension_number += MAX_SCOREBOARD;
 }
 
 //==============================================================================
@@ -932,6 +936,8 @@ static bool GL_ParseExtensionList(const char *list, const char *name)
 
 extern cvar_t vid_vsync;
 
+// FIXME: Move to vidsdl
+int SDL_GL_GetSwapInterval(void);
 static void GL_CheckExtensions(void)
 {
 	int swap_control;
@@ -1036,7 +1042,11 @@ static void GL_SetupState(void)
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-	glDepthRangef(0.0f, 1.0f);
+#ifdef OPENGLES
+	glDepthRangef(gldepthmin, gldepthmax);
+#else
+	glDepthRange(gldepthmin, gldepthmax);
+#endif
 	glDepthFunc(GL_LEQUAL);
 }
 

@@ -33,10 +33,21 @@ int mod_numknown;
 
 cvar_t gl_subdivide_size = { "gl_subdivide_size", "128", true };
 
+texture_t *r_notexture_mip;
+texture_t *r_notexture_mip2;
+
 void Mod_Init(void)
 {
-	Cvar_RegisterVariable(&gl_subdivide_size);
-	memset(mod_novis, 0xff, sizeof(mod_novis));
+	Cvar_RegisterVariable (&gl_subdivide_size);
+	memset (mod_novis, 0xff, sizeof(mod_novis));
+
+	r_notexture_mip = (texture_t *) Hunk_AllocName (sizeof(texture_t), "r_notexture_mip");
+	strcpy (r_notexture_mip->name, "notexture");
+	r_notexture_mip->height = r_notexture_mip->width = 32;
+
+	r_notexture_mip2 = (texture_t *) Hunk_AllocName (sizeof(texture_t), "r_notexture_mip2");
+	strcpy (r_notexture_mip2->name, "notexture2");
+	r_notexture_mip2->height = r_notexture_mip2->width = 32;
 }
 
 mleaf_t *Mod_PointInLeaf(vec3_t p, brush_model_t *model)
@@ -112,24 +123,12 @@ void Mod_ClearAll(void)
 {
 	int i;
 	model_t *mod;
-	static bool NoFree, Done;
-	extern void GL_FreeTextures(void);
 
 	for (i = 0, mod = mod_known; i < mod_numknown; i++, mod++)
 	{
 		if (mod->type != mod_alias)
 			mod->needload = true;
 	}
-
-	if (!Done)
-	{
-		// Some 3dfx miniGLs don't support glDeleteTextures (i.e. do nothing)
-		NoFree = COM_CheckParm("-nofreetex");
-		Done = true;
-	}
-
-	if (!NoFree)
-		GL_FreeTextures();
 }
 
 model_t *Mod_FindName(char *name)

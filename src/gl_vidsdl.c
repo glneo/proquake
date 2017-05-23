@@ -202,7 +202,7 @@ static bool VID_SetMode(int width, int height, int bpp, bool fullscreen)
 #else
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 1);
-	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 1);
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
 #endif
 
 //	SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_DEBUG_FLAG);
@@ -536,34 +536,9 @@ static void VID_InitModelist(void)
 	}
 }
 
-static void VID_SetPaletteOld(unsigned char *palette)
-{
-	byte *pal = palette;
-	unsigned r, g, b, v;
-	int i;
-	unsigned *table = d_8to24table;
-
-// 8 8 8 encoding
-
-	pal = palette;
-	table = d_8to24table;
-	for (i = 0; i < 256; i++, pal += 3)
-	{
-		r = pal[0];
-		g = pal[1];
-		b = pal[2];
-
-		v = (255 << 24) + (r << 0) + (g << 8) + (b << 16);
-		*table++ = v;
-	}
-
-	d_8to24table[255] = 0;  // 255 is transparent "MH: says this fixes pink edges"
-	//d_8to24table[255] &= 0xffffff;        // 255 is transparent
-}
-
 #define num_readvars	( sizeof(read_vars)/sizeof(read_vars[0]) )
 
-void VID_Init(unsigned char *palette)
+void VID_Init(void)
 {
 	int p, width, height, bpp, display_width, display_height, display_bpp;
 	bool fullscreen;
@@ -693,7 +668,7 @@ void VID_Init(unsigned char *palette)
 	//vid_menukeyfn = VID_MenuKey;
 
 	//Check_GammaOld(palette);
-	VID_SetPaletteOld(palette);
+	TexMgr_LoadPalette();
 
 //	VID_Gamma_Init(); //johnfitz
 //	VID_Menu_Init(); //johnfitz

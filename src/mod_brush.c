@@ -112,12 +112,12 @@ static void Mod_LoadTextures(brush_model_t *brushmodel, lump_t *l, byte *mod_bas
 
 		// If world model and NOT sky texture
 		int texture_flag = 0;
-		if (brushmodel->isworldmodel && !ISSKYTEX(tx->name))	//R00k
+		if (brushmodel->isworldmodel && !ISSKYTEX(tx->name))
 			texture_flag |= TEX_WORLD;
 
-		tx->gl_texturenum = GL_LoadTexture(mt->name, tx->width, tx->height, (byte *) (tx + 1), texture_flag | TEX_MIPMAP);
+		tx->gltexture = TexMgr_LoadImage(mt->name, tx->width, tx->height, SRC_INDEXED, (byte *) (tx + 1), texture_flag | TEX_MIPMAP);
 
-		tx->fullbright = -1; // because 0 is a potentially valid texture number
+//		tx->fullbright = -1; // because 0 is a potentially valid texture number
 		// check for fullbright pixels in the texture - only if it ain't liquid, etc also
 
 		if (!ISTURBTEX(tx->name) && FindFullbrightTexture((byte *) (tx + 1), pixels))
@@ -131,7 +131,7 @@ static void Mod_LoadTextures(brush_model_t *brushmodel, lump_t *l, byte *mod_bas
 			snprintf(fbr_mask_name, sizeof(fbr_mask_name), "fullbright_mask_%s", mt->name);
 
 			// load the fullbright pixels version of the texture
-			tx->fullbright = GL_LoadTexture(fbr_mask_name, tx->width, tx->height, (byte *) (tx + 1), texture_flag | TEX_MIPMAP | TEX_ALPHA);
+			tx->fullbright = TexMgr_LoadImage(fbr_mask_name, tx->width, tx->height, SRC_INDEXED, (byte *) (tx + 1), texture_flag | TEX_MIPMAP | TEX_ALPHA);
 		}
 
 		brushmodel->textures[i] = tx;

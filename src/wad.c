@@ -42,7 +42,7 @@ void SwapPic(qpic_t *pic)
  Can safely be performed in place.
  ==================
  */
-static void W_CleanupName(char *in, char *out)
+static void W_CleanupName(const char *in, char *out)
 {
 	int i, c;
 
@@ -93,7 +93,7 @@ void W_LoadWadFile(char *filename)
 	}
 }
 
-static lumpinfo_t *W_GetLumpinfo(char *name)
+static lumpinfo_t *W_GetLumpinfo(const char *name)
 {
 	int i;
 	lumpinfo_t *lump_p;
@@ -111,7 +111,7 @@ static lumpinfo_t *W_GetLumpinfo(char *name)
 	return NULL;
 }
 
-void *W_GetLumpName(char *name)
+void *W_GetLumpName(const char *name)
 {
 	lumpinfo_t *lump;
 

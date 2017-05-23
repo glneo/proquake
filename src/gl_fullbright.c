@@ -51,7 +51,7 @@ void DrawFullBrightTextures(entity_t *ent)
         // find the correct texture
         t = R_TextureAnimation(ent->frame, fa->texinfo->texture);
 
-        if (t->fullbright != -1 && fa->draw_this_frame)
+        if (t->fullbright != NULL && fa->draw_this_frame)
         {
             glEnable (GL_BLEND);
             GL_Bind (t->fullbright);

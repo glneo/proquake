@@ -438,6 +438,7 @@ void CL_ClearInterpolation(entity_t *ent)
  ==================
  */
 int bitcounts[16];
+void R_TranslatePlayerSkin(int playernum);
 
 static void CL_ParseUpdate(int bits)
 {

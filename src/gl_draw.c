@@ -27,27 +27,27 @@ cvar_t gl_smoothfont = { "gl_smoothfont", "1", true };
 byte *draw_chars;				// 8*8 graphic characters
 qpic_t *draw_backtile;
 
-int translate_texture;
-int char_texture;
+gltexture_t *translate_texture;
+gltexture_t *char_texture;
 
 qpic_t crosshairpic;
 
 typedef struct
 {
-	int texnum;
+	gltexture_t *gltexture;
 	float sl, tl, sh, th;
 } glpic_t;
 
 byte conback_buffer[sizeof(qpic_t) + sizeof(glpic_t)];
 qpic_t *conback = (qpic_t *) &conback_buffer;
 
-static int GL_LoadPicTexture(qpic_t *pic)
+static gltexture_t *GL_LoadPicTexture(qpic_t *pic)
 {
-	return GL_LoadTexture("", pic->width, pic->height, pic->data, TEX_ALPHA);
+	return TexMgr_LoadImage("", pic->width, pic->height, SRC_INDEXED, pic->data, TEX_ALPHA);
 }
 
 #define NUMCROSSHAIRS 5
-int crosshairtextures[NUMCROSSHAIRS];
+gltexture_t *crosshairtextures[NUMCROSSHAIRS];
 
 static byte crosshairdata[NUMCROSSHAIRS][64] = {
 	{
@@ -124,6 +124,7 @@ static byte crosshairdata[NUMCROSSHAIRS][64] = {
 
 byte scrap_texels[MAX_SCRAPS][BLOCK_WIDTH * BLOCK_HEIGHT * 4];
 bool scrap_dirty;
+gltexture_t	*scrap_textures[MAX_SCRAPS]; //johnfitz
 int scrap_texnum;
 
 // returns a texture number and the position inside it
@@ -168,19 +169,18 @@ static int Scrap_AllocBlock(int w, int h, int *x, int *y)
 	return (0);
 }
 
-int scrap_uploads;
-
-static void Scrap_Upload(void)
+static void Scrap_Upload (void)
 {
-	int texnum;
+	int i;
 
-	scrap_uploads++;
-
-	for (texnum = 0; texnum < MAX_SCRAPS; texnum++)
+	for (i = 0; i < MAX_SCRAPS; i++)
 	{
-		GL_Bind(scrap_texnum + texnum);
-		GL_Upload8(scrap_texels[texnum], BLOCK_WIDTH, BLOCK_HEIGHT, TEX_ALPHA);
+		char name[8];
+		sprintf (name, "scrap%i", i);
+		scrap_textures[i] = TexMgr_LoadImage(name, BLOCK_WIDTH, BLOCK_HEIGHT, SRC_INDEXED, scrap_texels[i],
+		                                     TEX_ALPHA | TEX_OVERWRITE | TEX_NOPICMIP);
 	}
+
 	scrap_dirty = false;
 }
 
@@ -198,16 +198,15 @@ typedef struct cachepic_s
 
 byte menuplyr_pixels[4096];
 
-qpic_t *Draw_PicFromWad(char *name)
+qpic_t *Draw_PicFromWad(const char *name)
 {
 	qpic_t *p;
-	glpic_t *gl;
-	static int pic_texels;
-	static int pic_count;
+	glpic_t gl;
+//	src_offset_t offset;
 
-
-	p = W_GetLumpName(name);
-	gl = (glpic_t *) p->data;
+	p = (qpic_t *) W_GetLumpName(name);
+//	if (!p)
+//		return pic_nul;
 
 	// load little ones into the scrap
 	if (p->width < 64 && p->height < 64)
@@ -220,26 +219,29 @@ qpic_t *Draw_PicFromWad(char *name)
 		scrap_dirty = true;
 		k = 0;
 		for (i = 0; i < p->height; i++)
+		{
 			for (j = 0; j < p->width; j++, k++)
 				scrap_texels[texnum][(y + i) * BLOCK_WIDTH + x + j] = p->data[k];
-		texnum += scrap_texnum;
-		gl->texnum = texnum;
-		gl->sl = (x + 0.01) / (float) BLOCK_WIDTH;
-		gl->sh = (x + p->width - 0.01) / (float) BLOCK_WIDTH;
-		gl->tl = (y + 0.01) / (float) BLOCK_WIDTH;
-		gl->th = (y + p->height - 0.01) / (float) BLOCK_WIDTH;
-
-		pic_count++;
-		pic_texels += p->width * p->height;
+		}
+		gl.gltexture = scrap_textures[texnum];
+		gl.sl = x / (float) BLOCK_WIDTH;
+		gl.sh = (x + p->width) / (float) BLOCK_WIDTH;
+		gl.tl = y / (float) BLOCK_WIDTH;
+		gl.th = (y + p->height) / (float) BLOCK_WIDTH;
 	}
 	else
 	{
-		gl->texnum = GL_LoadPicTexture(p);
-		gl->sl = 0;
-		gl->sh = 1;
-		gl->tl = 0;
-		gl->th = 1;
+		char texturename[64];
+		snprintf(texturename, sizeof(texturename), "%s", name);
+
+		gl.gltexture = TexMgr_LoadImage(texturename, p->width, p->height, SRC_INDEXED, p->data, TEX_ALPHA | TEX_PAD | TEX_NOPICMIP);
+		gl.sl = 0;
+		gl.sh = (float) p->width / (float) TexMgr_PadConditional(p->width);
+		gl.tl = 0;
+		gl.th = (float) p->height / (float) TexMgr_PadConditional(p->height);
 	}
+
+	memcpy(p->data, &gl, sizeof(glpic_t));
 
 	return p;
 }
@@ -278,7 +280,7 @@ qpic_t *Draw_CachePic(char *path)
 	pic->pic.height = dat->height;
 
 	gl = (glpic_t *) pic->pic.data;
-	gl->texnum = GL_LoadPicTexture(dat);
+	gl->gltexture = GL_LoadPicTexture(dat);
 	gl->sl = 0;
 	gl->sh = 1;
 	gl->tl = 0;
@@ -492,7 +494,7 @@ void Draw_AlphaPic(int x, int y, qpic_t *pic, float alpha)
 //	glCullFace(GL_FRONT);
 
 	gl = (glpic_t *) pic->data;
-	GL_Bind(gl->texnum);
+	GL_Bind(gl->gltexture);
 
 	glColor4f(1.0f, 1.0f, 1.0f, alpha);
 
@@ -528,7 +530,7 @@ void Draw_Pic(int x, int y, qpic_t *pic)
 		Scrap_Upload();
 
 	gl = (glpic_t *) pic->data;
-	GL_Bind(gl->texnum);
+	GL_Bind(gl->gltexture);
 
 	GLfloat texts[] = {
 		gl->sl, gl->tl,
@@ -576,7 +578,7 @@ void Draw_SubPic(int x, int y, qpic_t *pic, int srcx, int srcy, int width, int h
 	newtl = gl->tl + (srcy * oldglheight) / pic->height;
 	newth = newtl + (height * oldglheight) / pic->height;
 
-	GL_Bind(gl->texnum);
+	GL_Bind(gl->gltexture);
 
 	GLfloat texts[] = {
 		newsl, newtl,
@@ -611,7 +613,7 @@ void Draw_TransPicTranslate(int x, int y, qpic_t *pic, byte *translation)
 	byte *src;
 	int p;
 
-	GL_Bind(translate_texture);
+//	GL_Bind(translate_texture);
 
 	dest = trans;
 	for (v = 0; v < 64; v++, dest += 64)
@@ -671,7 +673,7 @@ void Draw_ConsoleBackground(int lines)
  */
 void Draw_TileClear(int x, int y, int w, int h)
 {
-	GL_Bind(*(int *) draw_backtile->data);
+//	GL_Bind(*(int *) draw_backtile->data);
 
 	GLfloat texts[] = {
 		x / 64.0, y / 64.0,
@@ -712,7 +714,7 @@ void Draw_AlphaFill(int x, int y, int w, int h, int c, float alpha)
 		glEnable(GL_BLEND);
 		glDisable(GL_ALPHA_TEST);
 	}
-	glColor4f(host_basepal[c * 3] / 255.0, host_basepal[c * 3 + 1] / 255.0, host_basepal[c * 3 + 2] / 255.0, alpha);
+	glColor4f(d_8to24table[c * 3] / 255.0, d_8to24table[c * 3 + 1] / 255.0, d_8to24table[c * 3 + 2] / 255.0, alpha);
 
 	GLfloat verts[] = {
 		x,     y,
@@ -747,7 +749,7 @@ void Draw_AlphaFill(int x, int y, int w, int h, int c, float alpha)
 void Draw_Fill(int x, int y, int w, int h, int c)
 {
 	glDisable(GL_TEXTURE_2D);
-	glColor4f(host_basepal[c * 3] / 255.0, host_basepal[c * 3 + 1] / 255.0, host_basepal[c * 3 + 2] / 255.0, 1.0f);
+	glColor4f(d_8to24table[c * 3] / 255.0, d_8to24table[c * 3 + 1] / 255.0, d_8to24table[c * 3 + 2] / 255.0, 1.0f);
 
 	GLfloat verts[] = {
 		x,     y,
@@ -851,7 +853,7 @@ static void Load_CharSet(void)
 		memcpy(&dest[8 * 128 * 2 * i], &src[8 * 128 * i], 8 * 128); // Copy each line
 
 	// now turn them into textures
-	char_texture = GL_LoadTexture("charset", 128, 256, dest, TEX_ALPHA);
+	char_texture = TexMgr_LoadImage("charset", 128, 256, SRC_INDEXED, dest, TEX_ALPHA);
 
 	free(dest);
 
@@ -916,7 +918,7 @@ static void Draw_InitConback_Old(void)
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
 	gl = (glpic_t *) conback->data;
-	gl->texnum = GL_LoadTexture("conback", conback->width, conback->height, ncdata, TEX_NOFLAGS);
+	gl->gltexture = TexMgr_LoadImage("conback", conback->width, conback->height, SRC_INDEXED, ncdata, TEX_NOFLAGS);
 	gl->sl = 0;
 	gl->sh = 1;
 	gl->tl = 0;
@@ -927,6 +929,27 @@ static void Draw_InitConback_Old(void)
 	// free loaded console
 	Hunk_FreeToLowMark(start);
 }
+
+/* generate pics from internal data */
+//static qpic_t *Draw_MakePic(const char *name, int width, int height, byte *data)
+//{
+//	int flags = TEX_NEAREST | TEX_ALPHA | TEX_PERSIST | TEX_NOPICMIP | TEX_PAD;
+//	qpic_t *pic;
+//	glpic_t gl;
+//
+//	pic = (qpic_t *) Hunk_Alloc(sizeof(qpic_t) - 4 + sizeof(glpic_t));
+//	pic->width = width;
+//	pic->height = height;
+//
+//	gl.gltexture = TexMgr_LoadImage(name, width, height, SRC_INDEXED, data, flags);
+//	gl.sl = 0;
+//	gl.sh = (float) width / (float) TexMgr_PadConditional(width);
+//	gl.tl = 0;
+//	gl.th = (float) height / (float) TexMgr_PadConditional(height);
+//	memcpy(pic->data, &gl, sizeof(glpic_t));
+//
+//	return pic;
+//}
 
 void Draw_Init(void)
 {
@@ -953,18 +976,18 @@ void Draw_Init(void)
 	Draw_InitConback_Old();
 
 	// save a texture slot for translated picture
-	translate_texture = texture_extension_number++;
+//	translate_texture = texture_extension_number++;
 
 	// save slots for scraps
-	scrap_texnum = texture_extension_number;
-	texture_extension_number += MAX_SCRAPS;
+//	scrap_texnum = texture_extension_number;
+//	texture_extension_number += MAX_SCRAPS;
 
 	// Load the crosshair pics
 	for (i = 0; i < NUMCROSSHAIRS; i++)
 	{
-		crosshairtextures[i] = GL_LoadTexture("", 8, 8, crosshairdata[i], TEX_ALPHA);
-		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		char name[11];
+		sprintf(name, "crosshair%i", i);
+		crosshairtextures[i] = TexMgr_LoadImage(name, 8, 8, SRC_INDEXED, crosshairdata[i], TEX_ALPHA | TEX_OVERWRITE | TEX_NOPICMIP);
 	}
 
 	// load game pics
