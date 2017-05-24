@@ -212,8 +212,8 @@ void IN_Shutdown(void)
 	IN_ShutdownJoystick();
 }
 
-extern cvar_t cl_maxpitch; /* johnfitz -- variable pitch clamping */
-extern cvar_t cl_minpitch; /* johnfitz -- variable pitch clamping */
+extern cvar_t cl_maxpitch;
+extern cvar_t cl_minpitch;
 
 void IN_MouseMotion(int dx, int dy)
 {

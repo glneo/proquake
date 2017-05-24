@@ -607,6 +607,8 @@ bool SV_RecursiveHullCheck(hull_t *hull, int num, float p1f, float p2f, vec3_t p
 	return false;
 }
 
+
+
 //Handles selection or creation of a clipping hull, and offseting (and eventually rotation) of the end points
 trace_t SV_ClipMoveToEntity(edict_t *ent, vec3_t start, vec3_t mins, vec3_t maxs, vec3_t end)
 {

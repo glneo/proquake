@@ -1,4 +1,6 @@
 /*
+ * Entity fragment functions
+ *
  * Copyright (C) 1996-1997 Id Software, Inc.
  *
  * This program is free software; you can redistribute it and/or
@@ -16,28 +18,11 @@
 #include "glquake.h"
 
 mnode_t *r_pefragtopnode;
-
-/*
- ===============================================================================
-
- ENTITY FRAGMENT FUNCTIONS
-
- ===============================================================================
- */
-
 efrag_t **lastlink;
-
 vec3_t r_emins, r_emaxs;
-
 entity_t *r_addent;
 
-/*
- ================
- R_RemoveEfrags
-
- Call when removing an object from the world or moving it to another position
- ================
- */
+/* Call when removing an object from the world or moving it to another position */
 void R_RemoveEfrags(entity_t *ent)
 {
 	efrag_t *ef, *old, *walk, **prev;
@@ -162,44 +147,22 @@ void R_AddEfrags(entity_t *ent)
 	ent->topnode = r_pefragtopnode;
 }
 
-/*
- ================
- R_StoreEfrags
-
- // FIXME: a lot of this goes away with edge-based
- ================
- */
 void R_StoreEfrags(efrag_t **ppefrag)
 {
-	entity_t *pent;
-	model_t *clmodel;
 	efrag_t *pefrag;
 
 	while ((pefrag = *ppefrag) != NULL)
 	{
-		pent = pefrag->entity;
-		clmodel = pent->model;
+		entity_t *pent = pefrag->entity;
 
-		switch (clmodel->type)
+		if ((pent->visframe != r_framecount) && (cl_numvisedicts < MAX_VISEDICTS))
 		{
-		case mod_alias:
-		case mod_brush:
-		case mod_sprite:
-			pent = pefrag->entity;
+			cl_visedicts[cl_numvisedicts++] = pent;
 
-			if ((pent->visframe != r_framecount) && (cl_numvisedicts < MAX_VISEDICTS))
-			{
-				cl_visedicts[cl_numvisedicts++] = pent;
-
-				// mark that we've recorded this entity for this frame
-				pent->visframe = r_framecount;
-			}
-
-			ppefrag = &pefrag->leafnext;
-			break;
-
-		default:
-			Sys_Error("Bad entity type %d\n", clmodel->type);
+			// mark that we've recorded this entity for this frame
+			pent->visframe = r_framecount;
 		}
+
+		ppefrag = &pefrag->leafnext;
 	}
 }

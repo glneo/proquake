@@ -17,42 +17,41 @@
 #include "quakedef.h"
 
 /*
-===============================================================================
+ ===============================================================================
 
-KEY BUTTONS
+ KEY BUTTONS
 
-Continuous button event tracking is complicated by the fact that two different
-input sources (say, mouse button 1 and the control key) can both press the
-same button, but the button should only be released when both of the
-pressing key have been released.
+ Continuous button event tracking is complicated by the fact that two different
+ input sources (say, mouse button 1 and the control key) can both press the
+ same button, but the button should only be released when both of the
+ pressing key have been released.
 
-When a key event issues a button command (+forward, +attack, etc), it appends
-its key number as a parameter to the command so it can be matched up with
-the release.
+ When a key event issues a button command (+forward, +attack, etc), it appends
+ its key number as a parameter to the command so it can be matched up with
+ the release.
 
-state bit 0 is the current state of the key
-state bit 1 is edge triggered on the up to down transition
-state bit 2 is edge triggered on the down to up transition
+ state bit 0 is the current state of the key
+ state bit 1 is edge triggered on the up to down transition
+ state bit 2 is edge triggered on the down to up transition
 
-===============================================================================
-*/
+ ===============================================================================
+ */
 
+kbutton_t in_mlook, in_klook;
+kbutton_t in_left, in_right, in_forward, in_back;
+kbutton_t in_lookup, in_lookdown, in_moveleft, in_moveright;
+kbutton_t in_strafe, in_speed, in_use, in_jump, in_attack;
+kbutton_t in_up, in_down;
 
-kbutton_t	in_mlook, in_klook;
-kbutton_t	in_left, in_right, in_forward, in_back;
-kbutton_t	in_lookup, in_lookdown, in_moveleft, in_moveright;
-kbutton_t	in_strafe, in_speed, in_use, in_jump, in_attack;
-kbutton_t	in_up, in_down;
-
- int			in_impulse;
+int in_impulse;
 
 // JPG 1.05 - translate +jump to +moveup under water
-extern cvar_t	pq_moveup;
+extern cvar_t pq_moveup;
 
-void KeyDown (kbutton_t *b) 
+void KeyDown(kbutton_t *b)
 {
-	int		k;
-	char	*c;
+	int k;
+	char *c;
 
 	c = Cmd_Argv(1);
 	if (c[0])
@@ -73,7 +72,7 @@ void KeyDown (kbutton_t *b)
 		b->down[1] = k;
 	else
 	{
-		Con_Printf ("Three keys down for a button!\n");
+		Con_Printf("Three keys down for a button!\n");
 		return;
 	}
 
@@ -82,15 +81,15 @@ void KeyDown (kbutton_t *b)
 	b->state |= 1 + 2;	// down + impulse down
 }
 
- void KeyUp (kbutton_t *b) 
+void KeyUp(kbutton_t *b)
 {
-	int		k;
-	char	*c;
+	int k;
+	char *c;
 
 	c = Cmd_Argv(1);
-	if (c[0]) 
+	if (c[0])
 		k = atoi(c);
-	else 
+	else
 	{ // typed manually at the console, assume for unsticking, so clear all
 		b->down[0] = b->down[1] = 0;
 		b->state = 4;	// impulse up
@@ -169,22 +168,17 @@ void KeyDown (kbutton_t *b)
 
  void IN_Impulse (void) {in_impulse=atoi(Cmd_Argv(1));}
 
-static int weaponstat[7] = {STAT_SHELLS, STAT_SHELLS, STAT_NAILS, STAT_NAILS, STAT_ROCKETS, STAT_ROCKETS, STAT_CELLS};
+static int weaponstat[7] = { STAT_SHELLS, STAT_SHELLS, STAT_NAILS, STAT_NAILS, STAT_ROCKETS, STAT_ROCKETS, STAT_CELLS };
 
-/* JPG 3.30 - bestweapon from QuakePro+
-===============
-IN_BestWeapon
-===============
-*/
-static void IN_BestWeapon (void)
+/* bestweapon from QuakePro+ */
+static void IN_BestWeapon(void)
 {
 	int i, impulse;
 
-	for (i = 1 ; i < Cmd_Argc() ; i++)
+	for (i = 1; i < Cmd_Argc(); i++)
 	{
 		impulse = atoi(Cmd_Argv(i));
-		if (impulse > 0 && impulse < 9 && (impulse == 1 ||
-			( (cl.items & (IT_SHOTGUN << (impulse - 2))) && cl.stats[weaponstat[impulse - 2]] )))
+		if (impulse > 0 && impulse < 9 && (impulse == 1 || ((cl.items & (IT_SHOTGUN << (impulse - 2))) && cl.stats[weaponstat[impulse - 2]])))
 		{
 			in_impulse = impulse;
 			break;
@@ -192,21 +186,16 @@ static void IN_BestWeapon (void)
 	}
 }
 
-
 /*
-===============
-CL_KeyState
-
-Returns 0.25 if a key was pressed and released during the frame,
-0.5 if it was pressed and held
-0 if held then released, and
-1.0 if held for the entire time
-===============
-*/
- float CL_KeyState (kbutton_t *key) 
+ * Returns 0.25 if a key was pressed and released during the frame,
+ * 0.5 if it was pressed and held,
+ * 0 if held then released, and
+ * 1.0 if held for the entire time
+ */
+float CL_KeyState(kbutton_t *key)
 {
-	float		val;
-	bool	impulsedown, impulseup, down;
+	float val;
+	bool impulsedown, impulseup, down;
 
 	impulsedown = key->state & 2;
 	impulseup = key->state & 4;
@@ -229,35 +218,27 @@ Returns 0.25 if a key was pressed and released during the frame,
 
 //==========================================================================
 
-cvar_t	cl_upspeed = {"cl_upspeed","200", true};
-cvar_t	cl_forwardspeed = {"cl_forwardspeed","400", true}; // Baker 3.99k: Defaults to 400 (always run) instead of 200
-cvar_t	cl_backspeed = {"cl_backspeed","400", true}; // Baker 3.99k: Defaults to 400 (always run) instead of 200
-cvar_t	cl_sidespeed = {"cl_sidespeed","350", true};
+cvar_t cl_upspeed = { "cl_upspeed", "200", true };
+cvar_t cl_forwardspeed = { "cl_forwardspeed", "400", true }; // Defaults to 400 (always run) instead of 200
+cvar_t cl_backspeed = { "cl_backspeed", "400", true }; // Defaults to 400 (always run) instead of 200
+cvar_t cl_sidespeed = { "cl_sidespeed", "350", true };
 
-cvar_t	cl_movespeedkey = {"cl_movespeedkey","2.0"};
+cvar_t cl_movespeedkey = { "cl_movespeedkey", "2.0" };
 
-cvar_t	cl_yawspeed = {"cl_yawspeed","140"};
-cvar_t	cl_pitchspeed = {"cl_pitchspeed","150"};
+cvar_t cl_yawspeed = { "cl_yawspeed", "140" };
+cvar_t cl_pitchspeed = { "cl_pitchspeed", "150" };
 
-cvar_t	cl_anglespeedkey = {"cl_anglespeedkey","1.5"};
+cvar_t cl_anglespeedkey = { "cl_anglespeedkey", "1.5" };
 
-cvar_t	m_accel = {"m_accel", "0"};
+cvar_t m_accel = { "m_accel", "0" };
+cvar_t freelook = { "freelook", "1", true }; // Freelook cvar support
+cvar_t pq_lag = { "pq_lag", "0" }; // synthetic lag
 
-cvar_t	freelook = {"freelook", "1", true};    // Baker 3.60 - Freelook cvar support
-cvar_t	pq_lag = {"pq_lag", "0"};			// JPG - synthetic lag
-cvar_t	cl_fullpitch = {"cl_fullpitch", "0"};	// JPG 2.01 - get rid of the "unknown command" messages
-
-/*
-================
-CL_AdjustAngles
-
-Moves the local angle positions
-================
-*/
- void CL_AdjustAngles (void)
+/* Moves the local angle positions */
+void CL_AdjustAngles(void)
 {
-	float	speed;
-	float	up, down;
+	float speed;
+	float up, down;
 
 	if (in_speed.state & 1)
 		speed = host_frametime * cl_anglespeedkey.value;
@@ -266,41 +247,30 @@ Moves the local angle positions
 
 	if (!(in_strafe.state & 1))
 	{
-		cl.viewangles[YAW] -= speed*cl_yawspeed.value*CL_KeyState (&in_right);
-		cl.viewangles[YAW] += speed*cl_yawspeed.value*CL_KeyState (&in_left);
+		cl.viewangles[YAW] -= speed * cl_yawspeed.value * CL_KeyState(&in_right);
+		cl.viewangles[YAW] += speed * cl_yawspeed.value * CL_KeyState(&in_left);
 		cl.viewangles[YAW] = anglemod(cl.viewangles[YAW]);
 	}
 	if (in_klook.state & 1)
 	{
-		V_StopPitchDrift ();
-		cl.viewangles[PITCH] -= speed*cl_pitchspeed.value * CL_KeyState (&in_forward);
-		cl.viewangles[PITCH] += speed*cl_pitchspeed.value * CL_KeyState (&in_back);
+		V_StopPitchDrift();
+		cl.viewangles[PITCH] -= speed * cl_pitchspeed.value * CL_KeyState(&in_forward);
+		cl.viewangles[PITCH] += speed * cl_pitchspeed.value * CL_KeyState(&in_back);
 	}
 
-	up = CL_KeyState (&in_lookup);
+	up = CL_KeyState(&in_lookup);
 	down = CL_KeyState(&in_lookdown);
 
-	cl.viewangles[PITCH] -= speed*cl_pitchspeed.value * up;
-	cl.viewangles[PITCH] += speed*cl_pitchspeed.value * down;
+	cl.viewangles[PITCH] -= speed * cl_pitchspeed.value * up;
+	cl.viewangles[PITCH] += speed * cl_pitchspeed.value * down;
 
 	if (up || down)
-		V_StopPitchDrift ();
+		V_StopPitchDrift();
 
-	// JPG 1.05 - add pq_fullpitch
-	if (pq_fullpitch.value)
-	{
-		if (cl.viewangles[PITCH] > 90)
-			cl.viewangles[PITCH] = 90;
-		if (cl.viewangles[PITCH] < -90)
-			cl.viewangles[PITCH] = -90;
-	}
-	else
-	{
-		if (cl.viewangles[PITCH] > 80)
-			cl.viewangles[PITCH] = 80;
-		if (cl.viewangles[PITCH] < -70)
-			cl.viewangles[PITCH] = -70;
-	}
+	if (cl.viewangles[PITCH] > cl_maxpitch.value)
+		cl.viewangles[PITCH] = cl_maxpitch.value;
+	if (cl.viewangles[PITCH] < cl_minpitch.value)
+		cl.viewangles[PITCH] = cl_minpitch.value;
 
 	if (cl.viewangles[ROLL] > 50)
 		cl.viewangles[ROLL] = 50;
@@ -310,43 +280,43 @@ Moves the local angle positions
 }
 
 /*
-================
-CL_BaseMove
+ ================
+ CL_BaseMove
 
-Send the intended movement message to the server
-================
-*/
-void CL_BaseMove (usercmd_t *cmd) 
+ Send the intended movement message to the server
+ ================
+ */
+void CL_BaseMove(usercmd_t *cmd)
 {
 	if (cls.signon != SIGNONS)
 		return;
 
-	CL_AdjustAngles ();
+	CL_AdjustAngles();
 
-	memset (cmd, 0, sizeof(*cmd));
+	memset(cmd, 0, sizeof(*cmd));
 
-	if (in_strafe.state & 1) 
+	if (in_strafe.state & 1)
 	{
-		cmd->sidemove += cl_sidespeed.value * CL_KeyState (&in_right);
-		cmd->sidemove -= cl_sidespeed.value * CL_KeyState (&in_left);
+		cmd->sidemove += cl_sidespeed.value * CL_KeyState(&in_right);
+		cmd->sidemove -= cl_sidespeed.value * CL_KeyState(&in_left);
 	}
 
-	cmd->sidemove += cl_sidespeed.value * CL_KeyState (&in_moveright);
-	cmd->sidemove -= cl_sidespeed.value * CL_KeyState (&in_moveleft);
+	cmd->sidemove += cl_sidespeed.value * CL_KeyState(&in_moveright);
+	cmd->sidemove -= cl_sidespeed.value * CL_KeyState(&in_moveleft);
 
-	cmd->upmove += cl_upspeed.value * CL_KeyState (&in_up);
-	cmd->upmove -= cl_upspeed.value * CL_KeyState (&in_down);
+	cmd->upmove += cl_upspeed.value * CL_KeyState(&in_up);
+	cmd->upmove -= cl_upspeed.value * CL_KeyState(&in_down);
 
-	if (! (in_klook.state & 1) ) 
+	if (!(in_klook.state & 1))
 	{
-		cmd->forwardmove += cl_forwardspeed.value * CL_KeyState (&in_forward);
-		cmd->forwardmove -= cl_backspeed.value * CL_KeyState (&in_back);
+		cmd->forwardmove += cl_forwardspeed.value * CL_KeyState(&in_forward);
+		cmd->forwardmove -= cl_backspeed.value * CL_KeyState(&in_back);
 	}
 
 //
 // adjust for speed key
 //
-	if (in_speed.state & 1) 
+	if (in_speed.state & 1)
 	{
 		cmd->forwardmove *= cl_movespeedkey.value;
 		cmd->sidemove *= cl_movespeedkey.value;
@@ -361,11 +331,11 @@ unsigned int lag_head, lag_tail;
 double lag_sendtime[32];
 
 /* JPG - this function sends delayed move messages
-==============
-CL_SendLagMove
-==============
-*/
-void CL_SendLagMove (void)
+ ==============
+ CL_SendLagMove
+ ==============
+ */
+void CL_SendLagMove(void)
 {
 	if (cls.demoplayback || cls.state != ca_connected || cls.signon != SIGNONS)
 		return;
@@ -379,23 +349,23 @@ void CL_SendLagMove (void)
 			continue;	// return -> continue
 		}
 
-		if (NET_SendUnreliableMessage (cls.netcon, &lag_buff[(lag_tail-1)&31]) == -1)
+		if (NET_SendUnreliableMessage(cls.netcon, &lag_buff[(lag_tail - 1) & 31]) == -1)
 		{
-			Con_Printf ("CL_SendMove: lost server connection\n");
-			CL_Disconnect ();
+			Con_Printf("CL_SendMove: lost server connection\n");
+			CL_Disconnect();
 		}
 	}
 }
 
 /*
-==============
-CL_SendMove
-==============
-*/
-void CL_SendMove (usercmd_t *cmd)
+ ==============
+ CL_SendMove
+ ==============
+ */
+void CL_SendMove(usercmd_t *cmd)
 {
-	int		i;
-	int		bits;
+	int i;
+	int bits;
 	sizebuf_t *buf;	// JPG - turned into a pointer (made corresponding changes below)
 //	static byte	data[128]; // JPG - replaced with lag_data
 
@@ -408,31 +378,31 @@ void CL_SendMove (usercmd_t *cmd)
 	cl.cmd = *cmd;
 
 // send the movement message
-    MSG_WriteByte (buf, clc_move);
+	MSG_WriteByte(buf, clc_move);
 
-	MSG_WriteFloat (buf, cl.mtime[0]);	// so server can get ping times
+	MSG_WriteFloat(buf, cl.mtime[0]);	// so server can get ping times
 
 	if (!cls.demoplayback && (cls.netcon->mod == MOD_PROQUAKE)) // JPG - precise aim for ProQuake!
 	{
-		for (i=0 ; i<3 ; i++)
-			MSG_WritePreciseAngle (buf, cl.viewangles[i]);
+		for (i = 0; i < 3; i++)
+			MSG_WritePreciseAngle(buf, cl.viewangles[i]);
 	}
 	else
 	{
-		for (i=0 ; i<3 ; i++)
-			MSG_WriteAngle (buf, cl.viewangles[i]);
+		for (i = 0; i < 3; i++)
+			MSG_WriteAngle(buf, cl.viewangles[i]);
 	}
 
-    MSG_WriteShort (buf, cmd->forwardmove);
-    MSG_WriteShort (buf, cmd->sidemove);
-    MSG_WriteShort (buf, cmd->upmove);
+	MSG_WriteShort(buf, cmd->forwardmove);
+	MSG_WriteShort(buf, cmd->sidemove);
+	MSG_WriteShort(buf, cmd->upmove);
 
 //
 // send button bits
 //
 	bits = 0;
 
-	if ( in_attack.state & 3 )
+	if (in_attack.state & 3)
 		bits |= 1;
 	in_attack.state &= ~2;
 
@@ -440,9 +410,9 @@ void CL_SendMove (usercmd_t *cmd)
 		bits |= 2;
 	in_jump.state &= ~2;
 
-    MSG_WriteByte (buf, bits);
+	MSG_WriteByte(buf, bits);
 
-    MSG_WriteByte (buf, in_impulse);
+	MSG_WriteByte(buf, in_impulse);
 	in_impulse = 0;
 
 //
@@ -458,63 +428,62 @@ void CL_SendMove (usercmd_t *cmd)
 
 	// JPG - replaced this with a call to CL_SendLagMove
 	/*
-	if (++cl.movemessages <= 2)
-		return;
+	 if (++cl.movemessages <= 2)
+	 return;
 
-	if (NET_SendUnreliableMessage (cls.netcon, &buf) == -1)
-	{
-		Con_Printf ("CL_SendMove: lost server connection\n");
-		CL_Disconnect ();
-	}
-	*/
+	 if (NET_SendUnreliableMessage (cls.netcon, &buf) == -1)
+	 {
+	 Con_Printf ("CL_SendMove: lost server connection\n");
+	 CL_Disconnect ();
+	 }
+	 */
 	CL_SendLagMove();
 }
 
 /*
-============
-CL_InitInput
-============
-*/
-void CL_InitInput (void) 
+ ============
+ CL_InitInput
+ ============
+ */
+void CL_InitInput(void)
 {
-	Cmd_AddCommand ("+moveup",IN_UpDown);
-	Cmd_AddCommand ("-moveup",IN_UpUp);
-	Cmd_AddCommand ("+movedown",IN_DownDown);
-	Cmd_AddCommand ("-movedown",IN_DownUp);
-	Cmd_AddCommand ("+left",IN_LeftDown);
-	Cmd_AddCommand ("-left",IN_LeftUp);
-	Cmd_AddCommand ("+right",IN_RightDown);
-	Cmd_AddCommand ("-right",IN_RightUp);
-	Cmd_AddCommand ("+forward",IN_ForwardDown);
-	Cmd_AddCommand ("-forward",IN_ForwardUp);
-	Cmd_AddCommand ("+back",IN_BackDown);
-	Cmd_AddCommand ("-back",IN_BackUp);
-	Cmd_AddCommand ("+lookup", IN_LookupDown);
-	Cmd_AddCommand ("-lookup", IN_LookupUp);
-	Cmd_AddCommand ("+lookdown", IN_LookdownDown);
-	Cmd_AddCommand ("-lookdown", IN_LookdownUp);
-	Cmd_AddCommand ("+strafe", IN_StrafeDown);
-	Cmd_AddCommand ("-strafe", IN_StrafeUp);
-	Cmd_AddCommand ("+moveleft", IN_MoveleftDown);
-	Cmd_AddCommand ("-moveleft", IN_MoveleftUp);
-	Cmd_AddCommand ("+moveright", IN_MoverightDown);
-	Cmd_AddCommand ("-moveright", IN_MoverightUp);
-	Cmd_AddCommand ("+speed", IN_SpeedDown);
-	Cmd_AddCommand ("-speed", IN_SpeedUp);
-	Cmd_AddCommand ("+attack", IN_AttackDown);
-	Cmd_AddCommand ("-attack", IN_AttackUp);
-	Cmd_AddCommand ("+use", IN_UseDown);
-	Cmd_AddCommand ("-use", IN_UseUp);
-	Cmd_AddCommand ("+jump", IN_JumpDown);
-	Cmd_AddCommand ("-jump", IN_JumpUp);
-	Cmd_AddCommand ("impulse", IN_Impulse);
-	Cmd_AddCommand ("+klook", IN_KLookDown);
-	Cmd_AddCommand ("-klook", IN_KLookUp);
-	Cmd_AddCommand ("+mlook", IN_MLookDown);
-	Cmd_AddCommand ("-mlook", IN_MLookUp);
+	Cmd_AddCommand("+moveup", IN_UpDown);
+	Cmd_AddCommand("-moveup", IN_UpUp);
+	Cmd_AddCommand("+movedown", IN_DownDown);
+	Cmd_AddCommand("-movedown", IN_DownUp);
+	Cmd_AddCommand("+left", IN_LeftDown);
+	Cmd_AddCommand("-left", IN_LeftUp);
+	Cmd_AddCommand("+right", IN_RightDown);
+	Cmd_AddCommand("-right", IN_RightUp);
+	Cmd_AddCommand("+forward", IN_ForwardDown);
+	Cmd_AddCommand("-forward", IN_ForwardUp);
+	Cmd_AddCommand("+back", IN_BackDown);
+	Cmd_AddCommand("-back", IN_BackUp);
+	Cmd_AddCommand("+lookup", IN_LookupDown);
+	Cmd_AddCommand("-lookup", IN_LookupUp);
+	Cmd_AddCommand("+lookdown", IN_LookdownDown);
+	Cmd_AddCommand("-lookdown", IN_LookdownUp);
+	Cmd_AddCommand("+strafe", IN_StrafeDown);
+	Cmd_AddCommand("-strafe", IN_StrafeUp);
+	Cmd_AddCommand("+moveleft", IN_MoveleftDown);
+	Cmd_AddCommand("-moveleft", IN_MoveleftUp);
+	Cmd_AddCommand("+moveright", IN_MoverightDown);
+	Cmd_AddCommand("-moveright", IN_MoverightUp);
+	Cmd_AddCommand("+speed", IN_SpeedDown);
+	Cmd_AddCommand("-speed", IN_SpeedUp);
+	Cmd_AddCommand("+attack", IN_AttackDown);
+	Cmd_AddCommand("-attack", IN_AttackUp);
+	Cmd_AddCommand("+use", IN_UseDown);
+	Cmd_AddCommand("-use", IN_UseUp);
+	Cmd_AddCommand("+jump", IN_JumpDown);
+	Cmd_AddCommand("-jump", IN_JumpUp);
+	Cmd_AddCommand("impulse", IN_Impulse);
+	Cmd_AddCommand("+klook", IN_KLookDown);
+	Cmd_AddCommand("-klook", IN_KLookUp);
+	Cmd_AddCommand("+mlook", IN_MLookDown);
+	Cmd_AddCommand("-mlook", IN_MLookUp);
 
-	Cmd_AddCommand ("bestweapon", IN_BestWeapon);	// JPG 3.30 - bestweapon from QuakePro+
+	Cmd_AddCommand("bestweapon", IN_BestWeapon);	// JPG 3.30 - bestweapon from QuakePro+
 
-	Cvar_RegisterVariable (&pq_lag); // JPG - synthetic lag
-	Cvar_RegisterVariable (&cl_fullpitch); // JPG 2.01 - get rid of "unknown command"
+	Cvar_RegisterVariable(&pq_lag); // JPG - synthetic lag
 }

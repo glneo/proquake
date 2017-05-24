@@ -35,7 +35,6 @@
 	#define LINUX // Everything else gets to be Linux for now ;)
 #endif
 
-#define CHASE_CAM_FIX
 #define SUPPORTS_TRANSFORM_INTERPOLATION // We are switching to r_interpolate_transform
 
 // Define Renderer Name

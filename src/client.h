@@ -141,6 +141,8 @@ typedef struct {
 
 extern client_static_t cls;
 
+extern bool bumper_on;
+
 //
 // the client_state_t structure is wiped completely at every
 // server sign-on
@@ -289,6 +291,9 @@ extern cvar_t pq_moveup;
 extern cvar_t ambient_level;
 extern cvar_t m_directinput;
 extern cvar_t vid_consize;
+
+extern cvar_t cl_maxpitch;
+extern cvar_t cl_minpitch;
 
 #define	MAX_TEMP_ENTITIES	64			// lightning bolts, etc
 #define	MAX_STATIC_ENTITIES	128			// torches, etc

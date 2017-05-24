@@ -17,7 +17,6 @@
 
 extern cvar_t chase_active;
 
-void TraceLine(vec3_t start, vec3_t end, vec3_t impact);
 void Chase_Update(void);
 void Chase_Init(void);
 

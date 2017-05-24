@@ -394,7 +394,6 @@ should be put at.
 */
 float CL_LerpPoint (void)
 {
-	extern bool bumper_on;
 	float	f, frac;
 
 	f = cl.mtime[0] - cl.mtime[1];
@@ -665,7 +664,7 @@ int CL_ReadFromServer (void)
 
 	do 
 	{
-		ret = CL_GetMessage ();
+		ret = CL_GetMessage();
 		if (ret == -1)
 			Host_Error ("CL_ReadFromServer: lost server connection");
 		if (!ret)
@@ -827,47 +826,9 @@ static void CL_RestoreSensitivity_f (void)
 	Cvar_SetValue("sensitivity", savedsensitivity);
 }
 
-/*
-=============
-CL_Tracepos_f -- johnfitz
-
-display impact point of trace along VPN
-=============
-*/
-extern void TraceLine (vec3_t start, vec3_t end, vec3_t impact);
-static void CL_Tracepos_f (void)
-{
-	vec3_t	v, w;
-
-	VectorScale(vpn, 8192.0, v);
-	TraceLine(r_refdef.vieworg, v, w);
-
-	if (VectorLength(w) == 0)
-		Con_Printf ("Tracepos: trace didn't hit anything\n");
-	else
-		Con_Printf ("Tracepos: (%i %i %i)\n", (int)w[0], (int)w[1], (int)w[2]);
-}
-
-/*
-=============
-CL_Viewpos_f -- johnfitz
-
-display client's position and angles
-=============
-*/
+/* display client position and angles */
 void CL_Viewpos_f (void)
 {
-#if 0
-	//camera position
-	Con_Printf ("Viewpos: (%i %i %i) %i %i %i\n",
-		(int)r_refdef.vieworg[0],
-		(int)r_refdef.vieworg[1],
-		(int)r_refdef.vieworg[2],
-		(int)r_refdef.viewangles[PITCH],
-		(int)r_refdef.viewangles[YAW],
-		(int)r_refdef.viewangles[ROLL]);
-#else
-	//player position
 	Con_Printf ("You are at xyz = %i %i %i   angles: %i %i %i\n",
 		(int)cl_entities[cl.viewentity].origin[0],
 		(int)cl_entities[cl.viewentity].origin[1],
@@ -875,16 +836,20 @@ void CL_Viewpos_f (void)
 		(int)cl.viewangles[PITCH],
 		(int)cl.viewangles[YAW],
 		(int)cl.viewangles[ROLL]);
-#endif
 }
 
+/* display camera position and angles */
+void CL_Campos_f (void)
+{
+	Con_Printf ("Viewpos: (%i %i %i) %i %i %i\n",
+		(int)r_refdef.vieworg[0],
+		(int)r_refdef.vieworg[1],
+		(int)r_refdef.vieworg[2],
+		(int)r_refdef.viewangles[PITCH],
+		(int)r_refdef.viewangles[YAW],
+		(int)r_refdef.viewangles[ROLL]);
+}
 
-
-/*
-=================
-CL_Init
-=================
-*/
 void CL_Init (void)
 {
 	SZ_Alloc (&cls.message, 1024);
@@ -892,7 +857,6 @@ void CL_Init (void)
 	CL_InitInput ();
 	CL_InitTEnts ();
 
-// register our commands
 	Cvar_RegisterVariable (&cl_name);
 	Cvar_RegisterVariable (&cl_color);
 	Cvar_RegisterVariable (&cl_upspeed);
@@ -908,7 +872,7 @@ void CL_Init (void)
 	Cvar_RegisterVariable (&lookspring);
 	Cvar_RegisterVariable (&lookstrafe);
 	Cvar_RegisterVariable (&sensitivity);
-	Cvar_RegisterVariable (&freelook);   // Baker 3.60 - Freelook cvar support
+	Cvar_RegisterVariable (&freelook);
 
 	Cvar_RegisterVariable (&m_pitch);
 	Cvar_RegisterVariable (&m_yaw);
@@ -932,10 +896,10 @@ void CL_Init (void)
 
 	Cmd_AddCommand ("timedemo", CL_TimeDemo_f);
 
-	Cmd_AddCommand ("tracepos", CL_Tracepos_f); //johnfitz
 	Cmd_AddCommand ("viewpos", CL_Viewpos_f);
+	Cmd_AddCommand ("campos", CL_Campos_f);
 
-// JPG - added these for %r formatting
+	// JPG - added these for %r formatting
 	Cvar_RegisterVariable (&pq_needrl);
 	Cvar_RegisterVariable (&pq_haverl);
 	Cvar_RegisterVariable (&pq_needrox);

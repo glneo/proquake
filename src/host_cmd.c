@@ -1380,7 +1380,7 @@ void Host_Kill_f(void)
 void Host_Pause_f(void)
 {
 //	if (cls.demonum == -1) // Don't allow startdemos to be paused
-	cl.paused ^= 2;		// to handle demo-pause
+	cl.paused ^= true; // to handle demo-pause
 
 	if (cmd_source == src_command)
 	{
@@ -1391,7 +1391,7 @@ void Host_Pause_f(void)
 		SV_ClientPrintf("Pause not allowed.\n");
 	else
 	{
-		sv.paused ^= 1;
+		sv.paused ^= true;
 
 		if (sv.paused)
 		{

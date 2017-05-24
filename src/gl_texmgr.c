@@ -912,7 +912,7 @@ static byte *TexMgr_PadImageH(byte *in, int width, int height, byte padbyte)
 /* handles 32bit source data */
 static void TexMgr_LoadImage32(gltexture_t *glt, unsigned *data)
 {
-	int format, miplevel, mipwidth, mipheight, picmip;
+	int miplevel, mipwidth, mipheight, picmip;
 
 	if (!gl_texture_NPOT)
 	{
@@ -943,8 +943,7 @@ static void TexMgr_LoadImage32(gltexture_t *glt, unsigned *data)
 
 	// upload
 	GL_Bind(glt);
-	format = (glt->flags & TEX_ALPHA) ? GL_RGBA : GL_RGBA;
-	glTexImage2D(GL_TEXTURE_2D, 0, format, glt->width, glt->height, 0, format, GL_UNSIGNED_BYTE, data);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, glt->width, glt->height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
 
 	// upload mipmaps
 	if (glt->flags & TEX_MIPMAP)
@@ -964,7 +963,7 @@ static void TexMgr_LoadImage32(gltexture_t *glt, unsigned *data)
 				TexMgr_MipMapH(data, mipwidth, mipheight);
 				mipheight >>= 1;
 			}
-			glTexImage2D(GL_TEXTURE_2D, miplevel, format, mipwidth, mipheight, 0, format, GL_UNSIGNED_BYTE, data);
+			glTexImage2D(GL_TEXTURE_2D, miplevel, GL_RGBA, mipwidth, mipheight, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
 		}
 	}
 
