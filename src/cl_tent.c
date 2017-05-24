@@ -222,8 +222,7 @@ void CL_ParseTEnt(void)
 		colorLength = MSG_ReadByte();
 		R_ParticleExplosion2(pos, colorStart, colorLength);
 		dl = CL_AllocDlight(0);
-		VectorCopy(pos, dl->origin)
-		;
+		VectorCopy(pos, dl->origin);
 		dl->radius = 350;
 		dl->die = cl.time + 0.5;
 		dl->decay = 300;

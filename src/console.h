@@ -32,6 +32,7 @@ void Con_Warning (char *fmt, ...); //johnfitz
 void Con_DPrintf (char *fmt, ...);
 void Con_SafePrintf (char *fmt, ...);
 void Con_Clear_f (void);
+void Con_LogCenterPrint(char *str);
 void Con_DrawNotify (void);
 void Con_ClearNotify (void);
 void Con_ToggleConsole_f (void);

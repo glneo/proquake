@@ -23,13 +23,17 @@
 #define	GAMENAME "id1" // directory to look in by default
 
 #include <math.h>
-#include <string.h>
+#include <strings.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <setjmp.h>
 #include <ctype.h>
+
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
 
 #define BIT(x) (1 << (x))
 

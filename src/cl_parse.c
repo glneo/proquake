@@ -16,45 +16,49 @@
 
 #include "quakedef.h"
 
-char *svc_strings[] = { "svc_bad", "svc_nop", "svc_disconnect", "svc_updatestat",
-		"svc_version",		// [long] server version
-		"svc_setview",		// [short] entity number
-		"svc_sound",			// <see code>
-		"svc_time",			// [float] server time
-		"svc_print",			// [string] null terminated string
-		"svc_stufftext",		// [string] stuffed into client's console buffer
-						// the string should be \n terminated
-		"svc_setangle",		// [vec3] set the view angle to this absolute value
+char *svc_strings[] = {
+	"svc_bad",
+	"svc_nop",
+	"svc_disconnect",
+	"svc_updatestat",
+	"svc_version", // [long] server version
+	"svc_setview", // [short] entity number
+	"svc_sound", // <see code>
+	"svc_time", // [float] server time
+	"svc_print", // [string] null terminated string
+	"svc_stufftext", // [string] stuffed into client's console buffer, the string should be \n terminated
+	"svc_setangle", // [vec3] set the view angle to this absolute value
+	"svc_serverinfo", // [long] version
+	                  // [string] signon string
+	                  // [string]..[0]model cache [string]...[0]sounds cache
+	                  // [string]..[0]item cache
+	"svc_lightstyle", // [byte] [string]
+	"svc_updatename", // [byte] [string]
+	"svc_updatefrags", // [byte] [short]
+	"svc_clientdata", // <shortbits + data>
+	"svc_stopsound", // <see code>
+	"svc_updatecolors", // [byte] [byte]
+	"svc_particle", // [vec3] <variable>
+	"svc_damage", // [byte] impact [byte] blood [vec3] from
+	"svc_spawnstatic",
+	"OBSOLETE svc_spawnbinary",
+	"svc_spawnbaseline",
+	"svc_temp_entity", // <variable>
+	"svc_setpause",
+	"svc_signonnum",
+	"svc_centerprint",
+	"svc_killedmonster",
+	"svc_foundsecret",
+	"svc_spawnstaticsound",
+	"svc_intermission",
+	"svc_finale", // [string] music [string] text
+	"svc_cdtrack", // [byte] track [byte] looptrack
+	"svc_sellscreen",
+	"svc_cutscene",
+};
 
-		"svc_serverinfo",		// [long] version
-						// [string] signon string
-						// [string]..[0]model cache [string]...[0]sounds cache
-						// [string]..[0]item cache
-		"svc_lightstyle",		// [byte] [string]
-		"svc_updatename",		// [byte] [string]
-		"svc_updatefrags",	// [byte] [short]
-		"svc_clientdata",		// <shortbits + data>
-		"svc_stopsound",		// <see code>
-		"svc_updatecolors",	// [byte] [byte]
-		"svc_particle",		// [vec3] <variable>
-		"svc_damage",			// [byte] impact [byte] blood [vec3] from
-
-		"svc_spawnstatic", "OBSOLETE svc_spawnbinary", "svc_spawnbaseline",
-
-		"svc_temp_entity",		// <variable>
-		"svc_setpause", "svc_signonnum", "svc_centerprint", "svc_killedmonster", "svc_foundsecret", "svc_spawnstaticsound", "svc_intermission",
-		"svc_finale",			// [string] music [string] text
-		"svc_cdtrack",			// [byte] track [byte] looptrack
-		"svc_sellscreen", "svc_cutscene", };
-
-/*
- ===============
- CL_EntityNum
-
- This error checks and tracks the total number of entities
- ===============
- */
-entity_t *CL_EntityNum(int num)
+/* This error checks and tracks the total number of entities */
+static entity_t *CL_EntityNum(int num)
 {
 	if (num >= cl.num_entities)
 	{
@@ -71,64 +75,46 @@ entity_t *CL_EntityNum(int num)
 	return &cl_entities[num];
 }
 
-/*
- ==================
- CL_ParseStartSoundPacket
- ==================
- */
-void CL_ParseStartSoundPacket(void)
+static void CL_ParseStartSoundPacket(void)
 {
-	vec3_t pos;
-	int channel, ent;
-	int sound_num;
-	int volume;
-	int field_mask;
-	float attenuation;
-	int i;
+	int field_mask = MSG_ReadByte();
 
-	field_mask = MSG_ReadByte();
+	int volume = (field_mask & SND_VOLUME) ? MSG_ReadByte() : DEFAULT_SOUND_PACKET_VOLUME;
+	float attenuation = (field_mask & SND_ATTENUATION) ? MSG_ReadByte() / 64.0 : DEFAULT_SOUND_PACKET_ATTENUATION;
 
-	volume = (field_mask & SND_VOLUME) ? MSG_ReadByte() : DEFAULT_SOUND_PACKET_VOLUME;
-	attenuation = (field_mask & SND_ATTENUATION) ? MSG_ReadByte() / 64.0 : DEFAULT_SOUND_PACKET_ATTENUATION;
+	int channel = MSG_ReadShort();
+	int sound_num = MSG_ReadByte();
 
-	channel = MSG_ReadShort();
-	sound_num = MSG_ReadByte();
-
-	ent = channel >> 3;
+	int ent = channel >> 3;
 	channel &= 7;
 
 	if (ent > MAX_EDICTS)
 		Host_Error("CL_ParseStartSoundPacket: ent = %i", ent);
 
-	for (i = 0; i < 3; i++)
+	vec3_t pos;
+	for (int i = 0; i < 3; i++)
 		pos[i] = MSG_ReadCoord();
 
 	S_StartSound(ent, channel, cl.sound_precache[sound_num], pos, volume / 255.0, attenuation);
 }
 
 /*
- ==================
- CL_KeepaliveMessage
-
- When the client is taking a long time to load stuff, send keepalive messages
- so the server doesn't disconnect.
- ==================
+ * When the client is taking a long time to load stuff, send keepalive messages
+ * so the server doesn't disconnect.
  */
 void CL_KeepaliveMessage(void)
 {
-	float time;
 	static float lastmsg;
 	int ret;
-	sizebuf_t old;
-	byte olddata[8192];
 
 	if (sv.active)
-		return;		// no need if server is local
+		return; // not need if server is local
 	if (cls.demoplayback)
 		return;
 
-// read messages from server, should just be nops
-	old = net_message;
+	// read messages from server, should just be nops
+	sizebuf_t old = net_message;
+	byte *olddata = malloc(net_message.cursize * sizeof(byte));
 	memcpy(olddata, net_message.data, net_message.cursize);
 
 	do
@@ -140,29 +126,35 @@ void CL_KeepaliveMessage(void)
 			break;	// nothing waiting
 
 		case 1:
+			free(olddata);
 			Host_Error("CL_KeepaliveMessage: received a message");
 			break;
 
 		case 2:
 			if (MSG_ReadByte() != svc_nop)
+			{
+				free(olddata);
 				Host_Error("CL_KeepaliveMessage: datagram wasn't a nop");
+			}
 			break;
 
 		default:
+			free(olddata);
 			Host_Error("CL_KeepaliveMessage: CL_GetMessage failed");
 		}
 	} while (ret);
 
 	net_message = old;
 	memcpy(net_message.data, olddata, net_message.cursize);
+	free(olddata);
 
-// check time
-	time = Sys_DoubleTime();
+	// check time
+	float time = Sys_DoubleTime();
 	if (time - lastmsg < 5)
 		return;
 	lastmsg = time;
 
-// write out a nop
+	// write out a nop
 	Con_Printf("--> client to server keepalive\n");
 
 	MSG_WriteByte(&cls.message, clc_nop);
@@ -170,17 +162,7 @@ void CL_KeepaliveMessage(void)
 	SZ_Clear(&cls.message);
 }
 
-void CL_NewMap(void)
-{
-
-}
-
-/*
- ==================
- CL_ParseServerInfo
- ==================
- */
-void CL_ParseServerInfo(void)
+static void CL_ParseServerInfo(void)
 {
 	char *str;
 	int i;
@@ -965,9 +947,10 @@ void CL_ParseProQuakeString(char *string)
 	Q_Version(string);	//R00k: look for "q_version" requests
 }
 
-#define SHOWNET(x) if(cl_shownet.value==2)Con_Printf ("%3i:%s\n", msg_readcount-1, x);
+#define SHOWNET(x) \
+	if(cl_shownet.value == 2) \
+		Con_Printf("%3i:%s\n", msg_readcount - 1, x);
 
-void Con_LogCenterPrint(char *str);
 void CL_ParseServerMessage(void)
 {
 	int cmd;
@@ -975,18 +958,16 @@ void CL_ParseServerMessage(void)
 	char *str;
 	extern cvar_t con_nocenterprint;
 
-//
-// if recording demos, copy the message out
-//
+	// if recording demos, copy the message out
 	if (cl_shownet.value == 1)
 		Con_Printf("%i ", net_message.cursize);
 	else if (cl_shownet.value == 2)
 		Con_Printf("------------------\n");
 
-	cl.onground = false;	// unless the server says otherwise
-//
-// parse the message
-//
+	// unless the server says otherwise
+	cl.onground = false;
+
+	// parse the message
 	MSG_BeginReading();
 
 	while (1)
@@ -999,14 +980,14 @@ void CL_ParseServerMessage(void)
 		if (cmd == -1)
 		{
 			SHOWNET("END OF MESSAGE");
-			return;		// end of message
+			return;
 		}
 
 		// if the high bit of the command byte is set, it is a fast update
-		if (cmd & 128)
+		if (cmd & BIT(7))
 		{
 			SHOWNET("fast update");
-			CL_ParseUpdate(cmd & 127);
+			CL_ParseUpdate(cmd & 0x7f);
 			continue;
 		}
 
@@ -1015,12 +996,7 @@ void CL_ParseServerMessage(void)
 		// other commands
 		switch (cmd)
 		{
-		default:
-			Host_Error("CL_ParseServerMessage: Illegible server message\n");
-			break;
-
 		case svc_nop:
-//			Con_Printf ("svc_nop\n");
 			break;
 
 		case svc_time:
@@ -1056,7 +1032,7 @@ void CL_ParseServerMessage(void)
 			{
 				SCR_CenterPrint(str);
 			}
-			Con_LogCenterPrint(str);		//johnfitz -- log centerprints to console
+			Con_LogCenterPrint(str); // log centerprints to console
 			break;
 
 		case svc_stufftext:
@@ -1253,6 +1229,9 @@ void CL_ParseServerMessage(void)
 			Cmd_ExecuteString("help", src_command);
 			break;
 
+		default:
+			Host_Error("CL_ParseServerMessage: Illegible server message\n");
+			break;
 		}
 	}
 }

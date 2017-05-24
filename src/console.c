@@ -862,12 +862,8 @@ void Con_CenterPrintf (int linewidth, char *fmt, ...)
 	}
 }
 
-/*
-==================
-Con_LogCenterPrint -- johnfitz -- echo centerprint message to the console
-==================
-*/
-void Con_LogCenterPrint (char *str)
+/* echo centerprint message to the console */
+void Con_LogCenterPrint(char *str)
 {
 	if (!strcmp(str, con_lastcenterstring))
 		return; //ignore duplicates

@@ -16,6 +16,11 @@
 
 #include "quakedef.h"
 
+enum srcformat
+{
+	SRC_INDEXED, SRC_LIGHTMAP, SRC_RGBA
+};
+
 texture_t *r_notexture_mip;
 
 int r_framecount;
@@ -45,7 +50,7 @@ void GL_BeginRendering(int *x, int *y, int *width, int *height)
 }
 void GL_EndRendering(void) {}
 void VID_Shutdown(void) {}
-void VID_Init(unsigned char *palette) {}
+void VID_Init(void) {}
 
 void Draw_Init(void) {}
 void Draw_Character(int x, int y, int num) {}
@@ -74,6 +79,8 @@ void R_RenderView(void) {}
 
 void R_Init(void) {}
 int GL_LoadTexture(char *identifier, int width, int height, byte *data, int mode) { return 0; }
+gltexture_t *TexMgr_LoadImage(const char *name, int width, int height, enum srcformat format, byte *data, unsigned flags) { return NULL; }
+int TexMgr_PadConditional(int s) { return 0; }
 void GL_SubdivideSurface(brush_model_t *brushmodel, msurface_t *fa) {}
 void ConvertPixels(byte *pixels, int num_pixels) {}
 int FindFullbrightTexture(byte *pixels, int num_pix)  { return 0; }

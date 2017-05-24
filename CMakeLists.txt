@@ -60,6 +60,7 @@ if(DISABLE_VIDEO)
 		${PROQUAKE_SOURCES}
 		src/gl_vidnull.c
 	)
+	set(GRAPHICS_LIBRARY "None")
 else()
 	set(PROQUAKE_SOURCES
 		${PROQUAKE_SOURCES}
@@ -116,5 +117,5 @@ endif()
 find_package(SDL2 REQUIRED)
 target_include_directories(proquake PUBLIC ${SDL2_INCLUDE_DIR})
 target_link_libraries(proquake m ${SDL2_LIBRARY})
-target_compile_options(proquake PRIVATE -g;-ffast-math;-Wall;-Werror)
+target_compile_options(proquake PRIVATE -g;-std=gnu99;-ffast-math;-Wall;-Werror)
 install(TARGETS proquake RUNTIME DESTINATION bin)

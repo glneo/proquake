@@ -838,74 +838,12 @@ void Cmd_ForwardToServer_f(void)
 					dst += sprintf(dst, "%d", cl.stats[STAT_ARMOR]);
 					break;
 
-				case 'r':
-					if (cl.stats[STAT_HEALTH] > 0 && (cl.items & IT_ROCKET_LAUNCHER))
-					{
-						if (cl.stats[STAT_ROCKETS] < 5)
-							dst += sprintf(dst, "%s", pq_needrox.string);
-						else
-							dst += sprintf(dst, "%s", pq_haverl.string);
-					}
-					else
-						dst += sprintf(dst, "%s", pq_needrl.string);
-					break;
-
 				case 'c':
 					dst += sprintf(dst, "%d", cl.stats[STAT_CELLS]);
 					break;
 
 				case 'x':
 					dst += sprintf(dst, "%d", cl.stats[STAT_ROCKETS]);
-					break;
-
-				case 'p':
-					if (cl.stats[STAT_HEALTH] > 0)
-					{
-						if (cl.items & IT_QUAD)
-						{
-							dst += sprintf(dst, "%s", pq_quad.string);
-							if (cl.items & (IT_INVULNERABILITY | IT_INVISIBILITY))
-								*dst++ = ',';
-						}
-						if (cl.items & IT_INVULNERABILITY)
-						{
-							dst += sprintf(dst, "%s", pq_pent.string);
-							if (cl.items & IT_INVISIBILITY)
-								*dst++ = ',';
-						}
-						if (cl.items & IT_INVISIBILITY)
-							dst += sprintf(dst, "%s", pq_ring.string);
-					}
-					break;
-
-				case 'w':	// JPG 3.00
-				{
-					int first = 1;
-					int item;
-					char *ch = pq_weapons.string;
-					if (cl.stats[STAT_HEALTH] > 0)
-					{
-						for (item = IT_SUPER_SHOTGUN; item <= IT_LIGHTNING; item *= 2)
-						{
-							if (*ch != ':' && (cl.items & item))
-							{
-								if (!first)
-									*dst++ = ',';
-								first = 0;
-								while (*ch && *ch != ':')
-									*dst++ = *ch++;
-							}
-							while (*ch && *ch != ':')
-								ch++;
-							if (*ch)
-								ch++;
-							if (!*ch)
-								break;
-						}
-					}
-					if (first)
-						dst += sprintf(dst, "%s", pq_noweapons.string);
-				}
 					break;
 
 				case '%':
