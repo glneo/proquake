@@ -1518,23 +1518,7 @@ void COM_InitFilesystem() //johnfitz -- modified based on topaz's tutorial
 			basedir[j - 1] = 0;
 	}
 	strlcpy(com_basedir, basedir, sizeof(com_basedir));
-//
-// -cachedir <path>
-// Overrides the system supplied cache directory (NULL or /qcache)
-// -cachedir - will disable caching.
-//
-	i = COM_CheckParm("-cachedir");
-	if (i && i < com_argc - 1)
-	{
-		if (com_argv[i + 1][0] == '-')
-			com_cachedir[0] = 0;
-		else
-			strcpy(com_cachedir, com_argv[i + 1]);
-	}
-	else if (host_parms.cachedir)
-		strcpy(com_cachedir, host_parms.cachedir);
-	else
-		com_cachedir[0] = 0;
+
 
 // start up with GAMENAME by default (id1)
 	COM_AddGameDirectory(va("%s/"GAMENAME, basedir));

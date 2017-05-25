@@ -42,6 +42,8 @@ cvar_t cl_minpitch = { "cl_minpitch", "-90", CVAR_ARCHIVE };
 
 cvar_t cl_bobbing = { "cl_bobbing", "0", CVAR_ARCHIVE};
 
+cvar_t	cfg_unbindall = {"cfg_unbindall", "1", CVAR_ARCHIVE};
+
 client_static_t cls;
 client_state_t cl;
 
@@ -824,6 +826,8 @@ void CL_Init(void)
 
 	Cvar_RegisterVariable(&pq_moveup);
 	Cvar_RegisterVariable(&pq_smoothcam);
+
+	Cvar_RegisterVariable (&cfg_unbindall);
 
 	Cmd_AddCommand("entities", CL_PrintEntities_f);
 	Cmd_AddCommand("disconnect", CL_Disconnect_f);

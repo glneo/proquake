@@ -402,7 +402,7 @@ gltexture_t *TexMgr_NewTexture(void)
 	return glt;
 }
 
-//ericw -- workaround for preventing TexMgr_FreeTexture during TexMgr_ReloadImages
+// workaround for preventing TexMgr_FreeTexture during TexMgr_ReloadImages
 static bool in_reload_images;
 
 void TexMgr_FreeTexture(gltexture_t *kill)

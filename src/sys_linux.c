@@ -98,6 +98,7 @@ void Sys_Quit(void)
 
 void Sys_Init(void)
 {
+	host_parms.userdir = host_parms.basedir; /* code elsewhere relies on this ! */
 }
 
 double Sys_DoubleTime (void)

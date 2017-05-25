@@ -25,7 +25,7 @@ void Con_CheckResize (void);
 void Con_Init (void);
 void Con_DrawConsole (int lines, bool drawinput);
 void Con_Print (char *txt);
-void Con_Printf (char *fmt, ...);
+void Con_Printf (const char *fmt, ...);
 
 void Con_Success (char *fmt, ...); //johnfitz
 void Con_Warning (char *fmt, ...); //johnfitz

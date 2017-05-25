@@ -176,6 +176,7 @@ extern	cvar_t	in_keymap;
 void Key_Event (int key, int ascii, bool down);
 void Key_Init (void);
 void Key_WriteBindings (FILE *f);
+char *Key_KeynumToString(int keynum);
 void Key_SetBinding (int keynum, char *binding);
 void Key_ClearStates (void);
 

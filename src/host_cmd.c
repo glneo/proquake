@@ -316,7 +316,7 @@ void Host_Status_f(void)
 	int minutes;
 	int hours = 0;
 	int j, a, b, c; // Baker 3.60 - a,b,c added for IP
-	void (*print)(char *fmt, ...);
+	void (*print)(const char *fmt, ...);
 
 	if (cmd_source == src_command)
 	{
@@ -2053,7 +2053,7 @@ void Load_Stats_Id_f(void)
 void Stats_Id_f(void)
 {
 	if (Cmd_Argc() != 2)
-		Con_Printf("%s <quakeone.com stats id> to log it\n");
+		Con_Printf("%s <quakeone.com stats id> to log it\n", Cmd_Argv(0));
 	else if (atoi(Cmd_Argv(1)) == 0)
 		Con_Printf("Your QuakeOne.com stats id is a number\n");
 	else
