@@ -24,17 +24,17 @@ void Con_DrawCharacter (int cx, int line, int num);
 void Con_CheckResize (void);
 void Con_Init (void);
 void Con_DrawConsole (int lines, bool drawinput);
-void Con_Print (char *txt);
 void Con_Printf (const char *fmt, ...);
 
 void Con_Success (char *fmt, ...); //johnfitz
-void Con_Warning (char *fmt, ...); //johnfitz
-void Con_DPrintf (char *fmt, ...);
-void Con_SafePrintf (char *fmt, ...);
-void Con_Clear_f (void);
-void Con_LogCenterPrint(char *str);
+void Con_Warning (const char *fmt, ...); //johnfitz
+void Con_DPrintf (const char *fmt, ...);
+void Con_SafePrintf (const char *fmt, ...);
+void Con_LogCenterPrint(const char *str);
 void Con_DrawNotify (void);
 void Con_ClearNotify (void);
 void Con_ToggleConsole_f (void);
 
-char *Con_Quakebar (int len);
+void Con_TabComplete(void);
+
+void Con_Quakebar(int len);

@@ -765,7 +765,7 @@ void M_Setup_Key(int key, int ascii)
 //		if (strcmp(cl_name.string, setup_myname) != 0)
 		Cbuf_AddText(va("name \"%s\"\n", setup_myname));
 //		if (strcmp(hostname.string, setup_hostname) != 0)
-		Cvar_Set("hostname", setup_hostname);
+		Cvar_SetQuick(&hostname, setup_hostname);
 //		if (setup_top != setup_oldtop || setup_bottom != setup_oldbottom)
 		Cbuf_AddText(va("color %i %i\n", setup_top, setup_bottom));
 		m_entersound = true;
@@ -852,7 +852,7 @@ void M_AdjustSliders(int dir)
 			scr_viewsize.value = 30;
 		if (scr_viewsize.value > 120)
 			scr_viewsize.value = 120;
-		Cvar_SetValue("viewsize", scr_viewsize.value);
+		Cvar_SetValueQuick(&scr_viewsize, scr_viewsize.value);
 		break;
 	case 4:	// Baker 3.60 --- fov size
 		scr_fov.value += dir * 1;
@@ -860,7 +860,7 @@ void M_AdjustSliders(int dir)
 			scr_fov.value = 90;
 		if (scr_fov.value > 110) // Baker 3.60 -- Will increase range after ProQuake FOV bug is fixed
 			scr_fov.value = 110;  // Baker 3.60 -- Will increase range after ProQuake FOV bug is fixed
-		Cvar_SetValue("fov", scr_fov.value);
+		Cvar_SetValueQuick(&scr_fov, scr_fov.value);
 		break;
 	case 5:	// gamma
 
@@ -882,7 +882,7 @@ void M_AdjustSliders(int dir)
 		if (sensitivity.value > 21)
 			sensitivity.value = 21; // Baker 3.60 increased top range to 21 from 11
 #endif /* MACOSX */
-		Cvar_SetValue("sensitivity", sensitivity.value);
+		Cvar_SetValueQuick(&sensitivity, sensitivity.value);
 		break;
 		/*
 		 case 7:	// music volume
@@ -894,7 +894,7 @@ void M_AdjustSliders(int dir)
 //			volume.value = 0;
 //		if (volume.value > 1)
 //			volume.value = 1;
-//		Cvar_SetValue("volume", volume.value);
+//		Cvar_SetValueQuick(&volume, volume.value);
 //		break;
 
 	case 8:
@@ -904,39 +904,39 @@ void M_AdjustSliders(int dir)
 		if (cl_upspeed.value > 200)
 		{
 			// Maxxed to OFF
-			Cvar_SetValue("cl_forwardspeed", 200);
-			Cvar_SetValue("cl_backspeed", 200);
-			Cvar_SetValue("cl_sidespeed", 350);    // Baker 3.60 - added 350 is the default
-			Cvar_SetValue("cl_upspeed", 200);	// Baker 3.60 - added 350 is the default
+			Cvar_SetValueQuick(&cl_forwardspeed, 200);
+			Cvar_SetValueQuick(&cl_backspeed, 200);
+			Cvar_SetValueQuick(&cl_sidespeed, 350);    // Baker 3.60 - added 350 is the default
+			Cvar_SetValueQuick(&cl_upspeed, 200);	// Baker 3.60 - added 350 is the default
 		}
 		else if (cl_forwardspeed.value > 200)
 		{
 			// Classic to Maxxed
-			Cvar_SetValue("cl_forwardspeed", 999); // Baker 3.60 - previously 400
-			Cvar_SetValue("cl_backspeed", 999);    // Baker 3.60 - previously 400
-			Cvar_SetValue("cl_sidespeed", 999);    // Baker 3.60 - added
-			Cvar_SetValue("cl_upspeed", 999);		// Baker 3.60 - added
+			Cvar_SetValueQuick(&cl_forwardspeed, 999); // Baker 3.60 - previously 400
+			Cvar_SetValueQuick(&cl_backspeed, 999);    // Baker 3.60 - previously 400
+			Cvar_SetValueQuick(&cl_sidespeed, 999);    // Baker 3.60 - added
+			Cvar_SetValueQuick(&cl_upspeed, 999);		// Baker 3.60 - added
 		}
 		else
 		{
 			// OFF to Classic
-			Cvar_SetValue("cl_forwardspeed", 400); // Baker 3.60 - previously 400
-			Cvar_SetValue("cl_backspeed", 400);    // Baker 3.60 - previously 400
-			Cvar_SetValue("cl_sidespeed", 350);    // Baker 3.60 - added
-			Cvar_SetValue("cl_upspeed", 200);		// Baker 3.60 - added
+			Cvar_SetValueQuick(&cl_forwardspeed, 400); // Baker 3.60 - previously 400
+			Cvar_SetValueQuick(&cl_backspeed, 400);    // Baker 3.60 - previously 400
+			Cvar_SetValueQuick(&cl_sidespeed, 350);    // Baker 3.60 - added
+			Cvar_SetValueQuick(&cl_upspeed, 200);		// Baker 3.60 - added
 		}
 		break;
 
 	case 10:	// freelook
-		Cvar_SetValue("freelook", !freelook.value);
+		Cvar_SetValueQuick(&freelook, !freelook.value);
 		break;
 
 	case 11:	// invert mouse
-		Cvar_SetValue("m_pitch", -m_pitch.value);
+		Cvar_SetValueQuick(&m_pitch, -m_pitch.value);
 		break;
 
 	case 12:	// lookspring
-		Cvar_SetValue("lookspring", !lookspring.value);
+		Cvar_SetValueQuick(&lookspring, !lookspring.value);
 		break;
 
 	case 13:
@@ -944,13 +944,13 @@ void M_AdjustSliders(int dir)
 		break;
 
 		/* case 13:	// lookstrafe
-		 Cvar_SetValue ("lookstrafe", !lookstrafe.value);
+		 Cvar_SetValueQuick(&lookstrafe, !lookstrafe.value);
 		 break; // Baker 3.60 - Moved to preferences menu */
 
 // JPG 1.05 - changed from #ifdef _WIND32 by CSR
 #if defined(_WIN32) || defined(X11) || defined(_BSD)  /* CSR */
 		case 16:	// _windowed_mouse
-		Cvar_SetValue ("_windowed_mouse", !_windowed_mouse.value);
+		Cvar_SetValueQuick(&_windowed_mouse, !_windowed_mouse.value);
 		break;
 #endif
 	}
@@ -1085,7 +1085,7 @@ void M_Options_Key(int key, int ascii)
 
 			Cbuf_AddText("resetall\n"); //johnfitz
 			Cbuf_AddText("exec default.cfg\n"); //Baker: this isn't quite gamedir neutral
-			Cmd_Baker_Inject_Aliases();
+//			Cmd_Baker_Inject_Aliases();
 			// Question: should everything be unaliased too?
 			// Question: what about instances where the default has been faked?
 			// To do:    Add Cvar_SetDefault
@@ -1407,18 +1407,18 @@ void M_Pref_AdjustSliders(int dir)
 		switch (newval)
 		{
 		case 1:
-			Cvar_Set("crosshair", "0");
-			Cvar_Set("cl_crosshaircentered", "0");
+			Cvar_SetQuick(&crosshair, "0");
+			Cvar_SetQuick(&cl_crosshaircentered, "0");
 			break;
 
 		case 2:
-			Cvar_Set("crosshair", "1");
-			Cvar_Set("cl_crosshaircentered", "0");
+			Cvar_SetQuick(&crosshair, "1");
+			Cvar_SetQuick(&cl_crosshaircentered, "0");
 			break;
 
 		case 3:
-			Cvar_Set("crosshair", "1");
-			Cvar_Set("cl_crosshaircentered", "1");
+			Cvar_SetQuick(&crosshair, "1");
+			Cvar_SetQuick(&cl_crosshaircentered, "1");
 			break;
 		}
 
@@ -1437,18 +1437,18 @@ void M_Pref_AdjustSliders(int dir)
 		switch (newval)
 		{
 		case 1:
-			Cvar_Set("r_ringalpha", "1");
-			Cvar_Set("r_drawviewmodel", "1");
+			Cvar_SetQuick(&r_ringalpha, "1");
+			Cvar_SetQuick(&r_drawviewmodel, "1");
 			break;
 
 		case 2:
-			Cvar_Set("r_ringalpha", "1");
-			Cvar_Set("r_drawviewmodel", "0");
+			Cvar_SetQuick(&r_ringalpha, "1");
+			Cvar_SetQuick(&r_drawviewmodel, "0");
 			break;
 
 		case 3:
-			Cvar_Set("r_drawviewmodel", "1");
-			Cvar_Set("r_ringalpha", "0.4");
+			Cvar_SetQuick(&r_drawviewmodel, "1");
+			Cvar_SetQuick(&r_ringalpha, "0.4");
 			break;
 		}
 
@@ -1456,7 +1456,7 @@ void M_Pref_AdjustSliders(int dir)
 
 	case 4:
 
-		Cvar_Set("r_truegunangle", r_truegunangle.value ? "0" : "1");
+		Cvar_SetQuick(&r_truegunangle, r_truegunangle.value ? "0" : "1");
 		break;
 
 	case 5:
@@ -1471,22 +1471,22 @@ void M_Pref_AdjustSliders(int dir)
 		{
 		case 1:
 			// Must be off, set to Quakedefaults
-			Cvar_Set("r_waterwarp", "1");
-			Cvar_Set("pq_ringblend", "1");
-			Cvar_Set("pq_quadblend", "1");
-			Cvar_Set("pq_pentblend", "1");
-			Cvar_Set("pq_suitblend", "1");
-			Cvar_Set("pq_waterblend", "1");
+			Cvar_SetQuick(&r_waterwarp, "1");
+			Cvar_SetQuick(&pq_ringblend, "1");
+			Cvar_SetQuick(&pq_quadblend, "1");
+			Cvar_SetQuick(&pq_pentblend, "1");
+			Cvar_SetQuick(&pq_suitblend, "1");
+			Cvar_SetQuick(&pq_waterblend, "1");
 			break;
 
 		case 2:
 			// FULL to LITE
-			Cvar_Set("r_waterwarp", "0");
-			Cvar_Set("pq_ringblend", "0");
-			Cvar_Set("pq_quadblend", "0.3");
-			Cvar_Set("pq_pentblend", "0.3");
-			Cvar_Set("pq_suitblend", "0.3");
-			Cvar_Set("pq_waterblend", "0.3");
+			Cvar_SetQuick(&r_waterwarp, "0");
+			Cvar_SetQuick(&pq_ringblend, "0");
+			Cvar_SetQuick(&pq_quadblend, "0.3");
+			Cvar_SetQuick(&pq_pentblend, "0.3");
+			Cvar_SetQuick(&pq_suitblend, "0.3");
+			Cvar_SetQuick(&pq_waterblend, "0.3");
 			break;
 		}
 
@@ -1497,45 +1497,45 @@ void M_Pref_AdjustSliders(int dir)
 		if (!cl_rollangle.value)  // Using most obscure value to avoid confusing someone who sets some of this
 		{
 			// Ok, we will assume it's all off so we turn everything on
-			Cvar_Set("v_kickpitch", "0.6");
-			Cvar_Set("v_kickroll", "0.6");
-			Cvar_Set("v_kicktime", "0.5");
-			Cvar_Set("cl_bob", "0.02");
-			Cvar_Set("cl_bobcycle", "0.6");
-			Cvar_Set("cl_bobup", "0.5");
-			Cvar_Set("cl_rollangle", "2");
+			Cvar_SetQuick(&v_kickpitch, "0.6");
+			Cvar_SetQuick(&v_kickroll, "0.6");
+			Cvar_SetQuick(&v_kicktime, "0.5");
+			Cvar_SetQuick(&cl_bob, "0.02");
+			Cvar_SetQuick(&cl_bobcycle, "0.6");
+			Cvar_SetQuick(&cl_bobup, "0.5");
+			Cvar_SetQuick(&cl_rollangle, "2");
 		}
 		else
 		{
-			Cvar_Set("v_kickpitch", "0");
-			Cvar_Set("v_kickroll", "0");
-			Cvar_Set("v_kicktime", "0");
-			Cvar_Set("cl_bob", "0");
-			Cvar_Set("cl_bobcycle", "0");
-			Cvar_Set("cl_bobup", "0");
-			Cvar_Set("cl_rollangle", "0");
+			Cvar_SetQuick(&v_kickpitch, "0");
+			Cvar_SetQuick(&v_kickroll, "0");
+			Cvar_SetQuick(&v_kicktime, "0");
+			Cvar_SetQuick(&cl_bob, "0");
+			Cvar_SetQuick(&cl_bobcycle, "0");
+			Cvar_SetQuick(&cl_bobup, "0");
+			Cvar_SetQuick(&cl_rollangle, "0");
 		}
 
 		break;
 
 	case 10:
 
-		Cvar_Set("cl_keypad", cl_keypad.value ? "0" : "1");
+		Cvar_SetQuick(&cl_keypad, cl_keypad.value ? "0" : "1");
 		break;
 
 		/*		case 11:
 
-		 Cvar_Set("scr_conspeed", (scr_conspeed.value >= 5000) ? "300" : "9999");
+		 Cvar_SetQuick(&scr_conspeed, (scr_conspeed.value >= 5000) ? "300" : "9999");
 		 break; */
 
 	case 11:
 
-		Cvar_Set("pq_moveup", pq_moveup.value ? "0" : "1");
+		Cvar_SetQuick(&pq_moveup, pq_moveup.value ? "0" : "1");
 		break;
 
 	case 12:
 
-		Cvar_Set("ambient_level", ambient_level.value ? "0" : "0.3");
+		Cvar_SetQuick(&ambient_level, ambient_level.value ? "0" : "0.3");
 		break;
 
 	case 13:
@@ -1543,9 +1543,9 @@ void M_Pref_AdjustSliders(int dir)
 #ifdef SUPPORTS_VSYNC
 
 		if (vid_vsync.value)
-		Cvar_Set("vid_vsync", "0");
+		Cvar_SetQuick(&vid_vsync, "0");
 		else
-		Cvar_Set("vid_vsync", "1");
+		Cvar_SetQuick(&vid_vsync, "1");
 
 #endif
 		break;
@@ -1565,19 +1565,19 @@ void M_Pref_AdjustSliders(int dir)
 		switch (newval)
 		{
 		case 1:
-			Cvar_Set("pq_maxfps", "72");
+			Cvar_SetQuick(&pq_maxfps, "72");
 			break;
 
 		case 2:
-			Cvar_Set("pq_maxfps", "120");
+			Cvar_SetQuick(&pq_maxfps, "120");
 			break;
 
 		case 3:
-			Cvar_Set("pq_maxfps", "200");
+			Cvar_SetQuick(&pq_maxfps, "200");
 			break;
 
 		case 4:
-			Cvar_Set("pq_maxfps", "250");
+			Cvar_SetQuick(&pq_maxfps, "250");
 			break;
 		}
 
@@ -1585,7 +1585,7 @@ void M_Pref_AdjustSliders(int dir)
 
 	case 15:
 
-		Cvar_Set("pq_drawfps", pq_drawfps.value ? "0" : "1");
+		Cvar_SetQuick(&pq_drawfps, pq_drawfps.value ? "0" : "1");
 		break;
 
 	case 16:
@@ -1597,7 +1597,7 @@ void M_Pref_AdjustSliders(int dir)
 		else if (newval == -2)
 			newval = 2;
 
-		Cvar_SetValue("vid_consize", newval);
+		Cvar_SetValueQuick(&vid_consize, newval);
 		break;
 
 	case 18:
@@ -1607,14 +1607,14 @@ void M_Pref_AdjustSliders(int dir)
 			SCR_ModalMessage("DirectInput is locked because the\n-dinput command line parameter\nwas used.\n\nPress Y or N to continue.",0.0f);
 			break;
 		}
-		Cvar_Set("m_directinput", m_directinput.value ? "0" : "1");
+		Cvar_SetQuick(&m_directinput, m_directinput.value ? "0" : "1");
 #endif
 		break;
 
 	case 19:
 
 #ifdef SUPPORTS_INTERNATIONAL_KEYBOARD
-		Cvar_Set("in_keymap", in_keymap.value ? "0" : "1");
+		Cvar_SetQuick(&in_keymap, in_keymap.value ? "0" : "1");
 #endif
 		break;
 
@@ -2472,7 +2472,7 @@ void M_NetStart_Change(int dir)
 		break;
 
 	case 2:
-		Cvar_SetValue("coop", coop.value ? 0 : 1);
+		Cvar_SetValueQuick(&coop, coop.value ? 0 : 1);
 		break;
 
 	case 3:
@@ -2481,35 +2481,35 @@ void M_NetStart_Change(int dir)
 		else
 			count = 2;
 
-		Cvar_SetValue("teamplay", teamplay.value + dir);
+		Cvar_SetValueQuick(&teamplay, teamplay.value + dir);
 		if (teamplay.value > count)
-			Cvar_SetValue("teamplay", 0);
+			Cvar_SetValueQuick(&teamplay, 0);
 		else if (teamplay.value < 0)
-			Cvar_SetValue("teamplay", count);
+			Cvar_SetValueQuick(&teamplay, count);
 		break;
 
 	case 4:
-		Cvar_SetValue("skill", skill.value + dir);
+		Cvar_SetValueQuick(&skill, skill.value + dir);
 		if (skill.value > 3)
-			Cvar_SetValue("skill", 0);
+			Cvar_SetValueQuick(&skill, 0);
 		if (skill.value < 0)
-			Cvar_SetValue("skill", 3);
+			Cvar_SetValueQuick(&skill, 3);
 		break;
 
 	case 5:
-		Cvar_SetValue("fraglimit", fraglimit.value + dir * 10);
+		Cvar_SetValueQuick(&fraglimit, fraglimit.value + dir * 10);
 		if (fraglimit.value > 100)
-			Cvar_SetValue("fraglimit", 0);
+			Cvar_SetValueQuick(&fraglimit, 0);
 		if (fraglimit.value < 0)
-			Cvar_SetValue("fraglimit", 100);
+			Cvar_SetValueQuick(&fraglimit, 100);
 		break;
 
 	case 6:
-		Cvar_SetValue("timelimit", timelimit.value + dir * 5);
+		Cvar_SetValueQuick(&timelimit, timelimit.value + dir * 5);
 		if (timelimit.value > 60)
-			Cvar_SetValue("timelimit", 0);
+			Cvar_SetValueQuick(&timelimit, 0);
 		if (timelimit.value < 0)
-			Cvar_SetValue("timelimit", 60);
+			Cvar_SetValueQuick(&timelimit, 60);
 		break;
 
 	case 7:

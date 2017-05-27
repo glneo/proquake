@@ -709,7 +709,7 @@ void CL_Fov_f(struct cvar_s *cvar)
 		if (default_fov.value == 90)
 			return; // Baker 3.99k: Don't do a message saying default FOV has been set to 90 if it is 90!
 
-		Cvar_SetValue("fov", default_fov.value);
+		Cvar_SetValueQuick(&scr_fov, default_fov.value);
 		Con_Printf("fov set to default_fov %s\n", default_fov.string);
 	}
 }
@@ -721,7 +721,7 @@ void CL_Default_fov_f(struct cvar_s *cvar)
 
 	if (default_fov.value < 10.0 || default_fov.value > 140.0)
 	{
-		Cvar_SetValue("default_fov", 0.0f);
+		Cvar_SetValueQuick(&default_fov, 0.0f);
 		Con_Printf("Default fov %s is out-of-range; set to 0\n", default_fov.string);
 	}
 

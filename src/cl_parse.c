@@ -203,7 +203,7 @@ static void CL_ParseServerInfo(void)
 	strncpy(cl.levelname, str, sizeof(cl.levelname) - 1);
 
 // separate the printfs so the server message can have a color
-	Con_Printf("\n\n\35\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\37\n\n");
+	Con_Quakebar(40);
 	Con_Printf("%c%s\n", 2, str);
 
 // first we go through and touch all of the precache data that still
@@ -956,7 +956,6 @@ void CL_ParseServerMessage(void)
 	int cmd;
 	int i;
 	char *str;
-	extern cvar_t con_nocenterprint;
 
 	// if recording demos, copy the message out
 	if (cl_shownet.value == 1)
@@ -1028,10 +1027,7 @@ void CL_ParseServerMessage(void)
 
 		case svc_centerprint:
 			str = MSG_ReadString();
-			if (!con_nocenterprint.value)
-			{
-				SCR_CenterPrint(str);
-			}
+			SCR_CenterPrint(str);
 			Con_LogCenterPrint(str); // log centerprints to console
 			break;
 

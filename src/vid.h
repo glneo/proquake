@@ -68,6 +68,7 @@ typedef struct {
 } viddef_t;
 
 extern viddef_t vid;				// global video state
+extern modestate_t modestate;
 extern unsigned d_8to24table[256];
 
 extern void (*vid_menudrawfn)(void);

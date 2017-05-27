@@ -127,26 +127,6 @@ void InsertLinkAfter(link_t *l, link_t *after)
 }
 
 /*
- ================
- COM_Quakebar
- ================
- */
-
-char *COM_Quakebar(int len)
-{
-	static char bar[42];
-	int i;
-	len = min(len, sizeof(bar) - 2);
-	bar[0] = '\36';
-
-	for (i = 1; i < len - 1; i++)
-		bar[i] = '\36';
-	bar[len - 1] = '\36';
-	bar[len] = 0;
-	return bar;
-}
-
-/*
  ============================================================================
 
  BYTE ORDER FUNCTIONS
@@ -481,9 +461,9 @@ void SZ_Alloc(sizebuf_t *buf, int startsize)
 
 void SZ_Free(sizebuf_t *buf)
 {
-//      Z_Free (buf->data);
-//      buf->data = NULL;
-//      buf->maxsize = 0;
+	Z_Free(buf->data);
+	buf->data = NULL;
+	buf->maxsize = 0;
 	buf->cursize = 0;
 }
 
@@ -809,8 +789,8 @@ void COM_CheckRegistered(void)
 		if (pop[i] != (unsigned short) BigShort(check[i]))
 			Sys_Error("Corrupted data file.");
 
-	Cvar_Set("cmdline", com_cmdline);
-	Cvar_Set("registered", "1");
+	Cvar_SetQuick(&cmdline, com_cmdline);
+	Cvar_SetQuick(&registered, "1");
 	static_registered = 1;
 	Con_Printf("Playing registered version.\n");
 }
@@ -925,15 +905,6 @@ void COM_Init(char *basedir)
 
 	COM_InitFilesystem();
 	COM_CheckRegistered();
-}
-
-char *CopyString(char *in)
-{
-	char *out;
-	out = Z_Malloc(strlen(in) + 1);
-	strcpy(out, in);
-	return out;
-
 }
 
 /// just for debugging
@@ -1318,6 +1289,8 @@ byte *COM_LoadFile(char *path, int usehunk)
 		else
 			buf = loadbuf;
 	}
+	else if (usehunk == 5)
+		buf = (byte *) Q_malloc(len + 1);
 	else
 		Sys_Error("bad usehunk");
 
@@ -1358,6 +1331,12 @@ byte *COM_LoadStackFile(char *path, void *buffer, int bufsize)
 	buf = COM_LoadFile(path, 4);
 
 	return buf;
+}
+
+// returns malloc'd memory
+byte *COM_LoadMallocFile(char *path)
+{
+	return COM_LoadFile(path, 5);
 }
 
 /*
@@ -1518,7 +1497,6 @@ void COM_InitFilesystem() //johnfitz -- modified based on topaz's tutorial
 			basedir[j - 1] = 0;
 	}
 	strlcpy(com_basedir, basedir, sizeof(com_basedir));
-
 
 // start up with GAMENAME by default (id1)
 	COM_AddGameDirectory(va("%s/"GAMENAME, basedir));

@@ -610,7 +610,7 @@ void Host_Ping_f(void)
 			n = Cmd_Argv(1);
 			if (*n == '+')
 			{
-				Cvar_Set("pq_lag", n + 1);
+				Cvar_SetQuick(&pq_lag, n + 1);
 				return;
 			}
 		}
@@ -972,7 +972,7 @@ void Host_Loadgame_f(void)
 	if (fscanf(f, "%f\n", &tfloat) < 1)
 		Con_Printf("ERROR: couldn't read from file.\n");
 	current_skill = (int) (tfloat + 0.1);
-	Cvar_SetValue("skill", (float) current_skill);
+	Cvar_SetValueQuick(&skill, (float) current_skill);
 
 	if (fscanf(f, "%s\n", mapname) < 1)
 		Con_Printf("ERROR: couldn't read from file.\n");
@@ -1081,7 +1081,7 @@ void Host_Name_f(void)
 	{
 		if (strcmp(cl_name.string, newName) == 0)
 			return;
-		Cvar_Set("_cl_name", newName);
+		Cvar_SetQuick(&cl_name, newName);
 		if (cls.state == ca_connected)
 			Cmd_ForwardToServer_f();
 		return;
@@ -1335,7 +1335,7 @@ void Host_Color_f(void)
 
 	if (cmd_source == src_command)
 	{
-		Cvar_SetValue("_cl_color", playercolor);
+		Cvar_SetValueQuick(&cl_color, playercolor);
 		if (cls.state == ca_connected)
 			Cmd_ForwardToServer_f();
 		return;

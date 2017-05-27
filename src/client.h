@@ -261,6 +261,8 @@ extern cvar_t cl_movespeedkey;
 extern cvar_t cl_yawspeed;
 extern cvar_t cl_pitchspeed;
 
+extern cvar_t pq_lag;
+
 extern cvar_t cl_anglespeedkey;
 
 extern cvar_t cl_shownet;
@@ -286,13 +288,30 @@ extern cvar_t pq_maxfps;
 extern cvar_t crosshair;
 extern cvar_t cl_crosshaircentered;
 extern cvar_t r_truegunangle;
+
+extern cvar_t pq_waterblend;
+extern cvar_t pq_quadblend;
+extern cvar_t pq_ringblend;
+extern cvar_t pq_pentblend;
 extern cvar_t pq_suitblend;
+
 extern cvar_t cl_keypad;
 extern cvar_t cl_rollangle;
 extern cvar_t pq_moveup;
 extern cvar_t ambient_level;
 extern cvar_t m_directinput;
 extern cvar_t vid_consize;
+
+extern cvar_t cl_rollspeed;
+extern cvar_t cl_rollangle;
+
+extern cvar_t cl_bob;
+extern cvar_t cl_bobcycle;
+extern cvar_t cl_bobup;
+
+extern cvar_t v_kicktime;
+extern cvar_t v_kickroll;
+extern cvar_t v_kickpitch;
 
 extern cvar_t cl_maxpitch;
 extern cvar_t cl_minpitch;

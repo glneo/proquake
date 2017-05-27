@@ -18,9 +18,6 @@
 
 #define		HISTORY_FILE_NAME	"quake_history.txt"
 
-#define		MAXCMDLINE	256
-#define		CMDLINES	64
-
 char key_lines[CMDLINES][MAXCMDLINE];
 int key_linepos;
 int shift_down = false;
@@ -199,7 +196,7 @@ void Key_Console(int key, int ascii)
 	// JPG 1.05 - fixed tab completion
 	if (key == K_TAB)
 	{
-//		Con_TabComplete ();
+		Con_TabComplete ();
 		return;
 	}
 
@@ -935,9 +932,7 @@ void Key_Event(int key, int ascii, bool down)
 	key_lastpress = key;
 	key_count++;
 	if (key_count <= 0)
-	{
 		return;		// just catching keys for Con_NotifyBox (which has been deleted .. Baker)
-	}
 
 // update auto-repeat status
 	if (down)

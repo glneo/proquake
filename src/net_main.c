@@ -237,9 +237,9 @@ static void MaxPlayers_f(void)
 
 	svs.maxclients = n;
 	if (n == 1)
-		Cvar_Set("deathmatch", "0");
+		Cvar_SetQuick(&deathmatch, "0");
 	else
-		Cvar_Set("deathmatch", "1");
+		Cvar_SetQuick(&deathmatch, "1");
 }
 
 static void NET_Port_f(void)

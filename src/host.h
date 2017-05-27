@@ -39,6 +39,15 @@ extern cvar_t sys_ticrate;
 extern cvar_t sys_nostdout;
 extern cvar_t developer;
 
+extern cvar_t pq_spam_rate;
+extern cvar_t pq_spam_grace;
+extern cvar_t pq_connectmute;
+extern cvar_t pq_tempmute;
+extern cvar_t pq_logbinds;
+extern cvar_t pq_showedict;
+extern cvar_t pq_dequake;
+extern cvar_t pq_maxfps;
+
 extern bool host_initialized;		// true if into command execution
 extern double host_frametime;
 extern byte *host_basepal;

@@ -79,8 +79,8 @@ void SV_Init(void)
 
 	// Baker: Dedicated server "defaults" - this is ok because quake.rc is executed later, so these "defaults" won't override config.cfg settings, etc.
 	if (COM_CheckParm("-dedicated")) {
-//		Cvar_Set("sv_defaultmap", "start"); // Baker 3.99b: "Default" it to start if dedicated server.
-		Cvar_Set("pq_connectmute", "3"); 	// Baker 3.99g: "Default" it to 10 seconds
+//		Cvar_SetQuick(&sv_defaultmap, "start"); // Baker 3.99b: "Default" it to start if dedicated server.
+		Cvar_SetQuick(&pq_connectmute, "3"); 	// Baker 3.99g: "Default" it to 10 seconds
 	}
 
 	for (i = 0; i < MAX_MODELS; i++)
@@ -210,14 +210,8 @@ void SV_SendServerinfo(client_t *client)
 {
 	char **s, message[2048];
 
-	// JPG - This used to be VERSION 1.09 SERVER (xxxxx CRC)
 	MSG_WriteByte(&client->message, svc_print);
-	snprintf(message, sizeof(message), "\n\35\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\37\n"
-			"\n   \01\02\02\02\02\02\02\02\02\02\02\02\02\02\02\02\02\02\02\02\02\02\02\02\02\02\02\02\02\03");
-	MSG_WriteString(&client->message, message);
-	MSG_WriteByte(&client->message, svc_print);
-	snprintf(message, sizeof(message), "\02\n   \04ProQuake Server Version %4.2f\06"
-			"\n   \07\10\10\10\10\10\10\10\10\10\10\10\10\10\10\10\10\10\10\10\10\10\10\10\10\10\10\10\10\11", PROQUAKE_SERIES_VERSION);
+	snprintf(message, sizeof(message), "\n%s Server Version %s\n", ENGINE_NAME, ENGINE_VERSION);
 	MSG_WriteString(&client->message, message);
 
 	MSG_WriteByte(&client->message, svc_serverinfo);
@@ -249,12 +243,6 @@ void SV_SendServerinfo(client_t *client)
 // set view
 	MSG_WriteByte(&client->message, svc_setview);
 	MSG_WriteShort(&client->message, NUM_FOR_EDICT(client->edict));
-
-	// JPG 2.01 - server side fullpitch fix
-	if (!pq_fullpitch.value && client->netconnection->mod != MOD_QSMACK) {
-		MSG_WriteByte(&client->message, svc_stufftext);
-		MSG_WriteString(&client->message, "pq_fullpitch 0; cl_fullpitch 0\n");
-	}
 
 	MSG_WriteByte(&client->message, svc_signonnum);
 	MSG_WriteByte(&client->message, 1);
@@ -995,7 +983,7 @@ void SV_SpawnServer(char *server)
 
 	// let's not have any servers with no name
 	if (hostname.string[0] == 0)
-		Cvar_Set("hostname", "UNNAMED");
+		Cvar_SetQuick(&hostname, "UNNAMED");
 	scr_centertime_off = 0;
 
 	Con_DPrintf("SpawnServer: %s\n", server);
@@ -1007,11 +995,11 @@ void SV_SpawnServer(char *server)
 
 // make cvars consistant
 	if (coop.value)
-		Cvar_SetValue("deathmatch", 0);
+		Cvar_SetValueQuick(&deathmatch, 0);
 	current_skill = (int) (skill.value + 0.5);
 	current_skill = CLAMP(0, current_skill, 3);
 
-	Cvar_SetValue("skill", (float) current_skill);
+	Cvar_SetValueQuick(&skill, (float) current_skill);
 
 // set up the new server
 	Host_ClearMemory();

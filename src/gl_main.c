@@ -348,7 +348,7 @@ static void R_SetupFrame(void)
 {
 	// don't allow cheats in multiplayer
 	if (cl.maxclients > 1 && r_fullbright.value != 0)
-		Cvar_Set("r_fullbright", "0");
+		Cvar_SetQuick(&r_fullbright, "0");
 
 	R_AnimateLight();
 
@@ -868,7 +868,7 @@ static char *GL_MakeNiceExtensionsList(const char *in)
 	int i, count;
 
 	if (!in)
-		return (char *) strdup("(none)");
+		return (char *)Q_strdup("(none)");
 
 	//each space will be replaced by 4 chars, so count the spaces before we malloc
 	for (i = 0, count = 1; i < (int) strlen(in); i++)
@@ -877,10 +877,10 @@ static char *GL_MakeNiceExtensionsList(const char *in)
 			count++;
 	}
 
-	out = (char *) Z_Malloc(strlen(in) + count * 3 + 1); //usually about 1-2k
+	out = (char *)Q_malloc(strlen(in) + count * 3 + 1); //usually about 1-2k
 	out[0] = 0;
 
-	copy = (char *) strdup(in);
+	copy = (char *)Q_strdup(in);
 	for (token = strtok(copy, " "); token; token = strtok(NULL, " "))
 	{
 		strcat(out, "\n   ");
@@ -1088,7 +1088,7 @@ void GL_Init(void)
 	}
 
 	if (gl_extensions_nice != NULL)
-		Z_Free(gl_extensions_nice);
+		free(gl_extensions_nice);
 	gl_extensions_nice = GL_MakeNiceExtensionsList(gl_extensions);
 
 	GL_CheckExtensions();

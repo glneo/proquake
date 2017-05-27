@@ -164,12 +164,21 @@ typedef enum {
 	key_game, key_console, key_message, key_menu
 } keydest_t;
 
+#define		MAXCMDLINE	256
+#define		CMDLINES	64
+
+extern char key_lines[CMDLINES][MAXCMDLINE];
+
 extern keydest_t	key_dest;
 extern char *keybindings[256];
 extern	int		key_repeats[256];
 extern	int		key_count;			// incremented every key event
 extern	int		key_lastpress;
 extern	int		history_line;
+extern	int key_linepos;
+extern	int edit_line;
+
+extern	bool team_message;
 
 extern	cvar_t	in_keymap;
 

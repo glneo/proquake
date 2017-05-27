@@ -416,10 +416,10 @@ static void VID_Test(void)
 	if (!SCR_ModalMessage("Would you like to keep this\nvideo mode? (y/n)\n", 5.0f))
 	{
 		//revert cvars and mode
-		Cvar_SetValue("vid_width", old_width);
-		Cvar_SetValue("vid_height", old_height);
-		Cvar_SetValue("vid_bpp", old_bpp);
-		Cvar_Set("vid_fullscreen", old_fullscreen ? "1" : "0");
+		Cvar_SetValueQuick(&vid_width, old_width);
+		Cvar_SetValueQuick(&vid_height, old_height);
+		Cvar_SetValueQuick(&vid_bpp, old_bpp);
+		Cvar_SetQuick(&vid_fullscreen, old_fullscreen ? "1" : "0");
 //		VID_Restart ();
 	}
 }
@@ -435,12 +435,12 @@ static void VID_SyncCvars(void)
 	{
 		if (!VID_GetDesktopFullscreen())
 		{
-			Cvar_SetValue("vid_width", VID_GetCurrentWidth());
-			Cvar_SetValue("vid_height", VID_GetCurrentHeight());
+			Cvar_SetValueQuick(&vid_width, VID_GetCurrentWidth());
+			Cvar_SetValueQuick(&vid_height, VID_GetCurrentHeight());
 		}
-		Cvar_SetValue("vid_bpp", VID_GetCurrentBPP());
-		Cvar_Set("vid_fullscreen", VID_GetFullscreen() ? "1" : "0");
-		Cvar_Set("vid_vsync", VID_GetVSync() ? "1" : "0");
+		Cvar_SetValueQuick(&vid_bpp, VID_GetCurrentBPP());
+		Cvar_SetQuick(&vid_fullscreen, VID_GetFullscreen() ? "1" : "0");
+		Cvar_SetQuick(&vid_vsync, VID_GetVSync() ? "1" : "0");
 	}
 
 	vid_changed = false;
@@ -578,7 +578,7 @@ void VID_Init(void)
 	display_height = mode.h;
 	display_bpp = SDL_BITSPERPIXEL(mode.format);
 
-	Cvar_SetValue("vid_bpp", (float) display_bpp);
+	Cvar_SetValueQuick(&vid_bpp, (float) display_bpp);
 
 //	if (CFG_OpenConfig("config.cfg") == 0)
 //	{
@@ -746,7 +746,7 @@ void VID_Toggle(void)
 	{
 		vid_toggle_works = false;
 		Con_DPrintf("SDL_WM_ToggleFullScreen failed, attempting VID_Restart\n");
-		vrestart: Cvar_Set("vid_fullscreen", VID_GetFullscreen() ? "0" : "1");
+		vrestart: Cvar_SetQuick(&vid_fullscreen, VID_GetFullscreen() ? "0" : "1");
 		Cbuf_AddText("vid_restart\n");
 	}
 }

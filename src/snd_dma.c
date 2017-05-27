@@ -111,7 +111,7 @@ static void SND_Callback_snd_filterquality(cvar_t *var)
 	if (snd_filterquality.value < 1 || snd_filterquality.value > 5)
 	{
 		Con_Printf("snd_filterquality must be between 1 and 5\n");
-		Cvar_Set("snd_filterquality", SND_FILTERQUALITY_DEFAULT);
+		Cvar_SetQuick(&snd_filterquality, SND_FILTERQUALITY_DEFAULT);
 	}
 }
 
@@ -182,18 +182,18 @@ void S_Init(void)
 	i = COM_CheckParm("-sndspeed");
 	if (i && i < com_argc - 1)
 	{
-		Cvar_Set("sndspeed", com_argv[i + 1]);
+		Cvar_SetQuick(&sndspeed, com_argv[i + 1]);
 	}
 
 	i = COM_CheckParm("-mixspeed");
 	if (i && i < com_argc - 1)
 	{
-		Cvar_Set("snd_mixspeed", com_argv[i + 1]);
+		Cvar_SetQuick(&snd_mixspeed, com_argv[i + 1]);
 	}
 
 	if (host_parms.memsize < 0x800000)
 	{
-		Cvar_Set("loadas8bit", "1");
+		Cvar_SetQuick(&loadas8bit, "1");
 		Con_Printf("loading all sounds as 8bit\n");
 	}
 

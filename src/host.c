@@ -235,9 +235,9 @@ void Host_FindMaxClients(void)
 	svs.clients = Hunk_AllocName(svs.maxclientslimit * sizeof(client_t), "clients");
 
 	if (svs.maxclients > 1)
-		Cvar_SetValue("deathmatch", 1.0);
+		Cvar_SetValueQuick(&deathmatch, 1.0);
 	else
-		Cvar_SetValue("deathmatch", 0.0);
+		Cvar_SetValueQuick(&deathmatch, 0.0);
 }
 
 char dequake[256];	// JPG 1.05

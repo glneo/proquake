@@ -31,11 +31,11 @@ cvar_t *Cvar_FindVar(const char *var_name)
 
 cvar_t *Cvar_FindVarAfter(const char *prev_name, unsigned int with_flags)
 {
-	cvar_t	*var;
+	cvar_t *var;
 
 	if (*prev_name)
 	{
-		var = Cvar_FindVar (prev_name);
+		var = Cvar_FindVar(prev_name);
 		if (!var)
 			return NULL;
 		var = var->next;
@@ -90,7 +90,7 @@ char *Cvar_CompleteVariable(const char *partial)
 	return NULL;
 }
 
-void Cvar_SetQuick (cvar_t *var, const char *value)
+void Cvar_SetQuick(cvar_t *var, const char *value)
 {
 	// Read-only or Locked
 	if (var->flags & (CVAR_ROM | CVAR_LOCKED))
@@ -127,7 +127,7 @@ void Cvar_SetQuick (cvar_t *var, const char *value)
 	}
 }
 
-void Cvar_SetValueQuick (cvar_t *var, float value)
+void Cvar_SetValueQuick(cvar_t *var, float value)
 {
 	Cvar_SetQuick(var, COM_NiceFloatString(value));
 }

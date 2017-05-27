@@ -12,6 +12,8 @@
  * General Public License for more details.
  */
 
+extern int glx, gly, glwidth, glheight;
+
 void SCR_Init (void);
 
 void SCR_UpdateScreen (void);

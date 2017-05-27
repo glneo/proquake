@@ -260,15 +260,15 @@ static void SCR_CalcRefdef(void)
 
 // bound viewsize
 	if (scr_viewsize.value < 30)
-		Cvar_Set("viewsize", "30");
+		Cvar_SetQuick(&scr_viewsize, "30");
 	if (scr_viewsize.value > 120)
-		Cvar_Set("viewsize", "120");
+		Cvar_SetQuick(&scr_viewsize, "120");
 
 // bound field of view
 	if (scr_fov.value < 10)
-		Cvar_Set("fov", "10");
+		Cvar_SetQuick(&scr_fov, "10");
 	if (scr_fov.value > 170)
-		Cvar_Set("fov", "170");
+		Cvar_SetQuick(&scr_fov, "170");
 
 // intermission is always full screen
 	if (cl.intermission)
@@ -359,7 +359,7 @@ static void SCR_CalcRefdef(void)
  */
 void SCR_SizeUp_f(void)
 {
-	Cvar_SetValue("viewsize", scr_viewsize.value + 10);
+	Cvar_SetValueQuick(&scr_viewsize, scr_viewsize.value + 10);
 	vid.recalc_refdef = 1;
 }
 
@@ -372,7 +372,7 @@ void SCR_SizeUp_f(void)
  */
 void SCR_SizeDown_f(void)
 {
-	Cvar_SetValue("viewsize", scr_viewsize.value - 10);
+	Cvar_SetValueQuick(&scr_viewsize, scr_viewsize.value - 10);
 	vid.recalc_refdef = 1;
 }
 
@@ -604,7 +604,6 @@ void SCR_DrawConsole(void)
 {
 	if (scr_con_current)
 	{
-//		scr_copyeverything = 1;
 		Con_DrawConsole(scr_con_current, true);
 		clearconsole = 0;
 	}
@@ -613,75 +612,6 @@ void SCR_DrawConsole(void)
 		if (key_dest == key_game || key_dest == key_message)
 			Con_DrawNotify();	// only draw notify in game
 	}
-}
-
-/*
- ==============================================================================
-
- SCREEN SHOTS
-
- ==============================================================================
- */
-
-typedef struct _TargaHeader
-{
-	unsigned char id_length, colormap_type, image_type;
-	unsigned short colormap_index, colormap_length;
-	unsigned char colormap_size;
-	unsigned short x_origin, y_origin, width, height;
-	unsigned char pixel_size, attributes;
-} TargaHeader;
-
-/*
- ==================
- SCR_ScreenShot_f
- ==================
- */
-void SCR_ScreenShot_f(void)
-{
-	byte *buffer;
-	char tganame[16];  //johnfitz -- was [80]
-	char checkname[MAX_OSPATH];
-	int i, c, temp;
-
-	// find a file name to save it to
-	for (i = 0; i < 10000; i++)
-	{
-		snprintf(tganame, sizeof(tganame), "quake%04i.tga", i);
-		snprintf(checkname, sizeof(checkname), "%s/%s", com_gamedir, tganame);
-		if (Sys_FileTime(checkname) == -1)
-			break;	// file doesn't exist
-	}
-
-	if (i == 10000)
-	{
-		Con_Printf("Error: Cannot create more than 10000 screenshots\n");
-		return;
-	}
-
-	buffer = Q_malloc(glwidth * glheight * 3 + 18);
-	memset(buffer, 0, 18);
-	buffer[2] = 2;		// uncompressed type
-	buffer[12] = glwidth & 255;
-	buffer[13] = glwidth >> 8;
-	buffer[14] = glheight & 255;
-	buffer[15] = glheight >> 8;
-	buffer[16] = 24;	// pixel size
-
-//	glReadPixels(glx, gly, glwidth, glheight, GL_RGB, GL_UNSIGNED_BYTE, buffer + 18);
-
-	// swap rgb to bgr
-	c = 18 + glwidth * glheight * 3;
-	for (i = 18; i < c; i += 3)
-	{
-		temp = buffer[i];
-		buffer[i] = buffer[i + 2];
-		buffer[i + 2] = temp;
-	}
-	COM_WriteFile(tganame, buffer, glwidth * glheight * 3 + 18);
-
-	free(buffer);
-	Con_Printf("Wrote %s\n", tganame);
 }
 
 //=============================================================================
@@ -1034,7 +964,6 @@ void SCR_Init(void)
 	Cvar_SetCallback(&scr_fov, CL_Fov_f);
 
 	// register our commands
-	Cmd_AddCommand("screenshot", SCR_ScreenShot_f);
 	Cmd_AddCommand("sizeup", SCR_SizeUp_f);
 	Cmd_AddCommand("sizedown", SCR_SizeDown_f);
 

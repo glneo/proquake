@@ -799,9 +799,9 @@ void V_RenderView(void)
 	// don't allow cheats in multiplayer
 	if (cl.maxclients > 1)
 	{
-		Cvar_Set("scr_ofsx", "0");
-		Cvar_Set("scr_ofsy", "0");
-		Cvar_Set("scr_ofsz", "0");
+		Cvar_SetQuick(&scr_ofsx, "0");
+		Cvar_SetQuick(&scr_ofsy, "0");
+		Cvar_SetQuick(&scr_ofsz, "0");
 	}
 
 	if (cl.intermission) // intermission / finale rendering

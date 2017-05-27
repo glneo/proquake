@@ -85,7 +85,7 @@ int UDP_Init (void)
 	if (strcmp(hostname.string, "UNNAMED") == 0)
 	{
 		buff[15] = 0;
-		Cvar_Set ("hostname", buff);
+		Cvar_SetQuick(&hostname, buff);
 	}
 
 	if ((net_controlsocket = UDP_OpenSocket (0)) == -1)
