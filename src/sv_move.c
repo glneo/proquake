@@ -16,7 +16,7 @@
 
 #include "quakedef.h"
 
-#define	STEPSIZE	18
+#define	STEPSIZE 18
 
 /*
  =============

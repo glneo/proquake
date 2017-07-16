@@ -191,7 +191,7 @@ typedef struct
 #include "server.h"
 #include "model.h"
 #include "input.h"
-#include "world.h"
+#include "sv_world.h"
 #include "keys.h"
 #include "console.h"
 #include "view.h"

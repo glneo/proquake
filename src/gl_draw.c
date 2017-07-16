@@ -673,7 +673,8 @@ void Draw_ConsoleBackground(int lines)
  */
 void Draw_TileClear(int x, int y, int w, int h)
 {
-//	GL_Bind(*(int *) draw_backtile->data);
+	glpic_t	*gl = (glpic_t *)draw_backtile->data;
+	GL_Bind (gl->gltexture);
 
 	GLfloat texts[] = {
 		x / 64.0, y / 64.0,

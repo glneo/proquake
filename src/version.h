@@ -38,11 +38,14 @@
 #define SUPPORTS_TRANSFORM_INTERPOLATION // We are switching to r_interpolate_transform
 
 // Define Renderer Name
+#ifdef OPENGLES
+#define RENDERER_NAME "GLes"
+#else
 #define RENDERER_NAME "GL"
+#endif
 
 // Define Capabilities
 #define SUPPORTS_HARDWARE_ANIM_INTERPOLATION // The hardware interpolation route
-#define SUPPORTS_2DPICS_ALPHA // Transparency of 2D pics
 #define SUPPORTS_GL_OVERBRIGHTS // Overbright method GLQuake is using, WinQuake always had them
 //#define SUPPORTS_VSYNC
 #define SUPPORTS_TRANSPARENT_SBAR

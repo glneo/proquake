@@ -822,333 +822,333 @@ void M_Setup_Key(int key, int ascii)
 //=============================================================================
 /* OPTIONS MENU */
 
-// JPG 1.05 - changed from #ifdef _WIND32 by CSR
-#if defined(_WIN32) || defined(X11) || defined(_BSD)  /* CSR */
-#define	OPTIONS_ITEMS	17 // Baker 3.60 - New Menu; Baker 3.99e: CD player on/off from menu
-#else
-#define	OPTIONS_ITEMS	16 // Baker 3.60 - New Menu
-#endif
+enum
+{
+	OPT_CUSTOMIZE = 0,
+	OPT_CONSOLE,
+	OPT_DEFAULTS,
+	OPT_SCALE,
+	OPT_SCRSIZE,
+	OPT_GAMMA,
+	OPT_CONTRAST,
+	OPT_MOUSESPEED,
+	OPT_SBALPHA,
+	OPT_SNDVOL,
+	OPT_MUSICVOL,
+	OPT_MUSICEXT,
+	OPT_ALWAYRUN,
+	OPT_INVMOUSE,
+	OPT_ALWAYSMLOOK,
+	OPT_LOOKSPRING,
+	OPT_LOOKSTRAFE,
+	OPT_VIDEO, // This is the last before OPTIONS_ITEMS
+	OPTIONS_ITEMS
+};
 
-#define	SLIDER_RANGE	10
+#define SLIDER_RANGE 10
 
 int options_cursor;
 
-void M_Menu_Options_f(void)
+void M_Menu_Options_f (void)
 {
+//	IN_Deactivate(modestate == MODE_WINDOWED);
 	key_dest = key_menu;
 	m_state = m_options;
 	m_entersound = true;
 }
 
-void M_AdjustSliders(int dir)
+
+void M_AdjustSliders (int dir)
 {
-	S_LocalSound("misc/menu3.wav");
+	float	f;
+
+	S_LocalSound ("misc/menu3.wav");
 
 	switch (options_cursor)
 	{
-	case 3:	// screen size
-		scr_viewsize.value += dir * 10;
-		if (scr_viewsize.value < 30)
-			scr_viewsize.value = 30;
-		if (scr_viewsize.value > 120)
-			scr_viewsize.value = 120;
-		Cvar_SetValueQuick(&scr_viewsize, scr_viewsize.value);
+	case OPT_SCALE:	// console and menu scale
+//		l = ((vid.width + 31) / 32) / 10.0;
+//		f = scr_conscale.value + dir * .1;
+//		if (f < 1)	f = 1;
+//		else if(f > l)	f = l;
+//		Cvar_SetValue ("scr_conscale", f);
+//		Cvar_SetValue ("scr_menuscale", f);
+//		Cvar_SetValue ("scr_sbarscale", f);
 		break;
-	case 4:	// Baker 3.60 --- fov size
-		scr_fov.value += dir * 1;
-		if (scr_fov.value < 90)
-			scr_fov.value = 90;
-		if (scr_fov.value > 110) // Baker 3.60 -- Will increase range after ProQuake FOV bug is fixed
-			scr_fov.value = 110;  // Baker 3.60 -- Will increase range after ProQuake FOV bug is fixed
-		Cvar_SetValueQuick(&scr_fov, scr_fov.value);
+	case OPT_SCRSIZE:	// screen size
+		f = scr_viewsize.value + dir * 10;
+		if (f > 120)	f = 120;
+		else if(f < 30)	f = 30;
+		Cvar_SetValue ("viewsize", f);
 		break;
-	case 5:	// gamma
+	case OPT_GAMMA:	// gamma
+//		f = vid_gamma.value - dir * 0.05;
+//		if (f < 0.5)	f = 0.5;
+//		else if (f > 1)	f = 1;
+//		Cvar_SetValue ("gamma", f);
+		break;
+	case OPT_CONTRAST:	// contrast
+//		f = vid_contrast.value + dir * 0.1;
+//		if (f < 1)	f = 1;
+//		else if (f > 2)	f = 2;
+//		Cvar_SetValue ("contrast", f);
+		break;
+	case OPT_MOUSESPEED:	// mouse speed
+		f = sensitivity.value + dir * 0.5;
+		if (f > 11)	f = 11;
+		else if (f < 1)	f = 1;
+		Cvar_SetValue ("sensitivity", f);
+		break;
+	case OPT_SBALPHA:	// statusbar alpha
+		f = cl_sbar.value - dir * 0.05;
+		if (f < 0)	f = 0;
+		else if (f > 1)	f = 1;
+		Cvar_SetValueQuick(&cl_sbar, f);
+		break;
+	case OPT_MUSICVOL:	// music volume
+		f = bgmvolume.value + dir * 0.1;
+		if (f < 0)	f = 0;
+		else if (f > 1)	f = 1;
+		Cvar_SetValue ("bgmvolume", f);
+		break;
+	case OPT_MUSICEXT:	// enable external music vs cdaudio
+//		Cvar_Set ("bgm_extmusic", bgm_extmusic.value ? "0" : "1");
+		break;
+	case OPT_SNDVOL:	// sfx volume
+		f = sfxvolume.value + dir * 0.1;
+		if (f < 0)	f = 0;
+		else if (f > 1)	f = 1;
+		Cvar_SetValue ("volume", f);
+		break;
 
-		SCR_ModalMessage("Brightness adjustment cannot\n"
-				"be done in-game if using the\n"
-				"-gamma command line parameter.\n\n\n"
-				"Remove -gamma from your command\n"
-				"line to use in-game brightness.\n\n"
-				"Press Y or N to continue.", 0.0f);
-		break;
-	case 6:	// mouse speed
-		sensitivity.value += dir * 1;
-		if (sensitivity.value < 1)
-			sensitivity.value = 1;
-#ifdef MACOSX_SENS_RANGE
-		if (sensitivity.value > 32)
-		sensitivity.value = 32;
-#else
-		if (sensitivity.value > 21)
-			sensitivity.value = 21; // Baker 3.60 increased top range to 21 from 11
-#endif /* MACOSX */
-		Cvar_SetValueQuick(&sensitivity, sensitivity.value);
-		break;
-		/*
-		 case 7:	// music volume
-
-		 break;*/
-//	case 7:	// sfx volume
-//		volume.value += dir * 0.1;
-//		if (volume.value < 0)
-//			volume.value = 0;
-//		if (volume.value > 1)
-//			volume.value = 1;
-//		Cvar_SetValueQuick(&volume, volume.value);
-//		break;
-
-	case 8:
-		break;
-
-	case 9:	// always run
-		if (cl_upspeed.value > 200)
+	case OPT_ALWAYRUN:	// always run
+		if (cl_movespeedkey.value <= 1)
+			Cvar_Set ("cl_movespeedkey", "2.0");
+		if (cl_forwardspeed.value > 200)
 		{
-			// Maxxed to OFF
-			Cvar_SetValueQuick(&cl_forwardspeed, 200);
-			Cvar_SetValueQuick(&cl_backspeed, 200);
-			Cvar_SetValueQuick(&cl_sidespeed, 350);    // Baker 3.60 - added 350 is the default
-			Cvar_SetValueQuick(&cl_upspeed, 200);	// Baker 3.60 - added 350 is the default
-		}
-		else if (cl_forwardspeed.value > 200)
-		{
-			// Classic to Maxxed
-			Cvar_SetValueQuick(&cl_forwardspeed, 999); // Baker 3.60 - previously 400
-			Cvar_SetValueQuick(&cl_backspeed, 999);    // Baker 3.60 - previously 400
-			Cvar_SetValueQuick(&cl_sidespeed, 999);    // Baker 3.60 - added
-			Cvar_SetValueQuick(&cl_upspeed, 999);		// Baker 3.60 - added
+			Cvar_Set ("cl_forwardspeed", "200");
+			Cvar_Set ("cl_backspeed", "200");
 		}
 		else
 		{
-			// OFF to Classic
-			Cvar_SetValueQuick(&cl_forwardspeed, 400); // Baker 3.60 - previously 400
-			Cvar_SetValueQuick(&cl_backspeed, 400);    // Baker 3.60 - previously 400
-			Cvar_SetValueQuick(&cl_sidespeed, 350);    // Baker 3.60 - added
-			Cvar_SetValueQuick(&cl_upspeed, 200);		// Baker 3.60 - added
+			Cvar_SetValue ("cl_forwardspeed", 200 * cl_movespeedkey.value);
+			Cvar_SetValue ("cl_backspeed", 200 * cl_movespeedkey.value);
 		}
 		break;
 
-	case 10:	// freelook
-		Cvar_SetValueQuick(&freelook, !freelook.value);
+	case OPT_INVMOUSE:	// invert mouse
+		Cvar_SetValue ("m_pitch", -m_pitch.value);
 		break;
 
-	case 11:	// invert mouse
-		Cvar_SetValueQuick(&m_pitch, -m_pitch.value);
+	case OPT_ALWAYSMLOOK:
+		if (in_mlook.state & 1)
+			Cbuf_AddText("-mlook");
+		else
+			Cbuf_AddText("+mlook");
 		break;
 
-	case 12:	// lookspring
-		Cvar_SetValueQuick(&lookspring, !lookspring.value);
+	case OPT_LOOKSPRING:	// lookspring
+		Cvar_Set ("lookspring", lookspring.value ? "0" : "1");
 		break;
 
-	case 13:
-
+	case OPT_LOOKSTRAFE:	// lookstrafe
+		Cvar_Set ("lookstrafe", lookstrafe.value ? "0" : "1");
 		break;
-
-		/* case 13:	// lookstrafe
-		 Cvar_SetValueQuick(&lookstrafe, !lookstrafe.value);
-		 break; // Baker 3.60 - Moved to preferences menu */
-
-// JPG 1.05 - changed from #ifdef _WIND32 by CSR
-#if defined(_WIN32) || defined(X11) || defined(_BSD)  /* CSR */
-		case 16:	// _windowed_mouse
-		Cvar_SetValueQuick(&_windowed_mouse, !_windowed_mouse.value);
-		break;
-#endif
 	}
 }
 
-void M_DrawSlider(int x, int y, float range)
+
+void M_DrawSlider (int x, int y, float range)
 {
-	int i;
+	int	i;
 
 	if (range < 0)
 		range = 0;
 	if (range > 1)
 		range = 1;
-	M_DrawCharacter(x - 8, y, 128);
+	M_DrawCharacter (x-8, y, 128);
 	for (i = 0; i < SLIDER_RANGE; i++)
-		M_DrawCharacter(x + i * 8, y, 129);
-	M_DrawCharacter(x + i * 8, y, 130);
-	M_DrawCharacter(x + (SLIDER_RANGE - 1) * 8 * range, y, 131);
+		M_DrawCharacter (x + i*8, y, 129);
+	M_DrawCharacter (x+i*8, y, 130);
+	M_DrawCharacter (x + (SLIDER_RANGE-1)*8 * range, y, 131);
 }
 
-void M_DrawCheckbox(int x, int y, int on)
+void M_DrawCheckbox (int x, int y, int on)
 {
+#if 0
 	if (on)
-		M_Print(x, y, "on");
+		M_DrawCharacter (x, y, 131);
 	else
-		M_Print(x, y, "off");
+		M_DrawCharacter (x, y, 129);
+#endif
+	if (on)
+		M_Print (x, y, "on");
+	else
+		M_Print (x, y, "off");
 }
 
-extern bool video_options_disabled;
-
-void M_Options_Draw(void)
+void M_Options_Draw (void)
 {
-	float r;
+	float r = 0;
 	qpic_t *p;
 
-	M_DrawTransPic(16, 4, Draw_CachePic("gfx/qplaque.lmp"));
-	p = Draw_CachePic("gfx/p_option.lmp");
-	M_DrawPic((320 - p->width) / 2, 4, p);
+	M_DrawTransPic (16, 4, Draw_CachePic ("gfx/qplaque.lmp") );
+	p = Draw_CachePic ("gfx/p_option.lmp");
+	M_DrawPic ( (320-p->width)/2, 4, p);
 
-	M_Print(16, 32, "    Customize controls");
-	M_Print(16, 40, "         Go to console");
-	M_Print(16, 48, "     Reset to defaults");
+	// Draw the items in the order of the enum defined above:
+	// OPT_CUSTOMIZE:
+	M_Print (16, 32,			"              Controls");
+	// OPT_CONSOLE:
+	M_Print (16, 32 + 8*OPT_CONSOLE,	"          Goto console");
+	// OPT_DEFAULTS:
+	M_Print (16, 32 + 8*OPT_DEFAULTS,	"          Reset config");
 
-	M_Print(16, 56, "           Screen size");
+	// OPT_SCALE:
+	M_Print (16, 32 + 8*OPT_SCALE,		"                 Scale");
+//	l = (vid.width / 320.0) - 1;
+//	r = l > 0 ? (scr_conscale.value - 1) / l : 0;
+	M_DrawSlider (220, 32 + 8*OPT_SCALE, r);
+
+	// OPT_SCRSIZE:
+	M_Print (16, 32 + 8*OPT_SCRSIZE,	"           Screen size");
 	r = (scr_viewsize.value - 30) / (120 - 30);
-	M_DrawSlider(220, 56, r);
+	M_DrawSlider (220, 32 + 8*OPT_SCRSIZE, r);
 
-	M_Print(16, 64, "         Field of view");
-	r = (scr_fov.value - 90) / (110 - 90);
-	M_DrawSlider(220, 64, r);
+	// OPT_GAMMA:
+	M_Print (16, 32 + 8*OPT_GAMMA,		"            Brightness");
+//	r = (1.0 - vid_gamma.value) / 0.5;
+	M_DrawSlider (220, 32 + 8*OPT_GAMMA, r);
 
-	M_Print(16, 72, "            Brightness");
+	// OPT_CONTRAST:
+	M_Print (16, 32 + 8*OPT_CONTRAST,	"              Contrast");
+//	r = vid_contrast.value - 1.0;
+	M_DrawSlider (220, 32 + 8*OPT_CONTRAST, r);
 
-	r = (1.0 - vold_gamma.value) / 0.5;
+	// OPT_MOUSESPEED:
+	M_Print (16, 32 + 8*OPT_MOUSESPEED,	"           Mouse Speed");
+	r = (sensitivity.value - 1)/10;
+	M_DrawSlider (220, 32 + 8*OPT_MOUSESPEED, r);
 
-	M_DrawSlider(220, 72, r);
+	// OPT_SBALPHA:
+	M_Print (16, 32 + 8*OPT_SBALPHA,	"       Statusbar alpha");
+	r = (1.0 - cl_sbar.value) ; // scr_sbaralpha range is 1.0 to 0.0
+	M_DrawSlider (220, 32 + 8*OPT_SBALPHA, r);
 
-	M_Print(16, 80, "           Mouse Speed");
-	r = (sensitivity.value - 1) / 20;
-	M_DrawSlider(220, 80, r);
+	// OPT_SNDVOL:
+	M_Print (16, 32 + 8*OPT_SNDVOL,		"          Sound Volume");
+	r = sfxvolume.value;
+	M_DrawSlider (220, 32 + 8*OPT_SNDVOL, r);
 
-	M_Print(16, 88, "          Sound Volume");
-	r = 5; //volume.value;
-	M_DrawSlider(220, 88, r);
+	// OPT_MUSICVOL:
+	M_Print (16, 32 + 8*OPT_MUSICVOL,	"          Music Volume");
+	r = bgmvolume.value;
+	M_DrawSlider (220, 32 + 8*OPT_MUSICVOL, r);
 
-	M_Print(16, 104, "            Always Run");
-	//M_DrawCheckbox (220, 104, cl_forwardspeed.value > 200);
-	M_Print(220, 104, cl_upspeed.value > 200 ? "maximum" : cl_forwardspeed.value > 200 ? "on" : "off");
+	// OPT_MUSICEXT:
+	M_Print (16, 32 + 8*OPT_MUSICEXT,	"        External Music");
+//	M_DrawCheckbox (220, 32 + 8*OPT_MUSICEXT, bgm_extmusic.value);
 
-	// Baker 3.60 - the "freelook" standard variable in Quake2, Quake3, etc.
-	M_Print(16, 112, "            Mouse Look");
-	M_DrawCheckbox(220, 112, freelook.value);
-	// End
+	// OPT_ALWAYRUN:
+	M_Print (16, 32 + 8*OPT_ALWAYRUN,	"            Always Run");
+	M_DrawCheckbox (220, 32 + 8*OPT_ALWAYRUN, cl_forwardspeed.value > 200);
 
-	M_Print(16, 120, "          Invert Mouse");
-	M_DrawCheckbox(220, 120, m_pitch.value < 0);
+	// OPT_INVMOUSE:
+	M_Print (16, 32 + 8*OPT_INVMOUSE,	"          Invert Mouse");
+	M_DrawCheckbox (220, 32 + 8*OPT_INVMOUSE, m_pitch.value < 0);
 
-	M_Print(16, 128, "            Lookspring");
-	M_DrawCheckbox(220, 128, lookspring.value);
+	// OPT_ALWAYSMLOOK:
+	M_Print (16, 32 + 8*OPT_ALWAYSMLOOK,	"            Mouse Look");
+	M_DrawCheckbox (220, 32 + 8*OPT_ALWAYSMLOOK, in_mlook.state & 1);
 
-	M_Print(16, 144, "     Advanced Settings");
+	// OPT_LOOKSPRING:
+	M_Print (16, 32 + 8*OPT_LOOKSPRING,	"            Lookspring");
+	M_DrawCheckbox (220, 32 + 8*OPT_LOOKSPRING, lookspring.value);
 
-//	if (vid_menudrawfn)
-	M_Print(16, 152, "         Video Options");
+	// OPT_LOOKSTRAFE:
+	M_Print (16, 32 + 8*OPT_LOOKSTRAFE,	"            Lookstrafe");
+	M_DrawCheckbox (220, 32 + 8*OPT_LOOKSTRAFE, lookstrafe.value);
 
-	{
-
-//		if (video_options_disabled)
-		M_Print(220, 152, "[locked]");
-	}
-
-#ifdef _WIN32
-	if (modestate == MODE_WINDOWED)
-
-#endif													/* JPG 1.05 by CSR */
-#if defined(_WIN32) || defined(X11) || defined(_BSD)	/* JPG 1.05 by CSR */
-
-	{
-		M_Print (16, 160, "             Use Mouse");
-		M_DrawCheckbox (220, 160, _windowed_mouse.value);
-	}
-#endif
+	// OPT_VIDEO:
+	if (vid_menudrawfn)
+		M_Print (16, 32 + 8*OPT_VIDEO,	"         Video Options");
 
 // cursor
-	M_DrawCharacter(200, 32 + options_cursor * 8, 12 + ((int) (realtime * 4) & 1));
+	M_DrawCharacter (200, 32 + options_cursor*8, 12+((int)(realtime*4)&1));
 }
 
-void Cmd_Baker_Inject_Aliases();
-void M_Options_Key(int key, int ascii)
-{
 
+void M_Options_Key (int key, int ascii)
+{
 	switch (key)
 	{
 	case K_ESCAPE:
-		M_Menu_Main_f();
+//	case K_BBUTTON:
+		M_Menu_Main_f ();
 		break;
 
 	case K_ENTER:
+//	case K_KP_ENTER:
+//	case K_ABUTTON:
 		m_entersound = true;
 		switch (options_cursor)
 		{
-		case 0:
-			M_Menu_Keys_f();
+		case OPT_CUSTOMIZE:
+			M_Menu_Keys_f ();
 			break;
-		case 1:
+		case OPT_CONSOLE:
 			m_state = m_none;
-			Con_ToggleConsole_f();
+			Con_ToggleConsole_f ();
 			break;
-		case 2:
-			if (!SCR_ModalMessage("Are you sure you want to reset\nall keys and settings?", 0.0f))
-				break;
-
-			Cbuf_AddText("resetall\n"); //johnfitz
-			Cbuf_AddText("exec default.cfg\n"); //Baker: this isn't quite gamedir neutral
-//			Cmd_Baker_Inject_Aliases();
-			// Question: should everything be unaliased too?
-			// Question: what about instances where the default has been faked?
-			// To do:    Add Cvar_SetDefault
+		case OPT_DEFAULTS:
+			if (SCR_ModalMessage("This will reset all controls\n"
+					"and stored cvars. Continue? (y/n)\n", 15.0f))
+			{
+				Cbuf_AddText ("resetcfg\n");
+				Cbuf_AddText ("exec default.cfg\n");
+			}
 			break;
-
-		case 14:
-			M_Menu_Preferences_f();
-			break;
-		case 15:
-
-			/*			if (video_options_disabled)
-			 SCR_ModalMessage("Video options are disabled when\nusing the -window command\nline parameter.\n\nRemove -window from your command\nline to enable in-game\nresolution changing.\n\nPress Y or N to continue.",0.0f);
-			 else */
-			M_Menu_Video_f();
-
+		case OPT_VIDEO:
+			M_Menu_Video_f ();
 			break;
 		default:
-			M_AdjustSliders(1);
+			M_AdjustSliders (1);
 			break;
 		}
 		return;
 
 	case K_UPARROW:
-		S_LocalSound("misc/menu1.wav");
+		S_LocalSound ("misc/menu1.wav");
 		options_cursor--;
 		if (options_cursor < 0)
-			options_cursor = OPTIONS_ITEMS - 1;
+			options_cursor = OPTIONS_ITEMS-1;
 		break;
 
 	case K_DOWNARROW:
-		S_LocalSound("misc/menu1.wav");
+		S_LocalSound ("misc/menu1.wav");
 		options_cursor++;
 		if (options_cursor >= OPTIONS_ITEMS)
 			options_cursor = 0;
 		break;
 
 	case K_LEFTARROW:
-		M_AdjustSliders(-1);
+		M_AdjustSliders (-1);
 		break;
 
 	case K_RIGHTARROW:
-		M_AdjustSliders(1);
+		M_AdjustSliders (1);
 		break;
 	}
 
-	if (options_cursor == 15 && vid_menudrawfn == NULL)
+	if (options_cursor == OPTIONS_ITEMS - 1 && vid_menudrawfn == NULL)
 	{
 		if (key == K_UPARROW)
-			options_cursor = 14;
+			options_cursor = OPTIONS_ITEMS - 2;
 		else
 			options_cursor = 0;
 	}
-
-#ifdef _WIN32
-	if ((options_cursor == 16) && (modestate != MODE_WINDOWED))
-	{
-		if (key == K_UPARROW)
-		options_cursor = 15;
-		else
-		options_cursor = 0;
-	}
-#endif
 }
+
 
 //=============================================================================
 /* KEYS MENU */
@@ -2337,27 +2337,13 @@ void M_GameOptions_Draw(void)
 
 		switch ((int) teamplay.value)
 		{
-		case 1:
-			msg = "No Friendly Fire";
-			break;
-		case 2:
-			msg = "Friendly Fire";
-			break;
-		case 3:
-			msg = "Tag";
-			break;
-		case 4:
-			msg = "Capture the Flag";
-			break;
-		case 5:
-			msg = "One Flag CTF";
-			break;
-		case 6:
-			msg = "Three Team CTF";
-			break;
-		default:
-			msg = "Off";
-			break;
+		case 1: msg = "No Friendly Fire"; break;
+		case 2: msg = "Friendly Fire"; break;
+		case 3: msg = "Tag"; break;
+		case 4: msg = "Capture the Flag"; break;
+		case 5: msg = "One Flag CTF"; break;
+		case 6: msg = "Three Team CTF"; break;
+		default: msg = "Off"; break;
 		}
 		M_Print(160, 72, msg);
 	}
@@ -2367,15 +2353,9 @@ void M_GameOptions_Draw(void)
 
 		switch ((int) teamplay.value)
 		{
-		case 1:
-			msg = "No Friendly Fire";
-			break;
-		case 2:
-			msg = "Friendly Fire";
-			break;
-		default:
-			msg = "Off";
-			break;
+		case 1: msg = "No Friendly Fire"; break;
+		case 2: msg = "Friendly Fire"; break;
+		default: msg = "Off"; break;
 		}
 		M_Print(160, 72, msg);
 	}

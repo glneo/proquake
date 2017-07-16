@@ -382,7 +382,9 @@ void PR_ExecuteProgram(func_t fnum)
 			c->_float = a->_float * b->_float;
 			break;
 		case OP_MUL_V:
-			c->_float = a->vector[0] * b->vector[0] + a->vector[1] * b->vector[1] + a->vector[2] * b->vector[2];
+			c->_float = a->vector[0] * b->vector[0] +
+			            a->vector[1] * b->vector[1] +
+				    a->vector[2] * b->vector[2];
 			break;
 		case OP_MUL_FV:
 			c->vector[0] = a->_float * b->vector[0];
@@ -444,7 +446,9 @@ void PR_ExecuteProgram(func_t fnum)
 			c->_float = a->_float == b->_float;
 			break;
 		case OP_EQ_V:
-			c->_float = (a->vector[0] == b->vector[0]) && (a->vector[1] == b->vector[1]) && (a->vector[2] == b->vector[2]);
+			c->_float = (a->vector[0] == b->vector[0]) &&
+			            (a->vector[1] == b->vector[1]) &&
+				    (a->vector[2] == b->vector[2]);
 			break;
 		case OP_EQ_S:
 			c->_float = !strcmp(PR_GetString(a->string), PR_GetString(b->string));
@@ -460,7 +464,9 @@ void PR_ExecuteProgram(func_t fnum)
 			c->_float = a->_float != b->_float;
 			break;
 		case OP_NE_V:
-			c->_float = (a->vector[0] != b->vector[0]) || (a->vector[1] != b->vector[1]) || (a->vector[2] != b->vector[2]);
+			c->_float = (a->vector[0] != b->vector[0]) ||
+			            (a->vector[1] != b->vector[1]) ||
+				    (a->vector[2] != b->vector[2]);
 			break;
 		case OP_NE_S:
 			c->_float = strcmp(PR_GetString(a->string), PR_GetString(b->string));
@@ -503,7 +509,7 @@ void PR_ExecuteProgram(func_t fnum)
 		case OP_ADDRESS:
 			ed = PROG_TO_EDICT(a->edict);
 #ifdef PARANOID
-			NUM_FOR_EDICT(ed);		// make sure it's in range
+			NUM_FOR_EDICT(ed); // make sure it's in range
 #endif
 			if (ed == (edict_t *) sv.edicts && sv.state == ss_active)
 				PR_RunError("assignment to world entity");
@@ -517,7 +523,7 @@ void PR_ExecuteProgram(func_t fnum)
 		case OP_LOAD_FNC:
 			ed = PROG_TO_EDICT(a->edict);
 #ifdef PARANOID
-			NUM_FOR_EDICT(ed);		// make sure it's in range
+			NUM_FOR_EDICT(ed); // make sure it's in range
 #endif
 			a = (eval_t *) ((int *) &ed->v + b->_int);
 			c->_int = a->_int;
@@ -526,7 +532,7 @@ void PR_ExecuteProgram(func_t fnum)
 		case OP_LOAD_V:
 			ed = PROG_TO_EDICT(a->edict);
 #ifdef PARANOID
-			NUM_FOR_EDICT(ed);		// make sure it's in range
+			NUM_FOR_EDICT(ed); // make sure it's in range
 #endif
 			a = (eval_t *) ((int *) &ed->v + b->_int);
 			c->vector[0] = a->vector[0];

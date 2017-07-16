@@ -12,7 +12,6 @@ set(PROQUAKE_SOURCES
 	src/mathlib.c
 	src/zone.c
 	src/wad.c
-	src/world.c
 	src/sys_linux.c
 # Client
 	src/cl_demo.c
@@ -51,6 +50,7 @@ set(PROQUAKE_SOURCES
 	src/sv_phys.c
 	src/sv_move.c
 	src/sv_user.c
+	src/sv_world.c
 )
 
 # Graphics

@@ -312,14 +312,6 @@ void Sbar_DrawSubPic(int x, int y, qpic_t *pic, int srcx, int srcy, int width, i
 	Draw_SubPic(x, y + (vid.height - SBAR_HEIGHT), pic, srcx, srcy, width, height);
 }
 
-/*
- =============
- Sbar_DrawTransPic
- =============
- */
-
-#ifdef SUPPORTS_2DPICS_ALPHA
-void Draw_AlphaPic(int x, int y, qpic_t *pic, float alpha);
 void Sbar_DrawAlphaPic(int x, int y, qpic_t *pic, float alpha)
 {
 	if (cl.gametype == GAME_DEATHMATCH)
@@ -327,7 +319,7 @@ void Sbar_DrawAlphaPic(int x, int y, qpic_t *pic, float alpha)
 	else
 		Draw_AlphaPic(x + ((vid.width - 320) >> 1), y + (vid.height - SBAR_HEIGHT), pic, alpha);
 }
-#endif
+
 void Sbar_DrawTransPic(int x, int y, qpic_t *pic)
 {
 	if (cl.gametype == GAME_DEATHMATCH)
@@ -1135,22 +1127,13 @@ void Sbar_Draw(void)
 
 	if (sb_showscores || cl.stats[STAT_HEALTH] <= 0)
 	{
-#ifdef SUPPORTS_2DPICS_ALPHA
 		Sbar_DrawAlphaPic(0, 0, sb_scorebar, cl_sbar.value);
-#else
-		Sbar_DrawPic (0, 0, sb_scorebar);
-#endif
 		Sbar_DrawScoreboard();
 		sb_updates = 0;
 	}
 	else if (sb_lines)
 	{
-#ifdef SUPPORTS_2DPICS_ALPHA
 		Sbar_DrawAlphaPic(0, 0, sb_sbar, cl_sbar.value);
-#else
-		if (cl_sbar.value || scr_viewsize.value < 100)
-		Sbar_DrawPic (0, 0, sb_sbar);
-#endif
 
 		// keys (hipnotic only)
 		//MED 01/04/97 moved keys here so they would not be overwritten

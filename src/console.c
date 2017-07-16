@@ -36,8 +36,8 @@ char *con_text = NULL;
 cvar_t con_notifytime = { "con_notifytime", "3", CVAR_NONE }; //seconds
 cvar_t con_logcenterprint = { "con_logcenterprint", "1", CVAR_NONE };
 cvar_t _con_notifylines = { "con_notifylines", "4" };
-cvar_t		pq_removecr = {"pq_removecr", "1"};		// JPG 3.20 - remove \r from console output
-int			con_notifylines;		// scan lines to clear for
+cvar_t pq_removecr = { "pq_removecr", "1" };		// JPG 3.20 - remove \r from console output
+int con_notifylines;		// scan lines to clear for
 
 #define	CON_LASTCENTERSTRING_SIZE 1024
 char con_lastcenterstring[CON_LASTCENTERSTRING_SIZE];
@@ -60,7 +60,7 @@ void Con_Quakebar(int len)
 {
 	char bar[42];
 
-	len = min(len, (int)sizeof(bar) - 2);
+	len = min(len, (int )sizeof(bar) - 2);
 	len = min(len, con_linewidth);
 
 	bar[0] = '\35';
@@ -649,15 +649,14 @@ typedef struct arg_completion_type_s
 	filelist_item_t **filelist;
 } arg_completion_type_t;
 
-static const arg_completion_type_t arg_completion_types[] =
-{
+static const arg_completion_type_t arg_completion_types[] = {
 //	{ "map ", &extralevels },
 //	{ "changelevel ", &extralevels },
-	{ "game ", &modlist },
+		{ "game ", &modlist },
 //	{ "record ", &demolist },
 //	{ "playdemo ", &demolist },
 //	{ "timedemo ", &demolist }
-};
+		};
 
 static const int num_arg_completion_types = sizeof(arg_completion_types) / sizeof(arg_completion_types[0]);
 
@@ -757,11 +756,11 @@ void Con_TabComplete(void)
 	tab_t *t;
 	int mark, i;
 
-// if editline is empty, return
+	// if editline is empty, return
 	if (key_lines[edit_line][1] == 0)
 		return;
 
-// get partial string (space -> cursor)
+	// get partial string (space -> cursor)
 	if (!key_tabpartial[0]) //first time through, find new insert point. (Otherwise, use previous.)
 	{
 		//work back from cursor until you find a space, quote, semicolon, or prompt
@@ -770,9 +769,7 @@ void Con_TabComplete(void)
 			c--;
 		c++; //start 1 char after the separator we just found
 	}
-	for (i = 0; c + i < key_lines[edit_line] + key_linepos; i++)
-		partial[i] = c[i];
-	partial[i] = 0;
+	strlcpy(partial, c, key_lines[edit_line] + key_linepos - c);
 
 // Map autocomplete function -- S.A
 // Since we don't have argument completion, this hack will do for now...
@@ -896,22 +893,22 @@ void Con_TabComplete(void)
  */
 
 /*
-================
-Con_DrawNotify
-Draws the last few lines of output transparently over the game top
-================
-*/
-void Con_DrawNotify (void)
+ ================
+ Con_DrawNotify
+ Draws the last few lines of output transparently over the game top
+ ================
+ */
+void Con_DrawNotify(void)
 {
-	int		x, v;
-	char	*text;
-	int		i;
-	float	time;
+	int x, v;
+	char *text;
+	int i;
+	float time;
 	extern char chat_buffer[];
-	int		maxlines = CLAMP (0, _con_notifylines.value, NUM_CON_TIMES);
+	int maxlines = CLAMP(0, _con_notifylines.value, NUM_CON_TIMES);
 
 	v = 0;
-	for (i = con_current - maxlines + 1 ; i <= con_current ; i++)
+	for (i = con_current - maxlines + 1; i <= con_current; i++)
 	{
 		if (i < 0)
 			continue;
@@ -921,16 +918,15 @@ void Con_DrawNotify (void)
 		time = realtime - time;
 		if (time > con_notifytime.value)
 			continue;
-		text = con_text + (i % con_totallines)*con_linewidth;
+		text = con_text + (i % con_totallines) * con_linewidth;
 
 		clearnotify = 0;
 
-		for (x = 0 ; x < con_linewidth ; x++)
-			Draw_Character ( (x+1)<<3, v, text[x]);
+		for (x = 0; x < con_linewidth; x++)
+			Draw_Character((x + 1) << 3, v, text[x]);
 
 		v += 8;
 	}
-
 
 	if (key_dest == key_message)
 	{
@@ -942,18 +938,18 @@ void Con_DrawNotify (void)
 		// JPG - added support for team messages
 		if (team_message)
 		{
-			Draw_String (8, v, "(say team):");
+			Draw_String(8, v, "(say team):");
 			x = 12; // Baker 3.90: 7 increased to 12 for "say_team"
 		}
 		else
 		{
-			Draw_String (8, v, "say:");
+			Draw_String(8, v, "say:");
 			x = 5;
 		}
 
-		while(chat_buffer[i])
+		while (chat_buffer[i])
 		{
-			Draw_Character ( x<<3, v, chat_buffer[i]);
+			Draw_Character(x << 3, v, chat_buffer[i]);
 			x++;
 
 			// JPG - added this for longer says
@@ -964,7 +960,7 @@ void Con_DrawNotify (void)
 				v += 8;
 			}
 		}
-		Draw_Character ( x<<3, v, 10+((int)(realtime*con_cursorspeed)&1));
+		Draw_Character(x << 3, v, 10 + ((int) (realtime * con_cursorspeed) & 1));
 		v += 8;
 	}
 
@@ -973,16 +969,16 @@ void Con_DrawNotify (void)
 }
 
 /*
-================
-Con_DrawInput
-The input line scrolls horizontally if typing goes beyond the right edge
-================
-*/
-static void Con_DrawInput (void)
+ ================
+ Con_DrawInput
+ The input line scrolls horizontally if typing goes beyond the right edge
+ ================
+ */
+static void Con_DrawInput(void)
 {
-	int		y;
-	int		i;
-	char	*text;
+	int y;
+	int i;
+	char *text;
 
 	if (key_dest != key_console && !con_forcedup)
 		return;		// don't draw anything
@@ -990,10 +986,10 @@ static void Con_DrawInput (void)
 	text = key_lines[edit_line];
 
 	// add the cursor frame
-	text[key_linepos] = 10+((int)(realtime*con_cursorspeed)&1);
+	text[key_linepos] = 10 + ((int) (realtime * con_cursorspeed) & 1);
 
 	// fill out remainder with spaces
-	for (i=key_linepos+1 ; i< con_linewidth ; i++)
+	for (i = key_linepos + 1; i < con_linewidth; i++)
 		text[i] = ' ';
 
 	//	prestep if horizontally scrolling
@@ -1001,15 +997,14 @@ static void Con_DrawInput (void)
 		text += 1 + key_linepos - con_linewidth;
 
 	// draw it
-	y = con_vislines-16;
+	y = con_vislines - 16;
 
-	for (i=0 ; i<con_linewidth ; i++)
-		Draw_Character ( (i+1)<<3, y, text[i]);
+	for (i = 0; i < con_linewidth; i++)
+		Draw_Character((i + 1) << 3, y, text[i]);
 
 	// remove cursor
 	key_lines[edit_line][key_linepos] = 0;
 }
-
 
 void Con_DrawConsole(int lines, bool drawinput)
 {
@@ -1093,7 +1088,6 @@ void Con_DrawConsole(int lines, bool drawinput)
 //	if (drawinput)
 //		Con_DrawInput();
 //}
-
 void Con_Init(void)
 {
 	int i = COM_CheckParm("-consize");
@@ -1102,7 +1096,7 @@ void Con_Init(void)
 	else
 		con_buffersize = CON_TEXTSIZE;
 
-	con_text = (char *)Hunk_AllocName(con_buffersize, "con_text");
+	con_text = (char *) Hunk_AllocName(con_buffersize, "con_text");
 	memset(con_text, ' ', con_buffersize);
 	con_linewidth = -1;
 
@@ -1113,9 +1107,9 @@ void Con_Init(void)
 
 	Cvar_RegisterVariable(&con_notifytime);
 	Cvar_RegisterVariable(&con_logcenterprint);
-	Cvar_RegisterVariable (&_con_notifylines);
+	Cvar_RegisterVariable(&_con_notifylines);
 
-	Cvar_RegisterVariable (&pq_removecr);
+	Cvar_RegisterVariable(&pq_removecr);
 
 	Cmd_AddCommand("toggleconsole", Con_ToggleConsole_f);
 	Cmd_AddCommand("messagemode", Con_MessageMode_f);

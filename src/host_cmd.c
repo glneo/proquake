@@ -896,8 +896,7 @@ void Host_Savegame_f(void)
 	fprintf(f, "%s\n", sv.name);
 	fprintf(f, "%f\n", sv.time);
 
-// write the light styles
-
+	// write the light styles
 	for (i = 0; i < MAX_LIGHTSTYLES; i++)
 	{
 		if (sv.lightstyles[i])
@@ -908,10 +907,8 @@ void Host_Savegame_f(void)
 
 	ED_WriteGlobals(f);
 	for (i = 0; i < sv.num_edicts; i++)
-	{
 		ED_Write(f, EDICT_NUM(i));
-		// fflush (f);  // Baker: MH proves commenting this out makes save games decent speed
-	}
+
 	fclose(f);
 	Con_Printf("done.\n");
 }
