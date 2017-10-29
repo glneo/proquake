@@ -332,13 +332,13 @@ static void TexMgr_Imagedump_f (void)
 		if (glt->flags & TEX_ALPHA)
 		{
 			buffer = (byte *) malloc(glt->width*glt->height*4);
-			glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_BYTE, buffer);
+//			glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_BYTE, buffer);
 			Image_WriteTGA(tganame, buffer, glt->width, glt->height, 32, true);
 		}
 		else
 		{
 			buffer = (byte *) malloc(glt->width*glt->height*3);
-			glGetTexImage(GL_TEXTURE_2D, 0, GL_RGB, GL_UNSIGNED_BYTE, buffer);
+//			glGetTexImage(GL_TEXTURE_2D, 0, GL_RGB, GL_UNSIGNED_BYTE, buffer);
 			Image_WriteTGA(tganame, buffer, glt->width, glt->height, 24, true);
 		}
 		free (buffer);
@@ -391,6 +391,9 @@ gltexture_t *TexMgr_NewTexture(void)
 
 	if (numgltextures == MAX_GLTEXTURES)
 		Sys_Error("numgltextures == MAX_GLTEXTURES\n");
+
+	if (free_gltextures == NULL)
+		return NULL;
 
 	glt = free_gltextures;
 	free_gltextures = glt->next;
@@ -1101,7 +1104,11 @@ gltexture_t *TexMgr_LoadImage(const char *name, int width, int height, enum srcf
 			return glt;
 	}
 	else
+	{
 		glt = TexMgr_NewTexture();
+		if (glt == NULL)
+			return NULL;
+	}
 
 	// copy data
 	strlcpy(glt->name, name, sizeof(glt->name));

@@ -15,15 +15,6 @@
 #include "quakedef.h"
 #include "glquake.h"
 
-#ifdef _WIN32
-#include "windows/winquake.h"
-#endif
-
-// JPG 1.05 - following code by CSR is for changing _windowed_mouse CVAR from menu in X11
-#if defined(X11) || defined(_BSD)   /* CSR */
-extern cvar_t _windowed_mouse; /* CSR */
-#endif                              /* CSR */
-
 void (*vid_menucmdfn)(void);
 void (*vid_menudrawfn)(void);
 void (*vid_menukeyfn)(int key);
@@ -882,16 +873,16 @@ void M_AdjustSliders (int dir)
 		Cvar_SetValue ("viewsize", f);
 		break;
 	case OPT_GAMMA:	// gamma
-//		f = vid_gamma.value - dir * 0.05;
-//		if (f < 0.5)	f = 0.5;
-//		else if (f > 1)	f = 1;
-//		Cvar_SetValue ("gamma", f);
+		f = vid_gamma.value - dir * 0.05;
+		if (f < 0.5)	f = 0.5;
+		else if (f > 1)	f = 1;
+		Cvar_SetValue ("gamma", f);
 		break;
 	case OPT_CONTRAST:	// contrast
-//		f = vid_contrast.value + dir * 0.1;
-//		if (f < 1)	f = 1;
-//		else if (f > 2)	f = 2;
-//		Cvar_SetValue ("contrast", f);
+		f = vid_contrast.value + dir * 0.1;
+		if (f < 1)	f = 1;
+		else if (f > 2)	f = 2;
+		Cvar_SetValue ("contrast", f);
 		break;
 	case OPT_MOUSESPEED:	// mouse speed
 		f = sensitivity.value + dir * 0.5;
@@ -1017,12 +1008,12 @@ void M_Options_Draw (void)
 
 	// OPT_GAMMA:
 	M_Print (16, 32 + 8*OPT_GAMMA,		"            Brightness");
-//	r = (1.0 - vid_gamma.value) / 0.5;
+	r = (1.0 - vid_gamma.value) / 0.5;
 	M_DrawSlider (220, 32 + 8*OPT_GAMMA, r);
 
 	// OPT_CONTRAST:
 	M_Print (16, 32 + 8*OPT_CONTRAST,	"              Contrast");
-//	r = vid_contrast.value - 1.0;
+	r = vid_contrast.value - 1.0;
 	M_DrawSlider (220, 32 + 8*OPT_CONTRAST, r);
 
 	// OPT_MOUSESPEED:
@@ -1382,9 +1373,6 @@ void M_Menu_Preferences_f(void)
 	m_state = m_preferences;  // Baker 3.60 - we are in the preferences menu
 	m_entersound = true;
 }
-#ifdef SUPPORTS_DIRECTINPUT
-extern bool commandline_dinput; // Baker 3.85 to support dinput switching
-#endif
 
 void M_Pref_AdjustSliders(int dir)
 {
@@ -1601,14 +1589,7 @@ void M_Pref_AdjustSliders(int dir)
 		break;
 
 	case 18:
-#ifdef SUPPORTS_DIRECTINPUT
-		if (commandline_dinput)
-		{
-			SCR_ModalMessage("DirectInput is locked because the\n-dinput command line parameter\nwas used.\n\nPress Y or N to continue.",0.0f);
-			break;
-		}
-		Cvar_SetQuick(&m_directinput, m_directinput.value ? "0" : "1");
-#endif
+
 		break;
 
 	case 19:

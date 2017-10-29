@@ -38,8 +38,8 @@ set(PROQUAKE_SOURCES
 	src/net_dgrm.c
 	src/net_loop.c
 	src/net_main.c
-	src/net_vcr.c
 	src/net_udp.c
+	src/net_vcr.c
 	src/net_bsd.c
 # Program
 	src/pr_cmds.c
@@ -76,8 +76,8 @@ else()
 		src/gl_vidsdl.c
 		src/gl_warp.c
 	)
-	set(GRAPHICS_LIBRARY "OpenGL" CACHE STRING "Select graphics library")
-	set_property(CACHE GRAPHICS_LIBRARY PROPERTY STRINGS "OpenGL" "OpenGL ES")
+	set(GRAPHICS_LIBRARY "OpenGL ES" CACHE STRING "Select graphics library")
+	set_property(CACHE GRAPHICS_LIBRARY PROPERTY STRINGS "OpenGL ES" "OpenGL")
 endif()
 
 # Sound

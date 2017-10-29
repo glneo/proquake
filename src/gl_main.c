@@ -250,7 +250,7 @@ static void R_DrawViewModel(void)
 
 static void R_PolyBlend(void)
 {
-	if (!v_blend[3])	// No blends ... get outta here
+	if (!v_blend[3]) // No blends ... get outta here
 		return;
 
 	if (!gl_polyblend.value)
@@ -287,7 +287,6 @@ static void R_PolyBlend(void)
 	glEnable(GL_DEPTH_TEST);
 	glDisable(GL_BLEND);
 	glEnable(GL_ALPHA_TEST);
-
 }
 
 static int SignbitsForPlane(mplane_t *out)
@@ -846,7 +845,6 @@ void R_Init(void)
 	Cvar_RegisterVariable(&gl_nearwater_fix);
 	Cvar_RegisterVariable(&gl_fadescreen_alpha);
 
-	TexMgr_Init();
 	R_InitParticles();
 	R_InitParticleTexture();
 }

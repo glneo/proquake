@@ -304,7 +304,7 @@ void Mod_LoadTextures(brush_model_t *brushmodel, lump_t *l, byte *mod_base, char
 		tx->fullbright = NULL; //johnfitz
 
 		//johnfitz -- lots of changes
-//		if (!isDedicated) //no texture uploading for dedicated server
+		if (cls.state != ca_dedicated) //no texture uploading for dedicated server
 		{
 //			if (!strncasecmp(tx->name,"sky",3)) //sky texture //also note -- was Q_strncmp, changed to match qbsp
 //				Sky_LoadTexture (tx);

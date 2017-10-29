@@ -17,7 +17,7 @@
 #include "net_loop.h"
 #include "net_dgrm.h"
 
-net_driver_t net_drivers[MAX_NET_DRIVERS] =
+net_driver_t net_drivers[] =
 {
 	{
 		"Loopback",
@@ -52,12 +52,11 @@ net_driver_t net_drivers[MAX_NET_DRIVERS] =
 		Datagram_Shutdown
 	}
 };
-
-int net_numdrivers = 2;
+int net_numdrivers = (sizeof(net_drivers) / sizeof(net_drivers[0]));
 
 #include "net_udp.h"
 
-net_landriver_t	net_landrivers[MAX_NET_DRIVERS] =
+net_landriver_t	net_landrivers[] =
 {
 	{
 		"UDP",
@@ -83,5 +82,4 @@ net_landriver_t	net_landrivers[MAX_NET_DRIVERS] =
 		UDP_SetSocketPort
 	}
 };
-
-int net_numlandrivers = 1;
+int net_numlandrivers = (sizeof(net_landrivers) / sizeof(net_landrivers[0]));

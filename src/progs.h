@@ -129,6 +129,7 @@ extern int pr_xstatement;
 extern unsigned short pr_crc;
 
 void PR_RunError(char *error, ...);
+void PF_changeyaw(void);
 
 void ED_PrintEdicts_f(void);
 void ED_PrintNum(int ent);

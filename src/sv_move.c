@@ -19,17 +19,13 @@
 #define	STEPSIZE 18
 
 /*
- =============
- SV_CheckBottom
-
- Returns false if any part of the bottom of the entity is off an edge that
- is not a staircase.
- =============
+ * Returns false if any part of the bottom of the entity is off an edge that
+ * is not a staircase.
  */
-int c_yes, c_no;
-
 bool SV_CheckBottom(edict_t *ent)
 {
+	// static int c_yes, c_no;
+
 	vec3_t mins, maxs, start, stop;
 	trace_t trace;
 	int x, y;
@@ -38,9 +34,9 @@ bool SV_CheckBottom(edict_t *ent)
 	VectorAdd(ent->v.origin, ent->v.mins, mins);
 	VectorAdd(ent->v.origin, ent->v.maxs, maxs);
 
-// if all of the points under the corners are solid world, don't bother
-// with the tougher checks
-// the corners must be within 16 of the midpoint
+	// if all of the points under the corners are solid world, don't bother
+	// with the tougher checks
+	// the corners must be within 16 of the midpoint
 	start[2] = mins[2] - 1;
 	for (x = 0; x <= 1; x++)
 		for (y = 0; y <= 1; y++)
@@ -51,15 +47,16 @@ bool SV_CheckBottom(edict_t *ent)
 				goto realcheck;
 		}
 
-	c_yes++;
-	return true;		// we got out easy
+	// c_yes++;
+	return true; // we got out easy
 
-	realcheck: c_no++;
+	realcheck:
+	// c_no++;
 
-// check it for real...
+	// check it for real...
 	start[2] = mins[2];
 
-// the midpoint must be within 16 of the bottom
+	// the midpoint must be within 16 of the bottom
 	start[0] = stop[0] = (mins[0] + maxs[0]) * 0.5;
 	start[1] = stop[1] = (mins[1] + maxs[1]) * 0.5;
 	stop[2] = start[2] - 2 * STEPSIZE;
@@ -69,7 +66,7 @@ bool SV_CheckBottom(edict_t *ent)
 		return false;
 	mid = bottom = trace.endpos[2];
 
-// the corners must be within 16 of the midpoint	
+	// the corners must be within 16 of the midpoint
 	for (x = 0; x <= 1; x++)
 		for (y = 0; y <= 1; y++)
 		{
@@ -84,19 +81,15 @@ bool SV_CheckBottom(edict_t *ent)
 				return false;
 		}
 
-	c_yes++;
+	// c_yes++;
 	return true;
 }
 
 /*
- =============
- SV_movestep
-
- Called by monster program code.
- The move will be adjusted for slopes and stairs, but if the move isn't
- possible, no move is done, false is returned, and
- pr_global_struct->trace_normal is set to the normal of the blocking wall
- =============
+ * Called by monster program code.
+ * The move will be adjusted for slopes and stairs, but if the move isn't
+ * possible, no move is done, false is returned, and
+ * pr_global_struct->trace_normal is set to the normal of the blocking wall
  */
 bool SV_movestep(edict_t *ent, vec3_t move, bool relink)
 {
@@ -106,11 +99,11 @@ bool SV_movestep(edict_t *ent, vec3_t move, bool relink)
 	int i;
 	edict_t *enemy;
 
-// try the move	
+	// try the move
 	VectorCopy(ent->v.origin, oldorg);
 	VectorAdd(ent->v.origin, move, neworg);
 
-// flying monsters don't step up
+	// flying monsters don't step up
 	if ((int) ent->v.flags & (FL_SWIM | FL_FLY))
 	{
 		// try one move with vertical motion, then one without
@@ -146,7 +139,7 @@ bool SV_movestep(edict_t *ent, vec3_t move, bool relink)
 		return false;
 	}
 
-// push down from a step height above the wished position
+	// push down from a step height above the wished position
 	neworg[2] += STEPSIZE;
 	VectorCopy(neworg, end);
 	end[2] -= STEPSIZE * 2;
@@ -172,14 +165,14 @@ bool SV_movestep(edict_t *ent, vec3_t move, bool relink)
 			if (relink)
 				SV_LinkEdict(ent, true);
 			ent->v.flags = (int) ent->v.flags & ~FL_ONGROUND;
-//	Con_Printf ("fall down\n"); 
+			// Con_Printf ("fall down\n");
 			return true;
 		}
 
-		return false;		// walked off an edge
+		return false; // walked off an edge
 	}
 
-// check point traces down for dangling corners
+	// check point traces down for dangling corners
 	VectorCopy(trace.endpos, ent->v.origin);
 
 	if (!SV_CheckBottom(ent))
@@ -197,30 +190,22 @@ bool SV_movestep(edict_t *ent, vec3_t move, bool relink)
 
 	if ((int) ent->v.flags & FL_PARTIALGROUND)
 	{
-//		Con_Printf ("back on ground\n"); 
+		// Con_Printf ("back on ground\n");
 		ent->v.flags = (int) ent->v.flags & ~FL_PARTIALGROUND;
 	}
 	ent->v.groundentity = EDICT_TO_PROG(trace.ent);
 
-// the move is ok
+	// the move is ok
 	if (relink)
 		SV_LinkEdict(ent, true);
 	return true;
 }
 
-//============================================================================
-
 /*
- ======================
- SV_StepDirection
-
- Turns to the movement direction, and walks the current distance if
- facing it.
-
- ======================
+ * Turns to the movement direction, and walks the current distance if
+ * facing it.
  */
-void PF_changeyaw(void);
-bool SV_StepDirection(edict_t *ent, float yaw, float dist)
+static bool SV_StepDirection(edict_t *ent, float yaw, float dist)
 {
 	vec3_t move, oldorigin;
 	float delta;
@@ -249,26 +234,15 @@ bool SV_StepDirection(edict_t *ent, float yaw, float dist)
 	return false;
 }
 
-/*
- ======================
- SV_FixCheckBottom
-
- ======================
- */
-void SV_FixCheckBottom(edict_t *ent)
+static void SV_FixCheckBottom(edict_t *ent)
 {
 //	Con_Printf ("SV_FixCheckBottom\n");
 
 	ent->v.flags = (int) ent->v.flags | FL_PARTIALGROUND;
 }
 
-/*
- ================
- SV_NewChaseDir
- ================
- */
-#define	DI_NODIR	-1
-void SV_NewChaseDir(edict_t *actor, edict_t *enemy, float dist)
+#define	DI_NODIR -1
+static void SV_NewChaseDir(edict_t *actor, edict_t *enemy, float dist)
 {
 	float deltax, deltay, d[3], tdir, olddir, turnaround;
 
@@ -290,7 +264,7 @@ void SV_NewChaseDir(edict_t *actor, edict_t *enemy, float dist)
 	else
 		d[2] = DI_NODIR;
 
-// try direct route
+	// try direct route
 	if (d[1] != DI_NODIR && d[2] != DI_NODIR)
 	{
 		if (d[1] == 0)
@@ -302,7 +276,7 @@ void SV_NewChaseDir(edict_t *actor, edict_t *enemy, float dist)
 			return;
 	}
 
-// try other directions
+	// try other directions
 	if (((rand() & 3) & 1) || fabsf(deltay) > fabsf(deltax))
 	{
 		tdir = d[1];
@@ -316,12 +290,12 @@ void SV_NewChaseDir(edict_t *actor, edict_t *enemy, float dist)
 	if (d[2] != DI_NODIR && d[2] != turnaround && SV_StepDirection(actor, d[2], dist))
 		return;
 
-// there is no direct path to the player, so pick another direction
+	// there is no direct path to the player, so pick another direction
 
 	if (olddir != DI_NODIR && SV_StepDirection(actor, olddir, dist))
 		return;
 
-	if (rand() & 1) 	// randomly determine direction of search
+	if (rand() & 1) // randomly determine direction of search
 	{
 		for (tdir = 0; tdir <= 315; tdir += 45)
 			if (tdir != turnaround && SV_StepDirection(actor, tdir, dist))
@@ -337,25 +311,17 @@ void SV_NewChaseDir(edict_t *actor, edict_t *enemy, float dist)
 	if (turnaround != DI_NODIR && SV_StepDirection(actor, turnaround, dist))
 		return;
 
-	actor->v.ideal_yaw = olddir;		// can't move
+	actor->v.ideal_yaw = olddir; // can't move
 
-// if a bridge was pulled out from underneath a monster, it may not have
-// a valid standing position at all
-
+	// if a bridge was pulled out from underneath a monster, it may not have
+	// a valid standing position at all
 	if (!SV_CheckBottom(actor))
 		SV_FixCheckBottom(actor);
 }
 
-/*
- ======================
- SV_CloseEnough
- ======================
- */
-bool SV_CloseEnough(edict_t *ent, edict_t *goal, float dist)
+static bool SV_CloseEnough(edict_t *ent, edict_t *goal, float dist)
 {
-	int i;
-
-	for (i = 0; i < 3; i++)
+	for (int i = 0; i < 3; i++)
 	{
 		if (goal->v.absmin[i] > ent->v.absmax[i] + dist)
 			return false;
@@ -365,19 +331,11 @@ bool SV_CloseEnough(edict_t *ent, edict_t *goal, float dist)
 	return true;
 }
 
-/*
- ======================
- SV_MoveToGoal
- ======================
- */
 void SV_MoveToGoal(void)
 {
-	edict_t *ent, *goal;
-	float dist;
-
-	ent = PROG_TO_EDICT(pr_global_struct->self);
-	goal = PROG_TO_EDICT(ent->v.goalentity);
-	dist = G_FLOAT(OFS_PARM0);
+	edict_t *ent = PROG_TO_EDICT(pr_global_struct->self);
+	edict_t *goal = PROG_TO_EDICT(ent->v.goalentity);
+	float dist = G_FLOAT(OFS_PARM0);
 
 	if (!((int) ent->v.flags & (FL_ONGROUND | FL_FLY | FL_SWIM)))
 	{
@@ -385,11 +343,11 @@ void SV_MoveToGoal(void)
 		return;
 	}
 
-// if the next step hits the enemy, return immediately
+	// if the next step hits the enemy, return immediately
 	if ( PROG_TO_EDICT(ent->v.enemy) != sv.edicts && SV_CloseEnough(ent, goal, dist))
 		return;
 
-// bump around...
+	// bump around...
 	if ((rand() & 3) == 1 || !SV_StepDirection(ent, ent->v.ideal_yaw, dist))
 		SV_NewChaseDir(ent, goal, dist);
 

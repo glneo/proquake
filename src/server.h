@@ -12,13 +12,16 @@
  * General Public License for more details.
  */
 
+#ifndef __SERVER_H
+#define __SERVER_H
+
 typedef struct
 {
 	int maxclients;
 	int maxclientslimit;
-	struct client_s *clients;		// [maxclients]
-	int serverflags;		// episode completion information
-	bool changelevel_issued;	// cleared when at SV_SpawnServer
+	struct client_s *clients; // [maxclients]
+	int serverflags; // episode completion information
+	bool changelevel_issued; // cleared when at SV_SpawnServer
 } server_static_t;
 
 //=============================================================================
@@ -120,65 +123,65 @@ typedef struct client_s
 //=============================================================================
 
 // edict->movetype values
-#define	MOVETYPE_NONE			0		// never moves
-#define	MOVETYPE_ANGLENOCLIP	1
-#define	MOVETYPE_ANGLECLIP		2
-#define	MOVETYPE_WALK			3		// gravity
-#define	MOVETYPE_STEP			4		// gravity, special edge handling
-#define	MOVETYPE_FLY			5
-#define	MOVETYPE_TOSS			6		// gravity
-#define	MOVETYPE_PUSH			7		// no clip to world, push and crush
-#define	MOVETYPE_NOCLIP			8
-#define	MOVETYPE_FLYMISSILE		9		// extra size to monsters
-#define	MOVETYPE_BOUNCE			10
+#define	MOVETYPE_NONE           0 // never moves
+#define	MOVETYPE_ANGLENOCLIP    1
+#define	MOVETYPE_ANGLECLIP      2
+#define	MOVETYPE_WALK           3 // gravity
+#define	MOVETYPE_STEP           4 // gravity, special edge handling
+#define	MOVETYPE_FLY            5
+#define	MOVETYPE_TOSS           6 // gravity
+#define	MOVETYPE_PUSH           7 // no clip to world, push and crush
+#define	MOVETYPE_NOCLIP         8
+#define	MOVETYPE_FLYMISSILE     9 // extra size to monsters
+#define	MOVETYPE_BOUNCE         10
 
 // edict->solid values
-#define	SOLID_NOT				0		// no interaction with other objects
-#define	SOLID_TRIGGER			1		// touch on edge, but not blocking
-#define	SOLID_BBOX				2		// touch on edge, block
-#define	SOLID_SLIDEBOX			3		// touch on edge, but not an onground
-#define	SOLID_BSP				4		// bsp clip, touch on edge, block
+#define	SOLID_NOT       0 // no interaction with other objects
+#define	SOLID_TRIGGER   1 // touch on edge, but not blocking
+#define	SOLID_BBOX      2 // touch on edge, block
+#define	SOLID_SLIDEBOX  3 // touch on edge, but not an onground
+#define	SOLID_BSP       4 // bsp clip, touch on edge, block
 
 // edict->deadflag values
-#define	DEAD_NO					0
-#define	DEAD_DYING				1
-#define	DEAD_DEAD				2
+#define	DEAD_NO	        0
+#define	DEAD_DYING      1
+#define	DEAD_DEAD       2
 
-#define	DAMAGE_NO				0
-#define	DAMAGE_YES				1
-#define	DAMAGE_AIM				2
+#define	DAMAGE_NO       0
+#define	DAMAGE_YES      1
+#define	DAMAGE_AIM      2
 
 // edict->flags
-#define	FL_FLY					1
-#define	FL_SWIM					2
-#define	FL_CONVEYOR				4
-#define	FL_CLIENT				8
-#define	FL_INWATER				16
-#define	FL_MONSTER				32
-#define	FL_GODMODE				64
-#define	FL_NOTARGET				128
-#define	FL_ITEM					256
-#define	FL_ONGROUND				512
-#define	FL_PARTIALGROUND		1024	// not all corners are valid
-#define	FL_WATERJUMP			2048	// player jumping out of water
-#define	FL_JUMPRELEASED			4096	// for jump debouncing
-#define FL_LOW_BANDWIDTH_CLIENT 8192    // Baker 3.99b: Slot Zero's anti-lag server/mod option for dialup users
+#define	FL_FLY			1
+#define	FL_SWIM                 2
+#define	FL_CONVEYOR             4
+#define	FL_CLIENT               8
+#define	FL_INWATER              16
+#define	FL_MONSTER              32
+#define	FL_GODMODE              64
+#define	FL_NOTARGET             128
+#define	FL_ITEM                 256
+#define	FL_ONGROUND             512
+#define	FL_PARTIALGROUND        1024 // not all corners are valid
+#define	FL_WATERJUMP            2048 // player jumping out of water
+#define	FL_JUMPRELEASED         4096 // for jump debouncing
+#define FL_LOW_BANDWIDTH_CLIENT 8192 // Baker 3.99b: Slot Zero's anti-lag server/mod option for dialup users
 
 // entity effects
 
-#define	EF_BRIGHTFIELD			1
-#define	EF_MUZZLEFLASH 			2
-#define	EF_BRIGHTLIGHT 			4
-#define	EF_DIMLIGHT 			8
-#define	EF_NODRAW				16
-#define	EF_BLUE					64
-#define	EF_RED					128
-#define EF_MAYBE_DRAW       32768   // Baker 3.99b: Slot Zero's anti-lag server/mod option for dialup users
+#define	EF_BRIGHTFIELD  1
+#define	EF_MUZZLEFLASH  2
+#define	EF_BRIGHTLIGHT  4
+#define	EF_DIMLIGHT     8
+#define	EF_NODRAW       16
+#define	EF_BLUE         64
+#define	EF_RED          128
+#define EF_MAYBE_DRAW   32768   // Baker 3.99b: Slot Zero's anti-lag server/mod option for dialup users
 
-#define	SPAWNFLAG_NOT_EASY			256
-#define	SPAWNFLAG_NOT_MEDIUM		512
-#define	SPAWNFLAG_NOT_HARD			1024
-#define	SPAWNFLAG_NOT_DEATHMATCH	2048
+#define	SPAWNFLAG_NOT_EASY              256
+#define	SPAWNFLAG_NOT_MEDIUM            512
+#define	SPAWNFLAG_NOT_HARD              1024
+#define	SPAWNFLAG_NOT_DEATHMATCH        2048
 
 //============================================================================
 
@@ -194,51 +197,45 @@ extern cvar_t pq_fullpitch;	// JPG 2.01
 
 extern cvar_t sv_cullentities;
 
-extern server_static_t svs;				// persistant server info
-extern server_t sv;					// local server
+extern server_static_t svs; // persistant server info
+extern server_t sv; // local server
 
 extern client_t *host_client;
-
 extern jmp_buf host_abortserver;
-
 extern double host_time;
 
 extern edict_t *sv_player;
 
 //===========================================================
 
+/* sv_main.c */
 void SV_Init(void);
-
 void SV_StartParticle(vec3_t org, vec3_t dir, int color, int count);
 void SV_StartSound(edict_t *entity, int channel, char *sample, int volume, float attenuation);
-
-void SV_DropClient(bool crash);
-
-void SV_SendClientMessages(void);
+void SV_CheckForNewClients(void);
 void SV_ClearDatagram(void);
-
+//byte *SV_FatPVS(vec3_t org, model_t *worldmodel);
+void SV_WriteClientdataToMessage(edict_t *ent, sizebuf_t *msg);
+void SV_SendClientMessages(void);
 int SV_ModelIndex(char *name);
+void SV_SaveSpawnparms(void);
+void SV_SpawnServer(char *server);
 
+/* sv_move.c */
+bool SV_CheckBottom(edict_t *ent);
+bool SV_movestep(edict_t *ent, vec3_t move, bool relink);
+void SV_MoveToGoal(void);
+
+/* sv_phys.c */
+void SV_Physics(void);
+
+/* sv_user.c */
 void SV_SetIdealPitch(void);
+void SV_RunClients(void);
 
-void SV_AddUpdates(void);
-
-void SV_ClientThink(void);
-void SV_AddClientToServer(struct qsocket_s *ret);
-
+/* host.c */
+void SV_DropClient(bool crash);
 void SV_ClientPrintf(const char *fmt, ...);
 void SV_BroadcastPrintf(char *fmt, ...);
 
-void SV_Physics(void);
-
-bool SV_CheckBottom(edict_t *ent);
-bool SV_movestep(edict_t *ent, vec3_t move, bool relink);
-
-void SV_WriteClientdataToMessage(edict_t *ent, sizebuf_t *msg);
-
-void SV_MoveToGoal(void);
-
-void SV_CheckForNewClients(void);
-void SV_RunClients(void);
-void SV_SaveSpawnparms();
-void SV_SpawnServer(char *server);
+#endif /* __SERVER_H */

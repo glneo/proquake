@@ -773,9 +773,7 @@ void COM_CheckRegistered(void)
 
 	if (h == -1)
 	{
-#if WINDED
-		Sys_Error ("This dedicated server requires a full registered copy of Quake");
-#endif
+		//Sys_Error ("This dedicated server requires a full registered copy of Quake");
 		Con_Printf("Playing shareware version.\n");
 		//if (com_modified)
 		//	Sys_Error ("You must have the registered version to use modified games");
@@ -953,7 +951,6 @@ typedef struct
 
 #define MAX_FILES_IN_PACK       2048
 
-char com_cachedir[MAX_OSPATH];
 char com_gamedir[MAX_OSPATH];	// JPG 3.20 - added initialization
 
 typedef struct searchpath_s
@@ -1068,6 +1065,18 @@ void COM_CopyFile(char *netpath, char *cachepath)
 	Sys_FileClose(out);
 }
 
+long COM_filelength (FILE *f)
+{
+	long		pos, end;
+
+	pos = ftell (f);
+	fseek (f, 0, SEEK_END);
+	end = ftell (f);
+	fseek (f, pos, SEEK_SET);
+
+	return end;
+}
+
 /*
  ===========
  COM_FindFile
@@ -1080,10 +1089,9 @@ int COM_FindFile(char *filename, int *handle, FILE **file)
 {
 	searchpath_t *search;
 	char netpath[MAX_OSPATH];
-	char cachepath[MAX_OSPATH];
 	pack_t *pak;
 	int i;
-	int findtime, cachetime;
+	int findtime;
 
 	if (file && handle)
 		Sys_Error("both handle and file set");
@@ -1126,58 +1134,36 @@ int COM_FindFile(char *filename, int *handle, FILE **file)
 					return com_filesize;
 				}
 		}
-		else
+		else	/* check a file in the directory tree */
 		{
-			// check a file in the directory tree
-			if (!static_registered)
-			{       // if not a registered version, don't ever go beyond base
-				if (strchr(filename, '/') || strchr(filename, '\\'))
+			if (!registered.value)
+			{ /* if not a registered version, don't ever go beyond base */
+				if ( strchr (filename, '/') || strchr (filename,'\\'))
 					continue;
 			}
 
-			snprintf(netpath, sizeof(netpath), "%s/%s", search->filename, filename);
-
-			findtime = Sys_FileTime(netpath);
+			snprintf(netpath, sizeof(netpath), "%s/%s",search->filename, filename);
+			findtime = Sys_FileTime (netpath);
 			if (findtime == -1)
 				continue;
 
-			// see if the file needs to be updated in the cache
-			if (!com_cachedir[0])
-				strcpy(cachepath, netpath);
-			else
-			{
-#if defined(_WIN32)
-				if ((strlen(netpath) < 2) || (netpath[1] != ':'))
-				snprintf(cachepath, sizeof(cachepath),"%s%s", com_cachedir, netpath);
-
-				else
-				snprintf(cachepath, sizeof(cachepath),"%s%s", com_cachedir, netpath+2);
-
-//#elif defined (MACOSX) || defined (LINUX)
-#else // Above line is insufficient since we do PSP and Flash now too
-
-				snprintf(cachepath, sizeof(cachepath), "%s%s", com_cachedir, netpath);
-#endif //^^ Windows prefixes drive names (no idea what OSX or Linux do for multiple drives).  In truth the above needs work for Windows networked drives prefixes (see aguirRe Quake for solution)
-
-				cachetime = Sys_FileTime(cachepath);
-
-				if (cachetime < findtime)
-					COM_CopyFile(netpath, cachepath);
-				strcpy(netpath, cachepath);
-			}
-
-			Sys_Printf("FindFile: %s\n", netpath);
-			com_filesize = Sys_FileOpenRead(netpath, &i);
 			if (handle)
+			{
+				com_filesize = Sys_FileOpenRead (netpath, &i);
 				*handle = i;
+				return com_filesize;
+			}
+			else if (file)
+			{
+				*file = fopen (netpath, "rb");
+				com_filesize = (*file == NULL) ? -1 : COM_filelength (*file);
+				return com_filesize;
+			}
 			else
 			{
-				Sys_FileClose(i);
-				*file = fopen(netpath, "rb");
+				return 0; /* dummy valid value for COM_FileExists() */
 			}
-			return com_filesize;
 		}
-
 	}
 
 	Sys_Printf("FindFile: can't find %s\n", filename);

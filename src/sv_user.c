@@ -38,26 +38,29 @@ usercmd_t cmd;
 
 cvar_t sv_idealpitchscale = { "sv_idealpitchscale", "0.8" };
 
-cvar_t pq_fullpitch = { "pq_fullpitch", "0", true };	// JPG 2.01
+cvar_t pq_fullpitch = { "pq_fullpitch", "0", true }; // JPG 2.01
 cvar_t sv_altnoclip = { "sv_altnoclip", "1" }; //don't save to config ... no reason to do so
 
-#define	MAX_FORWARD	6
+cvar_t sv_maxspeed = { "sv_maxspeed", "320", false, true };
+cvar_t sv_accelerate = { "sv_accelerate", "10" };
+
+#define	MAX_FORWARD 6
 void SV_SetIdealPitch(void)
 {
-	float angleval, sinval, cosval, z[MAX_FORWARD];
-	trace_t tr;
-	vec3_t top, bottom;
-	int i, j, step, dir, steps;
+	float z[MAX_FORWARD];
+	int i, dir, steps;
 
 	if (!((int) sv_player->v.flags & FL_ONGROUND))
 		return;
 
-	angleval = sv_player->v.angles[YAW] * M_PI * 2 / 360;
-	sinval = sinf(angleval);
-	cosval = cosf(angleval);
+	float angleval = sv_player->v.angles[YAW] * M_PI * 2 / 360;
+	float sinval = sinf(angleval);
+	float cosval = cosf(angleval);
 
 	for (i = 0; i < MAX_FORWARD; i++)
 	{
+		vec3_t top, bottom;
+
 		top[0] = sv_player->v.origin[0] + cosval * (i + 3) * 12;
 		top[1] = sv_player->v.origin[1] + sinval * (i + 3) * 12;
 		top[2] = sv_player->v.origin[2] + sv_player->v.view_ofs[2];
@@ -66,7 +69,7 @@ void SV_SetIdealPitch(void)
 		bottom[1] = top[1];
 		bottom[2] = top[2] - 160;
 
-		tr = SV_Move(top, vec3_origin, vec3_origin, bottom, 1, sv_player);
+		trace_t tr = SV_Move(top, vec3_origin, vec3_origin, bottom, 1, sv_player);
 		if (tr.allsolid)
 			return;	// looking at a wall, leave ideal the way is was
 
@@ -78,14 +81,14 @@ void SV_SetIdealPitch(void)
 
 	dir = 0;
 	steps = 0;
-	for (j = 1; j < i; j++)
+	for (int j = 1; j < i; j++)
 	{
-		step = z[j] - z[j - 1];
+		int step = z[j] - z[j - 1];
 		if (step > -ON_EPSILON && step < ON_EPSILON)
 			continue;
 
 		if (dir && (step - dir > ON_EPSILON || step - dir < -ON_EPSILON))
-			return;		// mixed changes
+			return; // mixed changes
 
 		steps++;
 		dir = step;
@@ -102,7 +105,7 @@ void SV_SetIdealPitch(void)
 	sv_player->v.idealpitch = -dir * sv_idealpitchscale.value;
 }
 
-void SV_UserFriction(void)
+static void SV_UserFriction(void)
 {
 	float *vel, speed, newspeed, control, friction;
 	vec3_t start, stop;
@@ -114,7 +117,7 @@ void SV_UserFriction(void)
 	if (!speed)
 		return;
 
-// if the leading edge is over a dropoff, increase friction
+	// if the leading edge is over a dropoff, increase friction
 	start[0] = stop[0] = origin[0] + vel[0] / speed * 16;
 	start[1] = stop[1] = origin[1] + vel[1] / speed * 16;
 	start[2] = origin[2] + sv_player->v.mins[2];
@@ -127,7 +130,7 @@ void SV_UserFriction(void)
 	else
 		friction = sv_friction.value;
 
-// apply friction
+	// apply friction
 	control = speed < sv_stopspeed.value ? sv_stopspeed.value : speed;
 	newspeed = speed - host_frametime * control * friction;
 
@@ -140,10 +143,7 @@ void SV_UserFriction(void)
 	vel[2] = vel[2] * newspeed;
 }
 
-
-cvar_t sv_maxspeed = { "sv_maxspeed", "320", false, true };
-cvar_t sv_accelerate = { "sv_accelerate", "10" };
-void SV_Accelerate(void)
+static void SV_Accelerate(void)
 {
 	int i;
 	float addspeed, accelspeed, currentspeed;
@@ -160,9 +160,8 @@ void SV_Accelerate(void)
 		velocity[i] += accelspeed * wishdir[i];
 }
 
-void SV_AirAccelerate(vec3_t wishveloc)
+static void SV_AirAccelerate(vec3_t wishveloc)
 {
-	int i;
 	float addspeed, wishspd, accelspeed, currentspeed;
 
 	wishspd = VectorNormalize(wishveloc);
@@ -177,15 +176,13 @@ void SV_AirAccelerate(vec3_t wishveloc)
 	if (accelspeed > addspeed)
 		accelspeed = addspeed;
 
-	for (i = 0; i < 3; i++)
+	for (int i = 0; i < 3; i++)
 		velocity[i] += accelspeed * wishveloc[i];
 }
 
-void DropPunchAngle(void)
+static void DropPunchAngle(void)
 {
-	float len;
-
-	len = VectorNormalize(sv_player->v.punchangle);
+	float len = VectorNormalize(sv_player->v.punchangle);
 
 	len -= 10 * host_frametime;
 	if (len < 0)
@@ -193,13 +190,13 @@ void DropPunchAngle(void)
 	VectorScale(sv_player->v.punchangle, len, sv_player->v.punchangle);
 }
 
-void SV_WaterMove(void)
+static void SV_WaterMove(void)
 {
 	int i;
 	vec3_t wishvel;
 	float speed, newspeed, wishspeed, addspeed, accelspeed;
 
-// user intentions
+	// user intentions
 	AngleVectors(sv_player->v.v_angle, forward, right, up);
 
 	for (i = 0; i < 3; i++)
@@ -218,7 +215,7 @@ void SV_WaterMove(void)
 	}
 	wishspeed *= 0.7;
 
-// water friction
+	// water friction
 	speed = VectorLength(velocity);
 	if (speed)
 	{
@@ -232,7 +229,7 @@ void SV_WaterMove(void)
 		newspeed = 0;
 	}
 
-// water acceleration
+	// water acceleration
 	if (!wishspeed)
 		return;
 
@@ -249,7 +246,7 @@ void SV_WaterMove(void)
 		velocity[i] += accelspeed * wishvel[i];
 }
 
-void SV_WaterJump(void)
+static void SV_WaterJump(void)
 {
 	if (sv.time > sv_player->v.teleport_time || !sv_player->v.waterlevel)
 	{
@@ -260,14 +257,8 @@ void SV_WaterJump(void)
 	sv_player->v.velocity[1] = sv_player->v.movedir[1];
 }
 
-/*
- ===================
- SV_NoclipMove -- johnfitz
-
- new, alternate noclip. old noclip is still handled in SV_AirMove
- ===================
- */
-void SV_NoclipMove(void)
+/* new, alternate noclip. old noclip is still handled in SV_AirMove */
+static void SV_NoclipMove(void)
 {
 	AngleVectors(sv_player->v.v_angle, forward, right, up);
 
@@ -283,7 +274,7 @@ void SV_NoclipMove(void)
 	}
 }
 
-void SV_AirMove(void)
+static void SV_AirMove(void)
 {
 	int i;
 	vec3_t wishvel;
@@ -294,7 +285,7 @@ void SV_AirMove(void)
 	fmove = cmd.forwardmove;
 	smove = cmd.sidemove;
 
-// hack to not let you back into teleporter
+	// hack to not let you back into teleporter
 	if (sv.time < sv_player->v.teleport_time && fmove < 0)
 		fmove = 0;
 
@@ -330,14 +321,10 @@ void SV_AirMove(void)
 }
 
 /*
- ===================
- SV_ClientThink
-
- the move fields specify an intended velocity in pix/sec
- the angle fields specify an exact angular motion in degrees
- ===================
+ * the move fields specify an intended velocity in pix/sec
+ * the angle fields specify an exact angular motion in degrees
  */
-void SV_ClientThink(void)
+static void SV_ClientThink(void)
 {
 	vec3_t v_angle;
 
@@ -384,16 +371,16 @@ void SV_ClientThink(void)
 	//johnfitz
 }
 
-void SV_ReadClientMove(usercmd_t *move)
+static void SV_ReadClientMove(usercmd_t *move)
 {
 	int i, bits;
 	vec3_t angle;
 
-// read ping time
+	// read ping time
 	host_client->ping_times[host_client->num_pings % NUM_PING_TIMES] = sv.time - MSG_ReadFloat();
 	host_client->num_pings++;
 
-// read current angles
+	// read current angles
 	if (host_client->netconnection->mod == MOD_PROQUAKE) // JPG - precise aim for ProQuake!!
 	{
 		for (i = 0; i < 3; i++)
@@ -423,12 +410,12 @@ void SV_ReadClientMove(usercmd_t *move)
 
 	VectorCopy(angle, host_client->edict->v.v_angle);
 
-// read movement
+	// read movement
 	move->forwardmove = MSG_ReadShort();
 	move->sidemove = MSG_ReadShort();
 	move->upmove = MSG_ReadShort();
 
-// read buttons
+	// read buttons
 	bits = MSG_ReadByte();
 	host_client->edict->v.button0 = bits & 1;
 	host_client->edict->v.button2 = (bits & 2) >> 1;
@@ -437,14 +424,8 @@ void SV_ReadClientMove(usercmd_t *move)
 		host_client->edict->v.impulse = i;
 }
 
-/*
- ===================
- SV_ReadClientMessage
-
- Returns false if the client should be killed
- ===================
- */
-bool SV_ReadClientMessage(void)
+/* Returns false if the client should be killed */
+static bool SV_ReadClientMessage(void)
 {
 	int ret, cmd;
 	char *s;
@@ -551,7 +532,7 @@ void SV_RunClients(void)
 
 		if (!SV_ReadClientMessage())
 		{
-			SV_DropClient(false);	// client misbehaved...
+			SV_DropClient(false); // client misbehaved...
 			continue;
 		}
 

@@ -57,8 +57,69 @@ static cvar_t vid_bpp = { "vid_bpp", "16", true };
 cvar_t vid_vsync = { "vid_vsync", "0", true };
 static cvar_t vid_desktopfullscreen = { "vid_desktopfullscreen", "0", true };
 
-cvar_t vid_gamma = { "gamma", "1", true }; //johnfitz -- moved here from view.c
-cvar_t vid_contrast = { "contrast", "1", true }; //QuakeSpasm, MarkV
+cvar_t vid_gamma = {"gamma", "1", CVAR_ARCHIVE};
+cvar_t vid_contrast = {"contrast", "1", CVAR_ARCHIVE};
+
+static bool gammaworks = false;	// whether hw-gamma works
+
+/*
+================
+VID_Gamma_SetGamma -- apply gamma correction
+================
+*/
+static void VID_Gamma_SetGamma (void)
+{
+	if (draw_context && gammaworks)
+	{
+		float value;
+
+		if (vid_gamma.value > (1.0f / GAMMA_MAX))
+			value = 1.0f / vid_gamma.value;
+		else
+			value = GAMMA_MAX;
+
+		if (SDL_SetWindowBrightness(draw_context, value) != 0)
+			Con_Printf ("VID_Gamma_SetGamma: failed on SDL_SetWindowBrightness\n");
+	}
+}
+
+/*
+================
+VID_Gamma_Restore -- restore system gamma
+================
+*/
+static void VID_Gamma_Restore (void)
+{
+
+	if (draw_context && gammaworks)
+	{
+		if (SDL_SetWindowBrightness(draw_context, 1) != 0)
+			Con_Printf ("VID_Gamma_Restore: failed on SDL_SetWindowBrightness\n");
+	}
+}
+
+static void VID_Gamma_Shutdown (void)
+{
+	VID_Gamma_Restore ();
+}
+
+static void VID_Gamma_f (cvar_t *var)
+{
+	VID_Gamma_SetGamma ();
+}
+
+static void VID_Gamma_Init (void)
+{
+	Cvar_RegisterVariable (&vid_gamma);
+	Cvar_RegisterVariable (&vid_contrast);
+	Cvar_SetCallback (&vid_gamma, VID_Gamma_f);
+	Cvar_SetCallback (&vid_contrast, VID_Gamma_f);
+
+	gammaworks = (SDL_SetWindowBrightness(draw_context, 1) == 0);
+
+	if (!gammaworks)
+		Con_SafePrintf("gamma adjustment not available\n");
+}
 
 static int VID_GetCurrentWidth(void)
 {
@@ -670,7 +731,7 @@ void VID_Init(void)
 	//Check_GammaOld(palette);
 	TexMgr_LoadPalette();
 
-//	VID_Gamma_Init(); //johnfitz
+	VID_Gamma_Init(); //johnfitz
 //	VID_Menu_Init(); //johnfitz
 
 	//QuakeSpasm: current vid settings should override config file settings.
@@ -683,6 +744,7 @@ void VID_Shutdown(void)
 	if (!vid_initialized)
 		return;
 
+	VID_Gamma_Shutdown();
 	SDL_QuitSubSystem(SDL_INIT_VIDEO);
 	draw_context = NULL;
 	gl_context = NULL;

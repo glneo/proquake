@@ -226,30 +226,7 @@ cshift_t cshift_water = { { 130, 80, 50 }, 128 };
 cshift_t cshift_slime = { { 0, 25, 5 }, 150 };
 cshift_t cshift_lava = { { 255, 80, 0 }, 150 };
 
-cvar_t vold_gamma = { "gamma", "1", true };
-
-byte gammatable[256];	// palette is sent through this
-
-byte rampsold[3][256];
-float v_blend[4];		// rgba 0.0 - 1.0
-
-void BuildGammaTable(float g)
-{
-	int i, inf;
-
-	if (g == 1.0)
-	{
-		for (i = 0; i < 256; i++)
-			gammatable[i] = i;
-		return;
-	}
-
-	for (i = 0; i < 256; i++)
-	{
-		inf = 255 * pow((i + 0.5) / 255.5, g) + 0.5;
-		gammatable[i] = CLAMP(0, inf, 255);
-	}
-}
+float v_blend[4]; // rgba 0.0 - 1.0
 
 /*
  ===============
@@ -856,8 +833,6 @@ void V_Init(void)
 	Cvar_RegisterVariable(&v_kickroll);
 	Cvar_RegisterVariable(&v_kickpitch);
 	Cvar_RegisterVariable(&v_gunkick);
-
-	Cvar_RegisterVariable(&vold_gamma);
 
 	// JPG 1.05 - colour shifts
 	Cvar_RegisterVariable(&pq_waterblend);

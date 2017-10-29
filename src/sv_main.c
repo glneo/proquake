@@ -33,11 +33,7 @@ char localmodels[MAX_MODELS][5];			// inline model names for precache
 
 //============================================================================
 
-/*
- ===============
- SV_Init
- ===============
- */
+
 void SV_Init(void)
 {
 	int i;
@@ -206,7 +202,7 @@ void SV_StartSound(edict_t *entity, int channel, char *sample, int volume, float
  This will be sent on the initial connection and upon each server load.
  ================
  */
-void SV_SendServerinfo(client_t *client)
+static void SV_SendServerinfo(client_t *client)
 {
 	char **s, message[2048];
 
@@ -259,7 +255,7 @@ void SV_SendServerinfo(client_t *client)
  once for a player each game, not once for each level change.
  ================
  */
-void SV_ConnectClient(int clientnum)
+static void SV_ConnectClient(int clientnum)
 {
 	int i, edictnum;
 	float spawn_parms[NUM_SPAWN_PARMS];
@@ -371,7 +367,7 @@ void SV_ClearDatagram(void)
 
 int fatbytes;
 byte fatpvs[MAX_MAP_LEAFS / 8];
-void SV_AddToFatPVS(vec3_t org, mnode_t *node, model_t *worldmodel)
+static void SV_AddToFatPVS(vec3_t org, mnode_t *node, model_t *worldmodel)
 {
 	int i;
 	byte *pvs;
@@ -403,20 +399,8 @@ void SV_AddToFatPVS(vec3_t org, mnode_t *node, model_t *worldmodel)
 }
 
 /*
- =============
- SV_FatPVS
-
- Calculates a PVS that is the inclusive or of all leafs within 8 pixels of the
- given point.
- =============
- */
-/*
- =============
- SV_FatPVS
-
- Calculates a PVS that is the inclusive or of all leafs within 8 pixels of the
- given point.
- =============
+ * Calculates a PVS that is the inclusive or of all leafs within 8 pixels of the
+ * given point.
  */
 byte *SV_FatPVS(vec3_t org, model_t *worldmodel)
 {
@@ -426,12 +410,7 @@ byte *SV_FatPVS(vec3_t org, model_t *worldmodel)
 	return fatpvs;
 }
 
-/*
- =============
- SV_WriteEntitiesToClient
- =============
- */
-void SV_WriteEntitiesToClient(edict_t *clent, sizebuf_t *msg, bool nomap)
+static void SV_WriteEntitiesToClient(edict_t *clent, sizebuf_t *msg, bool nomap)
 {
 	int e, i, bits;
 	float miss;
@@ -556,7 +535,7 @@ void SV_WriteEntitiesToClient(edict_t *clent, sizebuf_t *msg, bool nomap)
  SV_CleanupEnts
  =============
  */
-void SV_CleanupEnts(void)
+static void SV_CleanupEnts(void)
 {
 	int e;
 	edict_t *ent;
@@ -591,7 +570,7 @@ void SV_WriteClientdataToMessage(edict_t *ent, sizebuf_t *msg)
 	}
 
 // send the current viewpos offset from the view entity
-	SV_SetIdealPitch();		// how much to look up / down ideally
+	SV_SetIdealPitch(); // how much to look up / down ideally
 
 // a fixangle might get lost in a dropped packet.  Oh well.
 	if (ent->v.fixangle) {
@@ -685,12 +664,7 @@ void SV_WriteClientdataToMessage(edict_t *ent, sizebuf_t *msg)
 	}
 }
 
-/*
- =======================
- SV_SendClientDatagram
- =======================
- */
-bool SV_SendClientDatagram(client_t *client)
+static bool SV_SendClientDatagram(client_t *client)
 {
 	byte buf[MAX_DATAGRAM];
 	sizebuf_t msg;
@@ -725,7 +699,7 @@ bool SV_SendClientDatagram(client_t *client)
  SV_UpdateToReliableMessages
  =======================
  */
-void SV_UpdateToReliableMessages(void)
+static void SV_UpdateToReliableMessages(void)
 {
 	int i, j;
 	client_t *client;
@@ -762,7 +736,7 @@ void SV_UpdateToReliableMessages(void)
  message buffer
  =======================
  */
-void SV_SendNop(client_t *client)
+static void SV_SendNop(client_t *client)
 {
 	sizebuf_t msg;
 	byte buf[4];
@@ -871,7 +845,7 @@ int SV_ModelIndex(char *name)
 	return i;
 }
 
-void SV_CreateBaseline(void)
+static void SV_CreateBaseline(void)
 {
 	int i, entnum;
 	edict_t *svent;
@@ -919,7 +893,7 @@ void SV_CreateBaseline(void)
  Tell all the clients that the server is changing levels
  ================
  */
-void SV_SendReconnect(void)
+static void SV_SendReconnect(void)
 {
 	byte data[128];
 	sizebuf_t msg;

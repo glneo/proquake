@@ -131,7 +131,7 @@ void VCR_SearchForHosts (bool xmit)
 }
 
 
-qsocket_t *VCR_Connect (char *host)
+qsocket_t *VCR_Connect (const char *host)
 {
 	return NULL;
 }

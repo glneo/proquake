@@ -70,11 +70,7 @@ cvar_t loadas8bit = { "loadas8bit", "0", false };
 cvar_t sndspeed = { "sndspeed", "11025", false };
 cvar_t snd_mixspeed = { "snd_mixspeed", "44100", false };
 
-#if defined(_WIN32)
-#define SND_FILTERQUALITY_DEFAULT "5"
-#else
 #define SND_FILTERQUALITY_DEFAULT "1"
-#endif
 
 cvar_t snd_filterquality = { "snd_filterquality", SND_FILTERQUALITY_DEFAULT, false };
 

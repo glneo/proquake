@@ -19,6 +19,8 @@
 
 #define MAX_MODE_LIST 600
 
+#define GAMMA_MAX 3.0
+
 typedef struct vrect_s {
 	int x, y, width, height;
 	struct vrect_s *pnext;

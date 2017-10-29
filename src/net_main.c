@@ -24,15 +24,7 @@ bool tcpipAvailable = false;
 int net_hostport;
 int DEFAULTnet_hostport = 26000;
 
-char my_ipx_address[NET_NAMELEN];
 char my_tcpip_address[NET_NAMELEN];
-
-/*
- void (*GetComPortConfig) (int portNumber, int *port, int *irq, int *baud, bool *useModem);
- void (*SetComPortConfig) (int portNumber, int port, int irq, int baud, bool useModem);
- void (*GetModemConfig) (int portNumber, char *dialType, char *clear, char *init, char *hangup);
- void (*SetModemConfig) (int portNumber, char *dialType, char *clear, char *init, char *hangup);
- */
 
 static bool listening = false;
 
@@ -70,14 +62,6 @@ sizebuf_t rcon_message = { false, false, rcon_buff, RCON_BUFF_SIZE, 0 };
 bool rcon_active = false;
 
 //bool	configRestored = false;
-/*cvar_t	config_com_port = {"_config_com_port", "0x3f8", true};
- cvar_t	config_com_irq = {"_config_com_irq", "4", true};
- cvar_t	config_com_baud = {"_config_com_baud", "57600", true};
- cvar_t	config_com_modem = {"_config_com_modem", "1", true};
- cvar_t	config_modem_dialtype = {"_config_modem_dialtype", "T", true};
- cvar_t	config_modem_clear = {"_config_modem_clear", "ATZ", true};
- cvar_t	config_modem_init = {"_config_modem_init", "", true};
- cvar_t	config_modem_hangup = {"_config_modem_hangup", "AT H", true};*/
 
 #ifdef IDGODS
 cvar_t idgods =
@@ -100,20 +84,6 @@ double SetNetTime(void)
 	net_time = Sys_DoubleTime();
 	return net_time;
 }
-
-// JPG 3.00 - need this for linux build
-#ifndef _WIN32
-unsigned _lrotl(unsigned x, int s)
-{
-	s &= 31;
-	return (x << s) | (x >> (32 - s));
-}
-unsigned _lrotr(unsigned x, int s)
-{
-	s &= 31;
-	return (x >> s) | (x << (32 - s));
-}
-#endif
 
 /*
  ===================
@@ -800,11 +770,7 @@ int NET_SendToAll(sizebuf_t *data, int blocktime)
 
 //=============================================================================
 
-/*
- ====================
- NET_Init
- ====================
- */
+
 void NET_Init(void)
 {
 	int i, controlSocket;
@@ -860,15 +826,10 @@ void NET_Init(void)
 	Cvar_RegisterVariable(&rcon_password);			// JPG 3.00 - rcon password
 	Cvar_RegisterVariable(&rcon_server);			// JPG 3.00 - rcon server
 
-#ifdef PSP_NETWORKING_CODE
-	if(!host_initialized)
-#endif
-	{
-		Cmd_AddCommand("slist", NET_Slist_f);
-		Cmd_AddCommand("listen", NET_Listen_f);
-		Cmd_AddCommand("maxplayers", MaxPlayers_f);
-		Cmd_AddCommand("port", NET_Port_f);
-	}
+	Cmd_AddCommand("slist", NET_Slist_f);
+	Cmd_AddCommand("listen", NET_Listen_f);
+	Cmd_AddCommand("maxplayers", MaxPlayers_f);
+	Cmd_AddCommand("port", NET_Port_f);
 
 	// initialize all the drivers
 	for (net_driverlevel = 0; net_driverlevel < net_numdrivers; net_driverlevel++)
@@ -882,18 +843,10 @@ void NET_Init(void)
 			net_drivers[net_driverlevel].Listen(true);
 	}
 
-	if (*my_ipx_address)
-		Con_DPrintf("IPX address %s\n", my_ipx_address);
 	if (*my_tcpip_address)
 		Con_DPrintf("TCP/IP address %s\n", my_tcpip_address);
 
 }
-
-/*
- ====================
- NET_Shutdown
- ====================
- */
 
 void NET_Shutdown(void)
 {
@@ -904,7 +857,7 @@ void NET_Shutdown(void)
 	for (sock = net_activeSockets; sock; sock = sock->next)
 		NET_Close(sock);
 
-// shutdown the drivers
+	// shutdown the drivers
 	for (net_driverlevel = 0; net_driverlevel < net_numdrivers; net_driverlevel++)
 	{
 		if (net_drivers[net_driverlevel].initialized == true)

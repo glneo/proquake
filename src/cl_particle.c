@@ -38,7 +38,6 @@ const float r_avertexnormals[NUMVERTEXNORMALS][3] = {
 };
 
 vec3_t avelocities[NUMVERTEXNORMALS];
-float beamlength = 16;
 
 static particle_t *R_GetParticle()
 {
@@ -58,11 +57,7 @@ static particle_t *R_GetParticle()
 void R_EntityParticles(entity_t *ent)
 {
 	static const float dist = 64;
-
-	if (!avelocities[0][0])
-		for (int i = 0; i < NUMVERTEXNORMALS; i++)
-			for (int j = 0; j < 3; j++)
-				avelocities[i][j] = (rand() & 255) * 0.01;
+	static const float beamlength = 16;
 
 	for (int i = 0; i < NUMVERTEXNORMALS; i++)
 	{
@@ -542,6 +537,11 @@ void CL_RunParticles(void)
 void R_InitParticles(void)
 {
 	int i;
+
+	/* generate some random particle velocities */
+	for (int i = 0; i < NUMVERTEXNORMALS; i++)
+		for (int j = 0; j < 3; j++)
+			avelocities[i][j] = (rand() & 255) * 0.01;
 
 	if ((i = COM_CheckParm("-particles")) && i + 1 < com_argc)
 	{

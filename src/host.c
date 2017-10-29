@@ -1003,11 +1003,10 @@ void Host_Init(quakeparms_t *parms)
 		if (!host_colormap)
 			Sys_Error("Couldn't load gfx/colormap.lmp");
 
-#ifndef _WIN32 // on non win32, mouse comes before video for security reasons
-		IN_Init();
-#endif
 		VID_Init();
+		IN_Init();
 
+		TexMgr_Init();
 		R_Init();
 
 		Draw_Init();
@@ -1018,38 +1017,6 @@ void Host_Init(quakeparms_t *parms)
 //		CDAudio_Init ();
 		Sbar_Init();
 		CL_Init();
-#ifdef _WIN32 // on non win32, mouse comes before video for security reasons
-		IN_Init ();
-#endif
-
-#ifdef _WIN32
-		// Baker: 3.99m to get sys info
-		// must be AFTER video init stuff
-		Sys_InfoInit();// We don't care about dedicated servers for this
-
-		// Baker 3.76 - Autoplay demo
-
-		if (com_argc >= 2)
-		{
-			char *infile = com_argv[1];
-
-			if (infile[0] && infile[0] != '-' && infile[0] != '+')
-			{
-				char tmp[1024] =
-				{	0}, *ext = COM_FileExtension(infile);
-
-				if (!strncasecmp(ext, "dem", sizeof("dem")))
-				snprintf(tmp, sizeof(tmp), "playdemo \"%s\"\n", infile);
-
-				if (tmp[0])
-				{
-					nostartdemos = true;
-					Cbuf_AddText(tmp);
-				}
-			}
-		}
-#endif
-
 	}
 
 	Cbuf_InsertText("exec quake.rc\n");
