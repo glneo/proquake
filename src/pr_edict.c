@@ -864,12 +864,10 @@ char *ED_ParseEdict(char *data, edict_t *ent)
  */
 void ED_LoadFromFile(char *data)
 {
-	edict_t *ent;
-	int inhibit;
+	edict_t *ent = NULL;
+	int inhibit = 0;
 	dfunction_t *func;
 
-	ent = NULL;
-	inhibit = 0;
 	pr_global_struct->time = sv.time;
 
 	// parse ents

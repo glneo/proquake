@@ -654,33 +654,27 @@ void COM_DefaultExtension(char *path, char *extension)
 	strlcat(path, extension, MAX_OSPATH);
 }
 
-/*
- ==============
- COM_Parse
-
- Parse a token out of a string
- ==============
- */
+/* Parse a token out of a string */
 char *COM_Parse(char *data)
 {
 	int c;
-	int len;
+	int len = 0;
 
-	len = 0;
 	com_token[0] = 0;
 
 	if (!data)
 		return NULL;
 
-// skip whitespace
-	skipwhite: while ((c = *data) <= ' ')
+	// skip whitespace
+skipwhite:
+	while ((c = *data) <= ' ')
 	{
 		if (c == 0)
-			return NULL;                    // end of file;
+			return NULL; // end of file;
 		data++;
 	}
 
-// skip // comments
+	// skip // comments
 	if (c == '/' && data[1] == '/')
 	{
 		while (*data && *data != '\n')
@@ -688,7 +682,7 @@ char *COM_Parse(char *data)
 		goto skipwhite;
 	}
 
-// handle quoted strings specially
+	// handle quoted strings specially
 	if (c == '\"')
 	{
 		data++;
@@ -705,7 +699,7 @@ char *COM_Parse(char *data)
 		}
 	}
 
-// parse single characters
+	// parse single characters
 	if (c == '{' || c == '}' || c == ')' || c == '(' || c == '\'' || c == ':')
 	{
 		com_token[len] = c;
@@ -714,7 +708,7 @@ char *COM_Parse(char *data)
 		return data + 1;
 	}
 
-// parse a regular word
+	// parse a regular word
 	do
 	{
 		com_token[len] = c;

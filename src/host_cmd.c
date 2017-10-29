@@ -37,7 +37,6 @@ extern cvar_t pq_logbinds;
 
 int current_skill;
 
-void Mod_Print(void);
 extern void M_Menu_Quit_f(void);
 
 // The "just get out" version
@@ -1866,7 +1865,7 @@ void Host_Viewmodel_f(void)
 	if (!e)
 		return;
 
-	m = Mod_ForName(Cmd_Argv(1), false);
+	m = Mod_ForName(Cmd_Argv(1));
 	if (!m)
 	{
 		Con_Printf("Can't load %s\n", Cmd_Argv(1));
@@ -2131,7 +2130,6 @@ void Host_InitCommands(void)
 	Cmd_AddCommand("viewprev", Host_Viewprev_f);
 
 	Cmd_AddCommand("qcexec", Host_QC_Exec);
-	Cmd_AddCommand("mcache", Mod_Print);
 
 	Cmd_AddCommand("stats_id", Stats_Id_f);
 	Cmd_AddCommand("load_stats_id", Load_Stats_Id_f);

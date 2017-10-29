@@ -23,7 +23,6 @@ char loadname[32]; // for hunk tags
 void Mod_LoadAliasModel(model_t *mod, void *buffer);
 void Mod_LoadSpriteModel(model_t *mod, void *buffer);
 void Mod_LoadBrushModel(model_t *mod, void *buffer);
-model_t *Mod_LoadModel(model_t *mod, bool crash);
 
 byte mod_novis[MAX_MAP_LEAFS / 8];
 
@@ -35,20 +34,6 @@ cvar_t gl_subdivide_size = { "gl_subdivide_size", "128", true };
 
 texture_t *r_notexture_mip;
 texture_t *r_notexture_mip2;
-
-void Mod_Init(void)
-{
-	Cvar_RegisterVariable (&gl_subdivide_size);
-	memset (mod_novis, 0xff, sizeof(mod_novis));
-
-	r_notexture_mip = (texture_t *) Hunk_AllocName (sizeof(texture_t), "r_notexture_mip");
-	strcpy (r_notexture_mip->name, "notexture");
-	r_notexture_mip->height = r_notexture_mip->width = 32;
-
-	r_notexture_mip2 = (texture_t *) Hunk_AllocName (sizeof(texture_t), "r_notexture_mip2");
-	strcpy (r_notexture_mip2->name, "notexture2");
-	r_notexture_mip2->height = r_notexture_mip2->width = 32;
-}
 
 mleaf_t *Mod_PointInLeaf(vec3_t p, brush_model_t *model)
 {
@@ -159,8 +144,8 @@ model_t *Mod_FindName(char *name)
 	return mod;
 }
 
-/* Loads a model into the cache */
-model_t *Mod_LoadModel(model_t *mod, bool crash)
+/* Loads a model */
+model_t *Mod_LoadModel(model_t *mod)
 {
 	void *buf;
 	byte stackbuf[1024]; // avoid dirtying the cache heap
@@ -172,12 +157,7 @@ model_t *Mod_LoadModel(model_t *mod, bool crash)
 	// load the file
 	buf = (void *) COM_LoadStackFile(mod->name, stackbuf, sizeof(stackbuf));
 	if (!buf)
-	{
-		if (crash)
-			Sys_Error("%s not found", mod->name);
-
 		return NULL;
-	}
 
 	// allocate a new model
 	COM_FileBase(mod->name, loadname);
@@ -205,13 +185,13 @@ model_t *Mod_LoadModel(model_t *mod, bool crash)
 }
 
 /* Loads in a model for the given name */
-model_t *Mod_ForName(char *name, bool crash)
+model_t *Mod_ForName(char *name)
 {
 	model_t *mod;
 
 	mod = Mod_FindName(name);
 
-	return Mod_LoadModel(mod, crash);
+	return Mod_LoadModel(mod);
 }
 
 void Mod_TouchModel(char *name)
@@ -221,7 +201,7 @@ void Mod_TouchModel(char *name)
 
 //=============================================================================
 
-void Mod_Print(void)
+static void Mod_Print(void)
 {
 	int i;
 	model_t *mod;
@@ -229,4 +209,20 @@ void Mod_Print(void)
 	Con_Printf("Cached models:\n");
 	for (i = 0, mod = mod_known; i < mod_numknown; i++, mod++)
 		Con_Printf("%8p : %s\n", mod->aliasmodel, mod->name);
+}
+
+void Mod_Init(void)
+{
+	Cvar_RegisterVariable (&gl_subdivide_size);
+	Cmd_AddCommand("mcache", Mod_Print);
+
+	memset (mod_novis, 0xff, sizeof(mod_novis));
+
+	r_notexture_mip = (texture_t *) Hunk_AllocName (sizeof(texture_t), "r_notexture_mip");
+	strcpy (r_notexture_mip->name, "notexture");
+	r_notexture_mip->height = r_notexture_mip->width = 32;
+
+	r_notexture_mip2 = (texture_t *) Hunk_AllocName (sizeof(texture_t), "r_notexture_mip2");
+	strcpy (r_notexture_mip2->name, "notexture2");
+	r_notexture_mip2->height = r_notexture_mip2->width = 32;
 }

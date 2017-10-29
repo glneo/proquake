@@ -46,6 +46,9 @@ void CL_ParseBeam(model_t *m)
 	beam_t *b;
 	int i;
 
+	if (!m)
+		Sys_Error("Beam model not found");
+
 	ent = MSG_ReadShort();
 
 	start[0] = MSG_ReadCoord();
@@ -183,20 +186,20 @@ void CL_ParseTEnt(void)
 		break;
 
 	case TE_LIGHTNING1: // lightning bolts
-		CL_ParseBeam(Mod_ForName("progs/bolt.mdl", true));
+		CL_ParseBeam(Mod_ForName("progs/bolt.mdl"));
 		break;
 
 	case TE_LIGHTNING2: // lightning bolts
-		CL_ParseBeam(Mod_ForName("progs/bolt2.mdl", true));
+		CL_ParseBeam(Mod_ForName("progs/bolt2.mdl"));
 		break;
 
 	case TE_LIGHTNING3: // lightning bolts
-		CL_ParseBeam(Mod_ForName("progs/bolt3.mdl", true));
+		CL_ParseBeam(Mod_ForName("progs/bolt3.mdl"));
 		break;
 
 // PGM 01/21/97 
 	case TE_BEAM: // grappling hook beam
-		CL_ParseBeam(Mod_ForName("progs/beam.mdl", true));
+		CL_ParseBeam(Mod_ForName("progs/beam.mdl"));
 		break;
 // PGM 01/21/97
 

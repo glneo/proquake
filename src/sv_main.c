@@ -1017,13 +1017,15 @@ void SV_SpawnServer(char *server)
 
 	strlcpy(sv.name, server, sizeof(sv.name));
 	snprintf(sv.modelname, sizeof(sv.modelname), "maps/%s.bsp", server);
-	sv.worldmodel = Mod_ForName(sv.modelname, false);
+	sv.worldmodel = Mod_ForName(sv.modelname);
 
 	//Baker 3.99b: R00k if map isnt found then load the sv_defaultmap instead
 	if (!sv.worldmodel && sv_defaultmap.string[0]) {
 		strcpy(sv.name, sv_defaultmap.string);
 		snprintf(sv.modelname, sizeof(sv.modelname), "maps/%s.bsp", sv_defaultmap.string);
-		sv.worldmodel = Mod_ForName(sv.modelname, false);
+		sv.worldmodel = Mod_ForName(sv.modelname);
+		if (sv.worldmodel)
+			Sys_Error("Default world map %s not found", sv.modelname);
 	}
 	// Baker 3.99b: end mod
 
@@ -1042,7 +1044,7 @@ void SV_SpawnServer(char *server)
 	sv.model_precache[1] = sv.modelname;
 	for (i = 1; i < sv.worldmodel->brushmodel->numsubmodels; i++) {
 		sv.model_precache[i + 1] = localmodels[i];
-		sv.models[i + 1] = Mod_ForName(localmodels[i], false);
+		sv.models[i + 1] = Mod_ForName(localmodels[i]);
 	}
 
 // load the rest of the entities

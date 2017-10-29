@@ -399,7 +399,7 @@ struct model_s
 
 void Mod_Init(void);
 void Mod_ClearAll(void);
-model_t *Mod_ForName(char *name, bool crash);
+model_t *Mod_ForName(char *name);
 void Mod_TouchModel(char *name);
 model_t *Mod_FindName(char *name);
 mleaf_t *Mod_PointInLeaf(vec3_t p, brush_model_t *model);
