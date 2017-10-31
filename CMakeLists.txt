@@ -66,7 +66,6 @@ else()
 		${PROQUAKE_SOURCES}
 		src/gl_alias.c
 		src/gl_draw.c
-		src/gl_fullbright.c
 		src/gl_light.c
 		src/gl_main.c
 		src/gl_particle.c

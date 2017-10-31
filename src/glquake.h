@@ -29,43 +29,11 @@
 extern int d_lightstylevalue[256]; // 8.8 fraction of base light value
 
 extern int skytexturenum; // index in cl.loadmodel, not gl texture object
-extern int mirrortexturenum; // quake texturenum, not gltexturenum
-
-extern bool mirror;
-extern mplane_t *mirror_plane;
 
 extern float gl_max_anisotropy;
 extern bool gl_texture_NPOT;
 
 extern int glx, gly, glwidth, glheight;
-
-typedef enum
-{
-	pt_static,
-	pt_grav,
-	pt_slowgrav,
-	pt_fire,
-	pt_explode,
-	pt_explode2,
-	pt_blob,
-	pt_blob2,
-} ptype_t;
-
-// !!! if this is changed, it must be changed in d_ifacea.h too !!!
-typedef struct particle_s
-{
-// driver-usable fields
-	vec3_t org;
-	float color;
-// drivers never touch the following fields
-	struct particle_s *next;
-	vec3_t vel;
-	float ramp;
-	float die;
-	ptype_t type;
-} particle_t;
-
-//====================================================
 
 extern int r_framecount;
 extern int c_brush_polys, c_alias_polys;
@@ -81,20 +49,14 @@ extern refdef_t r_refdef;
 extern mleaf_t *r_viewleaf, *r_oldviewleaf;
 
 // rendering cvar stuffs
-extern cvar_t r_norefresh;
-extern cvar_t r_drawentities;
-extern cvar_t r_drawworld;
-extern cvar_t r_drawviewmodel; // client cvar
-extern cvar_t r_speeds;
+extern cvar_t r_drawviewmodel;
 extern cvar_t r_waterwarp;
 extern cvar_t r_fullbright;
 extern cvar_t r_lightmap;
 extern cvar_t r_shadows;
-extern cvar_t r_mirroralpha;
 extern cvar_t r_wateralpha;
 extern cvar_t r_dynamic;
 extern cvar_t r_novis;
-extern cvar_t r_farclip;
 
 // fenix@io.com: model interpolation
 extern cvar_t r_interpolate_animation;
@@ -104,19 +66,15 @@ extern cvar_t r_interpolate_weapon;
 // gl rendering cvars and stuff
 extern cvar_t gl_clear;
 extern cvar_t gl_cull;
-extern cvar_t gl_poly;
 extern cvar_t gl_smoothmodels;
 extern cvar_t gl_affinemodels;
 extern cvar_t gl_polyblend;
 
 extern cvar_t gl_flashblend;
-extern cvar_t gl_nocolors;
-//extern	cvar_t	gl_doubleeyes;
+//extern cvar_t	gl_doubleeyes;
 extern cvar_t gl_playermip;
 extern cvar_t gl_fullbright;
 extern cvar_t r_ringalpha;
-
-extern float r_world_matrix[16];
 
 extern qpic_t *draw_disc;
 

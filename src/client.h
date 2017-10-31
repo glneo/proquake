@@ -245,6 +245,31 @@ typedef struct {
 	bool noclip_anglehack;
 } client_state_t;
 
+typedef enum
+{
+	pt_static,
+	pt_grav,
+	pt_slowgrav,
+	pt_fire,
+	pt_explode,
+	pt_explode2,
+	pt_blob,
+	pt_blob2,
+} ptype_t;
+
+typedef struct particle_s
+{
+// driver-usable fields
+	vec3_t org;
+	float color;
+// drivers never touch the following fields
+	struct particle_s *next;
+	vec3_t vel;
+	float ramp;
+	float die;
+	ptype_t type;
+} particle_t;
+
 //
 // cvars
 //

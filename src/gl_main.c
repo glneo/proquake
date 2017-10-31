@@ -36,15 +36,8 @@ static mplane_t frustum[4];
 
 int c_brush_polys, c_alias_polys;
 
-int mirrortexturenum; // quake texturenum, not gltexturenum
-bool mirror;
-mplane_t *mirror_plane;
-
 // view origin and direction
 vec3_t r_origin, vright, vpn, vup;
-
-float r_world_matrix[16];
-float r_base_world_matrix[16];
 
 // screen size info
 refdef_t r_refdef;
@@ -60,7 +53,6 @@ cvar_t r_drawentities = { "r_drawentities", "1" };
 cvar_t r_speeds = { "r_speeds", "0" };
 cvar_t r_shadows = { "r_shadows", "0" };
 
-cvar_t r_mirroralpha = { "r_mirroralpha", "1" };
 cvar_t r_wateralpha = { "r_wateralpha", "1", true };
 cvar_t r_dynamic = { "r_dynamic", "1" };
 cvar_t r_novis = { "r_novis", "0" };
@@ -80,7 +72,6 @@ cvar_t gl_affinemodels = { "gl_affinemodels", "0" };
 cvar_t gl_polyblend = { "gl_polyblend", "1", true };
 cvar_t gl_flashblend = { "gl_flashblend", "1", true };
 cvar_t gl_playermip = { "gl_playermip", "0", true };
-cvar_t gl_nocolors = { "gl_nocolors", "0" };
 
 cvar_t r_truegunangle = { "r_truegunangle", "0", true };  // Baker 3.80x - Optional "true" gun positioning on viewmodel
 cvar_t r_drawviewmodel = { "r_drawviewmodel", "1", true };  // Baker 3.80x - Save to config
@@ -424,16 +415,7 @@ static void R_SetupGL(void)
 	farclip = max((int )r_farclip.value, 4096);
 	Q_gluPerspective(r_refdef.fov_y, screenaspect, 4, farclip); // 4096
 
-	if (mirror)
-	{
-		if (mirror_plane->normal[2])
-			glScalef(1, -1, 1);
-		else
-			glScalef(-1, 1, 1);
-		glCullFace(GL_BACK);
-	}
-	else
-		glCullFace(GL_FRONT);
+	glCullFace(GL_FRONT);
 
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
@@ -445,8 +427,6 @@ static void R_SetupGL(void)
 	glRotatef(-r_refdef.viewangles[0], 0, 1, 0);
 	glRotatef(-r_refdef.viewangles[1], 0, 0, 1);
 	glTranslatef(-r_refdef.vieworg[0], -r_refdef.vieworg[1], -r_refdef.vieworg[2]);
-
-	glGetFloatv(GL_MODELVIEW_MATRIX, r_world_matrix);
 
 	// set drawing parms
 	if (gl_cull.value)
@@ -595,7 +575,6 @@ void R_NewMap(void)
 
 	// identify sky texture
 	skytexturenum = -1;
-	mirrortexturenum = -1;
 
 	for (i = 0; i < cl.worldmodel->brushmodel->numtextures; i++)
 	{
@@ -603,8 +582,6 @@ void R_NewMap(void)
 			continue;
 		if (!strncmp(cl.worldmodel->brushmodel->textures[i]->name, "sky", 3))
 			skytexturenum = i;
-		if (!strncmp(cl.worldmodel->brushmodel->textures[i]->name, "window02_1", 10))
-			mirrortexturenum = i;
 		cl.worldmodel->brushmodel->textures[i]->texturechain = NULL;
 	}
 }
@@ -634,82 +611,6 @@ static void R_RenderScene(void)
 	R_DrawParticles();
 }
 
-static void R_Mirror(void)
-{
-	float d;
-	msurface_t *s;
-	entity_t *ent;
-
-	memcpy(r_base_world_matrix, r_world_matrix, sizeof(r_base_world_matrix));
-
-	d = DotProduct (r_refdef.vieworg, mirror_plane->normal) - mirror_plane->dist;
-	VectorMA(r_refdef.vieworg, -2 * d, mirror_plane->normal, r_refdef.vieworg);
-
-	d = DotProduct(vpn, mirror_plane->normal);
-	VectorMA(vpn, -2 * d, mirror_plane->normal, vpn);
-
-	r_refdef.viewangles[0] = -asin(vpn[2]) / M_PI * 180;
-	r_refdef.viewangles[1] = atan2(vpn[1], vpn[0]) / M_PI * 180;
-	r_refdef.viewangles[2] = -r_refdef.viewangles[2];
-
-	ent = &cl_entities[cl.viewentity];
-	if (cl_numvisedicts < MAX_VISEDICTS)
-	{
-		cl_visedicts[cl_numvisedicts] = ent;
-		cl_numvisedicts++;
-	}
-
-	gldepthmin = 0.5;
-	gldepthmax = 1;
-#ifdef OPENGLES
-	glDepthRangef(gldepthmin, gldepthmax);
-#else
-	glDepthRange(gldepthmin, gldepthmax);
-#endif
-	glDepthFunc(GL_LEQUAL);
-
-	R_RenderScene();
-	R_DrawWaterSurfaces();
-
-	gldepthmin = 0;
-	gldepthmax = 0.5;
-#ifdef OPENGLES
-	glDepthRangef(gldepthmin, gldepthmax);
-#else
-	glDepthRange(gldepthmin, gldepthmax);
-#endif
-	glDepthFunc(GL_LEQUAL);
-
-	// blend on top
-	glEnable(GL_BLEND);
-	//Baker 3.60 - Mirror alpha fix - from QER
-
-	if (r_mirroralpha.value < 1) // Baker 3.61 - Only run mirror alpha fix if it is being used; hopefully this may fix a possible crash issue on some video cards
-		glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
-	//mirror fix
-	glMatrixMode(GL_PROJECTION);
-	if (mirror_plane->normal[2])
-		glScalef(1, -1, 1);
-	else
-		glScalef(-1, 1, 1);
-	glCullFace(GL_FRONT);
-	glMatrixMode(GL_MODELVIEW);
-
-	glLoadMatrixf(r_base_world_matrix);
-
-	glColor4f(1.0f, 1.0f, 1.0f, r_mirroralpha.value);
-	s = cl.worldmodel->brushmodel->textures[mirrortexturenum]->texturechain;
-	for (; s; s = s->texturechain)
-		R_RenderBrushPoly(s);
-	cl.worldmodel->brushmodel->textures[mirrortexturenum]->texturechain = NULL;
-	glDisable(GL_BLEND);
-	//Baker 3.60 - Mirror alpha fix - from QER
-	if (r_mirroralpha.value < 1) // Baker 3.61 - Only run mirror alpha fix if it is being used; hopefully this may fix a possible crash issue on some video cards
-		glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
-	//mirror fix
-	glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
-}
-
 static void R_Clear(void)
 {
 	GLbitfield clearbits = GL_DEPTH_BUFFER_BIT;
@@ -723,10 +624,7 @@ static void R_Clear(void)
 	glDepthFunc(GL_LEQUAL);
 
 	gldepthmin = 0;
-	if (r_mirroralpha.value < 1.0) // Baker 3.99: was != 1.0, changed in event gets set to # higher than 1.0
-		gldepthmax = 0.5;
-	else
-		gldepthmax = 1;
+	gldepthmax = 1;
 
 #ifdef OPENGLES
 	glDepthRangef(gldepthmin, gldepthmax);
@@ -754,18 +652,12 @@ void R_RenderView(void)
 		c_alias_polys = 0;
 	}
 
-	mirror = false;
-
 	R_Clear();
 
 	// render normal view
 	R_RenderScene();
 	R_DrawViewModel();
 	R_DrawWaterSurfaces();
-
-	// if mirror is not still false, render mirror view
-	if (mirror)
-		R_Mirror();
 
 	R_PolyBlend();
 
@@ -816,7 +708,6 @@ void R_Init(void)
 	Cvar_RegisterVariable(&r_truegunangle);
 
 	Cvar_RegisterVariable(&r_shadows);
-	Cvar_RegisterVariable(&r_mirroralpha);
 	Cvar_RegisterVariable(&r_wateralpha);
 	Cvar_RegisterVariable(&r_dynamic);
 	Cvar_RegisterVariable(&r_novis);
@@ -839,7 +730,6 @@ void R_Init(void)
 	Cvar_RegisterVariable(&gl_polyblend);
 	Cvar_RegisterVariable(&gl_flashblend);
 	Cvar_RegisterVariable(&gl_playermip);
-	Cvar_RegisterVariable(&gl_nocolors);
 	Cvar_RegisterVariable(&gl_fullbright);
 	Cvar_RegisterVariable(&gl_overbright);
 	Cvar_RegisterVariable(&gl_nearwater_fix);

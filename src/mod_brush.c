@@ -235,6 +235,15 @@ static void Mod_LoadPlanes(brush_model_t *brushmodel, lump_t *l, byte *mod_base,
 //	}
 //}
 
+bool Mod_CheckFullbrights (byte *pixels, int count)
+{
+	int i;
+	for (i = 0; i < count; i++)
+		if (*pixels++ > 223)
+			return true;
+	return false;
+}
+
 void Mod_LoadTextures(brush_model_t *brushmodel, lump_t *l, byte *mod_base, char *mod_name)
 {
 	int		i, j, pixels, num, maxanim, altmax;
@@ -331,15 +340,15 @@ void Mod_LoadTextures(brush_model_t *brushmodel, lump_t *l, byte *mod_base, char
 
 					snprintf (texturename, sizeof(texturename), "%s:%s", mod_name, tx->name);
 //					offset = (src_offset_t)(mt+1) - (src_offset_t)mod_base;
-//					if (Mod_CheckFullbrights ((byte *)(tx+1), pixels))
-//					{
-//						tx->gltexture = TexMgr_LoadImage (brushmodel, texturename, tx->width, tx->height,
-//							SRC_INDEXED, (byte *)(tx+1), mod_name, offset, TEX_MIPMAP | TEX_NOBRIGHT | extraflags);
-//						q_snprintf (texturename, sizeof(texturename), "%s:%s_glow", mod_name, tx->name);
-//						tx->fullbright = TexMgr_LoadImage (brushmodel, texturename, tx->width, tx->height,
-//							SRC_INDEXED, (byte *)(tx+1), mod_name, offset, TEX_MIPMAP | TEX_FULLBRIGHT | extraflags);
-//					}
-//					else
+					if (Mod_CheckFullbrights ((byte *)(tx+1), pixels))
+					{
+						tx->gltexture = TexMgr_LoadImage (texturename, tx->width, tx->height,
+							SRC_INDEXED, (byte *)(tx+1), TEX_MIPMAP | TEX_NOBRIGHT | extraflags);
+						snprintf (texturename, sizeof(texturename), "%s:%s_glow", mod_name, tx->name);
+						tx->fullbright = TexMgr_LoadImage (texturename, tx->width, tx->height,
+							SRC_INDEXED, (byte *)(tx+1), TEX_MIPMAP | TEX_FULLBRIGHT | extraflags);
+					}
+					else
 					{
 						tx->gltexture = TexMgr_LoadImage (texturename, tx->width, tx->height,
 							SRC_INDEXED, (byte *)(tx+1), TEX_MIPMAP | extraflags);
@@ -618,7 +627,7 @@ static void CalcSurfaceExtents(brush_model_t *brushmodel, msurface_t *s)
 		s->texturemins[i] = bmins[i] * 16;
 		s->extents[i] = (bmaxs[i] - bmins[i]) * 16;
 		if (!(tex->flags & TEX_SPECIAL) && s->extents[i] > 512)
-			Host_Error("CalcSurfaceExtents: Bad surface extents");
+			Sys_Error("CalcSurfaceExtents: Bad surface extents");
 	}
 }
 

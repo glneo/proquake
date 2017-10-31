@@ -23,8 +23,6 @@
  * m*_t structures are in-memory
  */
 
-typedef struct model_s model_t;
-
 /*
  ==============================================================================
 
@@ -262,7 +260,6 @@ typedef struct
 } sprite_model_t;
 
 void R_DrawSpriteModel(entity_t *ent);
-void Mod_LoadSpriteModel(model_t *mod, void *buffer);
 
 /*
  ==============================================================================
@@ -319,8 +316,10 @@ typedef struct
 {
 	vec3_t scale;
 	vec3_t scale_origin;
-	float boundingradius;
+
 	vec3_t eyeposition;
+
+	float boundingradius;
 
 	int numskins;
 	int skinwidth;
@@ -369,7 +368,7 @@ typedef enum
 #define	MOD_FBRIGHT     BIT(10) // when fullbrights are disabled render this model brighter
 #define MOD_PLAYER      BIT(11)
 
-struct model_s
+typedef struct model_s
 {
 	char name[MAX_QPATH];
 	bool needload; // bmodels and sprites don't cache normally
@@ -393,7 +392,7 @@ struct model_s
 		sprite_model_t *spritemodel;
 		brush_model_t *brushmodel;
 	};
-};
+} model_t;
 
 //============================================================================
 

@@ -1000,8 +1000,6 @@ void PF_precache_model(void)
 		{
 			sv.model_precache[i] = s;
 			sv.models[i] = Mod_ForName(s);
-			if (sv.models[i])
-				Sys_Error("%s not found", s);
 			return;
 		}
 		if (!strcmp(sv.model_precache[i], s))

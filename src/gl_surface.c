@@ -83,10 +83,6 @@ void R_DrawWaterSurfaces(void)
 	msurface_t *s;
 	texture_t *t;
 
-	// go back to the world matrix
-
-	glLoadMatrixf(r_world_matrix);
-
 	if (r_wateralpha.value < 1.0)
 	{
 		glEnable(GL_BLEND);
@@ -121,14 +117,6 @@ void R_DrawWaterSurfaces(void)
 	}
 }
 
-static void R_MirrorChain(msurface_t *s)
-{
-	if (mirror)
-		return;
-	mirror = true;
-	mirror_plane = s->plane;
-}
-
 static void DrawTextureChains(brush_model_t *brushmodel)
 {
 	int i;
@@ -147,11 +135,6 @@ static void DrawTextureChains(brush_model_t *brushmodel)
 
 		if (i == skytexturenum)
 			R_DrawSkyChain(s);
-		else if (i == mirrortexturenum && r_mirroralpha.value < 1.0)
-		{
-			R_MirrorChain(s);
-			continue;
-		}
 		else
 		{
 			if ((s->flags & SURF_DRAWTURB) && r_wateralpha.value < 1.0)
@@ -449,11 +432,8 @@ static void R_RecursiveWorldNode(mnode_t *node)
 			if ((!(surf->flags & SURF_UNDERWATER) || !r_waterwarp.value) && ((dot < 0) ^ !!(surf->flags & SURF_PLANEBACK)))
 				continue;		// wrong side
 
-			if (!mirror || surf->texinfo->texture != cl.worldmodel->brushmodel->textures[mirrortexturenum])
-			{
-				surf->texturechain = surf->texinfo->texture->texturechain;
-				surf->texinfo->texture->texturechain = surf;
-			}
+			surf->texturechain = surf->texinfo->texture->texturechain;
+			surf->texinfo->texture->texturechain = surf;
 		}
 	}
 
@@ -503,10 +483,7 @@ void R_MarkLeaves(void)
 			}
 		}
 
-	if (r_oldviewleaf == r_viewleaf && (!r_novis.value && !nearwaterportal))
-		return;
-
-	if (mirror)
+	if ((r_oldviewleaf == r_viewleaf) && !r_novis.value && !nearwaterportal)
 		return;
 
 	r_visframecount++;

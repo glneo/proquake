@@ -18,8 +18,6 @@
 // on the same machine.
 #include "quakedef.h"
 
-char loadname[32]; // for hunk tags
-
 void Mod_LoadAliasModel(model_t *mod, void *buffer);
 void Mod_LoadSpriteModel(model_t *mod, void *buffer);
 void Mod_LoadBrushModel(model_t *mod, void *buffer);
@@ -57,7 +55,7 @@ mleaf_t *Mod_PointInLeaf(vec3_t p, brush_model_t *model)
 	return NULL;	// never reached
 }
 
-byte *Mod_DecompressVis(byte *in, brush_model_t *model)
+static byte *Mod_DecompressVis(byte *in, brush_model_t *model)
 {
 	int c, row;
 	byte *out;
@@ -106,14 +104,9 @@ byte *Mod_LeafPVS(mleaf_t *leaf, brush_model_t *model)
 
 void Mod_ClearAll(void)
 {
-	int i;
-	model_t *mod;
-
-	for (i = 0, mod = mod_known; i < mod_numknown; i++, mod++)
-	{
-		if (mod->type != mod_alias)
-			mod->needload = true;
-	}
+	for (int i = 0; i < mod_numknown; i++)
+		if (mod_known[i].type != mod_alias)
+			mod_known[i].needload = true;
 }
 
 model_t *Mod_FindName(char *name)
@@ -154,13 +147,12 @@ model_t *Mod_LoadModel(model_t *mod)
 	if (!mod->needload)
 		return mod;
 
+	// allocate a new model
+
 	// load the file
 	buf = (void *) COM_LoadStackFile(mod->name, stackbuf, sizeof(stackbuf));
 	if (!buf)
 		return NULL;
-
-	// allocate a new model
-	COM_FileBase(mod->name, loadname);
 
 	mod->needload = false;
 
@@ -199,16 +191,17 @@ void Mod_TouchModel(char *name)
 	Mod_FindName(name);
 }
 
-//=============================================================================
-
 static void Mod_Print(void)
 {
-	int i;
-	model_t *mod;
+	static char *model_types[] = {
+		[mod_brush] = "Brush",
+		[mod_sprite] = "Sprite",
+		[mod_alias] = "Alias",
+	};
 
 	Con_Printf("Cached models:\n");
-	for (i = 0, mod = mod_known; i < mod_numknown; i++, mod++)
-		Con_Printf("%8p : %s\n", mod->aliasmodel, mod->name);
+	for (int i = 0; i < mod_numknown; i++)
+		Con_Printf("%s: %s\t%s\n", mod_known[i].name, model_types[mod_known[i].type], mod_known[i].needload ? "Not Loaded" : "Loaded");
 }
 
 void Mod_Init(void)

@@ -48,6 +48,54 @@ extern cvar_t gl_overbright;
 byte color_white[4] = { 255, 255, 255, 255 };
 byte color_black[4] = { 0, 0, 0, 255 };
 
+int FindFullbrightTexture(byte *pixels, int num_pix)
+{
+	int i;
+	for (i = 0; i < num_pix; i++)
+		if (pixels[i] > 223)
+			return 1;
+
+	return 0;
+}
+
+void ConvertPixels(byte *pixels, int num_pixels)
+{
+	int i;
+
+	for (i = 0; i < num_pixels; i++)
+		if (pixels[i] < 224)
+			pixels[i] = 255;
+}
+
+void DrawFullBrightTextures(entity_t *ent)
+{
+	int i;
+	msurface_t *fa;
+	texture_t *t;
+
+	msurface_t *first_surf = ent->model->brushmodel->surfaces;
+	int num_surfs = ent->model->brushmodel->numsurfaces;
+
+	if (r_fullbright.value)
+		return;
+
+	for (fa = first_surf, i = 0; i < num_surfs; fa++, i++)
+	{
+		// find the correct texture
+		t = R_TextureAnimation(ent->frame, fa->texinfo->texture);
+
+		if (t->fullbright != NULL && fa->draw_this_frame)
+		{
+			glEnable(GL_BLEND);
+			GL_Bind(t->fullbright);
+			DrawGLPoly(fa->polys, 3);
+			glDisable(GL_BLEND);
+		}
+
+		fa->draw_this_frame = 0;
+	}
+}
+
 /*
  ===============
  R_UploadLightmap -- uploads the modified lightmap to opengl if necessary
