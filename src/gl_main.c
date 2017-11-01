@@ -79,7 +79,7 @@ cvar_t r_ringalpha = { "r_ringalpha", "0.4", true }; // Baker 3.80x - gl_ringalp
 cvar_t r_fullbright = { "r_fullbright", "0" };
 cvar_t r_lightmap = { "r_lightmap", "0" };
 
-cvar_t gl_fullbright = { "gl_fullbright", "0", true };
+cvar_t gl_fullbright = { "gl_fullbright", "1", true };
 cvar_t gl_overbright = { "gl_overbright", "1", true };
 
 cvar_t r_waterwarp = { "r_waterwarp", "0", true }; // Baker 3.60 - Save this to config now
@@ -336,10 +336,6 @@ static void R_SetFrustum(void)
 
 static void R_SetupFrame(void)
 {
-	// don't allow cheats in multiplayer
-	if (cl.maxclients > 1 && r_fullbright.value != 0)
-		Cvar_SetQuick(&r_fullbright, "0");
-
 	R_AnimateLight();
 
 	r_framecount++;

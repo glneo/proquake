@@ -203,6 +203,7 @@ static void *Mod_LoadAllSkins(alias_model_t *aliasmodel, daliasskintype_t *pskin
 	daliasskininterval_t *pinskinintervals;
 
 	aliasmodel->gl_texturenum = Q_malloc(sizeof(*aliasmodel->gl_texturenum) * aliasmodel->numskins);
+	aliasmodel->gl_fbtexturenum = Q_malloc(sizeof(*aliasmodel->gl_texturenum) * aliasmodel->numskins);
 
 	for (int i = 0; i < aliasmodel->numskins; i++)
 	{
@@ -211,11 +212,34 @@ static void *Mod_LoadAllSkins(alias_model_t *aliasmodel, daliasskintype_t *pskin
 			skin = (byte *)(pskintype + 1);
 			Mod_FloodFillSkin(skin, aliasmodel->skinwidth, aliasmodel->skinheight);
 
-			snprintf(name, sizeof(name), "%s_%i", mod_name, i);
-			aliasmodel->gl_texturenum[i][0] =
-			aliasmodel->gl_texturenum[i][1] =
-			aliasmodel->gl_texturenum[i][2] =
-			aliasmodel->gl_texturenum[i][3] = TexMgr_LoadImage(name, aliasmodel->skinwidth, aliasmodel->skinheight, SRC_INDEXED, skin, TEX_MIPMAP);
+			if (Mod_CheckFullbrights(skin, aliasmodel->skinwidth * aliasmodel->skinheight))
+			{
+				snprintf(name, sizeof(name), "%s_%i", mod_name, i);
+				aliasmodel->gl_texturenum[i][0] =
+				aliasmodel->gl_texturenum[i][1] =
+				aliasmodel->gl_texturenum[i][2] =
+				aliasmodel->gl_texturenum[i][3] = TexMgr_LoadImage(name, aliasmodel->skinwidth, aliasmodel->skinheight, SRC_INDEXED, skin, TEX_MIPMAP | TEX_NOBRIGHT);
+
+				snprintf(name, sizeof(name), "%s_%i_glow", mod_name, i);
+				aliasmodel->gl_fbtexturenum[i][0] =
+				aliasmodel->gl_fbtexturenum[i][1] =
+				aliasmodel->gl_fbtexturenum[i][2] =
+				aliasmodel->gl_fbtexturenum[i][3] = TexMgr_LoadImage(name, aliasmodel->skinwidth, aliasmodel->skinheight, SRC_INDEXED, skin, TEX_MIPMAP | TEX_FULLBRIGHT);
+			}
+			else
+			{
+				snprintf(name, sizeof(name), "%s_%i", mod_name, i);
+				aliasmodel->gl_texturenum[i][0] =
+				aliasmodel->gl_texturenum[i][1] =
+				aliasmodel->gl_texturenum[i][2] =
+				aliasmodel->gl_texturenum[i][3] = TexMgr_LoadImage(name, aliasmodel->skinwidth, aliasmodel->skinheight, SRC_INDEXED, skin, TEX_MIPMAP);
+
+				aliasmodel->gl_fbtexturenum[i][0] =
+				aliasmodel->gl_fbtexturenum[i][1] =
+				aliasmodel->gl_fbtexturenum[i][2] =
+				aliasmodel->gl_fbtexturenum[i][3] = NULL;
+			}
+
 			pskintype = (daliasskintype_t *)(skin + skinsize);
 		}
 		else

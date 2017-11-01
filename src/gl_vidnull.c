@@ -84,7 +84,7 @@ int TexMgr_PadConditional(int s) { return 0; }
 void GL_SubdivideSurface(brush_model_t *brushmodel, msurface_t *fa) {}
 void ConvertPixels(byte *pixels, int num_pixels) {}
 int FindFullbrightTexture(byte *pixels, int num_pix)  { return 0; }
-void R_InitSky(texture_t *mt, byte *src) {}
+void R_InitSky(texture_t *mt) {}
 void GL_FreeTextures(void) {}
 void R_TranslatePlayerSkin(int playernum) {}
 void R_NewMap(void) {}

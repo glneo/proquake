@@ -130,6 +130,7 @@ void R_DrawAliasModel(entity_t *ent)
 	bool isPlayer = ent > cl_entities &&
 			ent <= (cl_entities + cl.maxclients);
 	gltexture_t *tx;
+	gltexture_t *fb;
 
 //	vec3_t mins, maxs;
 //
@@ -198,10 +199,12 @@ void R_DrawAliasModel(entity_t *ent)
 	{
 		Con_DPrintf("no such skin # %d for '%s'\n", ent->skinnum, ent->model->name);
 		tx = 0; // NULL will give the checkerboard texture
+		fb = 0;
 	}
 	else
 	{
 		tx = aliasmodel->gl_texturenum[ent->skinnum][anim];
+		fb = aliasmodel->gl_fbtexturenum[ent->skinnum][anim];
 	}
 
 	GL_Bind(tx);
@@ -216,6 +219,19 @@ void R_DrawAliasModel(entity_t *ent)
 	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
 
 	GL_DrawAliasFrame(ent, aliasmodel, pose);
+
+	if (fb)
+	{
+		glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+		GL_Bind(fb);
+		glEnable(GL_BLEND);
+		glBlendFunc (GL_ONE, GL_ONE);
+		glDepthMask(GL_FALSE);
+		GL_DrawAliasFrame(ent, aliasmodel, pose);
+		glDepthMask(GL_TRUE);
+		glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+		glDisable(GL_BLEND);
+	}
 
 	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
 

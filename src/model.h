@@ -114,7 +114,7 @@ typedef struct msurface_s {
 
 	// lighting info
 	int dlightframe;
-	int dlightbits;
+	uint32_t dlightbits;
 
 	int lightmaptexturenum;
 	byte styles[MAXLIGHTMAPS];
@@ -325,6 +325,7 @@ typedef struct
 	int skinwidth;
 	int skinheight;
 	gltexture_t * (*gl_texturenum)[4];
+	gltexture_t * (*gl_fbtexturenum)[4];
 
 	int numverts;
 	mstvert_t *stverts[2];
@@ -403,5 +404,7 @@ void Mod_TouchModel(char *name);
 model_t *Mod_FindName(char *name);
 mleaf_t *Mod_PointInLeaf(vec3_t p, brush_model_t *model);
 byte *Mod_LeafPVS(mleaf_t *leaf, brush_model_t *model);
+
+bool Mod_CheckFullbrights (byte *pixels, int count);
 
 #endif	/* __MODEL_H */

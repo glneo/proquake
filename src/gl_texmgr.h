@@ -40,7 +40,9 @@
 
 enum srcformat
 {
-	SRC_INDEXED, SRC_LIGHTMAP, SRC_RGBA
+	SRC_INDEXED,
+	SRC_LIGHTMAP,
+	SRC_RGBA
 };
 
 typedef uintptr_t src_offset_t;

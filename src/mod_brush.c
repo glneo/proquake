@@ -243,7 +243,7 @@ bool Mod_CheckFullbrights (byte *pixels, int count)
 			return true;
 	return false;
 }
-
+void Sky_LoadTexture (texture_t *mt);
 void Mod_LoadTextures(brush_model_t *brushmodel, lump_t *l, byte *mod_base, char *mod_name)
 {
 	int		i, j, pixels, num, maxanim, altmax;
@@ -315,10 +315,9 @@ void Mod_LoadTextures(brush_model_t *brushmodel, lump_t *l, byte *mod_base, char
 		//johnfitz -- lots of changes
 		if (cls.state != ca_dedicated) //no texture uploading for dedicated server
 		{
-//			if (!strncasecmp(tx->name,"sky",3)) //sky texture //also note -- was Q_strncmp, changed to match qbsp
-//				Sky_LoadTexture (tx);
-//			else if (tx->name[0] == '*') //warping texture
-			if (tx->name[0] == '*') //warping texture
+			if (!strncasecmp(tx->name,"sky",3)) //sky texture
+				Sky_LoadTexture(tx);
+			else if (tx->name[0] == '*') //warping texture
 			{
 
 					snprintf (texturename, sizeof(texturename), "%s:%s", mod_name, tx->name);

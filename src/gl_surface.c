@@ -25,21 +25,12 @@
 
 #define BACKFACE_EPSILON 0.01
 
-vec3_t modelorg;
-
-extern int lightmap_bytes;
-extern byte lightmaps[4 * MAX_LIGHTMAPS * BLOCK_WIDTH * BLOCK_HEIGHT];
-
 typedef struct glRect_s
 {
 	unsigned char l, t, w, h;
 } glRect_t;
 
 extern glpoly_t *lightmap_polys[MAX_LIGHTMAPS];
-extern bool lightmap_modified[MAX_LIGHTMAPS];
-extern glRect_t lightmap_rectchange[MAX_LIGHTMAPS];
-
-extern cvar_t gl_overbright;
 
 void DrawGLPoly(glpoly_t *p, int tex_offset)
 {
@@ -51,20 +42,16 @@ void DrawGLPoly(glpoly_t *p, int tex_offset)
 /* Returns the proper texture for a given time and base texture */
 texture_t *R_TextureAnimation(int frame, texture_t *base)
 {
-	int relative, count;
-
 	if (frame)
-	{
 		if (base->alternate_anims)
 			base = base->alternate_anims;
-	}
 
 	if (!base->anim_total)
 		return base;
 
-	relative = (int) (cl.time * 10) % base->anim_total;
+	int relative = (int)(cl.time * 10) % base->anim_total;
 
-	count = 0;
+	int count = 0;
 	while (base->anim_min > relative || base->anim_max <= relative)
 	{
 		base = base->anim_next;
@@ -140,7 +127,7 @@ static void DrawTextureChains(brush_model_t *brushmodel)
 			if ((s->flags & SURF_DRAWTURB) && r_wateralpha.value < 1.0)
 				continue;	// draw translucent water later
 			for (; s; s = s->texturechain)
-				R_RenderBrushPoly(s);
+				R_RenderBrushPoly(s, 0);
 		}
 
 		t->texturechain = NULL;
@@ -167,14 +154,8 @@ void DrawGLWaterPoly(glpoly_t *p, int tex_offset)
 	glDrawArrays(GL_TRIANGLE_FAN, 0, p->numverts);
 }
 
-void R_RenderBrushPoly(msurface_t *fa)
+void R_RenderBrushPoly(msurface_t *fa, int frame)
 {
-	texture_t *t;
-	byte *base;
-	int maps;
-	glRect_t *theRect;
-	int smax, tmax;
-
 	c_brush_polys++;
 
 	if (fa->flags & SURF_DRAWSKY)
@@ -183,7 +164,7 @@ void R_RenderBrushPoly(msurface_t *fa)
 		return;
 	}
 
-	t = R_TextureAnimation(0, fa->texinfo->texture);
+	texture_t *t = R_TextureAnimation(frame, fa->texinfo->texture);
 	GL_Bind(t->gltexture);
 
 	if (fa->flags & SURF_DRAWTURB)
@@ -192,77 +173,32 @@ void R_RenderBrushPoly(msurface_t *fa)
 		return;
 	}
 
-	if ((fa->flags & SURF_UNDERWATER) && r_waterwarp.value) // JPG - added r_waterwarp
+	if ((fa->flags & SURF_UNDERWATER) && r_waterwarp.value)
 		DrawGLWaterPoly(fa->polys, 3);
 	else
 		DrawGLPoly(fa->polys, 3);
 
-	if (gl_fullbright.value)
-		fa->draw_this_frame = 1;
-
-	// add the poly to the proper lightmap chain
-
-	fa->polys->chain = lightmap_polys[fa->lightmaptexturenum];
-	lightmap_polys[fa->lightmaptexturenum] = fa->polys;
-
-	// mh - overbrights - need to rebuild the lightmap if this changes
-	if (fa->overbright != gl_overbright.value)
+	if (t->fullbright != NULL && gl_fullbright.value)
 	{
-		fa->overbright = gl_overbright.value;
-		goto dynamic;
+		glEnable(GL_BLEND);
+		GL_Bind(t->fullbright);
+		DrawGLPoly(fa->polys, 3);
+		glDisable(GL_BLEND);
 	}
 
-	// check for lightmap modification
-	for (maps = 0; maps < MAXLIGHTMAPS && fa->styles[maps] != 255; maps++)
-		if (d_lightstylevalue[fa->styles[maps]] != fa->cached_light[maps])
-			goto dynamic;
-
-	if (fa->dlightframe == r_framecount	// dynamic this frame
-	|| fa->cached_dlight)			// dynamic previously
-	{
-		dynamic: if (r_dynamic.value && !r_fullbright.value) // Bengt: added if no fullbrights
-		{
-			lightmap_modified[fa->lightmaptexturenum] = true;
-			theRect = &lightmap_rectchange[fa->lightmaptexturenum];
-			if (fa->light_t < theRect->t)
-			{
-				if (theRect->h)
-					theRect->h += theRect->t - fa->light_t;
-				theRect->t = fa->light_t;
-			}
-			if (fa->light_s < theRect->l)
-			{
-				if (theRect->w)
-					theRect->w += theRect->l - fa->light_s;
-				theRect->l = fa->light_s;
-			}
-			smax = (fa->extents[0] >> 4) + 1;
-			tmax = (fa->extents[1] >> 4) + 1;
-			if ((theRect->w + theRect->l) < (fa->light_s + smax))
-				theRect->w = (fa->light_s - theRect->l) + smax;
-			if ((theRect->h + theRect->t) < (fa->light_t + tmax))
-				theRect->h = (fa->light_t - theRect->t) + tmax;
-			base = lightmaps + fa->lightmaptexturenum * lightmap_bytes * BLOCK_WIDTH * BLOCK_HEIGHT;
-			base += fa->light_t * BLOCK_WIDTH * lightmap_bytes + fa->light_s * lightmap_bytes;
-			R_BuildLightMap(fa, base, BLOCK_WIDTH * lightmap_bytes);
-		}
-	}
+	R_RenderDynamicLightmaps(fa);
 }
 
 void R_DrawBrushModel(entity_t *ent)
 {
-	int i, k;
-	float dot;
 	vec3_t mins, maxs;
-	msurface_t *psurf;
-	mplane_t *pplane;
 	model_t *clmodel = ent->model;
 	bool rotated;
 
 	if (ent->angles[0] || ent->angles[1] || ent->angles[2])
 	{
 		rotated = true;
-		for (i = 0; i < 3; i++)
+		for (int i = 0; i < 3; i++)
 		{
 			mins[i] = ent->origin[i] - clmodel->radius;
 			maxs[i] = ent->origin[i] + clmodel->radius;
@@ -278,8 +214,7 @@ void R_DrawBrushModel(entity_t *ent)
 	if (R_CullBox(mins, maxs))
 		return;
 
-	memset(lightmap_polys, 0, sizeof(lightmap_polys));
-
+	vec3_t modelorg;
 	VectorSubtract(r_refdef.vieworg, ent->origin, modelorg);
 	if (rotated)
 	{
@@ -292,17 +227,17 @@ void R_DrawBrushModel(entity_t *ent)
 		modelorg[2] = DotProduct(temp, up);
 	}
 
-	psurf = &clmodel->brushmodel->surfaces[clmodel->brushmodel->firstmodelsurface];
+	memset(lightmap_polys, 0, sizeof(lightmap_polys));
 
 	// calculate dynamic lighting for bmodel if it's not an instanced model
 	if (clmodel->brushmodel->firstmodelsurface != 0 && !gl_flashblend.value)
 	{
-		for (k = 0; k < MAX_DLIGHTS; k++)
+		for (int k = 0; k < MAX_DLIGHTS; k++)
 		{
 			if (cl_dlights[k].die < cl.time || !cl_dlights[k].radius)
 				continue;
 
-			R_MarkLights(&cl_dlights[k], 1 << k, clmodel->brushmodel->nodes + clmodel->brushmodel->hulls[0].firstclipnode);
+			R_MarkLights(&cl_dlights[k], k, &clmodel->brushmodel->nodes[clmodel->brushmodel->hulls[0].firstclipnode]);
 		}
 	}
 
@@ -312,23 +247,22 @@ void R_DrawBrushModel(entity_t *ent)
 	ent->angles[0] = -ent->angles[0];	// stupid quake bug
 
 	// draw texture
-	for (i = 0; i < clmodel->brushmodel->nummodelsurfaces; i++, psurf++)
+	msurface_t *psurf = &clmodel->brushmodel->surfaces[clmodel->brushmodel->firstmodelsurface];
+	for (int i = 0; i < clmodel->brushmodel->nummodelsurfaces; i++, psurf++)
 	{
 		// find which side of the node we are on
-		pplane = psurf->plane;
-		dot = DotProduct (modelorg, pplane->normal) - pplane->dist;
+		mplane_t *pplane = psurf->plane;
+		float dot = DotProduct (modelorg, pplane->normal) - pplane->dist;
 
 		// draw the polygon
-		if (((psurf->flags & SURF_PLANEBACK) && (dot < -BACKFACE_EPSILON)) || (!(psurf->flags & SURF_PLANEBACK) && (dot > BACKFACE_EPSILON)))
+		if (((psurf->flags & SURF_PLANEBACK) && (dot < -BACKFACE_EPSILON)) ||
+		    (!(psurf->flags & SURF_PLANEBACK) && (dot > BACKFACE_EPSILON)))
 		{
-			R_RenderBrushPoly(psurf);
+			R_RenderBrushPoly(psurf, ent->frame);
 		}
 	}
 
 	R_BlendLightmaps();
-
-	if (gl_fullbright.value)
-		DrawFullBrightTextures(ent);
 
 	glPopMatrix();
 
@@ -395,16 +329,16 @@ static void R_RecursiveWorldNode(mnode_t *node)
 	switch (plane->type)
 	{
 	case PLANE_X:
-		dot = modelorg[0] - plane->dist;
+		dot = r_refdef.vieworg[0] - plane->dist;
 		break;
 	case PLANE_Y:
-		dot = modelorg[1] - plane->dist;
+		dot = r_refdef.vieworg[1] - plane->dist;
 		break;
 	case PLANE_Z:
-		dot = modelorg[2] - plane->dist;
+		dot = r_refdef.vieworg[2] - plane->dist;
 		break;
 	default:
-		dot = DotProduct (modelorg, plane->normal) - plane->dist;
+		dot = DotProduct (r_refdef.vieworg, plane->normal) - plane->dist;
 		break;
 	}
 
@@ -448,8 +382,6 @@ void R_DrawWorld(void)
 	memset(&ent, 0, sizeof(ent));
 	ent.model = cl.worldmodel;
 
-	VectorCopy(r_refdef.vieworg, modelorg);
-
 	memset(lightmap_polys, 0, sizeof(lightmap_polys));
 
 	R_RecursiveWorldNode(cl.worldmodel->brushmodel->nodes);
@@ -457,9 +389,6 @@ void R_DrawWorld(void)
 	DrawTextureChains(cl.worldmodel->brushmodel);
 
 	R_BlendLightmaps();
-
-	if (gl_fullbright.value)
-		DrawFullBrightTextures(&ent);
 }
 
 void R_MarkLeaves(void)

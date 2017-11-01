@@ -29,7 +29,7 @@ static GLint gl_hardware_maxsize;
 
 #define	MAX_GLTEXTURES	2048
 static int numgltextures;
-static gltexture_t *active_gltextures, *free_gltextures;
+static gltexture_t *active_gltextures;
 gltexture_t *notexture, *nulltexture;
 
 unsigned int d_8to24table[256];
@@ -123,9 +123,14 @@ typedef struct
 	int minfilter;
 	const char *name;
 } glmode_t;
-static glmode_t glmodes[] = { { GL_NEAREST, GL_NEAREST, "GL_NEAREST" }, { GL_NEAREST, GL_NEAREST_MIPMAP_NEAREST, "GL_NEAREST_MIPMAP_NEAREST" }, { GL_NEAREST,
-		GL_NEAREST_MIPMAP_LINEAR, "GL_NEAREST_MIPMAP_LINEAR" }, { GL_LINEAR, GL_LINEAR, "GL_LINEAR" }, { GL_LINEAR, GL_LINEAR_MIPMAP_NEAREST,
-		"GL_LINEAR_MIPMAP_NEAREST" }, { GL_LINEAR, GL_LINEAR_MIPMAP_LINEAR, "GL_LINEAR_MIPMAP_LINEAR" }, };
+static glmode_t glmodes[] = {
+	{ GL_NEAREST, GL_NEAREST,                "GL_NEAREST" },
+	{ GL_NEAREST, GL_NEAREST_MIPMAP_NEAREST, "GL_NEAREST_MIPMAP_NEAREST" },
+	{ GL_NEAREST, GL_NEAREST_MIPMAP_LINEAR,  "GL_NEAREST_MIPMAP_LINEAR" },
+	{ GL_LINEAR,  GL_LINEAR,                 "GL_LINEAR" },
+	{ GL_LINEAR,  GL_LINEAR_MIPMAP_NEAREST,  "GL_LINEAR_MIPMAP_NEAREST" },
+	{ GL_LINEAR,  GL_LINEAR_MIPMAP_LINEAR,   "GL_LINEAR_MIPMAP_LINEAR" },
+};
 #define NUM_GLMODES (int)(sizeof(glmodes)/sizeof(glmodes[0]))
 static int glmode_idx = NUM_GLMODES - 1; /* trilinear */
 
@@ -332,13 +337,13 @@ static void TexMgr_Imagedump_f (void)
 		if (glt->flags & TEX_ALPHA)
 		{
 			buffer = (byte *) malloc(glt->width*glt->height*4);
-//			glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_BYTE, buffer);
+			glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_BYTE, buffer);
 			Image_WriteTGA(tganame, buffer, glt->width, glt->height, 32, true);
 		}
 		else
 		{
 			buffer = (byte *) malloc(glt->width*glt->height*3);
-//			glGetTexImage(GL_TEXTURE_2D, 0, GL_RGB, GL_UNSIGNED_BYTE, buffer);
+			glGetTexImage(GL_TEXTURE_2D, 0, GL_RGB, GL_UNSIGNED_BYTE, buffer);
 			Image_WriteTGA(tganame, buffer, glt->width, glt->height, 24, true);
 		}
 		free (buffer);
@@ -387,21 +392,17 @@ gltexture_t *TexMgr_FindTexture(const char *name)
 
 gltexture_t *TexMgr_NewTexture(void)
 {
-	gltexture_t *glt;
-
 	if (numgltextures == MAX_GLTEXTURES)
 		Sys_Error("numgltextures == MAX_GLTEXTURES\n");
 
-	if (free_gltextures == NULL)
-		return NULL;
-
-	glt = free_gltextures;
-	free_gltextures = glt->next;
+	gltexture_t *glt = Q_malloc(sizeof(*glt));
 	glt->next = active_gltextures;
 	active_gltextures = glt;
 
 	glGenTextures(1, &glt->texnum);
+
 	numgltextures++;
+
 	return glt;
 }
 
@@ -424,10 +425,8 @@ void TexMgr_FreeTexture(gltexture_t *kill)
 	if (active_gltextures == kill)
 	{
 		active_gltextures = kill->next;
-		kill->next = free_gltextures;
-		free_gltextures = kill;
-
 		GL_DeleteTexture(kill);
+		free(kill);
 		numgltextures--;
 		return;
 	}
@@ -437,10 +436,8 @@ void TexMgr_FreeTexture(gltexture_t *kill)
 		if (glt->next == kill)
 		{
 			glt->next = kill->next;
-			kill->next = free_gltextures;
-			free_gltextures = kill;
-
 			GL_DeleteTexture(kill);
+			free(kill);
 			numgltextures--;
 			return;
 		}
@@ -977,7 +974,6 @@ static void TexMgr_LoadImage32(gltexture_t *glt, unsigned *data)
 /* handles 8bit source data, then passes it to LoadImage32 */
 static void TexMgr_LoadImage8(gltexture_t *glt, byte *data)
 {
-	extern cvar_t gl_fullbright;
 	bool padw = false, padh = false;
 	byte padbyte;
 	unsigned int *usepal;
@@ -999,7 +995,7 @@ static void TexMgr_LoadImage8(gltexture_t *glt, byte *data)
 			if (data[i] == 255) //transparent index
 				break;
 		if (i == (int) (glt->width * glt->height))
-			glt->flags -= TEX_ALPHA;
+			glt->flags &= ~TEX_ALPHA;
 	}
 
 	// choose palette and padbyte
@@ -1011,7 +1007,7 @@ static void TexMgr_LoadImage8(gltexture_t *glt, byte *data)
 			usepal = d_8to24table_fbright;
 		padbyte = 0;
 	}
-	else if ((glt->flags & TEX_NOBRIGHT) && gl_fullbright.value)
+	else if (glt->flags & TEX_NOBRIGHT)
 	{
 		if (glt->flags & TEX_ALPHA)
 			usepal = d_8to24table_nobright_fence;
@@ -1245,7 +1241,6 @@ void TexMgr_ReloadImage(gltexture_t *glt, int shirt, int pants)
 /* must be called before any texture loading */
 void TexMgr_Init(void)
 {
-	int i;
 	static byte notexture_data[16] = { //black and pink checker
 		104,   0,
 		  0, 104,
@@ -1257,11 +1252,7 @@ void TexMgr_Init(void)
 	extern texture_t *r_notexture_mip, *r_notexture_mip2;
 
 	// init texture list
-	free_gltextures = (gltexture_t *) Hunk_AllocName(MAX_GLTEXTURES * sizeof(gltexture_t), "gltextures");
 	active_gltextures = NULL;
-	for (i = 0; i < MAX_GLTEXTURES - 1; i++)
-		free_gltextures[i].next = &free_gltextures[i + 1];
-	free_gltextures[i].next = NULL;
 	numgltextures = 0;
 
 	// palette

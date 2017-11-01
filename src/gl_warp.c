@@ -305,73 +305,35 @@ void R_DrawSkyChain(msurface_t *fa)
 
 /*
  =============
- R_InitSky
-
- A sky texture is 256*128, with the right side being a masked overlay
+ Sky_LoadTexture
+ A sky texture is 256*128, with the left side being a masked overlay
  ==============
  */
-void R_InitSky(texture_t *mt, byte *src)
+void Sky_LoadTexture(texture_t *mt)
 {
+	static byte front_data[128 * 128];
+	static byte back_data[128 * 128];
 	char texturename[64];
-	int i, j, p, scaledx;
-	byte fixedsky[256 * 128];
-	unsigned trans[128 * 128];
-	unsigned transpix;
-	int r, g, b;
-	unsigned *rgba;
 
-	if (mt->width * mt->height != sizeof(fixedsky))
-	{
-		Con_DPrintf("\002R_InitSky: ");
-		Con_DPrintf("non-standard sky texture '%s' (%dx%d, should be 256x128)\n", mt->name, mt->width, mt->height);
+	byte *src = (byte *)mt + mt->offsets[0];
 
-		// Resize sky texture to correct size
-		memset(fixedsky, 0, sizeof(fixedsky));
-
-		for (i = 0; i < 256; ++i)
-		{
-			scaledx = i * mt->width / 256 * mt->height;
-
-			for (j = 0; j < 128; ++j)
-				fixedsky[i * 128 + j] = src[scaledx + j * mt->height / 128];
-		}
-
-		src = fixedsky;
-	}
-
-	// make an average value for the back to avoid
-	// a fringe on the top level
-
-	r = g = b = 0;
-	for (i = 0; i < 128; i++)
-		for (j = 0; j < 128; j++)
-		{
-			p = src[i * 256 + j + 128];
-			rgba = &d_8to24table[p];
-			trans[(i * 128) + j] = *rgba;
-			r += ((byte *) rgba)[0];
-			g += ((byte *) rgba)[1];
-			b += ((byte *) rgba)[2];
-		}
-
-	((byte *) &transpix)[0] = r / (128 * 128);
-	((byte *) &transpix)[1] = g / (128 * 128);
-	((byte *) &transpix)[2] = b / (128 * 128);
-	((byte *) &transpix)[3] = 0;
+	// extract back layer and upload
+	for (int i = 0; i < 128; i++)
+		for (int j = 0; j < 128; j++)
+			back_data[(i * 128) + j] = src[i * 256 + j + 128];
 
 	snprintf(texturename, sizeof(texturename), "%s_back", mt->name);
-	solidskytexture = TexMgr_LoadImage(texturename, 128, 128, SRC_INDEXED, (byte *)trans, TEX_NOFLAGS);
+	solidskytexture = TexMgr_LoadImage(texturename, 128, 128, SRC_INDEXED, back_data, TEX_NOFLAGS);
 
-	for (i = 0; i < 128; i++)
-		for (j = 0; j < 128; j++)
+	// extract front layer and upload
+	for (int i = 0; i < 128; i++)
+		for (int j = 0; j < 128; j++)
 		{
-			p = src[i * 256 + j];
-			if (p == 0)
-				trans[(i * 128) + j] = transpix;
-			else
-				trans[(i * 128) + j] = d_8to24table[p];
+			front_data[(i * 128) + j] = src[i * 256 + j];
+			if (front_data[(i * 128) + j] == 0)
+				front_data[(i * 128) + j] = 255;
 		}
 
 	snprintf(texturename, sizeof(texturename), "%s_front", mt->name);
-	solidskytexture = TexMgr_LoadImage(texturename, 128, 128, SRC_INDEXED, (byte *)trans, TEX_NOFLAGS);
+	alphaskytexture = TexMgr_LoadImage(texturename, 128, 128, SRC_INDEXED, front_data, TEX_ALPHA);
 }

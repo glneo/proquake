@@ -140,7 +140,7 @@ void DrawGLPoly(glpoly_t *p, int tex_offset);
 texture_t *R_TextureAnimation(int frame, texture_t *base);
 void R_DrawWaterSurfaces(void);
 void DrawGLWaterPoly(glpoly_t *p, int tex_offset);
-void R_RenderBrushPoly(msurface_t *fa);
+void R_RenderBrushPoly(msurface_t *fa, int frame);
 void R_DrawBrushModel(entity_t *ent);
 void R_DrawWorld(void);
 void R_MarkLeaves(void);
@@ -156,6 +156,6 @@ void EmitWaterPolys(msurface_t *fa);
 void EmitSkyPolys(msurface_t *fa);
 void EmitBothSkyLayers(msurface_t *fa);
 void R_DrawSkyChain(msurface_t *fa);
-void R_InitSky(texture_t *mt, byte *src);
+void R_InitSky(texture_t *mt);
 
 #endif /* __GLQUAKE_H */
