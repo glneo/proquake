@@ -18,8 +18,6 @@
 
 #include "version.h"
 
-//define PARANOID // speed sapping error checking
-
 #define	GAMENAME "id1" // directory to look in by default
 
 #include <math.h>

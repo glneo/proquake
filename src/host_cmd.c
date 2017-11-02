@@ -102,14 +102,14 @@ void KillGameDir(searchpath_t *search)
 		if (*search->filename)
 		{
 			com_searchpaths = search->next;
-			Z_Free(search);
+			free(search);
 			return; //once you hit the dir, youve already freed the paks
 		}
 		Sys_FileClose(search->pack->handle); //johnfitz
 		search_killer = search->next;
-		Z_Free(search->pack->files);
-		Z_Free(search->pack);
-		Z_Free(search);
+		free(search->pack->files);
+		free(search->pack);
+		free(search);
 		search = search_killer;
 	}
 }
@@ -178,7 +178,7 @@ void Host_Game_f(void)
 
 		if (strcasecmp(Cmd_Argv(1), GAMENAME)) //game is not id1
 		{
-			search = Z_Malloc(sizeof(searchpath_t));
+			search = Q_malloc(sizeof(searchpath_t));
 			strcpy(search->filename, pakfile);
 			search->next = com_searchpaths;
 			com_searchpaths = search;
@@ -190,7 +190,7 @@ void Host_Game_f(void)
 				pak = COM_LoadPackFile(pakfile);
 				if (!pak)
 					break;
-				search = Z_Malloc(sizeof(searchpath_t));
+				search = Q_malloc(sizeof(searchpath_t));
 				search->pack = pak;
 				search->next = com_searchpaths;
 				com_searchpaths = search;
@@ -237,7 +237,7 @@ void Modlist_Add(char *name)
 		if (!strcmp(name, mod->name))
 			return;
 
-	mod = Z_Malloc(sizeof(mod_t));
+	mod = Q_malloc(sizeof(mod_t));
 	strcpy(mod->name, name);
 
 	//insert each entry in alphabetical order

@@ -461,7 +461,7 @@ void SZ_Alloc(sizebuf_t *buf, int startsize)
 
 void SZ_Free(sizebuf_t *buf)
 {
-	Z_Free(buf->data);
+	free(buf->data);
 	buf->data = NULL;
 	buf->maxsize = 0;
 	buf->cursize = 0;
@@ -1258,7 +1258,7 @@ byte *COM_LoadFile(char *path, int usehunk)
 	else if (usehunk == 2)
 		buf = Hunk_TempAlloc(len + 1);
 	else if (usehunk == 0)
-		buf = Z_Malloc(len + 1);
+		buf = Q_malloc(len + 1);
 	else if (usehunk == 3)
 		buf = Cache_Alloc(loadcache, len + 1, base);
 	else if (usehunk == 4)
@@ -1363,7 +1363,7 @@ pack_t *COM_LoadPackFile(char *packfile)
 
 	//Hunk_AllocName (numpackfiles * sizeof(packfile_t), "packfile");
 
-	newfiles = Z_Malloc(numpackfiles * sizeof(packfile_t));
+	newfiles = Q_malloc(numpackfiles * sizeof(packfile_t));
 
 	//johnfitz
 
@@ -1389,7 +1389,7 @@ pack_t *COM_LoadPackFile(char *packfile)
 
 	//pack = Hunk_Alloc (sizeof (pack_t));
 
-	pack = Z_Malloc(sizeof(pack_t));
+	pack = Q_malloc(sizeof(pack_t));
 
 	//johnfitz
 
@@ -1423,7 +1423,7 @@ void COM_AddGameDirectory(char *dir)
 	strcpy(com_gamedir, dir);
 
 // add the directory to the search path
-	search = Z_Malloc(sizeof(searchpath_t));
+	search = Q_malloc(sizeof(searchpath_t));
 
 	strcpy(search->filename, dir);
 	search->next = com_searchpaths;
@@ -1436,7 +1436,7 @@ void COM_AddGameDirectory(char *dir)
 		pak = COM_LoadPackFile(pakfile);
 		if (!pak)
 			break;
-		search = Z_Malloc(sizeof(searchpath_t));
+		search = Q_malloc(sizeof(searchpath_t));
 
 		search->pack = pak;
 		search->next = com_searchpaths;

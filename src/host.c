@@ -953,11 +953,6 @@ void Host_InitVCR(quakeparms_t *parms)
 
 }
 
-/*
- ====================
- Host_Init
- ====================
- */
 void Host_Init(quakeparms_t *parms)
 {
 	if (standard_quake)

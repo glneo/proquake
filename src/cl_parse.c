@@ -114,7 +114,7 @@ void CL_KeepaliveMessage(void)
 
 	// read messages from server, should just be nops
 	sizebuf_t old = net_message;
-	byte *olddata = malloc(net_message.cursize * sizeof(byte));
+	byte *olddata = Q_malloc(net_message.cursize * sizeof(byte));
 	memcpy(olddata, net_message.data, net_message.cursize);
 
 	do

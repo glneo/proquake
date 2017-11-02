@@ -18,13 +18,7 @@ int wad_numlumps;
 lumpinfo_t *wad_lumps;
 byte *wad_base;
 
-/*
- =============================================================================
-
- automatic byte swapping
-
- =============================================================================
- */
+/* automatic byte swapping */
 void SwapPic(qpic_t *pic)
 {
 	pic->width = LittleLong(pic->width);
@@ -32,15 +26,10 @@ void SwapPic(qpic_t *pic)
 }
 
 /*
- ==================
- W_CleanupName
-
- Lowercases name and pads with spaces and a terminating 0 to the length of
- lumpinfo_t->name.
- Used so lumpname lookups can proceed rapidly by comparing 4 chars at a time
- Space padding is so names can be printed nicely in tables.
- Can safely be performed in place.
- ==================
+ * Lowercases name and pads with spaces and a terminating 0 to the length of
+ * lumpinfo_t->name. Used so lumpname lookups can proceed rapidly by comparing
+ * 4 chars at a time Space padding is so names can be printed nicely in tables.
+ * Can safely be performed in place.
  */
 static void W_CleanupName(const char *in, char *out)
 {

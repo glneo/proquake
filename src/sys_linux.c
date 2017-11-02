@@ -96,11 +96,6 @@ void Sys_Quit(void)
 	exit(0);
 }
 
-void Sys_Init(void)
-{
-	host_parms.userdir = host_parms.basedir; /* code elsewhere relies on this ! */
-}
-
 double Sys_DoubleTime (void)
 {
 	return SDL_GetTicks() / 1000.0;
@@ -245,7 +240,7 @@ int main(int argc, char **argv)
 	parms.argc = com_argc;
 	parms.argv = com_argv;
 
-	parms.memsize = 32 * 1024 * 1024;
+	parms.memsize = 32 * 1024 * 1024; // 32MB default
 
 	j = COM_CheckParm("-mem");
 	if (j)
@@ -257,8 +252,6 @@ int main(int argc, char **argv)
 	// parms.cachedir = cachedir;
 
 	Host_Init(&parms);
-
-	Sys_Init();
 
 	if (COM_CheckParm("-nostdout"))
 		nostdout = 1;

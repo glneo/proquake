@@ -336,13 +336,13 @@ static void TexMgr_Imagedump_f (void)
 		GL_Bind (glt);
 		if (glt->flags & TEX_ALPHA)
 		{
-			buffer = (byte *) malloc(glt->width*glt->height*4);
+			buffer = (byte *)Q_malloc(glt->width*glt->height*4);
 			glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_BYTE, buffer);
 			Image_WriteTGA(tganame, buffer, glt->width, glt->height, 32, true);
 		}
 		else
 		{
-			buffer = (byte *) malloc(glt->width*glt->height*3);
+			buffer = (byte *)Q_malloc(glt->width*glt->height*3);
 			glGetTexImage(GL_TEXTURE_2D, 0, GL_RGB, GL_UNSIGNED_BYTE, buffer);
 			Image_WriteTGA(tganame, buffer, glt->width, glt->height, 24, true);
 		}
@@ -479,7 +479,7 @@ void TexMgr_LoadPalette(void)
 	if (!f)
 		Sys_Error("Couldn't load gfx/palette.lmp");
 
-	pal = (byte *)malloc(768);
+	pal = (byte *)Q_malloc(768);
 	fread(pal, 1, 768, f);
 	fclose(f);
 

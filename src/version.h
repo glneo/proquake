@@ -49,5 +49,6 @@
 #define SUPPORTS_GL_OVERBRIGHTS // Overbright method GLQuake is using, WinQuake always had them
 //#define SUPPORTS_VSYNC
 #define SUPPORTS_TRANSPARENT_SBAR
+//#define PARANOID // speed sapping error checking
 
 #endif /* __VERSION_H */

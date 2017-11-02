@@ -200,7 +200,7 @@ void Cmd_TokenizeString(char *text)
 
 // clear the args from the last string
 	for (i = 0; i < cmd_argc; i++)
-		Z_Free(cmd_argv[i]);
+		free(cmd_argv[i]);
 
 	cmd_argc = 0;
 	cmd_args = NULL;
@@ -231,7 +231,7 @@ void Cmd_TokenizeString(char *text)
 
 		if (cmd_argc < MAX_ARGS)
 		{
-			cmd_argv[cmd_argc] = Z_Malloc(strlen(com_token) + 1);
+			cmd_argv[cmd_argc] = Q_malloc(strlen(com_token) + 1);
 			strcpy(cmd_argv[cmd_argc], com_token);
 			cmd_argc++;
 		}
