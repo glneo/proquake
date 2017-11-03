@@ -136,10 +136,12 @@ void R_InitParticleTexture(void);
 void R_DrawSpriteModel(entity_t *ent);
 
 // gl_surface.c
-void DrawGLPoly(glpoly_t *p, int tex_offset);
+void DrawGLPoly(glpoly_t *p);
+void DrawGLPolyLight(glpoly_t *p);
 texture_t *R_TextureAnimation(int frame, texture_t *base);
 void R_DrawWaterSurfaces(void);
-void DrawGLWaterPoly(glpoly_t *p, int tex_offset);
+void DrawGLWaterPoly(glpoly_t *p);
+void DrawGLWaterPolyLight(glpoly_t *p);
 void R_RenderBrushPoly(msurface_t *fa, int frame);
 void R_DrawBrushModel(entity_t *ent);
 void R_DrawWorld(void);

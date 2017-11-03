@@ -653,7 +653,6 @@ void R_RenderView(void)
 	// render normal view
 	R_RenderScene();
 	R_DrawViewModel();
-	R_DrawWaterSurfaces();
 
 	R_PolyBlend();
 

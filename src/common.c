@@ -1426,6 +1426,7 @@ void COM_AddGameDirectory(char *dir)
 	search = Q_malloc(sizeof(searchpath_t));
 
 	strcpy(search->filename, dir);
+	search->pack = NULL;
 	search->next = com_searchpaths;
 	com_searchpaths = search;
 

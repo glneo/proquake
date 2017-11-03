@@ -262,6 +262,7 @@ static void TexMgr_Imagelist_f(void)
 	Con_Printf("%i textures %i pixels %1.1f megabytes\n", numgltextures, (int) texels, mb);
 }
 
+#ifndef OPENGLES
 typedef struct targaheader_s {
 	unsigned char 	id_length, colormap_type, image_type;
 	unsigned short	colormap_index, colormap_length;
@@ -273,7 +274,7 @@ typedef struct targaheader_s {
 #define TARGAHEADERSIZE 18 //size on disk
 
 /* writes RGB or RGBA data to a TGA file */
-bool Image_WriteTGA (const char *name, byte *data, int width, int height, int bpp, bool upsidedown)
+static bool Image_WriteTGA (const char *name, byte *data, int width, int height, int bpp, bool upsidedown)
 {
 	int handle, i, size, temp, bytes;
 	char pathname[MAX_OSPATH];
@@ -351,6 +352,7 @@ static void TexMgr_Imagedump_f (void)
 
 	Con_Printf ("dumped %i textures to %s\n", numgltextures, dirname);
 }
+#endif
 
 /* report texture memory usage for this frame */
 float TexMgr_FrameUsage(void)
@@ -1267,7 +1269,9 @@ void TexMgr_Init(void)
 	Cvar_SetCallback(&gl_texturemode, &TexMgr_TextureMode_f);
 	Cmd_AddCommand("gl_describetexturemodes", &TexMgr_DescribeTextureModes_f);
 	Cmd_AddCommand("imagelist", &TexMgr_Imagelist_f);
+#ifndef OPENGLES
 	Cmd_AddCommand("imagedump", &TexMgr_Imagedump_f);
+#endif
 
 	// poll max size from hardware
 	glGetIntegerv(GL_MAX_TEXTURE_SIZE, &gl_hardware_maxsize);

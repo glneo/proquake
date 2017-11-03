@@ -273,7 +273,7 @@ static void CL_ParseServerInfo(void)
 
 	R_NewMap();
 
-	Hunk_Check();		// make sure nothing is hurt
+//	Hunk_Check();		// make sure nothing is hurt
 
 }
 

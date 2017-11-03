@@ -32,10 +32,17 @@ typedef struct glRect_s
 
 extern glpoly_t *lightmap_polys[MAX_LIGHTMAPS];
 
-void DrawGLPoly(glpoly_t *p, int tex_offset)
+void DrawGLPoly(glpoly_t *p)
 {
-	glTexCoordPointer(2, GL_FLOAT, VERTEXSIZE * sizeof(float), &p->verts[0][tex_offset]);
-	glVertexPointer(3, GL_FLOAT, VERTEXSIZE * sizeof(float), &p->verts[0][0]);
+	glTexCoordPointer(2, GL_FLOAT, 0, &p->tex[0]);
+	glVertexPointer(3, GL_FLOAT, 0, &p->verts[0][0]);
+	glDrawArrays(GL_TRIANGLE_FAN, 0, p->numverts);
+}
+
+void DrawGLPolyLight(glpoly_t *p)
+{
+	glTexCoordPointer(2, GL_FLOAT, 0, &p->light_tex[0]);
+	glVertexPointer(3, GL_FLOAT, 0, &p->verts[0][0]);
 	glDrawArrays(GL_TRIANGLE_FAN, 0, p->numverts);
 }
 
@@ -132,24 +139,42 @@ static void DrawTextureChains(brush_model_t *brushmodel)
 
 		t->texturechain = NULL;
 	}
+
+	R_DrawWaterSurfaces();
 }
 
 /* Warp the vertex coordinates */
-void DrawGLWaterPoly(glpoly_t *p, int tex_offset)
+void DrawGLWaterPoly(glpoly_t *p)
 {
-	int i;
-	float *v;
 	vec3_t verts[p->numverts];
 
-	v = p->verts[0];
-	for (i = 0; i < p->numverts; i++, v += VERTEXSIZE)
+	for (int i = 0; i < p->numverts; i++)
 	{
+		float *v = p->verts[i];
+		verts[i][0] = p->verts[0][0] + 8 * sin(v[1] * 0.05 + realtime) * sin(v[2] * 0.05 + realtime);
+		verts[i][1] = v[1] + 8 * sin(v[0] * 0.05 + realtime) * sin(v[2] * 0.05 + realtime);
+		verts[i][2] = v[2];
+	}
+
+	glTexCoordPointer(2, GL_FLOAT, 0, &p->tex[0]);
+	glVertexPointer(3, GL_FLOAT, 0, &verts[0][0]);
+	glDrawArrays(GL_TRIANGLE_FAN, 0, p->numverts);
+}
+
+/* Warp the vertex coordinates */
+void DrawGLWaterPolyLight(glpoly_t *p)
+{
+	vec3_t verts[p->numverts];
+
+	for (int i = 0; i < p->numverts; i++)
+	{
+		float *v = p->verts[i];
 		verts[i][0] = v[0] + 8 * sin(v[1] * 0.05 + realtime) * sin(v[2] * 0.05 + realtime);
 		verts[i][1] = v[1] + 8 * sin(v[0] * 0.05 + realtime) * sin(v[2] * 0.05 + realtime);
 		verts[i][2] = v[2];
 	}
 
-	glTexCoordPointer(2, GL_FLOAT, VERTEXSIZE * sizeof(float), &p->verts[0][tex_offset]);
+	glTexCoordPointer(2, GL_FLOAT, 0, &p->light_tex[0]);
 	glVertexPointer(3, GL_FLOAT, 0, &verts[0][0]);
 	glDrawArrays(GL_TRIANGLE_FAN, 0, p->numverts);
 }
@@ -158,31 +183,19 @@ void R_RenderBrushPoly(msurface_t *fa, int frame)
 {
 	c_brush_polys++;
 
-	if (fa->flags & SURF_DRAWSKY)
-	{	// warp texture, no lightmaps
-		EmitBothSkyLayers(fa);
-		return;
-	}
-
 	texture_t *t = R_TextureAnimation(frame, fa->texinfo->texture);
 	GL_Bind(t->gltexture);
 
-	if (fa->flags & SURF_DRAWTURB)
-	{	// warp texture, no lightmaps
-		EmitWaterPolys(fa);
-		return;
-	}
-
 	if ((fa->flags & SURF_UNDERWATER) && r_waterwarp.value)
-		DrawGLWaterPoly(fa->polys, 3);
+		DrawGLWaterPoly(fa->polys);
 	else
-		DrawGLPoly(fa->polys, 3);
+		DrawGLPoly(fa->polys);
 
 	if (t->fullbright != NULL && gl_fullbright.value)
 	{
 		glEnable(GL_BLEND);
 		GL_Bind(t->fullbright);
-		DrawGLPoly(fa->polys, 3);
+		DrawGLPoly(fa->polys);
 		glDisable(GL_BLEND);
 	}
 

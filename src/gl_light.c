@@ -94,9 +94,9 @@ void R_BlendLightmaps(void)
 		{
 			// JPG - added r_waterwarp
 			if ((p->flags & SURF_UNDERWATER) && r_waterwarp.value)
-				DrawGLWaterPoly(p, 5);
+				DrawGLWaterPolyLight(p);
 			else
-				DrawGLPoly(p, 5);
+				DrawGLPolyLight(p);
 		}
 	}
 
@@ -606,7 +606,10 @@ static void BuildSurfaceDisplayList(brush_model_t *brushmodel, int surface)
 	lnumverts = fa->numedges;
 
 	// draw texture
-	poly = Hunk_Alloc(sizeof(glpoly_t) + (lnumverts - 4) * VERTEXSIZE * sizeof(float));
+	poly = Q_malloc(sizeof(glpoly_t));
+	poly->verts = Q_malloc(sizeof(*poly->verts) * lnumverts);
+	poly->tex = Q_malloc(sizeof(*poly->tex) * lnumverts);
+	poly->light_tex = Q_malloc(sizeof(*poly->light_tex) * lnumverts);
 	poly->next = fa->polys;
 	poly->flags = fa->flags;
 	fa->polys = poly;
@@ -634,8 +637,8 @@ static void BuildSurfaceDisplayList(brush_model_t *brushmodel, int surface)
 		t /= fa->texinfo->texture->height;
 
 		VectorCopy(vec, poly->verts[i]);
-		poly->verts[i][3] = s;
-		poly->verts[i][4] = t;
+		poly->tex[i].s = s;
+		poly->tex[i].t = t;
 
 		// lightmap texture coordinates
 		s = DotProduct (vec, fa->texinfo->vecs[0]) + fa->texinfo->vecs[0][3];
@@ -650,8 +653,8 @@ static void BuildSurfaceDisplayList(brush_model_t *brushmodel, int surface)
 		t += 8;
 		t /= BLOCK_HEIGHT * 16; //fa->texinfo->texture->height;
 
-		poly->verts[i][5] = s;
-		poly->verts[i][6] = t;
+		poly->light_tex[i].s = s;
+		poly->light_tex[i].t = t;
 	}
 	poly->numverts = lnumverts;
 }

@@ -38,7 +38,7 @@ static void Mod_LoadPlanes(brush_model_t *brushmodel, lump_t *l, byte *mod_base,
 		Sys_Error("funny lump size in %s", mod_name);
 
 	int count = l->filelen / sizeof(*in);
-	mplane_t *out = Q_malloc(count * 2 * sizeof(*out));
+	mplane_t *out = Q_calloc(count * 2, sizeof(*out));
 
 	brushmodel->planes = out;
 	brushmodel->numplanes = count;
@@ -462,7 +462,7 @@ static void Mod_LoadVertexes(brush_model_t *brushmodel, lump_t *l, byte *mod_bas
 		Sys_Error("funny lump size in %s", mod_name);
 
 	int count = l->filelen / sizeof(*in);
-	mvertex_t *out = Q_malloc(sizeof(*out) * count);
+	mvertex_t *out = Q_calloc(count, sizeof(*out));
 
 	brushmodel->vertexes = out;
 	brushmodel->numvertexes = count;
@@ -493,7 +493,7 @@ static void Mod_LoadTexinfo(brush_model_t *brushmodel, lump_t *l, byte *mod_base
 		Sys_Error("funny lump size in %s", mod_name);
 
 	int count = l->filelen / sizeof(*in);
-	mtexinfo_t *out = Q_malloc(count * sizeof(*out));
+	mtexinfo_t *out = Q_calloc(count, sizeof(*out));
 
 	brushmodel->texinfo = out;
 	brushmodel->numtexinfo = count;
@@ -557,7 +557,7 @@ static void Mod_LoadSurfedges(brush_model_t *brushmodel, lump_t *l, byte *mod_ba
 		Sys_Error("funny lump size in %s", mod_name);
 
 	int count = l->filelen / sizeof(*in);
-	int *out = Q_malloc(count * sizeof(*out));
+	int *out = Q_calloc(count, sizeof(*out));
 
 	brushmodel->surfedges = out;
 	brushmodel->numsurfedges = count;
@@ -573,7 +573,7 @@ static void Mod_LoadEdges(brush_model_t *brushmodel, lump_t *l, byte *mod_base, 
 		Sys_Error("funny lump size in %s", mod_name);
 
 	int count = l->filelen / sizeof(*in);
-	medge_t *out = Q_malloc((count + 1) * sizeof(*out));
+	medge_t *out = Q_calloc((count + 1), sizeof(*out));
 
 	brushmodel->edges = out;
 	brushmodel->numedges = count;
@@ -637,7 +637,7 @@ static void Mod_LoadSurfaces(brush_model_t *brushmodel, lump_t *l, byte *mod_bas
 		Sys_Error("funny lump size in %s", mod_name);
 
 	int count = l->filelen / sizeof(*in);
-	msurface_t *out = Q_malloc(count * sizeof(*out));
+	msurface_t *out = Q_calloc(count, sizeof(*out));
 
 	brushmodel->surfaces = out;
 	brushmodel->numsurfaces = count;
@@ -646,7 +646,6 @@ static void Mod_LoadSurfaces(brush_model_t *brushmodel, lump_t *l, byte *mod_bas
 	{
 		out->firstedge = LittleLong(in->firstedge);
 		out->numedges = LittleShort(in->numedges);
-		out->flags = 0;
 
 		int planenum = LittleShort(in->planenum);
 		if (LittleShort(in->side))
@@ -690,7 +689,7 @@ static void Mod_LoadMarksurfaces(brush_model_t *brushmodel, lump_t *l, byte *mod
 		Sys_Error("funny lump size in %s", mod_name);
 
 	int count = l->filelen / sizeof(*in);
-	msurface_t **out = Q_malloc(count * sizeof(*out));
+	msurface_t **out = Q_calloc(count, sizeof(*out));
 
 	brushmodel->marksurfaces = out;
 	brushmodel->nummarksurfaces = count;
@@ -711,7 +710,7 @@ static void Mod_LoadLeafs(brush_model_t *brushmodel, lump_t *l, byte *mod_base, 
 		Sys_Error("funny lump size in %s", mod_name);
 
 	int count = l->filelen / sizeof(*in);
-	mleaf_t *out = Q_malloc(count * sizeof(*out));
+	mleaf_t *out = Q_calloc(count, sizeof(*out));
 
 	brushmodel->leafs = out;
 	brushmodel->numleafs = count;
@@ -805,7 +804,7 @@ static void Mod_LoadClipnodes(brush_model_t *brushmodel, lump_t *l, byte *mod_ba
 		Sys_Error("funny lump size in %s", mod_name);
 
 	int count = l->filelen / sizeof(*in);
-	dclipnode_t *out = Q_malloc(count * sizeof(*out));
+	dclipnode_t *out = Q_calloc(count, sizeof(*out));
 
 	brushmodel->clipnodes = out;
 	brushmodel->numclipnodes = count;
@@ -867,7 +866,7 @@ static void Mod_LoadSubmodels(brush_model_t *brushmodel, lump_t *l, byte *mod_ba
 	if (count > MAX_MODELS)
 		Sys_Error("model %s has invalid # of vertices: %d", mod_name, count);
 
-	dmodel_t *out = Q_malloc(count * sizeof(*out));
+	dmodel_t *out = Q_calloc(count, sizeof(*out));
 
 	brushmodel->submodels = out;
 	brushmodel->numsubmodels = count;
@@ -897,7 +896,7 @@ void Mod_MakeHull0(brush_model_t *brushmodel)
 {
 	mnode_t *in = brushmodel->nodes;
 	int count = brushmodel->numnodes;
-	dclipnode_t *out = Q_malloc(count * sizeof(*out));
+	dclipnode_t *out = Q_calloc(count, sizeof(*out));
 
 	hull_t *hull = &brushmodel->hulls[0];
 	hull->clipnodes = out;
