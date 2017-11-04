@@ -122,9 +122,6 @@ char *pr_opnames[] = {
 	"BITOR"
 };
 
-char *PR_GlobalString(int ofs);
-char *PR_GlobalStringNoContents(int ofs);
-
 //=============================================================================
 
 void PR_PrintStatement(dstatement_t *s)
@@ -242,7 +239,7 @@ void PR_RunError(char *error, ...)
 	PR_StackTrace();
 	Con_SafePrintf("%s\n", string);
 
-	pr_depth = 0;		// dump the stack so host_error can shutdown functions
+	pr_depth = 0; // dump the stack so host_error can shutdown functions
 
 	Host_Error("Program error");
 }
@@ -310,13 +307,7 @@ int PR_LeaveFunction(void)
 	return pr_stack[pr_depth].s;
 }
 
-/*
- ============================================================================
- PR_ExecuteProgram
-
- The interpretation main loop
- ============================================================================
- */
+/* The interpretation main loop */
 void PR_ExecuteProgram(func_t fnum)
 {
 	eval_t *a, *b, *c, *ptr;

@@ -50,14 +50,14 @@ static void *Mod_LoadSpriteFrame(mspriteframe_t *pspriteframe, dspriteframe_t *p
 static void *Mod_LoadAllSpriteFrames(sprite_model_t *spritemodel, dspriteframetype_t *pframetype, char *mod_name)
 {
 	int posenum = 0;
-	spritemodel->framedescs = Q_malloc(sizeof(*spritemodel->framedescs) * spritemodel->numframes);
+	spritemodel->framedescs = (mspriteframedesc_t *)Q_malloc(sizeof(*spritemodel->framedescs) * spritemodel->numframes);
 
 	for (int i = 0; i < spritemodel->numframes; i++)
 	{
 		if (LittleLong(pframetype->type) == SPR_SINGLE)
 		{
 			spritemodel->framedescs[i].numposes = 1;
-			spritemodel->framedescs[i].poses = Q_malloc(sizeof(*spritemodel->framedescs[i].poses));
+			spritemodel->framedescs[i].poses = (mspriteframe_t *)Q_malloc(sizeof(*spritemodel->framedescs[i].poses));
 			pframetype = (dspriteframetype_t *)Mod_LoadSpriteFrame(&spritemodel->framedescs[i].poses[0],
 			                                                       (dspriteframe_t *)(pframetype + 1),
 									       posenum++, mod_name);
@@ -67,7 +67,7 @@ static void *Mod_LoadAllSpriteFrames(sprite_model_t *spritemodel, dspriteframety
 			dspritegroup_t *spritegroup = (dspritegroup_t *)(pframetype + 1);
 			int numposes = LittleLong(spritegroup->numframes);
 			spritemodel->framedescs[i].numposes = numposes;
-			spritemodel->framedescs[i].poses = Q_malloc(sizeof(*spritemodel->framedescs[i].poses) * numposes);
+			spritemodel->framedescs[i].poses = (mspriteframe_t *)Q_malloc(sizeof(*spritemodel->framedescs[i].poses) * numposes);
 			dspriteinterval_t *pin_intervals = (dspriteinterval_t *)(spritegroup + 1);
 			for (int j = 0; j < numposes; j++)
 			{
@@ -96,7 +96,7 @@ void Mod_LoadSpriteModel(model_t *mod, void *buffer)
 	if (version != SPRITE_VERSION)
 		Sys_Error("%s has wrong version number (%i should be %i)", mod->name, version, SPRITE_VERSION);
 
-	sprite_model_t *spritemodel = Q_malloc(sizeof(*spritemodel));
+	sprite_model_t *spritemodel = (sprite_model_t *)Q_malloc(sizeof(*spritemodel));
 
 	// endian-adjust and copy the data, starting with the sprite header
 	spritemodel->type = LittleLong(pinmodel->type);
@@ -110,12 +110,12 @@ void Mod_LoadSpriteModel(model_t *mod, void *buffer)
 
 	// load the frames
 	dspriteframetype_t *pframetype = (dspriteframetype_t *)(pinmodel + 1);
-	pframetype = Mod_LoadAllSpriteFrames(spritemodel, pframetype, mod_name);
+	pframetype = (dspriteframetype_t *)Mod_LoadAllSpriteFrames(spritemodel, pframetype, mod_name);
 
 	mod->numframes = spritemodel->numframes;
 
 	mod->type = mod_sprite;
-	mod->synctype = LittleLong(pinmodel->synctype);
+	mod->synctype = (synctype_t)LittleLong(pinmodel->synctype);
 
 	mod->mins[0] = mod->mins[1] = -spritemodel->maxwidth / 2;
 	mod->maxs[0] = mod->maxs[1] = spritemodel->maxwidth / 2;

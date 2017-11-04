@@ -1208,7 +1208,7 @@ void Datagram_SearchForHosts(bool xmit)
 	}
 }
 
-extern int m_return_state;
+extern m_state_t m_return_state;
 static qsocket_t *_Datagram_Connect(const char *host)
 {
 	struct qsockaddr sendaddr;

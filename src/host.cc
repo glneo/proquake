@@ -232,7 +232,7 @@ void Host_FindMaxClients(void)
 
 	if (svs.maxclientslimit < 4)
 		svs.maxclientslimit = 4;
-	svs.clients = Hunk_AllocName(svs.maxclientslimit * sizeof(client_t), "clients");
+	svs.clients = (struct client_s *)Hunk_AllocName(svs.maxclientslimit * sizeof(client_t), "clients");
 
 	if (svs.maxclients > 1)
 		Cvar_SetValueQuick(&deathmatch, 1.0);
@@ -914,12 +914,12 @@ void Host_InitVCR(quakeparms_t *parms)
 			Sys_Error("Invalid signature in vcr file\n");
 
 		Sys_FileRead(vcrFile, &com_argc, sizeof(int));
-		com_argv = Q_malloc(com_argc * sizeof(char *));
+		com_argv = (char **)Q_malloc(com_argc * sizeof(char *));
 		com_argv[0] = parms->argv[0];
 		for (i = 0; i < com_argc; i++)
 		{
 			Sys_FileRead(vcrFile, &len, sizeof(int));
-			p = Q_malloc(len);
+			p = (char *)Q_malloc(len);
 			Sys_FileRead(vcrFile, p, len);
 			com_argv[i + 1] = p;
 		}
@@ -942,7 +942,7 @@ void Host_InitVCR(quakeparms_t *parms)
 			{
 				len = 10;
 				Sys_FileWrite(vcrFile, &len, sizeof(int));
-				Sys_FileWrite(vcrFile, "-playback", len);
+				Sys_FileWrite(vcrFile, (void *)"-playback", len);
 				continue;
 			}
 			len = strlen(com_argv[i]) + 1;
@@ -989,7 +989,7 @@ void Host_Init(quakeparms_t *parms)
 	NET_Init();
 	SV_Init();
 
-	Con_Printf("Exe: "__TIME__" "__DATE__"\n");
+	Con_Printf("Exe: " __TIME__ " " __DATE__ "\n");
 	Con_Printf("%4.1f megabyte heap\n", parms->memsize / (1024 * 1024.0));
 
 	if (cls.state != ca_dedicated)

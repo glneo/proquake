@@ -62,7 +62,7 @@ static void GL_DrawAliasFrame(entity_t *ent, alias_model_t *aliasmodel, int pose
 	glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
 }
 
-vec3_t lightspot;
+extern vec3_t lightspot;
 
 static void GL_DrawAliasShadow(entity_t *ent, alias_model_t *aliasmodel, int pose)
 {

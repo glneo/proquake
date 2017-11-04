@@ -134,3 +134,6 @@ void PF_changeyaw(void);
 void ED_PrintEdicts_f(void);
 void ED_PrintNum(int ent);
 
+char *PR_GlobalString(int ofs);
+char *PR_GlobalStringNoContents(int ofs);
+

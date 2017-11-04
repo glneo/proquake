@@ -25,6 +25,8 @@ typedef struct cmdalias_s
 } cmdalias_t;
 cmdalias_t *cmd_alias;
 
+bool cmd_wait = false;
+
 /*
  =============================================================================
 
@@ -34,7 +36,7 @@ cmdalias_t *cmd_alias;
  */
 
 sizebuf_t cmd_text;
-bool cmd_wait = false;
+
 
 void Cbuf_Init(void)
 {
@@ -45,9 +47,7 @@ void Cbuf_Init(void)
 /* Adds command text at the end of the buffer */
 void Cbuf_AddText(char *text)
 {
-	int l;
-
-	l = strlen(text);
+	int l = strlen(text);
 
 	if (cmd_text.cursize + l >= cmd_text.maxsize)
 	{
@@ -70,7 +70,7 @@ void Cbuf_InsertText(char *text)
 	// copy off any commands still remaining in the exec buffer
 	if (templen)
 	{
-		temp = Q_malloc(templen);
+		temp = (char *)Q_malloc(templen);
 		memcpy(temp, cmd_text.data, templen);
 		SZ_Clear(&cmd_text);
 	}
@@ -149,7 +149,7 @@ void Cbuf_Execute(void)
 typedef struct cmd_function_s
 {
 	struct cmd_function_s *next;
-	char *name;
+	const char *name;
 	xcommand_t function;
 } cmd_function_t;
 cmd_function_t *cmd_functions = NULL; // possible commands to execute
@@ -180,7 +180,7 @@ char *Cmd_Args(void)
 	return cmd_args;
 }
 
-bool Cmd_Exists(char *cmd_name)
+bool Cmd_Exists(const char *cmd_name)
 {
 	cmd_function_t *cmd;
 
@@ -231,7 +231,7 @@ void Cmd_TokenizeString(char *text)
 
 		if (cmd_argc < MAX_ARGS)
 		{
-			cmd_argv[cmd_argc] = Q_malloc(strlen(com_token) + 1);
+			cmd_argv[cmd_argc] = (char *)Q_malloc(strlen(com_token) + 1);
 			strcpy(cmd_argv[cmd_argc], com_token);
 			cmd_argc++;
 		}
@@ -310,7 +310,7 @@ void Cmd_StuffCmds_f(void)
 	if (!s)
 		return;
 
-	char *text = Q_malloc(s + 1);
+	char *text = (char *)Q_malloc(s + 1);
 	text[0] = 0;
 	for (int i = 1; i < com_argc; i++)
 	{
@@ -322,7 +322,7 @@ void Cmd_StuffCmds_f(void)
 	}
 
 	// pull out the commands
-	char *build = Q_malloc(s + 1);
+	char *build = (char *)Q_malloc(s + 1);
 	build[0] = 0;
 
 	for (int i = 0; i < (s - 1); i++)
@@ -449,7 +449,7 @@ void Cmd_Alias_f(void)
 
 		if (!a)
 		{
-			a = Q_malloc(sizeof(cmdalias_t));
+			a = (cmdalias_t *)Q_malloc(sizeof(cmdalias_t));
 			a->next = cmd_alias;
 			cmd_alias = a;
 		}
@@ -641,7 +641,7 @@ void Cmd_CmdList_f(void)
 	Con_Printf("\n\n");
 }
 
-void Cmd_AddCommand(char *cmd_name, xcommand_t function)
+void Cmd_AddCommand(const char *cmd_name, xcommand_t function)
 {
 	if (host_initialized) // because hunk allocation would get stomped
 		Sys_Error("Cmd_AddCommand after host_initialized");
@@ -660,7 +660,7 @@ void Cmd_AddCommand(char *cmd_name, xcommand_t function)
 		return;
 	}
 
-	cmd_function_t *cmd = Q_malloc(sizeof(cmd_function_t));
+	cmd_function_t *cmd = (cmd_function_t *)Q_malloc(sizeof(cmd_function_t));
 	cmd->name = cmd_name;
 	cmd->function = function;
 

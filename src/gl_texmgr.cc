@@ -397,7 +397,7 @@ gltexture_t *TexMgr_NewTexture(void)
 	if (numgltextures == MAX_GLTEXTURES)
 		Sys_Error("numgltextures == MAX_GLTEXTURES\n");
 
-	gltexture_t *glt = Q_malloc(sizeof(*glt));
+	gltexture_t *glt = (gltexture_t *)Q_malloc(sizeof(*glt));
 	glt->next = active_gltextures;
 	active_gltextures = glt;
 

@@ -27,18 +27,18 @@ static void Mod_LoadEntities(brush_model_t *brushmodel, lump_t *l, byte *mod_bas
 		brushmodel->entities = NULL;
 		return;
 	}
-	brushmodel->entities = Q_malloc(l->filelen);
+	brushmodel->entities = (char *)Q_malloc(l->filelen);
 	memcpy(brushmodel->entities, mod_base + l->fileofs, l->filelen);
 }
 
 static void Mod_LoadPlanes(brush_model_t *brushmodel, lump_t *l, byte *mod_base, char *mod_name)
 {
-	dplane_t *in = (void *) (mod_base + l->fileofs);
+	dplane_t *in = (dplane_t *)(mod_base + l->fileofs);
 	if (l->filelen % sizeof(*in))
 		Sys_Error("funny lump size in %s", mod_name);
 
 	int count = l->filelen / sizeof(*in);
-	mplane_t *out = Q_calloc(count * 2, sizeof(*out));
+	mplane_t *out = (mplane_t *)Q_calloc(count * 2, sizeof(*out));
 
 	brushmodel->planes = out;
 	brushmodel->numplanes = count;
@@ -457,12 +457,12 @@ void Mod_LoadTextures(brush_model_t *brushmodel, lump_t *l, byte *mod_base, char
 
 static void Mod_LoadVertexes(brush_model_t *brushmodel, lump_t *l, byte *mod_base, char *mod_name)
 {
-	dvertex_t *in = (void *) (mod_base + l->fileofs);
+	dvertex_t *in = (dvertex_t *)(mod_base + l->fileofs);
 	if (l->filelen % sizeof(*in))
 		Sys_Error("funny lump size in %s", mod_name);
 
 	int count = l->filelen / sizeof(*in);
-	mvertex_t *out = Q_calloc(count, sizeof(*out));
+	mvertex_t *out = (mvertex_t *)Q_calloc(count, sizeof(*out));
 
 	brushmodel->vertexes = out;
 	brushmodel->numvertexes = count;
@@ -482,18 +482,18 @@ static void Mod_LoadVisibility(brush_model_t *brushmodel, lump_t *l, byte *mod_b
 		brushmodel->visdata = NULL;
 		return;
 	}
-	brushmodel->visdata = Q_malloc(l->filelen);
+	brushmodel->visdata = (byte *)Q_malloc(l->filelen);
 	memcpy(brushmodel->visdata, mod_base + l->fileofs, l->filelen);
 }
 
 static void Mod_LoadTexinfo(brush_model_t *brushmodel, lump_t *l, byte *mod_base, char *mod_name)
 {
-	texinfo_t *in = (void *) (mod_base + l->fileofs);
+	texinfo_t *in = (texinfo_t *)(mod_base + l->fileofs);
 	if (l->filelen % sizeof(*in))
 		Sys_Error("funny lump size in %s", mod_name);
 
 	int count = l->filelen / sizeof(*in);
-	mtexinfo_t *out = Q_calloc(count, sizeof(*out));
+	mtexinfo_t *out = (mtexinfo_t *)Q_calloc(count, sizeof(*out));
 
 	brushmodel->texinfo = out;
 	brushmodel->numtexinfo = count;
@@ -546,18 +546,18 @@ static void Mod_LoadLighting(brush_model_t *brushmodel, lump_t *l, byte *mod_bas
 		return;
 	}
 
-	brushmodel->lightdata = Q_malloc(l->filelen);
+	brushmodel->lightdata = (byte *)Q_malloc(l->filelen);
 	memcpy(brushmodel->lightdata, mod_base + l->fileofs, l->filelen);
 }
 
 static void Mod_LoadSurfedges(brush_model_t *brushmodel, lump_t *l, byte *mod_base, char *mod_name)
 {
-	int *in = (void *) (mod_base + l->fileofs);
+	int *in = (int *)(mod_base + l->fileofs);
 	if (l->filelen % sizeof(*in))
 		Sys_Error("funny lump size in %s", mod_name);
 
 	int count = l->filelen / sizeof(*in);
-	int *out = Q_calloc(count, sizeof(*out));
+	int *out = (int *)Q_calloc(count, sizeof(*out));
 
 	brushmodel->surfedges = out;
 	brushmodel->numsurfedges = count;
@@ -568,12 +568,12 @@ static void Mod_LoadSurfedges(brush_model_t *brushmodel, lump_t *l, byte *mod_ba
 
 static void Mod_LoadEdges(brush_model_t *brushmodel, lump_t *l, byte *mod_base, char *mod_name)
 {
-	dedge_t *in = (void *) (mod_base + l->fileofs);
+	dedge_t *in = (dedge_t *)(mod_base + l->fileofs);
 	if (l->filelen % sizeof(*in))
 		Sys_Error("funny lump size in %s", mod_name);
 
 	int count = l->filelen / sizeof(*in);
-	medge_t *out = Q_calloc((count + 1), sizeof(*out));
+	medge_t *out = (medge_t *)Q_calloc((count + 1), sizeof(*out));
 
 	brushmodel->edges = out;
 	brushmodel->numedges = count;
@@ -632,12 +632,12 @@ static void CalcSurfaceExtents(brush_model_t *brushmodel, msurface_t *s)
 
 static void Mod_LoadSurfaces(brush_model_t *brushmodel, lump_t *l, byte *mod_base, char *mod_name)
 {
-	dface_t *in = (void *) (mod_base + l->fileofs);
+	dface_t *in = (dface_t *)(mod_base + l->fileofs);
 	if (l->filelen % sizeof(*in))
 		Sys_Error("funny lump size in %s", mod_name);
 
 	int count = l->filelen / sizeof(*in);
-	msurface_t *out = Q_calloc(count, sizeof(*out));
+	msurface_t *out = (msurface_t *)Q_calloc(count, sizeof(*out));
 
 	brushmodel->surfaces = out;
 	brushmodel->numsurfaces = count;
@@ -684,12 +684,12 @@ static void Mod_LoadSurfaces(brush_model_t *brushmodel, lump_t *l, byte *mod_bas
 
 static void Mod_LoadMarksurfaces(brush_model_t *brushmodel, lump_t *l, byte *mod_base, char *mod_name)
 {
-	short *in = (void *) (mod_base + l->fileofs);
+	short *in = (short *)(mod_base + l->fileofs);
 	if (l->filelen % sizeof(*in))
 		Sys_Error("funny lump size in %s", mod_name);
 
 	int count = l->filelen / sizeof(*in);
-	msurface_t **out = Q_calloc(count, sizeof(*out));
+	msurface_t **out = (msurface_t **)Q_calloc(count, sizeof(*out));
 
 	brushmodel->marksurfaces = out;
 	brushmodel->nummarksurfaces = count;
@@ -705,12 +705,12 @@ static void Mod_LoadMarksurfaces(brush_model_t *brushmodel, lump_t *l, byte *mod
 
 static void Mod_LoadLeafs(brush_model_t *brushmodel, lump_t *l, byte *mod_base, char *mod_name)
 {
-	dleaf_t *in = (void *) (mod_base + l->fileofs);
+	dleaf_t *in = (dleaf_t *)(mod_base + l->fileofs);
 	if (l->filelen % sizeof(*in))
 		Sys_Error("funny lump size in %s", mod_name);
 
 	int count = l->filelen / sizeof(*in);
-	mleaf_t *out = Q_calloc(count, sizeof(*out));
+	mleaf_t *out = (mleaf_t *)Q_calloc(count, sizeof(*out));
 
 	brushmodel->leafs = out;
 	brushmodel->numleafs = count;
@@ -756,12 +756,12 @@ static void Mod_SetParent(mnode_t *node, mnode_t *parent)
 
 static void Mod_LoadNodes(brush_model_t *brushmodel, lump_t *l, byte *mod_base, char *mod_name)
 {
-	dnode_t *in = (void *) (mod_base + l->fileofs);
+	dnode_t *in = (dnode_t *)(mod_base + l->fileofs);
 	if (l->filelen % sizeof(*in))
 		Sys_Error("funny lump size in %s", mod_name);
 
 	int count = l->filelen / sizeof(*in);
-	mnode_t *out = Q_calloc(count, sizeof(*out));
+	mnode_t *out = (mnode_t *)Q_calloc(count, sizeof(*out));
 
 	brushmodel->nodes = out;
 	brushmodel->numnodes = count;
@@ -799,12 +799,12 @@ static void Mod_LoadClipnodes(brush_model_t *brushmodel, lump_t *l, byte *mod_ba
 {
 	hull_t *hull;
 
-	dclipnode_t *in = (void *) (mod_base + l->fileofs);
+	dclipnode_t *in = (dclipnode_t *)(mod_base + l->fileofs);
 	if (l->filelen % sizeof(*in))
 		Sys_Error("funny lump size in %s", mod_name);
 
 	int count = l->filelen / sizeof(*in);
-	dclipnode_t *out = Q_calloc(count, sizeof(*out));
+	dclipnode_t *out = (dclipnode_t *)Q_calloc(count, sizeof(*out));
 
 	brushmodel->clipnodes = out;
 	brushmodel->numclipnodes = count;
@@ -858,7 +858,7 @@ static void Mod_LoadClipnodes(brush_model_t *brushmodel, lump_t *l, byte *mod_ba
 
 static void Mod_LoadSubmodels(brush_model_t *brushmodel, lump_t *l, byte *mod_base, char *mod_name)
 {
-	dmodel_t *in = (void *) (mod_base + l->fileofs);
+	dmodel_t *in = (dmodel_t *)(mod_base + l->fileofs);
 	if (l->filelen % sizeof(*in))
 		Sys_Error("funny lump size in %s", mod_name);
 
@@ -866,7 +866,7 @@ static void Mod_LoadSubmodels(brush_model_t *brushmodel, lump_t *l, byte *mod_ba
 	if (count > MAX_MODELS)
 		Sys_Error("model %s has invalid # of vertices: %d", mod_name, count);
 
-	dmodel_t *out = Q_calloc(count, sizeof(*out));
+	dmodel_t *out = (dmodel_t *)Q_calloc(count, sizeof(*out));
 
 	brushmodel->submodels = out;
 	brushmodel->numsubmodels = count;
@@ -896,7 +896,7 @@ void Mod_MakeHull0(brush_model_t *brushmodel)
 {
 	mnode_t *in = brushmodel->nodes;
 	int count = brushmodel->numnodes;
-	dclipnode_t *out = Q_calloc(count, sizeof(*out));
+	dclipnode_t *out = (dclipnode_t *)Q_calloc(count, sizeof(*out));
 
 	hull_t *hull = &brushmodel->hulls[0];
 	hull->clipnodes = out;
@@ -923,7 +923,7 @@ void Mod_LoadBrushModel(model_t *mod, void *buffer)
 	dheader_t *header = (dheader_t *) buffer;
 	char *mod_name = mod->name;
 
-	brush_model_t *brushmodel = Q_malloc(sizeof(*brushmodel));
+	brush_model_t *brushmodel = (brush_model_t *)Q_malloc(sizeof(*brushmodel));
 
 	brushmodel->bspversion = LittleLong(header->version);
 	if (brushmodel->bspversion != BSPVERSION)
@@ -994,7 +994,7 @@ void Mod_LoadBrushModel(model_t *mod, void *buffer)
 			snprintf(name, sizeof(name), "*%i", i + 1);
 			model_t *loadmodel = Mod_FindName(name);
 			*loadmodel = *mod;
-			loadmodel->brushmodel = Q_malloc(sizeof(*brushmodel));
+			loadmodel->brushmodel = (brush_model_t *)Q_malloc(sizeof(*brushmodel));
 			*loadmodel->brushmodel = *brushmodel;
 			brushmodel = loadmodel->brushmodel;
 			strcpy(loadmodel->name, name);

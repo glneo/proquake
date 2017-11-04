@@ -840,13 +840,13 @@ static void Load_CharSet(void)
 	// by hand, because we need to write the version
 	// string into the background before turning
 	// it into a texture
-	draw_chars = W_GetLumpName("conchars");
+	draw_chars = (byte *)W_GetLumpName("conchars");
 	for (i = 0; i < 256 * 64; i++)
 		if (draw_chars[i] == 0)
 			draw_chars[i] = 255;	// proper transparent color
 
 	// Expand charset texture with blank lines in between to avoid in-line distortion
-	dest = Q_malloc(128 * 256);
+	dest = (byte *)Q_malloc(128 * 256);
 	memset(dest, 0, 128 * 256);
 	src = draw_chars;
 

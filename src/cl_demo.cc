@@ -82,7 +82,7 @@ static void CL_WriteDemoMessage(void)
 
 static void PushFrameposEntry(long fbaz)
 {
-	framepos_t *newf = Q_malloc(sizeof(framepos_t));
+	framepos_t *newf = (framepos_t *)Q_malloc(sizeof(framepos_t));
 	newf->baz = fbaz;
 
 	if (!demo_framepos)

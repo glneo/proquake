@@ -32,8 +32,6 @@
 static vmode_t modelist[MAX_MODE_LIST];
 static int nummodes;
 
-unsigned d_8to24table[256];
-
 int texture_extension_number = 1;
 
 static bool vid_initialized = false;
@@ -46,9 +44,8 @@ static bool vid_changed = false;
 
 int texture_mode = GL_LINEAR;
 
-viddef_t vid; // global video state
+extern viddef_t vid; // global video state
 modestate_t modestate = MODE_NONE;
-bool scr_skipupdate;
 
 static cvar_t vid_fullscreen = { "vid_fullscreen", "0", true };
 static cvar_t vid_width = { "vid_width", "800", true };

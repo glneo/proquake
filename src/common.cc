@@ -17,9 +17,9 @@
 #include <string>
 #include <vector>
 #include <algorithm>
-extern "C" {
+
 #include "quakedef.h"
-}
+
 #include <cassert>  // strltrim strrtrim
 
 using namespace std;
@@ -855,6 +855,8 @@ void COM_InitArgv(int argc, char **argv)
 
 }
 
+void COM_InitFilesystem();
+
 /*
  ================
  COM_Init
@@ -890,6 +892,7 @@ void COM_Init(char *basedir)
 	Cvar_RegisterVariable(&cmdline);  // Baker 3.99c: needed for test2 command
 	Cmd_AddCommand((char *)"path", COM_Path_f);
 
+	COM_InitFilesystem();
 	COM_CheckRegistered();
 }
 
@@ -1458,8 +1461,8 @@ void COM_InitFilesystem() //johnfitz -- modified based on topaz's tutorial
 	strlcpy(com_basedir, basedir, sizeof(com_basedir));
 
 // start up with GAMENAME by default (id1)
-	COM_AddGameDirectory(va("%s/"GAMENAME, basedir));
-	strcpy(com_gamedir, va("%s/"GAMENAME, basedir));   // Baker 3.60 - From FitzQuake
+	COM_AddGameDirectory(va("%s/" GAMENAME, basedir));
+	strcpy(com_gamedir, va("%s/" GAMENAME, basedir));   // Baker 3.60 - From FitzQuake
 
 	if (COM_CheckParm((char *)"-rogue"))
 		COM_AddGameDirectory(va("%s/rogue", basedir));
@@ -1556,9 +1559,9 @@ int COM_Seconds(int seconds)
 #ifndef HAVE_STRLCAT
 size_t strlcat(char *dst, const char *src, size_t siz)
 {
-	register char *d = dst;
-	register const char *s = src;
-	register size_t n = siz;
+	char *d = dst;
+	const char *s = src;
+	size_t n = siz;
 	size_t dlen;
 
 	/* Find the end of dst and adjust bytes left but don't go past end */

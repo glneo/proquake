@@ -114,7 +114,7 @@ void CL_KeepaliveMessage(void)
 
 	// read messages from server, should just be nops
 	sizebuf_t old = net_message;
-	byte *olddata = Q_malloc(net_message.cursize * sizeof(byte));
+	byte *olddata = (byte *)Q_malloc(net_message.cursize * sizeof(byte));
 	memcpy(olddata, net_message.data, net_message.cursize);
 
 	do
@@ -192,8 +192,8 @@ static void CL_ParseServerInfo(void)
 		Con_Printf("Bad maxclients (%u) from server\n", cl.maxclients);
 		return;
 	}
-	cl.scores = Hunk_AllocName(cl.maxclients * sizeof(*cl.scores), "scores");
-	cl.teamscores = Hunk_AllocName(14 * sizeof(*cl.teamscores), "teamscor"); // JPG - for teamscore status bar
+	cl.scores = (scoreboard_t *)Hunk_AllocName(cl.maxclients * sizeof(*cl.scores), "scores");
+	cl.teamscores = (teamscore_t *)Hunk_AllocName(14 * sizeof(*cl.teamscores), "teamscor"); // JPG - for teamscore status bar
 
 // parse gametype
 	cl.gametype = MSG_ReadByte();

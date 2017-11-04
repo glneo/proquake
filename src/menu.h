@@ -12,7 +12,7 @@
  * General Public License for more details.
  */
 
-enum {
+typedef enum {
 	m_none = 0,
 	m_main,
 	m_singleplayer,
@@ -30,7 +30,9 @@ enum {
 	m_search,
 	m_slist,
 	m_preferences,
-} m_state;
+} m_state_t;
+
+extern m_state_t m_state;
 
 // menus
 void M_Init (void);

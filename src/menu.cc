@@ -15,6 +15,8 @@
 #include "quakedef.h"
 #include "glquake.h"
 
+m_state_t m_state;
+
 void (*vid_menucmdfn)(void);
 void (*vid_menudrawfn)(void);
 void (*vid_menukeyfn)(int key);
@@ -57,7 +59,7 @@ bool m_entersound; // play after drawing a frame, so caching
 // won't disrupt the sound
 bool m_recursiveDraw;
 
-int m_return_state;
+m_state_t m_return_state;
 bool m_return_onerror;
 char m_return_reason[64];
 
@@ -78,7 +80,7 @@ void M_DrawCharacter(int cx, int line, int num)
 	Draw_Character(cx + ((vid.width - 320) >> 1), line, num);
 }
 
-void M_Print(int cx, int cy, char *str)
+void M_Print(int cx, int cy, const char *str)
 {
 	while (*str)
 	{
@@ -1853,7 +1855,7 @@ void M_Help_Key(int key, int ascii)
 /* QUIT MENU */
 
 int msgNumber;
-int m_quit_prevstate;
+m_state_t m_quit_prevstate;
 bool wasInMenus;
 
 char *quitMessage[] = {
@@ -2819,8 +2821,8 @@ void (*m_key_callbacks[])(int key, int ascii) = {
 	[m_multiplayer] = M_MultiPlayer_Key,
 	[m_setup] = M_Setup_Key,
 	[m_options] = M_Options_Key,
-	[m_keys] = M_Keys_Key,
 	[m_video] = M_Video_Key,
+	[m_keys] = M_Keys_Key,
 	[m_help] = M_Help_Key,
 	[m_quit] = M_Quit_Key,
 	[m_lanconfig] = M_LanConfig_Key,

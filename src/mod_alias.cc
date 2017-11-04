@@ -65,7 +65,7 @@ static void *Mod_LoadAliasFrame(alias_model_t *aliasmodel, int *posenum, int i, 
 	dtrivertx_t *pinframe = (dtrivertx_t *)(pdaliasframe + 1);
 
 //	aliasmodel->poseverts = Q_realloc(aliasmodel->poseverts, sizeof(*aliasmodel->poseverts) * (posenum + 1));
-	aliasmodel->poseverts[*posenum] = Q_malloc(sizeof(mtrivertx_t) * aliasmodel->numverts);
+	aliasmodel->poseverts[*posenum] = (mtrivertx_t *)Q_malloc(sizeof(mtrivertx_t) * aliasmodel->numverts);
 	for (int j = 0; j < aliasmodel->numverts; j++)
 	{
 		for (int k = 0; k < 3; k++)
@@ -104,7 +104,7 @@ static void *Mod_LoadAliasGroup(alias_model_t *aliasmodel, int *posenum, int i, 
 	for (int j = 0; j < numsubframes; j++)
 	{
 		dtrivertx_t *pinframe = (dtrivertx_t *)(pdaliasframe + 1);
-		aliasmodel->poseverts[*posenum] = Q_malloc(sizeof(mtrivertx_t) * aliasmodel->numverts);
+		aliasmodel->poseverts[*posenum] = (mtrivertx_t *)Q_malloc(sizeof(mtrivertx_t) * aliasmodel->numverts);
 		for (int k = 0; k < aliasmodel->numverts; k++)
 		{
 			for (int l = 0; l < 3; l++)
@@ -124,7 +124,7 @@ static void *Mod_LoadAllFrames(alias_model_t *aliasmodel, daliasframetype_t *pfr
 
 	for (int i = 0; i < aliasmodel->numframes; i++)
 	{
-		aliasframetype_t frametype = LittleLong(pframetype->type);
+		aliasframetype_t frametype = (aliasframetype_t)LittleLong(pframetype->type);
 		if (frametype == ALIAS_SINGLE)
 			pframetype = (daliasframetype_t *)Mod_LoadAliasFrame(aliasmodel, &posenum, i, pframetype);
 		else
@@ -202,8 +202,8 @@ static void *Mod_LoadAllSkins(alias_model_t *aliasmodel, daliasskintype_t *pskin
 	daliasskingroup_t *pinskingroup;
 	daliasskininterval_t *pinskinintervals;
 
-	aliasmodel->gl_texturenum = Q_malloc(sizeof(*aliasmodel->gl_texturenum) * aliasmodel->numskins);
-	aliasmodel->gl_fbtexturenum = Q_malloc(sizeof(*aliasmodel->gl_texturenum) * aliasmodel->numskins);
+	aliasmodel->gl_texturenum = (gltexture_t *(*)[4])Q_malloc(sizeof(*aliasmodel->gl_texturenum) * aliasmodel->numskins);
+	aliasmodel->gl_fbtexturenum = (gltexture_t *(*)[4])Q_malloc(sizeof(*aliasmodel->gl_texturenum) * aliasmodel->numskins);
 
 	for (int i = 0; i < aliasmodel->numskins; i++)
 	{
@@ -249,7 +249,7 @@ static void *Mod_LoadAllSkins(alias_model_t *aliasmodel, daliasskintype_t *pskin
 			groupskins = LittleLong(pinskingroup->numskins);
 			pinskinintervals = (daliasskininterval_t *)(pinskingroup + 1);
 
-			skin = (void *)(pinskinintervals + groupskins);
+			skin = (byte *)(pinskinintervals + groupskins);
 			int j;
 			for (j = 0; j < groupskins; j++)
 			{
@@ -277,7 +277,7 @@ void Mod_LoadAliasModel(model_t *mod, void *buffer)
 	if (version != ALIAS_VERSION)
 		Sys_Error("%s has wrong version number (%i should be %i)", mod_name, version, ALIAS_VERSION);
 
-	alias_model_t *aliasmodel = Q_malloc(sizeof(*aliasmodel));
+	alias_model_t *aliasmodel = (alias_model_t *)Q_malloc(sizeof(*aliasmodel));
 
 	// endian-adjust and copy the data, starting with the alias model header
 	for (int i = 0; i < 3; i++)
@@ -309,12 +309,12 @@ void Mod_LoadAliasModel(model_t *mod, void *buffer)
 
 	// load the skins
 	daliasskintype_t *pskintype = (daliasskintype_t *)(pinmodel + 1);
-	pskintype = Mod_LoadAllSkins(aliasmodel, pskintype, mod_name);
+	pskintype = (daliasskintype_t *)Mod_LoadAllSkins(aliasmodel, pskintype, mod_name);
 
 	// load texture cords s and t
 	dstvert_t *pinstverts = (dstvert_t *)pskintype;
-	aliasmodel->stverts[0] = Q_malloc(sizeof(*aliasmodel->stverts) * aliasmodel->numverts);
-	aliasmodel->stverts[1] = Q_malloc(sizeof(*aliasmodel->stverts) * aliasmodel->numverts);
+	aliasmodel->stverts[0] = (mstvert_t *)Q_malloc(sizeof(*aliasmodel->stverts) * aliasmodel->numverts);
+	aliasmodel->stverts[1] = (mstvert_t *)Q_malloc(sizeof(*aliasmodel->stverts) * aliasmodel->numverts);
 	for (int i = 0; i < aliasmodel->numverts; i++)
 	{
 		int s = LittleLong(pinstverts[i].s);
@@ -334,7 +334,7 @@ void Mod_LoadAliasModel(model_t *mod, void *buffer)
 	aliasmodel->backstart = aliasmodel->numtris - 1;
 	int front_index = 0;
 	dtriangle_t *pintriangles = (dtriangle_t *)&pinstverts[aliasmodel->numverts];
-	aliasmodel->triangles = Q_malloc(sizeof(*aliasmodel->triangles) * aliasmodel->numtris);
+	aliasmodel->triangles = (mtriangle_t *)Q_malloc(sizeof(*aliasmodel->triangles) * aliasmodel->numtris);
 	for (int i = 0; i < aliasmodel->numtris; i++)
 	{
 		short *pvert;
@@ -350,13 +350,13 @@ void Mod_LoadAliasModel(model_t *mod, void *buffer)
 
 	// load the frames
 	daliasframetype_t *pframetype = (daliasframetype_t *)&pintriangles[aliasmodel->numtris];
-	aliasmodel->frames = Q_malloc(sizeof(*aliasmodel->frames) * aliasmodel->numframes);
-	pframetype = Mod_LoadAllFrames(aliasmodel, pframetype);
+	aliasmodel->frames = (maliasframedesc_t *)Q_malloc(sizeof(*aliasmodel->frames) * aliasmodel->numframes);
+	pframetype = (daliasframetype_t *)Mod_LoadAllFrames(aliasmodel, pframetype);
 
 	mod->numframes = aliasmodel->numframes;
 
 	mod->type = mod_alias;
-	mod->synctype = LittleLong(pinmodel->synctype);
+	mod->synctype = (synctype_t)LittleLong(pinmodel->synctype);
 	mod->flags = LittleLong(pinmodel->flags);
 	if (strcmp("progs/player.mdl", mod_name) == 0)
 		mod->flags |= MOD_PLAYER;

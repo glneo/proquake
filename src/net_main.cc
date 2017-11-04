@@ -34,8 +34,8 @@ bool slistLocal = true;
 static double slistStartTime;
 static int slistLastShown;
 
-static void Slist_Send(void);
-static void Slist_Poll(void);
+static void Slist_Send(void *);
+static void Slist_Poll(void *);
 PollProcedure slistSendProcedure = { NULL, 0.0, Slist_Send };
 PollProcedure slistPollProcedure = { NULL, 0.0, Slist_Poll };
 
@@ -289,7 +289,7 @@ void NET_Slist_f(void)
 	hostCacheCount = 0;
 }
 
-static void Slist_Send(void)
+static void Slist_Send(void *)
 {
 	for (net_driverlevel = 0; net_driverlevel < net_numdrivers; net_driverlevel++)
 	{
@@ -304,7 +304,7 @@ static void Slist_Send(void)
 	SchedulePollProcedure(&slistSendProcedure, 0.75);
 }
 
-static void Slist_Poll(void)
+static void Slist_Poll(void *)
 {
 	for (net_driverlevel = 0; net_driverlevel < net_numdrivers; net_driverlevel++)
 	{

@@ -61,10 +61,10 @@ cvar_t pq_suitblend = { "pq_suitblend", "0.3", true };
 
 float v_dmg_time, v_dmg_roll, v_dmg_pitch;
 
-refdef_t r_refdef;
+extern refdef_t r_refdef;
 
 // view origin and direction
-vec3_t r_origin, vright, vpn, vup;
+extern vec3_t r_origin, vright, vpn, vup;
 
 /*
  ===============

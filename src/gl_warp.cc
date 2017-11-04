@@ -107,10 +107,10 @@ static void SubdividePolygon(msurface_t *warpface, int numverts, vec3_t verts[])
 		return;
 	}
 
-	glpoly_t *poly = Q_malloc(sizeof(glpoly_t));
-	poly->verts = Q_malloc(sizeof(*poly->verts) * numverts);
-	poly->tex = Q_malloc(sizeof(*poly->tex) * numverts);
-	poly->light_tex = Q_malloc(sizeof(*poly->light_tex) * numverts);
+	glpoly_t *poly = (glpoly_t *)Q_malloc(sizeof(glpoly_t));
+	poly->verts = (vec3_t *)Q_malloc(sizeof(*poly->verts) * numverts);
+	poly->tex = (tex_cord *)Q_malloc(sizeof(*poly->tex) * numverts);
+	poly->light_tex = (tex_cord *)Q_malloc(sizeof(*poly->light_tex) * numverts);
 	poly->next = warpface->polys;
 	warpface->polys = poly;
 	poly->numverts = numverts;

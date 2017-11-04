@@ -253,20 +253,14 @@ dfunction_t *ED_FindFunction(char *name)
 	return NULL;
 }
 
-/*
- ============
- PR_ValueString
-
- Returns a string describing *data in a type specific manner
- =============
- */
+/* Returns a string describing *data in a type specific manner */
 char *PR_ValueString(etype_t type, eval_t *val)
 {
 	static char line[256];
 	ddef_t *def;
 	dfunction_t *f;
 
-	type &= ~DEF_SAVEGLOBAL;
+	type = (etype_t)(type & ~DEF_SAVEGLOBAL);
 
 	switch (type)
 	{
@@ -313,12 +307,8 @@ char *PR_ValueString(etype_t type, eval_t *val)
 }
 
 /*
- ============
- PR_UglyValueString
-
- Returns a string describing *data in a type specific manner
- Easier to parse than PR_ValueString
- =============
+ * Returns a string describing *data in a type specific manner
+ * Easier to parse than PR_ValueString
  */
 char *PR_UglyValueString(etype_t type, eval_t *val)
 {
@@ -326,7 +316,7 @@ char *PR_UglyValueString(etype_t type, eval_t *val)
 	ddef_t *def;
 	dfunction_t *f;
 
-	type &= ~DEF_SAVEGLOBAL;
+	type = (etype_t)(type & ~DEF_SAVEGLOBAL);
 
 	switch (type)
 	{
@@ -368,13 +358,7 @@ char *PR_UglyValueString(etype_t type, eval_t *val)
 	return line;
 }
 
-/*
- ============
- PR_GlobalString
-
- Returns a string with a description and the contents of a global,
- ============
- */
+/* Returns a string with a description and the contents of a global */
 char *PR_GlobalString(int ofs)
 {
 	char *s;
@@ -390,7 +374,7 @@ char *PR_GlobalString(int ofs)
 	}
 	else
 	{
-		s = PR_ValueString(def->type, val);
+		s = PR_ValueString((etype_t)def->type, (eval_t *)val);
 		snprintf(line, sizeof(line), "%i(%s)%s", ofs, PR_GetString(def->s_name), s);
 	}
 
@@ -464,7 +448,7 @@ void ED_Print(edict_t *ed)
 		while (l++ < 15)
 			Con_SafePrintf(" ");
 
-		Con_SafePrintf("%s\n", PR_ValueString(d->type, (eval_t *) v));
+		Con_SafePrintf("%s\n", PR_ValueString((etype_t)d->type, (eval_t *) v));
 	}
 }
 
@@ -507,7 +491,7 @@ void ED_Write(FILE *f, edict_t *ed)
 			continue;
 
 		fprintf(f, "\"%s\" ", name);
-		fprintf(f, "\"%s\"\n", PR_UglyValueString(d->type, (eval_t *) v));
+		fprintf(f, "\"%s\"\n", PR_UglyValueString((etype_t)d->type, (eval_t *) v));
 	}
 
 	fprintf(f, "}\n");
@@ -618,7 +602,7 @@ void ED_WriteGlobals(FILE *f)
 
 		name = PR_GetString(def->s_name);
 		fprintf(f, "\"%s\" ", name);
-		fprintf(f, "\"%s\"\n", PR_UglyValueString(type, (eval_t *) &pr_globals[def->ofs]));
+		fprintf(f, "\"%s\"\n", PR_UglyValueString((etype_t)type, (eval_t *) &pr_globals[def->ofs]));
 	}
 	fprintf(f, "}\n");
 }
@@ -662,10 +646,10 @@ void ED_ParseGlobals(char *data)
 int ED_NewString(char *string)
 {
 	char *new_p;
-	int i, l, new;
+	int i, l, new_int;
 
 	l = strlen(string) + 1;
-	new = PR_AllocString(l, &new_p);
+	new_int = PR_AllocString(l, &new_p);
 
 	for (i = 0; i < l; i++)
 	{
@@ -678,7 +662,7 @@ int ED_NewString(char *string)
 			*new_p++ = string[i];
 	}
 
-	return new;
+	return new_int;
 }
 
 /*

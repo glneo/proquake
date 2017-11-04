@@ -820,7 +820,9 @@ static bool GL_ParseExtensionList(const char *list, const char *name)
 extern cvar_t vid_vsync;
 
 // FIXME: Move to vidsdl
+extern "C" {
 int SDL_GL_GetSwapInterval(void);
+}
 static void GL_CheckExtensions(void)
 {
 	int swap_control;

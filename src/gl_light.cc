@@ -606,10 +606,10 @@ static void BuildSurfaceDisplayList(brush_model_t *brushmodel, int surface)
 	lnumverts = fa->numedges;
 
 	// draw texture
-	poly = Q_malloc(sizeof(glpoly_t));
-	poly->verts = Q_malloc(sizeof(*poly->verts) * lnumverts);
-	poly->tex = Q_malloc(sizeof(*poly->tex) * lnumverts);
-	poly->light_tex = Q_malloc(sizeof(*poly->light_tex) * lnumverts);
+	poly = (glpoly_t *)Q_malloc(sizeof(glpoly_t));
+	poly->verts = (vec3_t *)Q_malloc(sizeof(*poly->verts) * lnumverts);
+	poly->tex = (tex_cord *)Q_malloc(sizeof(*poly->tex) * lnumverts);
+	poly->light_tex = (tex_cord *)Q_malloc(sizeof(*poly->light_tex) * lnumverts);
 	poly->next = fa->polys;
 	poly->flags = fa->flags;
 	fa->polys = poly;

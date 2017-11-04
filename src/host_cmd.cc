@@ -178,7 +178,7 @@ void Host_Game_f(void)
 
 		if (strcasecmp(Cmd_Argv(1), GAMENAME)) //game is not id1
 		{
-			search = Q_malloc(sizeof(searchpath_t));
+			search = (searchpath_t *) Q_malloc(sizeof(searchpath_t));
 			strcpy(search->filename, pakfile);
 			search->next = com_searchpaths;
 			com_searchpaths = search;
@@ -190,7 +190,7 @@ void Host_Game_f(void)
 				pak = COM_LoadPackFile(pakfile);
 				if (!pak)
 					break;
-				search = Q_malloc(sizeof(searchpath_t));
+				search = (searchpath_t *) Q_malloc(sizeof(searchpath_t));
 				search->pack = pak;
 				search->next = com_searchpaths;
 				com_searchpaths = search;
@@ -237,7 +237,7 @@ void Modlist_Add(char *name)
 		if (!strcmp(name, mod->name))
 			return;
 
-	mod = Q_malloc(sizeof(mod_t));
+	mod = (mod_t *) Q_malloc(sizeof(mod_t));
 	strcpy(mod->name, name);
 
 	//insert each entry in alphabetical order
@@ -915,13 +915,10 @@ void Host_Savegame_f(void)
 void Host_Loadgame_f(void)
 {
 	char name[MAX_OSPATH];
-	FILE *f;
 	char mapname[MAX_QPATH];
 	float time, tfloat;
 	char str[32768], *start;
 	int i, r;
-	edict_t *ent;
-	int entnum;
 	int version;
 	float spawn_parms[NUM_SPAWN_PARMS];
 
@@ -934,7 +931,7 @@ void Host_Loadgame_f(void)
 		return;
 	}
 
-	cls.demonum = -1;		// stop demo loop in case this fails
+	cls.demonum = -1; // stop demo loop in case this fails
 
 	snprintf(name, sizeof(name), "%s/%s", com_gamedir, Cmd_Argv(1));
 	COM_DefaultExtension(name, ".sav");
@@ -944,7 +941,7 @@ void Host_Loadgame_f(void)
 //	SCR_BeginLoadingPlaque ();
 
 	Con_Printf("Loading game from %s...\n", name);
-	f = fopen(name, "r");
+	FILE *f = fopen(name, "r");
 	if (!f)
 	{
 		Con_Printf("ERROR: couldn't open save file for reading.\n");
@@ -993,12 +990,12 @@ void Host_Loadgame_f(void)
 	{
 		if (fscanf(f, "%s\n", str) < 1)
 			Con_Printf("ERROR: couldn't read from file.\n");
-		sv.lightstyles[i] = Hunk_Alloc(strlen(str) + 1);
+		sv.lightstyles[i] = (char *) Hunk_Alloc(strlen(str) + 1);
 		strcpy(sv.lightstyles[i], str);
 	}
 
 // load the edicts out of the savegame file
-	entnum = -1;		// -1 is the globals
+	int entnum = -1;		// -1 is the globals
 	while (!feof(f))
 	{
 		for (i = 0; i < sizeof(str) - 1; i++)
@@ -1030,7 +1027,7 @@ void Host_Loadgame_f(void)
 		else
 		{	// parse an edict
 
-			ent = EDICT_NUM(entnum);
+			edict_t *ent = EDICT_NUM(entnum);
 			memset(&ent->v, 0, progs->entityfields * 4);
 			ent->free = false;
 			ED_ParseEdict(start, ent);
@@ -1116,7 +1113,7 @@ char *VersionString(void)
 void Host_Version_f(void)
 {
 	Con_Printf("%s version %s\n", ENGINE_NAME, VersionString());
-	Con_Printf("Exe: "__TIME__" "__DATE__"\n");
+	Con_Printf("Exe: " __TIME__ " " __DATE__ "\n");
 //#ifdef __GNUC__
 //    Con_DevPrintf (DEV_ANY, "Compiled with GNUC\n");
 //#else

@@ -23,9 +23,10 @@
 #include <sys/ioctl.h>
 #include <errno.h>
 
-
+extern "C" {
 extern int gethostname (char *, int);
 extern int close (int);
+}
 
 extern cvar_t hostname;
 
@@ -145,7 +146,7 @@ int UDP_OpenSocket (int port)
 	address.sin_family = AF_INET;
 	address.sin_addr.s_addr = myAddr; // JPG - changed INADDR_ANY to myAddr
 	address.sin_port = htons(port);
-	if( bind (newsocket, (void *)&address, sizeof(address)) == -1)
+	if( bind (newsocket, (const struct sockaddr *)&address, sizeof(address)) == -1)
 		goto ErrorReturn;
 
 	return newsocket;
