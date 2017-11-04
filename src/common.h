@@ -59,9 +59,6 @@ void RemoveLink(link_t *l);
 void InsertLinkBefore(link_t *l, link_t *before);
 void InsertLinkAfter(link_t *l, link_t *after);
 
-// (type *)STRUCT_FROM_LINK(link_t *link, type, member)
-// ent = STRUCT_FROM_LINK(link,entity_t,order)
-// FIXME: remove this mess!
 #define	STRUCT_FROM_LINK(l,t,m) ((t *)((byte *)l - (size_t)&(((t *)0)->m)))
 
 //============================================================================
@@ -145,6 +142,8 @@ extern char com_basedir[MAX_OSPATH];
 
 struct cache_user_s;
 
+typedef struct pack_s pack_t;
+
 extern char com_gamedir[MAX_OSPATH];
 
 void COM_ForceExtension(char *path, char *extension);	// by joe
@@ -152,7 +151,7 @@ void COM_ForceExtension(char *path, char *extension);	// by joe
 void COM_WriteFile(char *filename, void *data, int len);
 
 void COM_CreatePath(char *path);
-
+pack_t *COM_LoadPackFile(char *packfile);
 int COM_OpenFile(char *filename, int *hndl);
 int COM_FOpenFile(char *filename, FILE **file);
 void COM_CloseFile(int h);

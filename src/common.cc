@@ -14,30 +14,28 @@
  * General Public License for more details.
  */
 
+#include <string>
+#include <vector>
+#include <algorithm>
+extern "C" {
 #include "quakedef.h"
-#include <assert.h>  // strltrim strrtrim
+}
+#include <cassert>  // strltrim strrtrim
 
-#define NUM_SAFE_ARGVS  4
+using namespace std;
 
-static char *largv[MAX_NUM_ARGVS + NUM_SAFE_ARGVS + 1];
-static char *argvdummy = " ";
+vector<string> largv;
 
-static char *safeargvs[NUM_SAFE_ARGVS] = { "-nolan", "-nosound", "-joystick", "-nomouse" };
+cvar_t registered = { (char *)"registered", (char *)"0" };
+cvar_t cmdline = { (char *)"cmdline", (char *)"", false, true };
 
-cvar_t registered = { "registered", "0" };
-cvar_t cmdline = { "cmdline", "", false, true };
-
-bool com_modified;   // set true if using non-id files
-
-bool proghack;
+bool com_modified; // set true if using non-id files
 
 int static_registered = 1;  // only for startup check, then set
 
-void COM_InitFilesystem(void);
-
-// if a packfile directory differs from this, it is assumed to be hacked
-#define PAK0_COUNT              339
-#define PAK0_CRC                32981
+// if a packfile directory differs from this, it is assumed to be modified
+#define PAK0_COUNT 339
+#define PAK0_CRC 32981
 
 char com_token[1024];
 char com_basedir[MAX_OSPATH];	// c:/quake
@@ -45,7 +43,7 @@ char com_basedir[MAX_OSPATH];	// c:/quake
 int com_argc;
 char **com_argv;
 
-#define CMDLINE_LENGTH	256
+#define CMDLINE_LENGTH 256
 char com_cmdline[CMDLINE_LENGTH];
 
 bool standard_quake = true, rogue, hipnotic;
@@ -56,14 +54,24 @@ bool standard_quake = true, rogue, hipnotic;
 //bool		mod_nosoundwarn = false;	// Don't warn about missing sounds
 
 // this graphic needs to be in the pak file to use registered features
-static unsigned short pop[] = { 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x6600, 0x0000, 0x0000, 0x0000, 0x6600, 0x0000,
-		0x0000, 0x0066, 0x0000, 0x0000, 0x0000, 0x0000, 0x0067, 0x0000, 0x0000, 0x6665, 0x0000, 0x0000, 0x0000, 0x0000, 0x0065, 0x6600, 0x0063, 0x6561,
-		0x0000, 0x0000, 0x0000, 0x0000, 0x0061, 0x6563, 0x0064, 0x6561, 0x0000, 0x0000, 0x0000, 0x0000, 0x0061, 0x6564, 0x0064, 0x6564, 0x0000, 0x6469,
-		0x6969, 0x6400, 0x0064, 0x6564, 0x0063, 0x6568, 0x6200, 0x0064, 0x6864, 0x0000, 0x6268, 0x6563, 0x0000, 0x6567, 0x6963, 0x0064, 0x6764, 0x0063,
-		0x6967, 0x6500, 0x0000, 0x6266, 0x6769, 0x6a68, 0x6768, 0x6a69, 0x6766, 0x6200, 0x0000, 0x0062, 0x6566, 0x6666, 0x6666, 0x6666, 0x6562, 0x0000,
-		0x0000, 0x0000, 0x0062, 0x6364, 0x6664, 0x6362, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0062, 0x6662, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,
-		0x0000, 0x0061, 0x6661, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x6500, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,
-		0x6400, 0x0000, 0x0000, 0x0000 };
+static unsigned short pop[] = {
+	0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,
+	0x0000, 0x0000, 0x6600, 0x0000, 0x0000, 0x0000, 0x6600, 0x0000,
+	0x0000, 0x0066, 0x0000, 0x0000, 0x0000, 0x0000, 0x0067, 0x0000,
+	0x0000, 0x6665, 0x0000, 0x0000, 0x0000, 0x0000, 0x0065, 0x6600,
+	0x0063, 0x6561, 0x0000, 0x0000, 0x0000, 0x0000, 0x0061, 0x6563,
+	0x0064, 0x6561, 0x0000, 0x0000, 0x0000, 0x0000, 0x0061, 0x6564,
+	0x0064, 0x6564, 0x0000, 0x6469, 0x6969, 0x6400, 0x0064, 0x6564,
+	0x0063, 0x6568, 0x6200, 0x0064, 0x6864, 0x0000, 0x6268, 0x6563,
+	0x0000, 0x6567, 0x6963, 0x0064, 0x6764, 0x0063, 0x6967, 0x6500,
+	0x0000, 0x6266, 0x6769, 0x6a68, 0x6768, 0x6a69, 0x6766, 0x6200,
+	0x0000, 0x0062, 0x6566, 0x6666, 0x6666, 0x6666, 0x6562, 0x0000,
+	0x0000, 0x0000, 0x0062, 0x6364, 0x6664, 0x6362, 0x0000, 0x0000,
+	0x0000, 0x0000, 0x0000, 0x0062, 0x6662, 0x0000, 0x0000, 0x0000,
+	0x0000, 0x0000, 0x0000, 0x0061, 0x6661, 0x0000, 0x0000, 0x0000,
+	0x0000, 0x0000, 0x0000, 0x0000, 0x6500, 0x0000, 0x0000, 0x0000,
+	0x0000, 0x0000, 0x0000, 0x0000, 0x6400, 0x0000, 0x0000, 0x0000
+};
 
 /*
 
@@ -118,6 +126,7 @@ void InsertLinkBefore(link_t *l, link_t *before)
 	l->prev->next = l;
 	l->next->prev = l;
 }
+
 void InsertLinkAfter(link_t *l, link_t *after)
 {
 	l->next = after->next;
@@ -217,7 +226,7 @@ void MSG_WriteChar(sizebuf_t *sb, int c)
 		Sys_Error ("range error");
 #endif
 
-	buf = SZ_GetSpace(sb, 1);
+	buf = (byte *)SZ_GetSpace(sb, 1);
 	buf[0] = c;
 }
 
@@ -230,7 +239,7 @@ void MSG_WriteByte(sizebuf_t *sb, int c)
 		Sys_Error ("range error");
 #endif
 
-	buf = SZ_GetSpace(sb, 1);
+	buf = (byte *)SZ_GetSpace(sb, 1);
 	buf[0] = c;
 }
 
@@ -243,7 +252,7 @@ void MSG_WriteShort(sizebuf_t *sb, int c)
 		Sys_Error ("range error");
 #endif
 
-	buf = SZ_GetSpace(sb, 2);
+	buf = (byte *)SZ_GetSpace(sb, 2);
 	buf[0] = c & 0xff;
 	buf[1] = c >> 8;
 }
@@ -252,7 +261,7 @@ void MSG_WriteLong(sizebuf_t *sb, int c)
 {
 	byte *buf;
 
-	buf = SZ_GetSpace(sb, 4);
+	buf = (byte *)SZ_GetSpace(sb, 4);
 	buf[0] = c & 0xff;
 	buf[1] = (c >> 8) & 0xff;
 	buf[2] = (c >> 16) & 0xff;
@@ -276,7 +285,7 @@ void MSG_WriteFloat(sizebuf_t *sb, float f)
 void MSG_WriteString(sizebuf_t *sb, char *s)
 {
 	if (!s)
-		SZ_Write(sb, "", 1);
+		SZ_Write(sb, (void *)"", 1);
 	else
 		SZ_Write(sb, s, strlen(s) + 1);
 }
@@ -415,7 +424,8 @@ float MSG_ReadFloat(void)
 char *MSG_ReadString(void)
 {
 	static char string[2048];
-	int l, c;
+	unsigned int l;
+	int c;
 
 	l = 0;
 	do
@@ -454,7 +464,7 @@ void SZ_Alloc(sizebuf_t *buf, int startsize)
 {
 	if (startsize < 256)
 		startsize = 256;
-	buf->data = Hunk_AllocName(startsize, "sizebuf");
+	buf->data = (byte *)Hunk_AllocName(startsize, (char *)"sizebuf");
 	buf->maxsize = startsize;
 	buf->cursize = 0;
 }
@@ -568,7 +578,7 @@ char *COM_FileExtension(char *in)
 
 	in = strrchr(in, '.');
 	if (!in)
-		return "";
+		return (char *)"";
 	in++;
 	for (i = 0; i < 7 && *in; i++, in++)
 		exten[i] = *in;
@@ -743,17 +753,11 @@ skipwhite:
  */
 int COM_CheckParm(char *parm)
 {
-	int i;
+	unsigned int pos = find(largv.begin(), largv.end(), string(parm))  - largv.begin();
+	if (pos == largv.size())
+		return 0;
 
-	for (i = 1; i < com_argc; i++)
-	{
-		if (!com_argv[i])
-			continue;               // NEXTSTEP sometimes clears appkit vars.
-		if (!strcmp(parm, com_argv[i]))
-			return i;
-	}
-
-	return 0;
+	return pos + 1;
 }
 
 /*
@@ -772,7 +776,7 @@ void COM_CheckRegistered(void)
 	unsigned short check[128];
 	int i;
 
-	COM_OpenFile("gfx/pop.lmp", &h);
+	COM_OpenFile((char *)"gfx/pop.lmp", &h);
 	static_registered = 0;
 
 	if (h == -1)
@@ -806,7 +810,6 @@ void COM_Path_f(void);
  */
 void COM_InitArgv(int argc, char **argv)
 {
-	bool safe;
 	int i, j, n;
 
 	// reconstitute the command line for the cmdline externally visible cvar
@@ -829,36 +832,18 @@ void COM_InitArgv(int argc, char **argv)
 
 	com_cmdline[n] = 0;
 
-	safe = false;
+	for (com_argc = 0; com_argc < argc; com_argc++)
+		largv.push_back(argv[com_argc]);
 
-	for (com_argc = 0; (com_argc < MAX_NUM_ARGVS) && (com_argc < argc); com_argc++)
-	{
-		largv[com_argc] = argv[com_argc];
-		if (!strcmp("-safe", argv[com_argc]))
-			safe = true;
-	}
+	com_argv = argv;
 
-	if (safe)
-	{
-		// force all the safe-mode switches. Note that we reserved extra space in
-		// case we need to add these, so we don't need an overflow check
-		for (i = 0; i < NUM_SAFE_ARGVS; i++)
-		{
-			largv[com_argc] = safeargvs[i];
-			com_argc++;
-		}
-	}
-
-	largv[com_argc] = argvdummy;
-	com_argv = largv;
-
-	if (COM_CheckParm("-rogue"))
+	if (COM_CheckParm((char *)"-rogue"))
 	{
 		rogue = true;
 		standard_quake = false;
 	}
 
-	if (COM_CheckParm("-hipnotic"))
+	if (COM_CheckParm((char *)"-hipnotic"))
 	{
 		hipnotic = true;
 		standard_quake = false;
@@ -903,9 +888,8 @@ void COM_Init(char *basedir)
 
 	Cvar_RegisterVariable(&registered);
 	Cvar_RegisterVariable(&cmdline);  // Baker 3.99c: needed for test2 command
-	Cmd_AddCommand("path", COM_Path_f);
+	Cmd_AddCommand((char *)"path", COM_Path_f);
 
-	COM_InitFilesystem();
 	COM_CheckRegistered();
 }
 
@@ -1007,11 +991,11 @@ void COM_WriteFile(char *filename, void *data, int len)
 	handle = Sys_FileOpenWrite(name);
 	if (handle == -1)
 	{
-		Sys_Printf("COM_WriteFile: failed on %s\n", name);
+		Sys_Printf((char *)"COM_WriteFile: failed on %s\n", name);
 		return;
 	}
 
-	Sys_Printf("COM_WriteFile: %s\n", name);
+	Sys_Printf((char *)"COM_WriteFile: %s\n", name);
 	Sys_FileWrite(handle, data, len);
 	Sys_FileClose(handle);
 }
@@ -1047,7 +1031,7 @@ void COM_CreatePath(char *path)
 void COM_CopyFile(char *netpath, char *cachepath)
 {
 	int in, out;
-	int remaining, count;
+	unsigned int remaining, count;
 	char buf[4096];
 
 	remaining = Sys_FileOpenRead(netpath, &in);
@@ -1106,11 +1090,6 @@ int COM_FindFile(char *filename, int *handle, FILE **file)
 // search through the path, one element at a time
 //
 	search = com_searchpaths;
-	if (proghack)
-	{	// gross hack to use quake 1 progs with quake 2 maps
-		if (!strcmp(filename, "progs.dat"))
-			search = search->next;
-	}
 
 	for (; search; search = search->next)
 	{
@@ -1170,7 +1149,7 @@ int COM_FindFile(char *filename, int *handle, FILE **file)
 		}
 	}
 
-	Sys_Printf("FindFile: can't find %s\n", filename);
+	Sys_Printf((char *)"FindFile: can't find %s\n", filename);
 
 	if (handle)
 		*handle = -1;
@@ -1254,17 +1233,17 @@ byte *COM_LoadFile(char *path, int usehunk)
 	COM_FileBase(path, base, 32);
 
 	if (usehunk == 1)
-		buf = Hunk_AllocName(len + 1, base);
+		buf = (byte *)Hunk_AllocName(len + 1, base);
 	else if (usehunk == 2)
-		buf = Hunk_TempAlloc(len + 1);
+		buf = (byte *)Hunk_TempAlloc(len + 1);
 	else if (usehunk == 0)
-		buf = Q_malloc(len + 1);
+		buf = (byte *)Q_malloc(len + 1);
 	else if (usehunk == 3)
-		buf = Cache_Alloc(loadcache, len + 1, base);
+		buf = (byte *)Cache_Alloc(loadcache, len + 1, base);
 	else if (usehunk == 4)
 	{
 		if (len + 1 > loadsize)
-			buf = Hunk_TempAlloc(len + 1);
+			buf = (byte *)Hunk_TempAlloc(len + 1);
 		else
 			buf = loadbuf;
 	}
@@ -1363,7 +1342,7 @@ pack_t *COM_LoadPackFile(char *packfile)
 
 	//Hunk_AllocName (numpackfiles * sizeof(packfile_t), "packfile");
 
-	newfiles = Q_malloc(numpackfiles * sizeof(packfile_t));
+	newfiles = (packfile_t *)Q_malloc(numpackfiles * sizeof(packfile_t));
 
 	//johnfitz
 
@@ -1389,7 +1368,7 @@ pack_t *COM_LoadPackFile(char *packfile)
 
 	//pack = Hunk_Alloc (sizeof (pack_t));
 
-	pack = Q_malloc(sizeof(pack_t));
+	pack = 	(pack_t *)Q_malloc(sizeof(pack_t));
 
 	//johnfitz
 
@@ -1423,7 +1402,7 @@ void COM_AddGameDirectory(char *dir)
 	strcpy(com_gamedir, dir);
 
 // add the directory to the search path
-	search = Q_malloc(sizeof(searchpath_t));
+	search = (searchpath_t *)Q_malloc(sizeof(searchpath_t));
 
 	strcpy(search->filename, dir);
 	search->pack = NULL;
@@ -1437,7 +1416,7 @@ void COM_AddGameDirectory(char *dir)
 		pak = COM_LoadPackFile(pakfile);
 		if (!pak)
 			break;
-		search = Q_malloc(sizeof(searchpath_t));
+		search = (searchpath_t *)Q_malloc(sizeof(searchpath_t));
 
 		search->pack = pak;
 		search->next = com_searchpaths;
@@ -1463,7 +1442,7 @@ void COM_InitFilesystem() //johnfitz -- modified based on topaz's tutorial
 // -basedir <path>
 // Overrides the system supplied base directory (under GAMENAME)
 //
-	i = COM_CheckParm("-basedir");
+	i = COM_CheckParm((char *)"-basedir");
 	if (i && i < com_argc - 1)
 		strcpy(basedir, com_argv[i + 1]);
 	else
@@ -1482,9 +1461,9 @@ void COM_InitFilesystem() //johnfitz -- modified based on topaz's tutorial
 	COM_AddGameDirectory(va("%s/"GAMENAME, basedir));
 	strcpy(com_gamedir, va("%s/"GAMENAME, basedir));   // Baker 3.60 - From FitzQuake
 
-	if (COM_CheckParm("-rogue"))
+	if (COM_CheckParm((char *)"-rogue"))
 		COM_AddGameDirectory(va("%s/rogue", basedir));
-	if (COM_CheckParm("-hipnotic"))
+	if (COM_CheckParm((char *)"-hipnotic"))
 		COM_AddGameDirectory(va("%s/hipnotic", basedir));
 
 	com_verifypaths = com_searchpaths;	// JPG 3.20
@@ -1493,7 +1472,7 @@ void COM_InitFilesystem() //johnfitz -- modified based on topaz's tutorial
 // -game <gamedir>
 // Adds basedir/gamedir as an override game
 //
-	i = COM_CheckParm("-game");
+	i = COM_CheckParm((char *)"-game");
 	if (i && i < com_argc - 1)
 	{
 		com_modified = true;
@@ -1504,7 +1483,7 @@ void COM_InitFilesystem() //johnfitz -- modified based on topaz's tutorial
 // -path <dir or packfile> [<dir or packfile>] ...
 // Fully specifies the exact serach path, overriding the generated one
 //
-	i = COM_CheckParm("-path");
+	i = COM_CheckParm((char *)"-path");
 	if (i)
 	{
 		com_modified = true;
@@ -1513,7 +1492,7 @@ void COM_InitFilesystem() //johnfitz -- modified based on topaz's tutorial
 		{
 			if (!com_argv[i] || com_argv[i][0] == '+' || com_argv[i][0] == '-')
 				break;
-			search = Hunk_Alloc(sizeof(searchpath_t));
+			search = (searchpath_t *)Hunk_Alloc(sizeof(searchpath_t));
 			if (!strcmp(COM_FileExtension(com_argv[i]), "pak"))
 			{
 				search->pack = COM_LoadPackFile(com_argv[i]);
@@ -1526,9 +1505,6 @@ void COM_InitFilesystem() //johnfitz -- modified based on topaz's tutorial
 			com_searchpaths = search;
 		}
 	}
-
-	if (COM_CheckParm("-proghack"))
-		proghack = true;
 }
 
 void COM_SlashesForward_Like_Unix(char *WindowsStylePath)

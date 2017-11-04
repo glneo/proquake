@@ -3,7 +3,7 @@ project(ProQuake)
 
 set(PROQUAKE_SOURCES
 # Common
-	src/common.c
+	src/common.cc
 	src/cvar.c
 	src/crc.c
 	src/host.c
@@ -116,5 +116,5 @@ endif()
 find_package(SDL2 REQUIRED)
 target_include_directories(proquake PUBLIC ${SDL2_INCLUDE_DIR})
 target_link_libraries(proquake m ${SDL2_LIBRARY})
-target_compile_options(proquake PRIVATE -g;-std=gnu99;-ffast-math;-Wall;-Werror)
+target_compile_options(proquake PRIVATE -g;-std=gnu99;-ffast-math;-Wall)
 install(TARGETS proquake RUNTIME DESTINATION bin)
