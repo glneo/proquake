@@ -45,9 +45,6 @@ kbutton_t in_up, in_down;
 
 int in_impulse;
 
-// JPG 1.05 - translate +jump to +moveup under water
-extern cvar_t pq_moveup;
-
 void KeyDown(kbutton_t *b)
 {
 	int k;

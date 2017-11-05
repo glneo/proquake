@@ -341,6 +341,9 @@ extern cvar_t v_kickpitch;
 extern cvar_t cl_maxpitch;
 extern cvar_t cl_minpitch;
 
+// JPG 1.05 - translate +jump to +moveup under water
+extern cvar_t pq_moveup;
+
 #define	MAX_TEMP_ENTITIES	64			// lightning bolts, etc
 #define	MAX_STATIC_ENTITIES	128			// torches, etc
 #define	MAX_VISEDICTS	256

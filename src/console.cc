@@ -892,12 +892,7 @@ void Con_TabComplete(void)
  ==============================================================================
  */
 
-/*
- ================
- Con_DrawNotify
- Draws the last few lines of output transparently over the game top
- ================
- */
+/* Draws the last few lines of output transparently over the game top */
 void Con_DrawNotify(void)
 {
 	int x, v;
@@ -968,12 +963,7 @@ void Con_DrawNotify(void)
 		con_notifylines = v;
 }
 
-/*
- ================
- Con_DrawInput
- The input line scrolls horizontally if typing goes beyond the right edge
- ================
- */
+/* The input line scrolls horizontally if typing goes beyond the right edge */
 static void Con_DrawInput(void)
 {
 	int y;
@@ -1034,60 +1024,11 @@ void Con_DrawConsole(int lines, bool drawinput)
 			Draw_Character((x + 1) << 3, y, text[x]);
 	}
 
-// draw the input prompt, user text, and cursor if desired
+	// draw the input prompt, user text, and cursor if desired
 	if (drawinput)
 		Con_DrawInput();
 }
 
-/*
- * Draws the console with the solid background
- * The typing input line at the bottom should only be drawn if typing is allowed
- */
-//void Con_DrawConsole(int lines, bool drawinput)
-//{
-//	int i, j, x, y, sb, rows;
-//	const char *text;
-//	char ver[32];
-//
-//	if (lines <= 0)
-//		return;
-//
-//	con_vislines = lines * vid.conheight / glheight;
-//	// GL_SetCanvas(CANVAS_CONSOLE);
-//
-//	// draw the background
-//	Draw_ConsoleBackground(lines);
-//
-//	// draw the buffer text
-//	rows = (con_vislines + 7) / 8;
-//	y = vid.conheight - rows * 8;
-//	rows -= 2; //for input and version lines
-//	sb = (con_backscroll) ? 2 : 0;
-//
-//	for (i = con_current - rows + 1; i <= con_current - sb; i++, y += 8)
-//	{
-//		j = i - con_backscroll;
-//		if (j < 0)
-//			j = 0;
-//		text = con_text + (j % con_totallines) * con_linewidth;
-//
-//		for (x = 0; x < con_linewidth; x++)
-//			Draw_Character((x + 1) << 3, y, text[x]);
-//	}
-//
-//	// draw scrollback arrows
-//	if (con_backscroll)
-//	{
-//		y += 8; // blank line
-//		for (x = 0; x < con_linewidth; x += 4)
-//			Draw_Character((x + 1) << 3, y, '^');
-//		y += 8;
-//	}
-//
-//	// draw the input prompt, user text, and cursor
-//	if (drawinput)
-//		Con_DrawInput();
-//}
 void Con_Init(void)
 {
 	int i = COM_CheckParm("-consize");
@@ -1096,7 +1037,7 @@ void Con_Init(void)
 	else
 		con_buffersize = CON_TEXTSIZE;
 
-	con_text = (char *) Hunk_AllocName(con_buffersize, "con_text");
+	con_text = (char *)Hunk_AllocName(con_buffersize, "con_text");
 	memset(con_text, ' ', con_buffersize);
 	con_linewidth = -1;
 

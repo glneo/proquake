@@ -18,7 +18,7 @@
 #define	BLOCK_WIDTH     128
 #define	BLOCK_HEIGHT    128
 
-#define	MAX_LIGHTMAPS   64
+#define	MAX_LIGHTMAPS   128
 
 typedef struct glRect_s
 {

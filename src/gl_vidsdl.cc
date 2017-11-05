@@ -44,7 +44,7 @@ static bool vid_changed = false;
 
 int texture_mode = GL_LINEAR;
 
-extern viddef_t vid; // global video state
+viddef_t vid; // global video state
 modestate_t modestate = MODE_NONE;
 
 static cvar_t vid_fullscreen = { "vid_fullscreen", "0", true };

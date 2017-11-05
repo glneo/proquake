@@ -757,7 +757,7 @@ int COM_CheckParm(char *parm)
 	if (pos == largv.size())
 		return 0;
 
-	return pos + 1;
+	return pos;
 }
 
 /*

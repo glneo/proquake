@@ -697,56 +697,6 @@ void CL_SendCmd(void)
 	SZ_Clear(&cls.message);
 }
 
-// Baker 3.85:  This should really be located elsewhere, but duplicating it in both gl_screen.c and screen.c is silly.
-//              Quakeworld has the equivalent in cl_cmd.c
-
-extern cvar_t default_fov;
-
-void CL_Fov_f(struct cvar_s *cvar)
-{
-	if (scr_fov.value == 90.0 && default_fov.value)
-	{
-		if (default_fov.value == 90)
-			return; // Baker 3.99k: Don't do a message saying default FOV has been set to 90 if it is 90!
-
-		Cvar_SetValueQuick(&scr_fov, default_fov.value);
-		Con_Printf("fov set to default_fov %s\n", default_fov.string);
-	}
-}
-
-void CL_Default_fov_f(struct cvar_s *cvar)
-{
-	if (default_fov.value == 0)
-		return; // Baker: this is totally permissible and happens with Reset to defaults.
-
-	if (default_fov.value < 10.0 || default_fov.value > 140.0)
-	{
-		Cvar_SetValueQuick(&default_fov, 0.0f);
-		Con_Printf("Default fov %s is out-of-range; set to 0\n", default_fov.string);
-	}
-
-}
-
-// End Baker
-
-/* Saves the FOV */
-static void CL_SaveFOV_f(void)
-{
-	savedfov = scr_fov.value;
-}
-
-/* Restores FOV to saved level */
-static void CL_RestoreFOV_f(void)
-{
-	if (!savedfov)
-	{
-		Con_Printf("RestoreFOV: No saved FOV to restore\n");
-		return;
-	}
-
-	Cvar_SetValueQuick(&scr_fov, savedfov);
-}
-
 /* Saves the Sensitivity */
 static void CL_SaveSensitivity_f(void)
 {
@@ -837,9 +787,6 @@ void CL_Init(void)
 	Cmd_AddCommand("playdemo", CL_PlayDemo_f);
 	Cmd_AddCommand("nextstartdemo", CL_PlayDemo_NextStartDemo_f);
 	Cmd_AddCommand("timedemo", CL_TimeDemo_f);
-
-	Cmd_AddCommand("savefov", CL_SaveFOV_f);
-	Cmd_AddCommand("restorefov", CL_RestoreFOV_f);
 
 	Cmd_AddCommand("savesensitivity", CL_SaveSensitivity_f);
 	Cmd_AddCommand("restoresensitivity", CL_RestoreSensitivity_f);

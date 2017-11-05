@@ -28,6 +28,17 @@ typedef struct efrag_s
 	struct efrag_s *entnext;
 } efrag_t;
 
+typedef struct
+{
+	vec3_t origin;
+	vec3_t angles;
+	int modelindex;
+	int frame;
+	int colormap;
+	int skin;
+	int effects;
+} entity_state_t;
+
 typedef struct entity_s
 {
 	bool forcelink; // model changed

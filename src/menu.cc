@@ -834,7 +834,7 @@ enum
 	OPT_ALWAYSMLOOK,
 	OPT_LOOKSPRING,
 	OPT_LOOKSTRAFE,
-	OPT_VIDEO, // This is the last before OPTIONS_ITEMS
+	OPT_VIDEO,
 	OPTIONS_ITEMS
 };
 
@@ -982,7 +982,7 @@ void M_DrawCheckbox (int x, int y, int on)
 
 void M_Options_Draw (void)
 {
-	float r = 0;
+	float r = 0, l;
 	qpic_t *p;
 
 	M_DrawTransPic (16, 4, Draw_CachePic ("gfx/qplaque.lmp") );
@@ -999,8 +999,8 @@ void M_Options_Draw (void)
 
 	// OPT_SCALE:
 	M_Print (16, 32 + 8*OPT_SCALE,		"                 Scale");
-//	l = (vid.width / 320.0) - 1;
-//	r = l > 0 ? (scr_conscale.value - 1) / l : 0;
+	l = (vid.width / 320.0) - 1;
+	r = l > 0 ? (scr_conscale.value - 1) / l : 0;
 	M_DrawSlider (220, 32 + 8*OPT_SCALE, r);
 
 	// OPT_SCRSIZE:
@@ -1575,19 +1575,19 @@ void M_Pref_AdjustSliders(int dir)
 
 	case 15:
 
-		Cvar_SetQuick(&pq_drawfps, pq_drawfps.value ? "0" : "1");
+		Cvar_SetQuick(&scr_showfps, scr_showfps.value ? "0" : "1");
 		break;
 
 	case 16:
 
 		// 72 ON | 120 OFF | 200 OFF | 250 OFF
-		newval = CLAMP(-2, vid_consize.value + (dir < 0 ? -1 : 1), 3);
-		if (newval == 3) // We won't allow 320 selection except from console
-			newval = -1;
-		else if (newval == -2)
-			newval = 2;
-
-		Cvar_SetValueQuick(&vid_consize, newval);
+//		newval = CLAMP(-2, vid_consize.value + (dir < 0 ? -1 : 1), 3);
+//		if (newval == 3) // We won't allow 320 selection except from console
+//			newval = -1;
+//		else if (newval == -2)
+//			newval = 2;
+//
+//		Cvar_SetValueQuick(&vid_consize, newval);
 		break;
 
 	case 18:
@@ -1667,17 +1667,17 @@ void M_Pref_Options_Draw(void)
 									(pq_maxfps.value == 250 ? "250 fps" : "custom"))));
 	i += 8; 	  // 14
 	M_Print(16, i, "     show framerate ");
-	M_Print(220, i, pq_drawfps.value ? "on" : "off");
+	M_Print(220, i, scr_showfps.value ? "on" : "off");
 	i += 8;	  // 14
 	M_Print(16, i, "     console width  ");
-	M_Print(220, i,
-			vid_consize.value == 0 ?
-					"100%" :
-					(vid_consize.value == 1 ?
-							"50%" :
-							(vid_consize.value == 2 ?
-									"640 width" :
-									(vid_consize.value == -1 ? "auto" : "custom"))));
+//	M_Print(220, i,
+//			vid_consize.value == 0 ?
+//					"100%" :
+//					(vid_consize.value == 1 ?
+//							"50%" :
+//							(vid_consize.value == 2 ?
+//									"640 width" :
+//									(vid_consize.value == -1 ? "auto" : "custom"))));
 	i += 16; 	  // 15
 	M_Print(16, i, "     directinput mouse ");
 

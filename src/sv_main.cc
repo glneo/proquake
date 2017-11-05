@@ -36,19 +36,6 @@ char localmodels[MAX_MODELS][5];			// inline model names for precache
 
 void SV_Init(void)
 {
-	int i;
-	extern cvar_t sv_maxvelocity;
-	extern cvar_t sv_gravity;
-	extern cvar_t sv_nostep;
-	extern cvar_t sv_friction;
-	extern cvar_t sv_edgefriction;
-	extern cvar_t sv_stopspeed;
-	extern cvar_t sv_maxspeed;
-	extern cvar_t sv_accelerate;
-	extern cvar_t sv_idealpitchscale;
-	extern cvar_t sv_aim;
-	extern cvar_t sv_altnoclip; //johnfitz
-
 	Cvar_RegisterVariable(&sv_maxvelocity);
 	Cvar_RegisterVariable(&sv_gravity);
 	Cvar_RegisterVariable(&sv_friction);
@@ -79,7 +66,7 @@ void SV_Init(void)
 		Cvar_SetQuick(&pq_connectmute, "3"); 	// Baker 3.99g: "Default" it to 10 seconds
 	}
 
-	for (i = 0; i < MAX_MODELS; i++)
+	for (int i = 0; i < MAX_MODELS; i++)
 		snprintf(localmodels[i], sizeof(localmodels[i]), "*%i", i);
 }
 

@@ -38,6 +38,7 @@ void SBAR_cl_sbar_f(struct cvar_s *cvar)
 int sb_updates;		// if >= vid.numpages, no update needed
 
 #define STAT_MINUS		10	// num frame for '-' stats digit
+
 qpic_t *sb_nums[2][11];
 qpic_t *sb_colon, *sb_slash;
 qpic_t *sb_ibar;
@@ -397,8 +398,11 @@ int Sbar_itoa(int num, char *buf)
  */
 void Sbar_DrawNum(int x, int y, int num, int digits, int color)
 {
-	char str[12], *ptr;
+	char str[12];
+	char *ptr;
 	int l, frame;
+
+	num = min(999, num); //johnfitz -- cap high values rather than truncating number
 
 	l = Sbar_itoa(num, str);
 	ptr = str;
@@ -409,7 +413,10 @@ void Sbar_DrawNum(int x, int y, int num, int digits, int color)
 
 	while (*ptr)
 	{
-		frame = (*ptr == '-') ? STAT_MINUS : *ptr - '0';
+		if (*ptr == '-')
+			frame = STAT_MINUS;
+		else
+			frame = *ptr - '0';
 
 		Sbar_DrawTransPic(x, y, sb_nums[color][frame]);
 		x += 24;
@@ -499,7 +506,8 @@ int Sbar_ColorForMap(int m)
  */
 void Sbar_UpdateScoreboard(void)
 {
-	int i, k, top, bottom;
+	int i, k;
+	int top, bottom;
 	scoreboard_t *s;
 
 	Sbar_SortFrags();
@@ -556,7 +564,7 @@ void Sbar_SoloScoreboard(void)
 			break;
 		}
 
-		Draw_String(vid.width - (24 + strlen(str) * 8), 8 + (pq_drawfps.value ? 8 : 0) + (show_speed.value ? 8 : 0), str);
+		Draw_String(vid.width - (24 + strlen(str) * 8), 8 + (scr_showfps.value ? 8 : 0) + (scr_printspeed.value ? 8 : 0), str);
 	}
 
 	snprintf(str, sizeof(str), "Monsters:%3i /%3i", cl.stats[STAT_MONSTERS], cl.stats[STAT_TOTALMONSTERS]);
@@ -1009,7 +1017,8 @@ void Sbar_DrawFace(void)
 // PGM 03/02/97 - fixed so color swatch only appears in CTF modes
 	if (rogue && (cl.maxclients != 1) && (teamplay.value > 3) && (teamplay.value < 7))
 	{
-		int top, bottom, xofs;
+		int top, bottom;
+		int xofs;
 		char num[12];
 		scoreboard_t *s;
 
@@ -1020,7 +1029,10 @@ void Sbar_DrawFace(void)
 		top = Sbar_ColorForMap(top);
 		bottom = Sbar_ColorForMap(bottom);
 
-		xofs = (cl.gametype == GAME_DEATHMATCH) ? 113 : ((vid.width - 320) >> 1) + 113;
+		if (cl.gametype == GAME_DEATHMATCH)
+			xofs = 113;
+		else
+			xofs = ((vid.width - 320) >> 1) + 113;
 
 		Sbar_DrawPic(112, 0, rsb_teambord);
 		Draw_Fill(xofs, vid.height - SBAR_HEIGHT + 3, 22, 9, top);
@@ -1230,7 +1242,8 @@ void Sbar_Draw(void)
  */
 void Sbar_IntermissionNumber(int x, int y, int num, int digits, int color)
 {
-	char str[12], *ptr;
+	char str[12];
+	char *ptr;
 	int l, frame;
 
 	l = Sbar_itoa(num, str);
@@ -1242,7 +1255,10 @@ void Sbar_IntermissionNumber(int x, int y, int num, int digits, int color)
 
 	while (*ptr)
 	{
-		frame = (*ptr == '-') ? STAT_MINUS : *ptr - '0';
+		if (*ptr == '-')
+			frame = STAT_MINUS;
+		else
+			frame = *ptr - '0';
 
 		Draw_TransPic(x, y, sb_nums[color][frame]);
 		x += 24;
@@ -1258,7 +1274,9 @@ void Sbar_IntermissionNumber(int x, int y, int num, int digits, int color)
 void Sbar_DeathmatchOverlay(void)
 {
 	qpic_t *pic;
-	int i, k, l, top, bottom, x, y, f;
+	int i, k, l;
+	int top, bottom;
+	int x, y, f;
 	char num[12];
 	scoreboard_t *s;
 	int j, ping; // JPG - added these
