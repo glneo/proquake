@@ -59,195 +59,17 @@ static void Mod_LoadPlanes(brush_model_t *brushmodel, lump_t *l, byte *mod_base,
 	}
 }
 
-//static void Mod_LoadTextures(brush_model_t *brushmodel, lump_t *l, byte *mod_base, char *mod_name)
-//{
-//	if (!l->filelen)
-//	{
-//		brushmodel->textures = NULL;
-//		return;
-//	}
-//
-//	dmiptexlump_t *miptexlump = (dmiptexlump_t *) (mod_base + l->fileofs);
-//	int nummiptex = LittleLong(miptexlump->nummiptex);
-//
-//	brushmodel->numtextures = nummiptex;
-//	brushmodel->textures = Q_malloc(nummiptex * sizeof(*brushmodel->textures));
-//
-//	for (int i = 0; i < nummiptex; i++)
-//	{
-//		int dataofs = LittleLong(miptexlump->dataofs[i]);
-//		if (dataofs == -1)
-//			continue;
-//
-//		miptex_t *mt = (miptex_t *) ((byte *) miptexlump + dataofs);
-//		unsigned int width = LittleLong(mt->width);
-//		unsigned int height = LittleLong(mt->height);
-//
-//		// HACK HACK HACK
-//		if (!strcmp(mt->name, "shot1sid") && mt->width == 32 && mt->height == 32 && CRC_Block((byte *) (mt + 1), mt->width * mt->height) == 65393)
-//		{	// This texture in b_shell1.bsp has some of the first 32 pixels painted white.
-//			// They are invisible in software, but look really ugly in GL. So we just copy
-//			// 32 pixels from the bottom to make it look nice.
-//			memcpy(mt + 1, (byte *) (mt + 1) + 32 * 31, 32);
-//		}
-//
-//		if ((width & 15) || (height & 15))
-//			Sys_Error("Texture %s's dimensions are not multiples of 16", mt->name);
-//
-//		unsigned int pixels = width * height / 64 * 85;
-//		texture_t *tx = Q_calloc(sizeof(*tx), pixels);
-//
-//		memcpy(tx->name, mt->name, sizeof(tx->name));
-//		tx->width = width;
-//		tx->height = height;
-//		for (int j = 0; j < MIPLEVELS; j++)
-//			tx->offsets[j] = LittleLong(mt->offsets[j]) + sizeof(texture_t) - sizeof(miptex_t);
-//
-//		// the pixels immediately follow the structures
-//		memcpy(tx + 1, mt + 1, pixels);
-//
-//		// If world model and sky texture and q1 bsp and not dedicated ...
-//		if (brushmodel->isworldmodel && ISSKYTEX(tx->name))
-//			R_InitSky(tx, (byte *) mt + tx->offsets[0]);
-//
-//		// If world model and NOT sky texture
-//		int texture_flag = 0;
-//		if (brushmodel->isworldmodel && !ISSKYTEX(tx->name))
-//			texture_flag |= TEX_WORLD;
-//
-//		tx->gltexture = TexMgr_LoadImage(mt->name, tx->width, tx->height, SRC_INDEXED, (byte *) (tx + 1), texture_flag | TEX_MIPMAP);
-//
-////		tx->fullbright = -1; // because 0 is a potentially valid texture number
-//		// check for fullbright pixels in the texture - only if it ain't liquid, etc also
-//
-//		if (!ISTURBTEX(tx->name) && FindFullbrightTexture((byte *) (tx + 1), pixels))
-//		{
-//			// convert any non fullbright pixel to fully transparent
-//			ConvertPixels((byte *) (tx + 1), pixels);
-//
-//			char fbr_mask_name[64];
-//
-//			// get a new name for the fullbright mask to avoid cache mismatches
-//			snprintf(fbr_mask_name, sizeof(fbr_mask_name), "fullbright_mask_%s", mt->name);
-//
-//			// load the fullbright pixels version of the texture
-//			tx->fullbright = TexMgr_LoadImage(fbr_mask_name, tx->width, tx->height, SRC_INDEXED, (byte *) (tx + 1), texture_flag | TEX_MIPMAP | TEX_ALPHA);
-//		}
-//
-//		brushmodel->textures[i] = tx;
-//	}
-//
-//	texture_t *tx, *tx2;
-//	texture_t *anims[10];
-//	texture_t *altanims[10];
-//	int num, maxanim, altmax;
-//	//
-//	// sequence the animations
-//	//
-//	for (int i = 0; i < nummiptex; i++)
-//	{
-//		tx = brushmodel->textures[i];
-//		if (!tx || tx->name[0] != '+')
-//			continue;
-//		if (tx->anim_next)
-//			continue;	// allready sequenced
-//
-//		// find the number of frames in the animation
-//		memset(anims, 0, sizeof(anims));
-//		memset(altanims, 0, sizeof(altanims));
-//
-//		maxanim = tx->name[1];
-//		altmax = 0;
-//		if (maxanim >= 'a' && maxanim <= 'z')
-//			maxanim -= 'a' - 'A';
-//		if (maxanim >= '0' && maxanim <= '9')
-//		{
-//			maxanim -= '0';
-//			altmax = 0;
-//			anims[maxanim] = tx;
-//			maxanim++;
-//		}
-//		else if (maxanim >= 'A' && maxanim <= 'J')
-//		{
-//			altmax = maxanim - 'A';
-//			maxanim = 0;
-//			altanims[altmax] = tx;
-//			altmax++;
-//		}
-//		else
-//			Sys_Error("Bad animating texture %s", tx->name);
-//
-//		for (int j = i + 1; j < nummiptex; j++)
-//		{
-//			tx2 = brushmodel->textures[j];
-//			if (!tx2 || tx2->name[0] != '+')
-//				continue;
-//			if (strcmp(tx2->name + 2, tx->name + 2))
-//				continue;
-//
-//			num = tx2->name[1];
-//			if (num >= 'a' && num <= 'z')
-//				num -= 'a' - 'A';
-//			if (num >= '0' && num <= '9')
-//			{
-//				num -= '0';
-//				anims[num] = tx2;
-//				if (num + 1 > maxanim)
-//					maxanim = num + 1;
-//			}
-//			else if (num >= 'A' && num <= 'J')
-//			{
-//				num = num - 'A';
-//				altanims[num] = tx2;
-//				if (num + 1 > altmax)
-//					altmax = num + 1;
-//			}
-//			else
-//				Sys_Error("Bad animating texture %s", tx->name);
-//		}
-//
-//#define	ANIM_CYCLE	2
-//		// link them all together
-//		for (int j = 0; j < maxanim; j++)
-//		{
-//			tx2 = anims[j];
-//			if (!tx2)
-//				Sys_Error ("Missing frame %i of %s",j, tx->name);
-//			tx2->anim_total = maxanim * ANIM_CYCLE;
-//			tx2->anim_min = j * ANIM_CYCLE;
-//			tx2->anim_max = (j + 1) * ANIM_CYCLE;
-//			tx2->anim_next = anims[(j + 1) % maxanim];
-//			if (altmax)
-//				tx2->alternate_anims = altanims[0];
-//		}
-//		for (int j = 0; j < altmax; j++)
-//		{
-//			tx2 = altanims[j];
-//			if (!tx2)
-//				Sys_Error("Missing frame %i of %s", j, tx->name);
-//			tx2->anim_total = altmax * ANIM_CYCLE;
-//			tx2->anim_min = j * ANIM_CYCLE;
-//			tx2->anim_max = (j + 1) * ANIM_CYCLE;
-//			tx2->anim_next = altanims[(j + 1) % altmax];
-//			if (maxanim)
-//				tx2->alternate_anims = anims[0];
-//		}
-//	}
-//}
-
 bool Mod_CheckFullbrights (byte *pixels, int count)
 {
-	int i;
-	for (i = 0; i < count; i++)
+	for (int i = 0; i < count; i++)
 		if (*pixels++ > 223)
 			return true;
 	return false;
 }
+
 void Sky_LoadTexture (texture_t *mt);
 void Mod_LoadTextures(brush_model_t *brushmodel, lump_t *l, byte *mod_base, char *mod_name)
 {
-	int		i, j, pixels, num, maxanim, altmax;
-	miptex_t	*mt;
 	texture_t	*tx, *tx2;
 	texture_t	*anims[10];
 	texture_t	*altanims[10];
@@ -275,27 +97,27 @@ void Mod_LoadTextures(brush_model_t *brushmodel, lump_t *l, byte *mod_base, char
 	brushmodel->numtextures = nummiptex + 2; //johnfitz -- need 2 dummy texture chains for missing textures
 	brushmodel->textures = (texture_t **) Hunk_AllocName (brushmodel->numtextures * sizeof(*brushmodel->textures) , mod_name);
 
-	for (i=0 ; i<nummiptex ; i++)
+	for (int i=0 ; i<nummiptex ; i++)
 	{
 		m->dataofs[i] = LittleLong(m->dataofs[i]);
 		if (m->dataofs[i] == -1)
 			continue;
-		mt = (miptex_t *)((byte *)m + m->dataofs[i]);
+		miptex_t	*mt = (miptex_t *)((byte *)m + m->dataofs[i]);
 		mt->width = LittleLong (mt->width);
 		mt->height = LittleLong (mt->height);
-		for (j=0 ; j<MIPLEVELS ; j++)
+		for (int j=0 ; j<MIPLEVELS ; j++)
 			mt->offsets[j] = LittleLong (mt->offsets[j]);
 
 		if ( (mt->width & 15) || (mt->height & 15) )
 			Sys_Error ("Texture %s is not 16 aligned", mt->name);
-		pixels = mt->width*mt->height/64*85;
+		int pixels = mt->width*mt->height/64*85;
 		tx = (texture_t *) Hunk_AllocName (sizeof(texture_t) +pixels, mod_name );
 		brushmodel->textures[i] = tx;
 
 		memcpy (tx->name, mt->name, sizeof(tx->name));
 		tx->width = mt->width;
 		tx->height = mt->height;
-		for (j=0 ; j<MIPLEVELS ; j++)
+		for (int j=0 ; j<MIPLEVELS ; j++)
 			tx->offsets[j] = mt->offsets[j] + sizeof(texture_t) - sizeof(miptex_t);
 		// the pixels immediately follow the structures
 
@@ -364,7 +186,7 @@ void Mod_LoadTextures(brush_model_t *brushmodel, lump_t *l, byte *mod_base, char
 //
 // sequence the animations
 //
-	for (i=0 ; i<nummiptex ; i++)
+	for (int i=0 ; i<nummiptex ; i++)
 	{
 		tx = brushmodel->textures[i];
 		if (!tx || tx->name[0] != '+')
@@ -376,8 +198,8 @@ void Mod_LoadTextures(brush_model_t *brushmodel, lump_t *l, byte *mod_base, char
 		memset (anims, 0, sizeof(anims));
 		memset (altanims, 0, sizeof(altanims));
 
-		maxanim = tx->name[1];
-		altmax = 0;
+		int maxanim = tx->name[1];
+		int altmax = 0;
 		if (maxanim >= 'a' && maxanim <= 'z')
 			maxanim -= 'a' - 'A';
 		if (maxanim >= '0' && maxanim <= '9')
@@ -397,7 +219,7 @@ void Mod_LoadTextures(brush_model_t *brushmodel, lump_t *l, byte *mod_base, char
 		else
 			Sys_Error ("Bad animating texture %s", tx->name);
 
-		for (j=i+1 ; j<nummiptex ; j++)
+		for (int j=i+1 ; j<nummiptex ; j++)
 		{
 			tx2 = brushmodel->textures[j];
 			if (!tx2 || tx2->name[0] != '+')
@@ -405,7 +227,7 @@ void Mod_LoadTextures(brush_model_t *brushmodel, lump_t *l, byte *mod_base, char
 			if (strcmp (tx2->name+2, tx->name+2))
 				continue;
 
-			num = tx2->name[1];
+			int num = tx2->name[1];
 			if (num >= 'a' && num <= 'z')
 				num -= 'a' - 'A';
 			if (num >= '0' && num <= '9')
@@ -428,7 +250,7 @@ void Mod_LoadTextures(brush_model_t *brushmodel, lump_t *l, byte *mod_base, char
 
 #define	ANIM_CYCLE	2
 	// link them all together
-		for (j=0 ; j<maxanim ; j++)
+		for (int j=0 ; j<maxanim ; j++)
 		{
 			tx2 = anims[j];
 			if (!tx2)
@@ -440,7 +262,7 @@ void Mod_LoadTextures(brush_model_t *brushmodel, lump_t *l, byte *mod_base, char
 			if (altmax)
 				tx2->alternate_anims = altanims[0];
 		}
-		for (j=0 ; j<altmax ; j++)
+		for (int j=0 ; j<altmax ; j++)
 		{
 			tx2 = altanims[j];
 			if (!tx2)

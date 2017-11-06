@@ -81,7 +81,7 @@ void R_BlendLightmaps(void)
 	if (gl_overbright.value)
 		glBlendFunc(GL_DST_COLOR, GL_SRC_COLOR);
 	else
-		glBlendFunc(GL_ZERO, GL_ONE_MINUS_SRC_COLOR);
+		glBlendFunc(GL_ZERO, GL_SRC_COLOR);
 
 	if (!r_lightmap.value)
 		glEnable(GL_BLEND);

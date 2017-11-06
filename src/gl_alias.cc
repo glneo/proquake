@@ -216,13 +216,13 @@ void R_DrawAliasModel(entity_t *ent)
 	if (gl_affinemodels.value)
 		glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_FASTEST);
 
-	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
 
 	GL_DrawAliasFrame(ent, aliasmodel, pose);
 
 	if (fb)
 	{
-		glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+		glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
 		GL_Bind(fb);
 		glEnable(GL_BLEND);
 		glBlendFunc (GL_ONE, GL_ONE);
@@ -231,9 +231,8 @@ void R_DrawAliasModel(entity_t *ent)
 		glDepthMask(GL_TRUE);
 		glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 		glDisable(GL_BLEND);
+		glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
 	}
-
-	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
 
 	if (gl_affinemodels.value)
 		glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);

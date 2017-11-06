@@ -191,15 +191,21 @@ void R_RenderBrushPoly(msurface_t *fa, int frame)
 	else
 		DrawGLPoly(fa->polys);
 
+	R_RenderDynamicLightmaps(fa);
+
 	if (t->fullbright != NULL && gl_fullbright.value)
 	{
+		glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
 		glEnable(GL_BLEND);
+		glBlendFunc (GL_ONE, GL_ONE);
+		glDepthMask(GL_FALSE);
 		GL_Bind(t->fullbright);
 		DrawGLPoly(fa->polys);
+		glDepthMask(GL_TRUE);
+		glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 		glDisable(GL_BLEND);
+		glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
 	}
-
-	R_RenderDynamicLightmaps(fa);
 }
 
 void R_DrawBrushModel(entity_t *ent)
