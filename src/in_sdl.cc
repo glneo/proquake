@@ -92,8 +92,8 @@ void IN_Activate(void)
 	if (no_mouse)
 		return;
 
-	if (!SDL_SetRelativeMouseMode(SDL_TRUE))
-		Con_Printf("WARNING: SDL_SetRelativeMouseMode(SDL_TRUE) failed.\n");
+//	if (!SDL_SetRelativeMouseMode(SDL_TRUE))
+//		Con_Printf("WARNING: SDL_SetRelativeMouseMode(SDL_TRUE) failed.\n");
 
 	IN_EndIgnoringMouseEvents();
 

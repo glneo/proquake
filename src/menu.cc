@@ -107,7 +107,7 @@ void M_DrawTransPic(int x, int y, qpic_t *pic)
 
 void M_DrawPic(int x, int y, qpic_t *pic)
 {
-	Draw_Pic(x + ((vid.width - 320) >> 1), y, pic);
+	Draw_Pic(x + ((vid.width - 320) >> 1), y, pic, 1.0f);
 }
 
 byte identityTable[256];
@@ -2784,12 +2784,14 @@ void M_Draw(void)
 	if (m_state == m_none || key_dest != key_menu)
 		return;
 
+	GL_SetCanvas (CANVAS_MENU); //johnfitz
+
 	if (!m_recursiveDraw)
 	{
 		if (scr_con_current)
 		{
 			if (key_dest == key_console || key_dest == key_message)
-				Draw_ConsoleBackground(vid.height);
+				Draw_ConsoleBackground();
 
 			S_ExtraUpdate();
 		}

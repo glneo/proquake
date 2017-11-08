@@ -15,14 +15,14 @@
 #include "quakedef.h"
 #include "glquake.h"
 
-cvar_t crosshair = { "crosshair", "1", true };
-cvar_t cl_crossx = { "cl_crossx", "0", true };
-cvar_t cl_crossy = { "cl_crossy", "0", true };
-cvar_t cl_crosshaircentered = { "cl_crosshaircentered", "1", true };
-cvar_t gl_crosshairalpha = { "crosshairalpha", "1", true };
-cvar_t crosshaircolor = { "crosshaircolor", "15", true };
-cvar_t crosshairsize = { "crosshairsize", "1", true };
-cvar_t gl_smoothfont = { "gl_smoothfont", "1", true };
+cvar_t crosshair = { "crosshair", "1", CVAR_ARCHIVE };
+cvar_t cl_crossx = { "cl_crossx", "0", CVAR_ARCHIVE };
+cvar_t cl_crossy = { "cl_crossy", "0", CVAR_ARCHIVE };
+cvar_t cl_crosshaircentered = { "cl_crosshaircentered", "1", CVAR_ARCHIVE };
+cvar_t gl_crosshairalpha = { "crosshairalpha", "1", CVAR_ARCHIVE };
+cvar_t crosshairsize = { "crosshairsize", "1", CVAR_ARCHIVE };
+cvar_t gl_smoothfont = { "gl_smoothfont", "1", CVAR_ARCHIVE };
+cvar_t scr_conalpha = {"scr_conalpha", "0.5", CVAR_ARCHIVE}; //johnfitz
 
 byte *draw_chars;				// 8*8 graphic characters
 qpic_t *draw_backtile;
@@ -47,7 +47,7 @@ static gltexture_t *GL_LoadPicTexture(qpic_t *pic)
 }
 
 #define NUMCROSSHAIRS 5
-gltexture_t *crosshairtextures[NUMCROSSHAIRS];
+qpic_t *crosshair_pics[NUMCROSSHAIRS];
 
 static byte crosshairdata[NUMCROSSHAIRS][64] = {
 	{
@@ -101,6 +101,8 @@ static byte crosshairdata[NUMCROSSHAIRS][64] = {
 		0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
 	},
 };
+
+canvastype currentcanvas = CANVAS_NONE; //johnfitz -- for GL_SetCanvas
 
 /*
  =============================================================================
@@ -319,18 +321,15 @@ static bool IsValid(int y, int num)
 
 static void Character(int x, int y, int num)
 {
-	float frow, fcol, size, offset;
-
 	num &= 255;
-
 	int row = num >> 4;
 	int col = num & 15;
 
-	frow = row * 0.0625;
-	fcol = col * 0.0625;
-	size = 0.0625;
-//	offset = 0.002; // slight offset to avoid in-between lines distortion
-	offset = 0.03125; // offset to match expanded charset texture
+	float frow = row * 0.0625;
+	float fcol = col * 0.0625;
+	float size = 0.0625;
+//	float offset = 0.002; // slight offset to avoid in-between lines distortion
+	float offset = 0.03125; // offset to match expanded charset texture
 
 	GLfloat texts[] = {
 		fcol,        frow,
@@ -361,7 +360,7 @@ void Draw_Character(int x, int y, int num)
 	Character(x, y, num);
 }
 
-void Draw_String(int x, int y, char *str)
+void Draw_String(int x, int y, const char *str)
 {
 	GL_Bind(char_texture);
 
@@ -375,128 +374,39 @@ void Draw_String(int x, int y, char *str)
 	}
 }
 
-static byte *StringToRGB(char *s)
-{
-	byte *col;
-	static byte rgb[4];
-
-	Cmd_TokenizeString(s);
-	if (Cmd_Argc() == 3)
-	{
-		rgb[0] = (byte) atoi(Cmd_Argv(0));
-		rgb[1] = (byte) atoi(Cmd_Argv(1));
-		rgb[2] = (byte) atoi(Cmd_Argv(2));
-	}
-	else
-	{
-		col = (byte *) &d_8to24table[(byte) atoi(s)];
-		rgb[0] = col[0];
-		rgb[1] = col[1];
-		rgb[2] = col[2];
-	}
-	rgb[3] = 255;
-
-	return rgb;
-}
-
 void Draw_Crosshair(void)
 {
-	float x, y, ofs1, ofs2, sh, th, sl, tl;
-	byte *col;
-	extern vrect_t scr_vrect;
+	float x = scr_vrect.x + scr_vrect.width / 2 + cl_crossx.value;
+	float y = scr_vrect.y + scr_vrect.height / 2 + cl_crossy.value;
 
 	if (crosshair.value >= 2 && (crosshair.value <= NUMCROSSHAIRS + 1))
-	{
-		x = scr_vrect.x + scr_vrect.width / 2 + cl_crossx.value;
-		y = scr_vrect.y + scr_vrect.height / 2 + cl_crossy.value;
-
-		if (!gl_crosshairalpha.value)
-			return;
-
-		glTexEnvf( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
-
-		col = StringToRGB(crosshaircolor.string);
-
-		if (gl_crosshairalpha.value)
-		{
-			glDisable(GL_ALPHA_TEST);
-			glEnable(GL_BLEND);
-			col[3] = CLAMP (0, gl_crosshairalpha.value, 1) * 255;
-			glColor4ub(col[0], col[1], col[2], col[3]);
-		}
-		else
-		{
-			glColor4ub(col[0], col[1], col[2], 255);
-		}
-
-		GL_Bind(crosshairtextures[(int) crosshair.value - 2]);
-		ofs1 = 3.5;
-		ofs2 = 4.5;
-		tl = sl = 0;
-		sh = th = 1;
-
-		ofs1 *= (vid.width / 320) * CLAMP(0, crosshairsize.value, 20);
-		ofs2 *= (vid.width / 320) * CLAMP(0, crosshairsize.value, 20);
-
-		GLfloat texts[] = {
-			sl, tl,
-			sh, tl,
-			sh, th,
-			sl, th,
-		};
-
-		GLfloat verts[] = {
-			x - ofs1, y - ofs1,
-			x + ofs2, y - ofs1,
-			x + ofs2, y + ofs2,
-			x - ofs1, y + ofs2,
-		};
-
-		glTexCoordPointer(2, GL_FLOAT, 0, texts);
-		glVertexPointer(2, GL_FLOAT, 0, verts);
-		glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
-
-		if (gl_crosshairalpha.value)
-		{
-			glDisable(GL_BLEND);
-			glEnable(GL_ALPHA_TEST);
-		}
-
-		glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
-		glTexEnvf( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
-	}
+		Draw_Pic(x, y, crosshair_pics[(int)crosshair.value - 2], gl_crosshairalpha.value);
 	else if (crosshair.value)
 	{
-		if (!cl_crosshaircentered.value)
-		{
-			// Standard off-center Quake crosshair
-			Draw_Character(scr_vrect.x + (scr_vrect.width / 2) + cl_crossx.value, scr_vrect.y + (scr_vrect.height / 2) + cl_crossy.value, '+');
-		}
-		else
-		{
-			// Baker 3.60 - Centered crosshair (FuhQuake)
-			Draw_Character(scr_vrect.x + ((scr_vrect.width / 2) - 4) + cl_crossx.value, scr_vrect.y + ((scr_vrect.height / 2) - 4) + cl_crossy.value, '+');
-		}
+		if (cl_crosshaircentered.value) // Centered crosshair
+			Draw_Character(x - 4, y - 4, '+');
+		else // Standard off-center Quake crosshair
+			Draw_Character(x, y, '+');
 	}
 
 }
 
-void Draw_AlphaPic(int x, int y, qpic_t *pic, float alpha)
+void Draw_Pic(int x, int y, qpic_t *pic, float alpha)
 {
-	glpic_t *gl;
-
 	if (scrap_dirty)
 		Scrap_Upload();
 
-	glDisable(GL_ALPHA_TEST);
-	glEnable(GL_BLEND);
-//	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-//	glCullFace(GL_FRONT);
+	alpha = CLAMP(0, alpha, 1.0f);
 
-	gl = (glpic_t *) pic->data;
-	GL_Bind(gl->gltexture);
-
+	if (alpha < 1.0f)
+	{
+		glEnable(GL_BLEND);
+		glDisable(GL_ALPHA_TEST);
+	}
 	glColor4f(1.0f, 1.0f, 1.0f, alpha);
+
+	glpic_t *gl = (glpic_t *) pic->data;
+	GL_Bind(gl->gltexture);
 
 	GLfloat texts[] = {
 		gl->sl, gl->tl,
@@ -517,95 +427,25 @@ void Draw_AlphaPic(int x, int y, qpic_t *pic, float alpha)
 	glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 
 	glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
-
-	glEnable(GL_ALPHA_TEST);
-	glDisable(GL_BLEND);
-}
-
-void Draw_Pic(int x, int y, qpic_t *pic)
-{
-	glpic_t *gl;
-
-	if (scrap_dirty)
-		Scrap_Upload();
-
-	gl = (glpic_t *) pic->data;
-	GL_Bind(gl->gltexture);
-
-	GLfloat texts[] = {
-		gl->sl, gl->tl,
-		gl->sh, gl->tl,
-		gl->sh, gl->th,
-		gl->sl, gl->th,
-	};
-
-	GLfloat verts[] = {
-		x,              y,
-		x + pic->width, y,
-		x + pic->width, y + pic->height,
-		x,              y + pic->height,
-	};
-
-	glTexCoordPointer(2, GL_FLOAT, 0, texts);
-	glVertexPointer(2, GL_FLOAT, 0, verts);
-	glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+	if (alpha < 1.0f)
+	{
+		glEnable(GL_ALPHA_TEST);
+		glDisable(GL_BLEND);
+	}
 }
 
 void Draw_TransPic(int x, int y, qpic_t *pic)
 {
-	if (x < 0 || (unsigned) (x + pic->width) > vid.width || y < 0 || (unsigned) (y + pic->height) > vid.height)
+	if (x < 0 ||
+	    y < 0 ||
+	    (unsigned)(x + pic->width) > vid.width ||
+	    (unsigned) (y + pic->height) > vid.height)
 		Sys_Error("bad coordinates");
 
-	Draw_Pic(x, y, pic);
+	Draw_Pic(x, y, pic, 1.0f);
 }
 
-void Draw_SubPic(int x, int y, qpic_t *pic, int srcx, int srcy, int width, int height)
-{
-	glpic_t *gl;
-	float newsl, newtl, newsh, newth;
-	float oldglwidth, oldglheight;
-
-	if (scrap_dirty)
-		Scrap_Upload();
-	gl = (glpic_t *) pic->data;
-
-	oldglwidth = gl->sh - gl->sl;
-	oldglheight = gl->th - gl->tl;
-
-	newsl = gl->sl + (srcx * oldglwidth) / pic->width;
-	newsh = newsl + (width * oldglwidth) / pic->width;
-
-	newtl = gl->tl + (srcy * oldglheight) / pic->height;
-	newth = newtl + (height * oldglheight) / pic->height;
-
-	GL_Bind(gl->gltexture);
-
-	GLfloat texts[] = {
-		newsl, newtl,
-		newsh, newtl,
-		newsh, newth,
-		newsl, newth,
-	};
-
-	GLfloat verts[] = {
-		x,         y,
-		x + width, y,
-		x + width, y + height,
-		x,         y + height,
-	};
-
-	glTexCoordPointer(2, GL_FLOAT, 0, texts);
-	glVertexPointer(2, GL_FLOAT, 0, verts);
-	glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
-}
-
-/*
- =============
- Draw_TransPicTranslate
-
- Only used for the player color selection menu
- =============
- */
+/* Only used for the player color selection menu */
 void Draw_TransPicTranslate(int x, int y, qpic_t *pic, byte *translation)
 {
 	int v, u;
@@ -653,23 +493,22 @@ void Draw_TransPicTranslate(int x, int y, qpic_t *pic, byte *translation)
 	glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 }
 
-void Draw_ConsoleBackground(int lines)
+void Draw_ConsoleBackground()
 {
-	int y = (vid.height * 3) >> 2;
+	qpic_t *pic = Draw_CachePic ("gfx/conback.lmp");
+	pic->width = vid.conwidth;
+	pic->height = vid.conheight;
 
-	if (lines > y)
-		Draw_Pic(0, lines - vid.height, conback);
-	else
-		Draw_AlphaPic(0, lines - vid.height, conback, (float) (1.2 * lines) / y);
+	float alpha = (con_forcedup) ? 1.0 : scr_conalpha.value;
+
+	GL_SetCanvas (CANVAS_CONSOLE); //in case this is called from weird places
+
+	Draw_Pic(0, 0, pic, alpha);
 }
 
 /*
- =============
- Draw_TileClear
-
- This repeats a 64*64 tile graphic to fill the screen around a sized down
- refresh window.
- =============
+ * This repeats a 64*64 tile graphic to fill the screen around a sized down
+ * refresh window
  */
 void Draw_TileClear(int x, int y, int w, int h)
 {
@@ -695,19 +534,11 @@ void Draw_TileClear(int x, int y, int w, int h)
 	glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 }
 
-/*
- =============
- Draw_AlphaFill
-
- Fills a box of pixels with a single color
- =============
- */
-void Draw_AlphaFill(int x, int y, int w, int h, int c, float alpha)
+/* Fills a box of pixels with a single color */
+void Draw_Fill(int x, int y, int w, int h, int c, float alpha)
 {
+	byte *pal = (byte *)d_8to24table;
 	alpha = CLAMP(0, alpha, 1.0f);
-
-	if (!alpha)
-		return;
 
 	glDisable(GL_TEXTURE_2D);
 	if (alpha < 1.0f)
@@ -715,7 +546,10 @@ void Draw_AlphaFill(int x, int y, int w, int h, int c, float alpha)
 		glEnable(GL_BLEND);
 		glDisable(GL_ALPHA_TEST);
 	}
-	glColor4f(d_8to24table[c * 3] / 255.0, d_8to24table[c * 3 + 1] / 255.0, d_8to24table[c * 3 + 2] / 255.0, alpha);
+	glColor4f(pal[c * 4    ] / 255.0,
+		  pal[c * 4 + 1] / 255.0,
+		  pal[c * 4 + 2] / 255.0,
+		  alpha);
 
 	GLfloat verts[] = {
 		x,     y,
@@ -731,71 +565,23 @@ void Draw_AlphaFill(int x, int y, int w, int h, int c, float alpha)
 
 	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
 
-	glEnable(GL_TEXTURE_2D);
-	if (alpha < 1)
+	glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+	if (alpha < 1.0f)
 	{
 		glEnable(GL_ALPHA_TEST);
 		glDisable(GL_BLEND);
 	}
-	glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
-}
-
-/*
- =============
- Draw_Fill
-
- Fills a box of pixels with a single color
- =============
- */
-void Draw_Fill(int x, int y, int w, int h, int c)
-{
-	glDisable(GL_TEXTURE_2D);
-	glColor4f(d_8to24table[c * 3] / 255.0, d_8to24table[c * 3 + 1] / 255.0, d_8to24table[c * 3 + 2] / 255.0, 1.0f);
-
-	GLfloat verts[] = {
-		x,     y,
-		x + w, y,
-		x + w, y + h,
-		x,     y + h,
-	};
-
-	glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-
-	glVertexPointer(2, GL_FLOAT, 0, verts);
-	glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
-
-	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-
-	glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
 	glEnable(GL_TEXTURE_2D);
 }
-//=============================================================================
 
 void Draw_FadeScreen(void)
 {
 	extern cvar_t gl_fadescreen_alpha;
 
-	glEnable(GL_BLEND);
-	glDisable(GL_TEXTURE_2D);
-	glColor4f(0, 0, 0, gl_fadescreen_alpha.value);
+	GL_SetCanvas(CANVAS_DEFAULT);
 
-	GLfloat verts[] = {
-		0, 0,
-		vid.width, 0,
-		vid.width, vid.height,
-		0, vid.height,
-	};
-
-	glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-
-	glVertexPointer(2, GL_FLOAT, 0, verts);
-	glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
-
-	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-
-	glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
-	glEnable(GL_TEXTURE_2D);
-	glDisable(GL_BLEND);
+	Draw_Fill(0, 0, vid.width, vid.height, 0, gl_fadescreen_alpha.value);
+	Draw_Fill(0, 0, glwidth, glheight, 0, gl_fadescreen_alpha.value);
 
 	Sbar_Changed();
 }
@@ -814,143 +600,135 @@ static void Q_glOrthof(GLfloat left, GLfloat right, GLfloat bottom, GLfloat top,
 	glMultMatrixf(matrix);
 }
 
-void GL_Set2D(void)
+void GL_SetCanvas(canvastype newcanvas)
 {
-	glViewport(glx, gly, glwidth, glheight);
+	extern vrect_t scr_vrect;
+	float s;
+	int lines;
+
+	if (newcanvas == currentcanvas)
+		return;
 
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
-	Q_glOrthof(0, vid.width, vid.height, 0, -99999, 99999);
+
+	switch (newcanvas)
+	{
+	case CANVAS_DEFAULT:
+		Q_glOrthof(0, glwidth, glheight, 0, -99999, 99999);
+		glViewport(glx, gly, glwidth, glheight);
+		break;
+	case CANVAS_CONSOLE:
+		lines = vid.conheight - (scr_con_current * vid.conheight / glheight);
+		Q_glOrthof(0, vid.conwidth, vid.conheight + lines, lines, -99999, 99999);
+		glViewport(glx, gly, glwidth, glheight);
+		break;
+	case CANVAS_MENU:
+		s = min((float )glwidth / 320.0, (float )glheight / 200.0);
+		s = CLAMP(1.0, scr_menuscale.value, s);
+		// ericw -- doubled width to 640 to accommodate long keybindings
+		Q_glOrthof(0, 640, 200, 0, -99999, 99999);
+		glViewport(glx + (glwidth - 320 * s) / 2, gly + (glheight - 200 * s) / 2, 640 * s, 200 * s);
+		break;
+	case CANVAS_SBAR:
+		s = CLAMP(1.0, scr_sbarscale.value, (float )glwidth / 320.0);
+		if (cl.gametype == GAME_DEATHMATCH)
+		{
+			Q_glOrthof(0, glwidth / s, 48, 0, -99999, 99999);
+			glViewport(glx, gly, glwidth, 48 * s);
+		}
+		else
+		{
+			Q_glOrthof(0, 320, 48, 0, -99999, 99999);
+			glViewport(glx + (glwidth - 320 * s) / 2, gly, 320 * s, 48 * s);
+		}
+		break;
+//	case CANVAS_WARPIMAGE:
+//		glOrtho (0, 128, 0, 128, -99999, 99999);
+//		glViewport (glx, gly+glheight-gl_warpimagesize, gl_warpimagesize, gl_warpimagesize);
+//		break;
+	case CANVAS_CROSSHAIR: //0,0 is center of viewport
+		s = CLAMP(1.0, scr_crosshairscale.value, 10.0);
+		Q_glOrthof(scr_vrect.width / -2 / s, scr_vrect.width / 2 / s, scr_vrect.height / 2 / s, scr_vrect.height / -2 / s, -99999, 99999);
+		glViewport(scr_vrect.x, glheight - scr_vrect.y - scr_vrect.height, scr_vrect.width & ~1, scr_vrect.height & ~1);
+		break;
+	case CANVAS_BOTTOMLEFT: //used by devstats
+		s = (float) glwidth / vid.conwidth; //use console scale
+		Q_glOrthof(0, 320, 200, 0, -99999, 99999);
+		glViewport(glx, gly, 320 * s, 200 * s);
+		break;
+	case CANVAS_BOTTOMRIGHT: //used by fps/clock
+		s = (float) glwidth / vid.conwidth; //use console scale
+		Q_glOrthof(0, 320, 200, 0, -99999, 99999);
+		glViewport(glx + glwidth - 320 * s, gly, 320 * s, 200 * s);
+		break;
+	case CANVAS_TOPRIGHT: //used by disc
+		s = 1;
+		Q_glOrthof(0, 320, 200, 0, -99999, 99999);
+		glViewport(glx + glwidth - 320 * s, gly + glheight - 200 * s, 320 * s, 200 * s);
+		break;
+	default:
+		Sys_Error("GL_SetCanvas: bad canvas type");
+	}
 
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
+
+	currentcanvas = newcanvas;
+}
+
+void GL_Set2D(void)
+{
+	currentcanvas = CANVAS_INVALID;
+	GL_SetCanvas(CANVAS_DEFAULT);
 
 	glDisable(GL_DEPTH_TEST);
 	glDisable(GL_CULL_FACE);
 	glDisable(GL_BLEND);
 	glEnable(GL_ALPHA_TEST);
+	glColor4f(1, 1, 1, 1);
 }
 
 static void Load_CharSet(void)
 {
-	int i;
-	byte *dest, *src;
-
-	// load the console background and the charset
-	// by hand, because we need to write the version
-	// string into the background before turning
-	// it into a texture
-	draw_chars = (byte *)W_GetLumpName("conchars");
-	for (i = 0; i < 256 * 64; i++)
+	draw_chars = (byte *) W_GetLumpName("conchars");
+	for (int i = 0; i < 256 * 64; i++)
 		if (draw_chars[i] == 0)
-			draw_chars[i] = 255;	// proper transparent color
+			draw_chars[i] = 255; // proper transparent color
 
 	// Expand charset texture with blank lines in between to avoid in-line distortion
-	dest = (byte *)Q_malloc(128 * 256);
+	byte *dest = (byte *) Q_malloc(128 * 256);
 	memset(dest, 0, 128 * 256);
-	src = draw_chars;
+	byte *src = draw_chars;
 
-	for (i = 0; i < 16; ++i)
+	for (int i = 0; i < 16; ++i)
 		memcpy(&dest[8 * 128 * 2 * i], &src[8 * 128 * i], 8 * 128); // Copy each line
 
 	// now turn them into textures
-	char_texture = TexMgr_LoadImage("charset", 128, 256, SRC_INDEXED, dest, TEX_ALPHA);
+	char_texture = TexMgr_LoadImage("charset", 128, 256, SRC_INDEXED, dest, TEX_ALPHA | TEX_NOPICMIP);
 
 	free(dest);
-
-	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-}
-
-static void Draw_CharToConback(int num, byte *dest)
-{
-	int row, col;
-	byte *source;
-	int drawline;
-	int x;
-
-	row = num >> 4;
-	col = num & 15;
-	source = draw_chars + (row << 10) + (col << 3);
-
-	drawline = 8;
-
-	while (drawline--)
-	{
-		for (x = 0; x < 8; x++)
-			if (source[x] != 255)
-				dest[x] = 0x60 + source[x];
-		source += 128;
-		dest += 320;
-	}
-
-}
-
-static void Draw_InitConback_Old(void)
-{
-	qpic_t *cb;
-	int start;
-	byte *dest;
-	char ver[40];
-	glpic_t *gl;
-
-	byte *ncdata;
-
-	start = Hunk_LowMark();
-
-	cb = (qpic_t *) COM_LoadTempFile("gfx/conback.lmp");
-	if (!cb)
-		Sys_Error("Couldn't load gfx/conback.lmp");
-	SwapPic(cb);
-
-	// hack the version number directly into the pic
-
-	snprintf(ver, sizeof(ver), "(QuickQuake) %4.2f", (float) PROQUAKE_SERIES_VERSION);
-
-	dest = cb->data + 320 * 186 + 320 - 11 - 8 * strlen(ver);
-	for (int x = 0; x < strlen(ver); x++)
-		Draw_CharToConback(ver[x], dest + (x << 3));
-
-	conback->width = cb->width;
-	conback->height = cb->height;
-	ncdata = cb->data;
-
-	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-
-	gl = (glpic_t *) conback->data;
-	gl->gltexture = TexMgr_LoadImage("conback", conback->width, conback->height, SRC_INDEXED, ncdata, TEX_NOFLAGS);
-	gl->sl = 0;
-	gl->sh = 1;
-	gl->tl = 0;
-	gl->th = 1;
-	conback->width = vid.width;
-	conback->height = vid.height;
-
-	// free loaded console
-	Hunk_FreeToLowMark(start);
 }
 
 /* generate pics from internal data */
-//static qpic_t *Draw_MakePic(const char *name, int width, int height, byte *data)
-//{
-//	int flags = TEX_NEAREST | TEX_ALPHA | TEX_PERSIST | TEX_NOPICMIP | TEX_PAD;
-//	qpic_t *pic;
-//	glpic_t gl;
-//
-//	pic = (qpic_t *) Hunk_Alloc(sizeof(qpic_t) - 4 + sizeof(glpic_t));
-//	pic->width = width;
-//	pic->height = height;
-//
-//	gl.gltexture = TexMgr_LoadImage(name, width, height, SRC_INDEXED, data, flags);
-//	gl.sl = 0;
-//	gl.sh = (float) width / (float) TexMgr_PadConditional(width);
-//	gl.tl = 0;
-//	gl.th = (float) height / (float) TexMgr_PadConditional(height);
-//	memcpy(pic->data, &gl, sizeof(glpic_t));
-//
-//	return pic;
-//}
+static qpic_t *Draw_MakePic(const char *name, int width, int height, byte *data)
+{
+	int flags = TEX_NEAREST | TEX_ALPHA | TEX_PERSIST | TEX_NOPICMIP | TEX_PAD;
+	glpic_t gl;
+
+	qpic_t *pic = (qpic_t *) Hunk_Alloc(sizeof(qpic_t) - 4 + sizeof(glpic_t));
+	pic->width = width;
+	pic->height = height;
+
+	gl.gltexture = TexMgr_LoadImage(name, width, height, SRC_INDEXED, data, flags);
+	gl.sl = 0;
+	gl.sh = (float) width / (float) TexMgr_PadConditional(width);
+	gl.tl = 0;
+	gl.th = (float) height / (float) TexMgr_PadConditional(height);
+	memcpy(pic->data, &gl, sizeof(glpic_t));
+
+	return pic;
+}
 
 void Draw_Init(void)
 {
@@ -961,34 +739,20 @@ void Draw_Init(void)
 	Cvar_RegisterVariable(&cl_crossy);
 	Cvar_RegisterVariable(&cl_crosshaircentered);
 	Cvar_RegisterVariable(&gl_crosshairalpha);
-	Cvar_RegisterVariable(&crosshaircolor);
 	Cvar_RegisterVariable(&crosshairsize);
+	Cvar_RegisterVariable(&scr_conalpha);
 
 	Cvar_RegisterVariable(&gl_smoothfont);
 	Cvar_SetCallback(&gl_smoothfont, OnChange_gl_smoothfont);
 
-	// load the console background and the charset
-	// by hand, because we need to write the version
-	// string into the background before turning
-	// it into a texture
-
 	Load_CharSet();
-
-	Draw_InitConback_Old();
-
-	// save a texture slot for translated picture
-//	translate_texture = texture_extension_number++;
-
-	// save slots for scraps
-//	scrap_texnum = texture_extension_number;
-//	texture_extension_number += MAX_SCRAPS;
 
 	// Load the crosshair pics
 	for (i = 0; i < NUMCROSSHAIRS; i++)
 	{
 		char name[11];
 		sprintf(name, "crosshair%i", i);
-		crosshairtextures[i] = TexMgr_LoadImage(name, 8, 8, SRC_INDEXED, crosshairdata[i], TEX_ALPHA | TEX_OVERWRITE | TEX_NOPICMIP);
+		crosshair_pics[i] = Draw_MakePic(name, 8, 8, crosshairdata[i]);
 	}
 
 	// load game pics

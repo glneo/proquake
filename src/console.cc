@@ -46,8 +46,6 @@ char con_lastcenterstring[CON_LASTCENTERSTRING_SIZE];
 float con_times[NUM_CON_TIMES];	// realtime time the line was generated
 // for transparent notify lines
 
-int con_vislines;
-
 bool con_debuglog = false;
 
 bool con_initialized;
@@ -79,11 +77,6 @@ void Con_Quakebar(int len)
 	Con_Printf("%s", bar);
 }
 
-/*
- ================
- Con_ToggleConsole_f
- ================
- */
 extern int history_line; //johnfitz
 
 void Con_ToggleConsole_f(void)
@@ -434,13 +427,7 @@ void Con_DPrintf(const char *fmt, ...)
 	Con_SafePrintf("%s", msg);
 }
 
-/*
- ==================
- Con_SafePrintf
-
- Okay to call even when the screen can't be updated
- ==================
- */
+/* Okay to call even when the screen can't be updated */
 void Con_SafePrintf(const char *fmt, ...)
 {
 	va_list argptr;
@@ -457,11 +444,6 @@ void Con_SafePrintf(const char *fmt, ...)
 	scr_disabled_for_loading = temp;
 }
 
-/*
- ================
- Con_CenterPrintf -- johnfitz -- pad each line with spaces to make it appear centered
- ================
- */
 void Con_CenterPrintf(int linewidth, const char *fmt, ...) __attribute__((__format__(__printf__,2,3)));
 void Con_CenterPrintf(int linewidth, const char *fmt, ...)
 {
@@ -470,7 +452,6 @@ void Con_CenterPrintf(int linewidth, const char *fmt, ...)
 	char line[MAXPRINTMSG]; //one line from the message
 	char spaces[21]; //buffer for spaces
 	char *src, *dst;
-	int len, s;
 
 	va_start(argptr, fmt);
 	vsnprintf(msg, sizeof(msg), fmt, argptr);
@@ -486,10 +467,10 @@ void Con_CenterPrintf(int linewidth, const char *fmt, ...)
 		if (*src == '\n')
 			src++;
 
-		len = strlen(line);
+		int len = strlen(line);
 		if (len < linewidth)
 		{
-			s = (linewidth - len) / 2;
+			int s = (linewidth - len) / 2;
 			memset(spaces, ' ', s);
 			spaces[s] = 0;
 			Con_Printf("%s%s\n", spaces, line);
@@ -895,29 +876,25 @@ void Con_TabComplete(void)
 /* Draws the last few lines of output transparently over the game top */
 void Con_DrawNotify(void)
 {
-	int x, v;
-	char *text;
-	int i;
-	float time;
-	extern char chat_buffer[];
-	int maxlines = CLAMP(0, _con_notifylines.value, NUM_CON_TIMES);
+	GL_SetCanvas(CANVAS_CONSOLE);
 
-	v = 0;
-	for (i = con_current - maxlines + 1; i <= con_current; i++)
+	int v = vid.conheight;
+	int maxlines = CLAMP(0, _con_notifylines.value, NUM_CON_TIMES);
+	for (int i = con_current - maxlines + 1; i <= con_current; i++)
 	{
 		if (i < 0)
 			continue;
-		time = con_times[i % NUM_CON_TIMES];
+		float time = con_times[i % NUM_CON_TIMES];
 		if (time == 0)
 			continue;
 		time = realtime - time;
 		if (time > con_notifytime.value)
 			continue;
-		text = con_text + (i % con_totallines) * con_linewidth;
+		const char *text = con_text + (i % con_totallines) * con_linewidth;
 
 		clearnotify = 0;
 
-		for (x = 0; x < con_linewidth; x++)
+		for (int x = 0; x < con_linewidth; x++)
 			Draw_Character((x + 1) << 3, v, text[x]);
 
 		v += 8;
@@ -927,34 +904,31 @@ void Con_DrawNotify(void)
 	{
 		clearnotify = 0;
 
-		// JPG - was x = 0 etc.. recoded with x = 5, i = 0
-		i = 0;
-
-		// JPG - added support for team messages
+		int msg_start;
 		if (team_message)
 		{
 			Draw_String(8, v, "(say team):");
-			x = 12; // Baker 3.90: 7 increased to 12 for "say_team"
+			msg_start = 12;
 		}
 		else
 		{
 			Draw_String(8, v, "say:");
-			x = 5;
+			msg_start = 5;
 		}
 
-		while (chat_buffer[i])
+		int x = msg_start;
+		for (int i = 0; chat_buffer[i]; i++)
 		{
 			Draw_Character(x << 3, v, chat_buffer[i]);
 			x++;
 
-			// JPG - added this for longer says
-			i++;
 			if (x > con_linewidth)
 			{
-				x = team_message ? 12 : 5; // Baker 3.90: 7 increased to 12 "(say)" ---> "(say_team)"
+				x = msg_start;
 				v += 8;
 			}
 		}
+
 		Draw_Character(x << 3, v, 10 + ((int) (realtime * con_cursorspeed) & 1));
 		v += 8;
 	}
@@ -964,69 +938,78 @@ void Con_DrawNotify(void)
 }
 
 /* The input line scrolls horizontally if typing goes beyond the right edge */
-static void Con_DrawInput(void)
+static void Con_DrawInput(int con_vislines)
 {
-	int y;
-	int i;
-	char *text;
-
 	if (key_dest != key_console && !con_forcedup)
-		return;		// don't draw anything
+		return; // don't draw anything
 
-	text = key_lines[edit_line];
-
-	// add the cursor frame
-	text[key_linepos] = 10 + ((int) (realtime * con_cursorspeed) & 1);
-
-	// fill out remainder with spaces
-	for (i = key_linepos + 1; i < con_linewidth; i++)
-		text[i] = ' ';
-
-	//	prestep if horizontally scrolling
+	// pre-step if horizontally scrolling
+	int ofs = 0;
 	if (key_linepos >= con_linewidth)
-		text += 1 + key_linepos - con_linewidth;
+		ofs = 1 + key_linepos - con_linewidth;
 
-	// draw it
-	y = con_vislines - 16;
+	// draw input string
+	int i;
+	for (i = 0; key_lines[edit_line][i+ofs] && i < con_linewidth; i++)
+		Draw_Character ((i+1)<<3, vid.conheight - 16, key_lines[edit_line][i+ofs]);
 
-	for (i = 0; i < con_linewidth; i++)
-		Draw_Character((i + 1) << 3, y, text[i]);
-
-	// remove cursor
-	key_lines[edit_line][key_linepos] = 0;
+	// draw cursor
+	if ((int)((realtime)*con_cursorspeed) & 1)
+	{
+		i = key_linepos - ofs;
+		Draw_Character((i + 1) << 3, vid.conheight - 16, 11);
+	}
 }
 
 void Con_DrawConsole(int lines, bool drawinput)
 {
-	int i, j, x, y, rows;
-	char *text;
-
 	if (lines <= 0)
 		return;
 
+	GL_SetCanvas(CANVAS_CONSOLE);
+
 	// draw the background
-	Draw_ConsoleBackground(lines);
+	Draw_ConsoleBackground();
 
-	// draw the text
-	con_vislines = lines;
+	// draw the buffer text
+	int con_vislines = lines * vid.conheight / glheight;
+	int rows = (con_vislines + 7) / 8;
+	int y = vid.conheight - (rows * 8);
+	rows -= 2; //for input and version lines
+	int sb = (con_backscroll) ? 2 : 0;
 
-	rows = (lines - 16) >> 3;		// rows of text to draw
-	y = lines - 16 - (rows << 3);	// may start slightly negative
-
-	for (i = con_current - rows + 1; i <= con_current; i++, y += 8)
+	for (int i = con_current - rows + 1; i <= con_current - sb; i++)
 	{
-		j = i - con_backscroll;
+		int j = i - con_backscroll;
 		if (j < 0)
 			j = 0;
-		text = con_text + (j % con_totallines) * con_linewidth;
 
-		for (x = 0; x < con_linewidth; x++)
+		const char *text = con_text + (j % con_totallines) * con_linewidth;
+		for (int x = 0; x < con_linewidth; x++)
 			Draw_Character((x + 1) << 3, y, text[x]);
+
+		y += 8;
 	}
 
-	// draw the input prompt, user text, and cursor if desired
+	// draw scrollback arrows
+	if (con_backscroll)
+	{
+		y += 8; // blank line
+		for (int x = 0; x < con_linewidth; x += 4)
+			Draw_Character((x + 1) << 3, y, '^');
+		y += 8;
+	}
+
+	// draw the input prompt, user text, and cursor
 	if (drawinput)
-		Con_DrawInput();
+		Con_DrawInput(con_vislines);
+
+	//draw version number in bottom right
+//	y += 8;
+	char ver[32];
+	sprintf(ver, "QuakeSpasm %1.2f.%d", (float) 2, 3);
+	for (int x = 0; x < (int) strlen(ver); x++)
+		Draw_Character((con_linewidth - strlen(ver) + x + 2) << 3, y, ver[x] /*+ 128*/);
 }
 
 void Con_Init(void)

@@ -167,7 +167,7 @@ void SCR_DrawCenterString(void) //actually do the drawing
 	int x, y;
 	int remaining;
 
-//	GL_SetCanvas (CANVAS_MENU); //johnfitz
+	GL_SetCanvas (CANVAS_MENU); //johnfitz
 
 // the finale prints the characters one at a time
 	if (cl.intermission)
@@ -469,7 +469,7 @@ void SCR_DrawFPS(void)
 		y = 200 - 8;
 		if (scr_clock.value)
 			y -= 8; //make room for clock
-//		GL_SetCanvas (CANVAS_BOTTOMRIGHT);
+		GL_SetCanvas (CANVAS_BOTTOMRIGHT);
 		Draw_String(x, y, st);
 		scr_tileclear_updates = 0;
 	}
@@ -497,7 +497,7 @@ void SCR_DrawClock(void)
 		return;
 
 	//draw it
-//	GL_SetCanvas (CANVAS_BOTTOMRIGHT);
+	GL_SetCanvas (CANVAS_BOTTOMRIGHT);
 	Draw_String(320 - (strlen(str) << 3), 200 - 8, str);
 
 	scr_tileclear_updates = 0;
@@ -553,9 +553,9 @@ void SCR_DrawRam(void)
 	if (!scr_showram.value)
 		return;
 
-//	GL_SetCanvas (CANVAS_DEFAULT); //johnfitz
+	GL_SetCanvas (CANVAS_DEFAULT); //johnfitz
 
-	Draw_Pic(scr_vrect.x + 32, scr_vrect.y, scr_ram);
+	Draw_Pic(scr_vrect.x + 32, scr_vrect.y, scr_ram, 1.0f);
 }
 
 /*
@@ -580,9 +580,9 @@ void SCR_DrawTurtle(void)
 	if (count < 3)
 		return;
 
-//	GL_SetCanvas (CANVAS_DEFAULT); //johnfitz
+	GL_SetCanvas (CANVAS_DEFAULT); //johnfitz
 
-	Draw_Pic(scr_vrect.x, scr_vrect.y, scr_turtle);
+	Draw_Pic(scr_vrect.x, scr_vrect.y, scr_turtle, 1.0f);
 }
 
 /*
@@ -597,9 +597,9 @@ void SCR_DrawNet(void)
 	if (cls.demoplayback)
 		return;
 
-//	GL_SetCanvas (CANVAS_DEFAULT); //johnfitz
+	GL_SetCanvas (CANVAS_DEFAULT); //johnfitz
 
-	Draw_Pic(scr_vrect.x + 64, scr_vrect.y, scr_net);
+	Draw_Pic(scr_vrect.x + 64, scr_vrect.y, scr_net, 1.0f);
 }
 
 /*
@@ -617,10 +617,10 @@ void SCR_DrawPause(void)
 	if (!scr_showpause.value)		// turn off for screenshots
 		return;
 
-//	GL_SetCanvas (CANVAS_MENU); //johnfitz
+	GL_SetCanvas (CANVAS_MENU); //johnfitz
 
 	pic = Draw_CachePic("gfx/pause.lmp");
-	Draw_Pic((320 - pic->width) / 2, (240 - 48 - pic->height) / 2, pic); //johnfitz -- stretched menus
+	Draw_Pic((320 - pic->width) / 2, (240 - 48 - pic->height) / 2, pic, 1.0f); //johnfitz -- stretched menus
 
 	scr_tileclear_updates = 0; //johnfitz
 }
@@ -637,10 +637,10 @@ void SCR_DrawLoading(void)
 	if (!scr_drawloading)
 		return;
 
-//	GL_SetCanvas (CANVAS_MENU); //johnfitz
+	GL_SetCanvas (CANVAS_MENU); //johnfitz
 
 	pic = Draw_CachePic("gfx/loading.lmp");
-	Draw_Pic((320 - pic->width) / 2, (240 - 48 - pic->height) / 2, pic); //johnfitz -- stretched menus
+	Draw_Pic((320 - pic->width) / 2, (240 - 48 - pic->height) / 2, pic, 1.0f); //johnfitz -- stretched menus
 
 	scr_tileclear_updates = 0; //johnfitz
 }
@@ -655,7 +655,7 @@ void SCR_DrawCrosshair(void)
 	if (!crosshair.value)
 		return;
 
-//	GL_SetCanvas (CANVAS_CROSSHAIR);
+	GL_SetCanvas (CANVAS_CROSSHAIR);
 	Draw_Character(-4, -4, '+'); //0,0 is center of viewport
 }
 
@@ -842,7 +842,7 @@ void SCR_DrawNotifyString(void)
 	int j;
 	int x, y;
 
-//	GL_SetCanvas (CANVAS_MENU); //johnfitz
+	GL_SetCanvas (CANVAS_MENU); //johnfitz
 
 	start = scr_notifystring;
 

@@ -159,6 +159,7 @@ typedef enum
 
 #define	MAXCMDLINE		256
 
+extern char chat_buffer[];
 
 typedef enum {
 	key_game, key_console, key_message, key_menu

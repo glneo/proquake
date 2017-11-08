@@ -387,6 +387,7 @@ static void R_SetupGL(void)
 	// set up viewpoint
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
+
 	x = r_refdef.vrect.x * glwidth / vid.width;
 	x2 = (r_refdef.vrect.x + r_refdef.vrect.width) * glwidth / vid.width;
 	y = (vid.height - r_refdef.vrect.y) * glheight / vid.height;

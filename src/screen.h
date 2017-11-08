@@ -18,6 +18,7 @@ void SCR_Init (void);
 
 void SCR_UpdateScreen (void);
 
+extern vrect_t scr_vrect;
 
 void SCR_SizeUp (void);
 void SCR_SizeDown (void);
@@ -48,6 +49,22 @@ extern	cvar_t		scr_conwidth;
 extern	cvar_t		scr_conscale;
 extern	cvar_t		scr_scale;
 extern	cvar_t		scr_crosshairscale;
+
+typedef enum {
+	CANVAS_NONE,
+	CANVAS_DEFAULT,
+	CANVAS_CONSOLE,
+	CANVAS_MENU,
+	CANVAS_SBAR,
+	CANVAS_WARPIMAGE,
+	CANVAS_CROSSHAIR,
+	CANVAS_BOTTOMLEFT,
+	CANVAS_BOTTOMRIGHT,
+	CANVAS_TOPRIGHT,
+	CANVAS_INVALID = -1
+} canvastype;
+
+void GL_SetCanvas (canvastype newcanvas);
 
 extern	cvar_t scr_menuscale;
 extern	cvar_t scr_sbarscale;
