@@ -49,6 +49,8 @@ typedef struct {
 	pixel_t *colormap;              // 256 * VID_GRADES size
 	unsigned short *colormap16;     // 256 * VID_GRADES size
 	int fullbright;                 // index of first fullbright color
+	unsigned x;
+	unsigned y;
 	unsigned width;
 	unsigned height;
 	float aspect;                   // width / height -- < 0 is taller than wide

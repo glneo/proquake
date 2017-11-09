@@ -62,7 +62,7 @@ qpic_t *draw_disc;
 
 bool sb_showscores;
 
-int sb_lines;			// scan lines to draw
+int sb_lines; // scan lines to draw
 
 qpic_t *rsb_invbar[2];
 qpic_t *rsb_weapons[5];
@@ -287,20 +287,9 @@ void Sbar_DrawPic(int x, int y, qpic_t *pic)
 	Draw_Pic(x, y + 24, pic, 1.0f);
 }
 
-void Sbar_DrawAlphaPic(int x, int y, qpic_t *pic, float alpha)
+void Sbar_DrawPicAlpha(int x, int y, qpic_t *pic, float alpha)
 {
-	if (cl.gametype == GAME_DEATHMATCH)
-		Draw_Pic(x /*+ ((vid.width - 320)>>1)*/, y + (vid.height - SBAR_HEIGHT), pic, alpha);
-	else
-		Draw_Pic(x + ((vid.width - 320) >> 1), y + (vid.height - SBAR_HEIGHT), pic, alpha);
-}
-
-void Sbar_DrawTransPic(int x, int y, qpic_t *pic)
-{
-	if (cl.gametype == GAME_DEATHMATCH)
-		Draw_TransPic(x /*+ ((vid.width - 320)>>1)*/, y + (vid.height - SBAR_HEIGHT), pic);
-	else
-		Draw_TransPic(x + ((vid.width - 320) >> 1), y + (vid.height - SBAR_HEIGHT), pic);
+	Draw_Pic(x, y, pic, alpha);
 }
 
 /*
@@ -387,7 +376,7 @@ void Sbar_DrawNum(int x, int y, int num, int digits, int color)
 		else
 			frame = *ptr - '0';
 
-		Sbar_DrawTransPic(x, y, sb_nums[color][frame]);
+		Sbar_DrawPic(x, y, sb_nums[color][frame]);
 		x += 24;
 		ptr++;
 	}
@@ -578,13 +567,13 @@ void Sbar_DrawInventory(void)
 	if (rogue)
 	{
 		if (cl.stats[STAT_ACTIVEWEAPON] >= RIT_LAVA_NAILGUN)
-			Sbar_DrawPic(0, -24, rsb_invbar[0]); //johnfitz -- scr_sbaralpha
+			Sbar_DrawPicAlpha(0, -24, rsb_invbar[0], scr_sbaralpha.value); //johnfitz -- scr_sbaralpha
 		else
-			Sbar_DrawPic(0, -24, rsb_invbar[1]); //johnfitz -- scr_sbaralpha
+			Sbar_DrawPicAlpha(0, -24, rsb_invbar[1], scr_sbaralpha.value); //johnfitz -- scr_sbaralpha
 	}
 	else
 	{
-		Sbar_DrawPic(0, -24, sb_ibar); //johnfitz -- scr_sbaralpha
+		Sbar_DrawPicAlpha(0, -24, sb_ibar, scr_sbaralpha.value); //johnfitz -- scr_sbaralpha
 	}
 
 // weapons
@@ -798,7 +787,6 @@ void Sbar_DrawFrags(void)
 	int i, k, numscores;
 	int top, bottom;
 	int x, y, f;
-	int xofs;
 	char num[12];
 	scoreboard_t *s;
 	int teamscores, colors, ent, minutes, seconds, mask; // JPG - added these
@@ -815,10 +803,6 @@ void Sbar_DrawFrags(void)
 	numscores = scoreboardlines <= 4 ? scoreboardlines : 4;
 
 	x = 23;
-	if (cl.gametype == GAME_DEATHMATCH)
-		xofs = 0;
-	else
-		xofs = (vid.width - 320) >> 1;
 	y = vid.height - SBAR_HEIGHT - 23;
 
 	// JPG - check to see if we need to draw the timer
@@ -886,8 +870,8 @@ void Sbar_DrawFrags(void)
 		top = Sbar_ColorForMap(top);
 		bottom = Sbar_ColorForMap(bottom);
 
-		Draw_Fill(xofs + x * 8 + 10, y, 28, 4, top, 1.0f);
-		Draw_Fill(xofs + x * 8 + 10, y + 4, 28, 3, bottom, 1.0f);
+		Draw_Fill(x * 8 + 10, y, 28, 4, top, 1.0f);
+		Draw_Fill(x * 8 + 10, y + 4, 28, 3, bottom, 1.0f);
 
 		// draw number
 		snprintf(num, sizeof(num), "%3i", f);
@@ -947,8 +931,8 @@ void Sbar_DrawFace(void)
 			xofs = ((vid.width - 320) >> 1) + 113;
 
 		Sbar_DrawPic(112, 0, rsb_teambord);
-		Draw_Fill(xofs, SBAR_HEIGHT + 3, 22, 9, top, 1.0f);
-		Draw_Fill(xofs, SBAR_HEIGHT + 12, 22, 9, bottom, 1.0f);
+		Draw_Fill(xofs, 24 + 3, 22, 9, top, 1.0f); //johnfitz -- sbar coords are now relative
+		Draw_Fill(xofs, 24 + 12, 22, 9, bottom, 1.0f); //johnfitz -- sbar coords are now relative
 
 		// draw number
 		f = s->frags;
@@ -1013,40 +997,35 @@ void Sbar_DrawFace(void)
 
 void Sbar_Draw(void)
 {
-//	bool	headsup;	// joe
-
-//	headsup = (cl_sbar.value == 0 && scr_viewsize.value >= 100);
-//	if ((sb_updates >= vid.numpages) && !headsup)
-//		return;
-
 	if (scr_con_current == vid.height)
-		return;		// console is full screen
+		return; // console is full screen
 
-	if (cl_sbar.value >= 1.0)
-	{
-		// Baker: 3.97 We don't do this with transparent sbar
-		if (sb_updates >= vid.numpages && !gl_clear.value) //Baker 3.60 - gl_clear fix with sbar
-			return;
-	}
+	if (cl.intermission)
+		return;
 
-	GL_SetCanvas(CANVAS_DEFAULT); //johnfitz
+	if (sb_updates >= vid.numpages && !gl_clear.value && scr_sbaralpha.value >= 1.0)
+		return;
 
-//	scr_copyeverything = 1;
 	sb_updates++;
 
-	if (cl_sbar.value >= 1.0 || scr_viewsize.value < 100.0)
+	//johnfitz -- don't waste fillrate by clearing the area behind the sbar
+	float w = CLAMP(320.0f, scr_sbarscale.value * 320.0f, (float )vid.width);
+	if (sb_lines && vid.width > w)
 	{
-		// Baker: For viewsize < 100 clear the tile
-		if (sb_lines && vid.width > 320)
+		if (scr_sbaralpha.value < 1.0)
+			SRC_DrawTileClear(0, vid.height - sb_lines, vid.width, sb_lines);
+		if (cl.gametype == GAME_DEATHMATCH)
+			SRC_DrawTileClear(w, vid.height - sb_lines, vid.width - w, sb_lines);
+		else
 		{
-			Draw_TileClear(0, vid.height - sb_lines, vid.width, sb_lines);
-			//Con_Printf("Clearing sbar\n");
+			SRC_DrawTileClear(0, vid.height - sb_lines, (vid.width - w) / 2.0f, sb_lines);
+			SRC_DrawTileClear((vid.width - w) / 2.0f + w, vid.height - sb_lines, (vid.width - w) / 2.0f, sb_lines);
 		}
 	}
 
-	GL_SetCanvas(CANVAS_SBAR); //johnfitz
+//	Draw_SetCanvas(CANVAS_SBAR); //johnfitz
 
-	if (sb_lines > 24)
+	if (scr_viewsize.value < 110)
 	{
 		Sbar_DrawInventory();
 		if (cl.maxclients != 1)
@@ -1055,13 +1034,13 @@ void Sbar_Draw(void)
 
 	if (sb_showscores || cl.stats[STAT_HEALTH] <= 0)
 	{
-		Sbar_DrawAlphaPic(0, 0, sb_scorebar, cl_sbar.value);
+		Sbar_DrawPicAlpha(0, 0, sb_scorebar, scr_sbaralpha.value);
 		Sbar_DrawScoreboard();
 		sb_updates = 0;
 	}
-	else if (sb_lines)
+	else if (scr_viewsize.value < 120)
 	{
-		Sbar_DrawAlphaPic(0, 0, sb_sbar, cl_sbar.value);
+		Sbar_DrawPicAlpha(0, 0, sb_sbar, scr_sbaralpha.value);
 
 		// keys (hipnotic only)
 		//MED 01/04/97 moved keys here so they would not be overwritten
@@ -1077,7 +1056,7 @@ void Sbar_Draw(void)
 		if (cl.items & IT_INVULNERABILITY)
 		{
 			Sbar_DrawNum(24, 0, 666, 3, 1);
-			Sbar_DrawPic (0, 0, draw_disc);
+			Sbar_DrawPic(0, 0, draw_disc);
 		}
 		else
 		{
@@ -1142,11 +1121,8 @@ void Sbar_Draw(void)
 		Sbar_DrawNum(248, 0, cl.stats[STAT_AMMO], 3, cl.stats[STAT_AMMO] <= 10);
 	}
 
-	if (vid.width > 320)
-	{
-		if (cl.gametype == GAME_DEATHMATCH)
-			Sbar_MiniDeathmatchOverlay();
-	}
+	if (cl.gametype == GAME_DEATHMATCH)
+		Sbar_MiniDeathmatchOverlay();
 }
 
 //=============================================================================
@@ -1197,7 +1173,7 @@ void Sbar_DeathmatchOverlay(void)
 	scoreboard_t *s;
 	int j, ping; // JPG - added these
 
-	GL_SetCanvas(CANVAS_MENU); //johnfitz
+	Draw_SetCanvas(CANVAS_MENU); //johnfitz
 
 	// JPG 1.05 (rewrote this) - check to see if we need to update ping times
 	if ((cl.last_ping_time < cl.time - 5) && pq_scoreboard_pings.value)
@@ -1304,7 +1280,7 @@ void Sbar_DeathmatchOverlay(void)
 		for (i = 0; i < 4; i++)
 			Draw_Character(x - 56 + i * 8, 30, num[i] + 128);
 	}
-	GL_SetCanvas(CANVAS_SBAR); //johnfitz
+	Draw_SetCanvas(CANVAS_SBAR); //johnfitz
 }
 
 /*
@@ -1414,7 +1390,7 @@ void Sbar_IntermissionOverlay(void)
 		return;
 	}
 
-	GL_SetCanvas(CANVAS_MENU); //johnfitz
+	Draw_SetCanvas(CANVAS_MENU); //johnfitz
 
 	pic = Draw_CachePic("gfx/complete.lmp");
 	Draw_Pic(64, 24, pic, 1.0f);
@@ -1450,7 +1426,7 @@ void Sbar_FinaleOverlay(void)
 
 //	scr_copyeverything = 1;
 
-	GL_SetCanvas(CANVAS_MENU); //johnfitz
+	Draw_SetCanvas(CANVAS_MENU); //johnfitz
 
 	pic = Draw_CachePic("gfx/finale.lmp");
 	Draw_TransPic((vid.width - pic->width) / 2, 16, pic);

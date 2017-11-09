@@ -310,8 +310,6 @@ extern cvar_t cfg_unbindall;
 extern cvar_t scr_fov;
 extern cvar_t pq_maxfps;
 
-extern cvar_t crosshair;
-extern cvar_t cl_crosshaircentered;
 extern cvar_t r_truegunangle;
 
 extern cvar_t pq_waterblend;

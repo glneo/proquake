@@ -55,9 +55,7 @@ void M_GameOptions_Draw(void);
 void M_Search_Draw(void);
 void M_ServerList_Draw(void);
 
-bool m_entersound; // play after drawing a frame, so caching
-// won't disrupt the sound
-bool m_recursiveDraw;
+bool m_entersound; // play after drawing a frame, so caching won't disrupt the sound
 
 m_state_t m_return_state;
 bool m_return_onerror;
@@ -77,7 +75,7 @@ void M_ConfigureNetSubsystem(void);
  */
 void M_DrawCharacter(int cx, int line, int num)
 {
-	Draw_Character(cx + ((vid.width - 320) >> 1), line, num);
+	Draw_Character(cx, line, num);
 }
 
 void M_Print(int cx, int cy, const char *str)
@@ -102,12 +100,12 @@ void M_PrintWhite(int cx, int cy, char *str)
 
 void M_DrawTransPic(int x, int y, qpic_t *pic)
 {
-	Draw_TransPic(x + ((vid.width - 320) >> 1), y, pic);
+	Draw_TransPic(x, y, pic);
 }
 
 void M_DrawPic(int x, int y, qpic_t *pic)
 {
-	Draw_Pic(x + ((vid.width - 320) >> 1), y, pic, 1.0f);
+	Draw_Pic(x, y, pic, 1.0f);
 }
 
 byte identityTable[256];
@@ -853,20 +851,20 @@ void M_Menu_Options_f (void)
 
 void M_AdjustSliders (int dir)
 {
-	float	f;
+	float f, l;
 
 	S_LocalSound ("misc/menu3.wav");
 
 	switch (options_cursor)
 	{
 	case OPT_SCALE:	// console and menu scale
-//		l = ((vid.width + 31) / 32) / 10.0;
-//		f = scr_conscale.value + dir * .1;
-//		if (f < 1)	f = 1;
-//		else if(f > l)	f = l;
-//		Cvar_SetValue ("scr_conscale", f);
-//		Cvar_SetValue ("scr_menuscale", f);
-//		Cvar_SetValue ("scr_sbarscale", f);
+		l = ((vid.width + 31) / 32) / 10.0;
+		f = scr_conscale.value + dir * .1;
+		if (f < 1)	f = 1;
+		else if(f > l)	f = l;
+		Cvar_SetValue ("scr_conscale", f);
+		Cvar_SetValue ("scr_menuscale", f);
+		Cvar_SetValue ("scr_sbarscale", f);
 		break;
 	case OPT_SCRSIZE:	// screen size
 		f = scr_viewsize.value + dir * 10;
@@ -1389,7 +1387,7 @@ void M_Pref_AdjustSliders(int dir)
 
 		if (!crosshair.value)
 			newval = (dir < 0) ? 3 : 2;
-		else if (!cl_crosshaircentered.value)
+		else if (!scr_crosshaircentered.value)
 			newval = (dir < 0) ? 1 : 3;
 		else
 			newval = (dir < 0) ? 2 : 1;
@@ -1398,17 +1396,17 @@ void M_Pref_AdjustSliders(int dir)
 		{
 		case 1:
 			Cvar_SetQuick(&crosshair, "0");
-			Cvar_SetQuick(&cl_crosshaircentered, "0");
+			Cvar_SetQuick(&scr_crosshaircentered, "0");
 			break;
 
 		case 2:
 			Cvar_SetQuick(&crosshair, "1");
-			Cvar_SetQuick(&cl_crosshaircentered, "0");
+			Cvar_SetQuick(&scr_crosshaircentered, "0");
 			break;
 
 		case 3:
 			Cvar_SetQuick(&crosshair, "1");
-			Cvar_SetQuick(&cl_crosshaircentered, "1");
+			Cvar_SetQuick(&scr_crosshaircentered, "1");
 			break;
 		}
 
@@ -1619,7 +1617,7 @@ void M_Pref_Options_Draw(void)
 	i += 8;								  // 0
 	i += 8;
 	M_Print(16, i, "     crosshair      ");
-	M_Print(220, i, crosshair.value ? (cl_crosshaircentered.value ? "centered" : "on") : "off");
+	M_Print(220, i, crosshair.value ? (scr_crosshaircentered.value ? "centered" : "on") : "off");
 	i += 8; 	  // 2
 //#ifdef SUPPORTS_ENTITY_ALPHA
 	M_Print(16, i, "     draw weapon    ");
@@ -1914,14 +1912,6 @@ void M_Quit_Key(int key, int ascii)
 
 void M_Quit_Draw(void)
 {
-	if (wasInMenus)
-	{
-		m_state = m_quit_prevstate;
-		m_recursiveDraw = true;
-		M_Draw();
-		m_state = m_quit;
-	}
-
 	M_DrawTextBox(56, 76, 24, 4);
 	M_Print(64, 84, quitMessage[msgNumber * 4 + 0]);
 	M_Print(64, 92, quitMessage[msgNumber * 4 + 1]);
@@ -2783,25 +2773,6 @@ void M_Draw(void)
 {
 	if (m_state == m_none || key_dest != key_menu)
 		return;
-
-	GL_SetCanvas (CANVAS_MENU); //johnfitz
-
-	if (!m_recursiveDraw)
-	{
-		if (scr_con_current)
-		{
-			if (key_dest == key_console || key_dest == key_message)
-				Draw_ConsoleBackground();
-
-			S_ExtraUpdate();
-		}
-		else
-			Draw_FadeScreen();
-	}
-	else
-	{
-		m_recursiveDraw = false;
-	}
 
 	if (m_state > m_none && m_state <= m_preferences)
 		m_draw_callbacks[m_state]();

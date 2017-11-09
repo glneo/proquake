@@ -26,20 +26,8 @@ const float r_avertexnormal_dots[SHADEDOT_QUANT][256] = {
 	#include "anorm_dots.h"
 };
 
-static void GL_DrawAliasFrame(entity_t *ent, alias_model_t *aliasmodel, int pose)
+static void GL_DrawAliasFrame(entity_t *ent, alias_model_t *aliasmodel, int pose, float alpha)
 {
-	float alpha;
-
-	if (ent != &cl.viewent)
-		alpha = 1.0f;
-	else
-	{
-		if(cl.items & IT_INVISIBILITY)
-			alpha = r_ringalpha.value;
-		else
-			alpha = 1.0f;
-	}
-
 	if (alpha < 1.0f)
 		glEnable(GL_BLEND);
 
@@ -56,10 +44,10 @@ static void GL_DrawAliasFrame(entity_t *ent, alias_model_t *aliasmodel, int pose
 	glTexCoordPointer(2, GL_FLOAT, sizeof(*(aliasmodel->stverts[1])), &aliasmodel->stverts[1]->s);
 	glDrawElements(GL_TRIANGLES, (aliasmodel->numtris - aliasmodel->backstart) * 3, GL_UNSIGNED_SHORT, (aliasmodel->triangles + aliasmodel->backstart));
 
+	glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+
 	if (alpha < 1.0f)
 		glDisable(GL_BLEND);
-
-	glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
 }
 
 extern vec3_t lightspot;
@@ -126,7 +114,6 @@ static int R_GetAliasPose(entity_t *ent, alias_model_t *aliasmodel)
 
 void R_DrawAliasModel(entity_t *ent)
 {
-
 	bool isPlayer = ent > cl_entities &&
 			ent <= (cl_entities + cl.maxclients);
 	gltexture_t *tx;
@@ -218,7 +205,18 @@ void R_DrawAliasModel(entity_t *ent)
 
 	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
 
-	GL_DrawAliasFrame(ent, aliasmodel, pose);
+	float alpha;
+	if (ent != &cl.viewent)
+		alpha = 1.0f;
+	else
+	{
+		if(cl.items & IT_INVISIBILITY)
+			alpha = r_ringalpha.value;
+		else
+			alpha = 1.0f;
+	}
+
+	GL_DrawAliasFrame(ent, aliasmodel, pose, alpha);
 
 	if (fb)
 	{
@@ -227,7 +225,7 @@ void R_DrawAliasModel(entity_t *ent)
 		glEnable(GL_BLEND);
 		glBlendFunc (GL_ONE, GL_ONE);
 		glDepthMask(GL_FALSE);
-		GL_DrawAliasFrame(ent, aliasmodel, pose);
+		GL_DrawAliasFrame(ent, aliasmodel, pose, alpha);
 		glDepthMask(GL_TRUE);
 		glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 		glDisable(GL_BLEND);

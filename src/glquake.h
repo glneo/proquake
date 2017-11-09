@@ -33,8 +33,6 @@ extern int skytexturenum; // index in cl.loadmodel, not gl texture object
 extern float gl_max_anisotropy;
 extern bool gl_texture_NPOT;
 
-extern int glx, gly, glwidth, glheight;
-
 extern int r_framecount;
 extern int c_brush_polys, c_alias_polys;
 
@@ -78,6 +76,20 @@ extern cvar_t r_ringalpha;
 
 extern qpic_t *draw_disc;
 
+typedef enum {
+	CANVAS_NONE,
+	CANVAS_DEFAULT,
+	CANVAS_CONSOLE,
+	CANVAS_MENU,
+	CANVAS_SBAR,
+	CANVAS_WARPIMAGE,
+	CANVAS_CROSSHAIR,
+	CANVAS_BOTTOMLEFT,
+	CANVAS_BOTTOMRIGHT,
+	CANVAS_TOPRIGHT,
+	CANVAS_INVALID = -1
+} canvastype;
+
 // gl_alias.c
 void R_DrawAliasModel(entity_t *ent);
 
@@ -86,17 +98,14 @@ qpic_t *Draw_PicFromWad(const char *name);
 qpic_t *Draw_CachePic(char *path);
 void Draw_Character(int x, int y, int num);
 void Draw_String(int x, int y, const char *str);
-void Draw_Crosshair(void);
 void Draw_Pic(int x, int y, qpic_t *pic, float alpha);
 void Draw_TransPic(int x, int y, qpic_t *pic);
-void Draw_SubPic(int x, int y, qpic_t *pic, int srcx, int srcy, int width, int height);
 void Draw_TransPicTranslate(int x, int y, qpic_t *pic, byte *translation);
-void Draw_ConsoleBackground();
-void Draw_TileClear(int x, int y, int w, int h);
-void Draw_AlphaFill(int x, int y, int w, int h, int c, float alpha);
+void Draw_PicTile(int x, int y, int w, int h, qpic_t *pic, float alpha);
 void Draw_Fill(int x, int y, int w, int h, int c, float alpha);
-void Draw_FadeScreen(void);
+void Draw_SetCanvas(canvastype newcanvas);
 void GL_Set2D(void);
+qpic_t *Draw_MakePic(const char *name, int width, int height, byte *data);
 void Draw_Init(void);
 
 // gl_fullbright.c
@@ -123,7 +132,7 @@ void R_TranslatePlayerSkin(int playernum);
 void R_NewMap(void);
 void R_RenderView(void);
 void GL_Init(void);
-void GL_BeginRendering(int *x, int *y, int *width, int *height);
+void GL_BeginRendering();
 void GL_EndRendering(void);
 void R_Init(void);
 

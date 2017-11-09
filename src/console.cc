@@ -244,8 +244,8 @@ static void Con_Linefeed(void)
 	//johnfitz -- improved scrolling
 	if (con_backscroll)
 		con_backscroll++;
-	if (con_backscroll > con_totallines - (glheight >> 3) - 1)
-		con_backscroll = con_totallines - (glheight >> 3) - 1;
+	if (con_backscroll > con_totallines - (vid.height >> 3) - 1)
+		con_backscroll = con_totallines - (vid.height >> 3) - 1;
 	//johnfitz
 
 	con_x = 0;
@@ -876,8 +876,6 @@ void Con_TabComplete(void)
 /* Draws the last few lines of output transparently over the game top */
 void Con_DrawNotify(void)
 {
-	GL_SetCanvas(CANVAS_CONSOLE);
-
 	int v = vid.conheight;
 	int maxlines = CLAMP(0, _con_notifylines.value, NUM_CON_TIMES);
 	for (int i = con_current - maxlines + 1; i <= con_current; i++)
@@ -966,13 +964,8 @@ void Con_DrawConsole(int lines, bool drawinput)
 	if (lines <= 0)
 		return;
 
-	GL_SetCanvas(CANVAS_CONSOLE);
-
-	// draw the background
-	Draw_ConsoleBackground();
-
 	// draw the buffer text
-	int con_vislines = lines * vid.conheight / glheight;
+	int con_vislines = lines * vid.conheight / vid.height;
 	int rows = (con_vislines + 7) / 8;
 	int y = vid.conheight - (rows * 8);
 	rows -= 2; //for input and version lines

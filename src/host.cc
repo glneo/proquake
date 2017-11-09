@@ -823,12 +823,13 @@ void _Host_Frame(double time)
 	if (cls.state == ca_connected)
 		CL_ReadFromServer();
 
+	CL_RunParticles();
+
 	// update video
 	if (host_speeds.value)
 		time1 = Sys_DoubleTime();
 
 	SCR_UpdateScreen();
-	CL_RunParticles(); //johnfitz -- seperated from rendering
 
 	if (host_speeds.value)
 		time2 = Sys_DoubleTime();

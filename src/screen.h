@@ -12,77 +12,57 @@
  * General Public License for more details.
  */
 
-extern int glx, gly, glwidth, glheight;
-
-void SCR_Init (void);
-
-void SCR_UpdateScreen (void);
+#ifndef __SCREEN_H
+#define __SCREEN_H
 
 extern vrect_t scr_vrect;
 
-void SCR_SizeUp (void);
-void SCR_SizeDown (void);
-void SCR_BringDownConsole (void);
-void SCR_CenterPrint (const char *str);
+extern float scr_con_current;
+extern float scr_conlines; // lines of console to display
 
-void SCR_BeginLoadingPlaque (void);
-void SCR_EndLoadingPlaque (void);
+extern int sb_lines;
+extern int clearnotify; // set to 0 whenever notify text is drawn
 
-int SCR_ModalMessage (const char *text, float timeout); //johnfitz -- added timeout
+extern bool scr_disabled_for_loading;
 
-extern	float		scr_con_current;
-extern	float		scr_conlines;		// lines of console to display
+extern cvar_t scr_menuscale;
 
-//extern	int			scr_fullupdate;	// set to 0 to force full redraw
-extern	int			sb_lines;
+extern cvar_t scr_sbarscale;
+extern cvar_t scr_sbaralpha;
 
-extern	int			clearnotify;	// set to 0 whenever notify text is drawn
-extern	bool	scr_disabled_for_loading;
-extern	bool	scr_skipupdate;
+extern cvar_t scr_conalpha;
+extern cvar_t scr_conscale;
+extern cvar_t scr_conwidth;
+extern cvar_t scr_conspeed;
 
-extern	cvar_t		scr_viewsize;
-extern  cvar_t		pq_drawfps;
+extern cvar_t crosshair;
+extern cvar_t scr_crosshairalpha;
+extern cvar_t scr_crosshairscale;
+extern cvar_t scr_crosshaircentered;
 
-extern	cvar_t		scr_menuscale;
-extern	cvar_t		scr_sbarscale;
-extern	cvar_t		scr_conwidth;
-extern	cvar_t		scr_conscale;
-extern	cvar_t		scr_scale;
-extern	cvar_t		scr_crosshairscale;
+extern cvar_t scr_fadealpha;
 
-typedef enum {
-	CANVAS_NONE,
-	CANVAS_DEFAULT,
-	CANVAS_CONSOLE,
-	CANVAS_MENU,
-	CANVAS_SBAR,
-	CANVAS_WARPIMAGE,
-	CANVAS_CROSSHAIR,
-	CANVAS_BOTTOMLEFT,
-	CANVAS_BOTTOMRIGHT,
-	CANVAS_TOPRIGHT,
-	CANVAS_INVALID = -1
-} canvastype;
+extern cvar_t scr_showfps;
+extern cvar_t scr_showram;
+extern cvar_t scr_showturtle;
+extern cvar_t scr_showpause;
+extern cvar_t scr_showclock;
 
-void GL_SetCanvas (canvastype newcanvas);
+extern cvar_t scr_fov;
+extern cvar_t scr_fov_adapt;
+extern cvar_t scr_viewsize;
+extern cvar_t scr_centertime;
+extern cvar_t scr_printspeed;
 
-extern	cvar_t scr_menuscale;
-extern	cvar_t scr_sbarscale;
-extern	cvar_t scr_sbaralpha;
-extern	cvar_t scr_conwidth;
-extern	cvar_t scr_conscale;
-extern	cvar_t scr_crosshairscale;
-extern	cvar_t scr_showfps;
-extern	cvar_t scr_clock;
-//johnfitz
+void SCR_CenterPrint(const char *str);
+void SCR_BeginLoadingPlaque(void);
+void SCR_EndLoadingPlaque(void);
+int SCR_ModalMessage(const char *text, float timeout);
+void SRC_DrawTileClear(int x, int y, int w, int h);
+void SCR_TileClear(void);
+void SCR_ConsoleBackground(void);
+void SCR_FadeScreen(void);
+void SCR_UpdateScreen(void);
+void SCR_Init(void);
 
-extern	cvar_t scr_viewsize;
-extern	cvar_t scr_fov;
-extern	cvar_t scr_fov_adapt;
-extern	cvar_t scr_conspeed;
-extern	cvar_t scr_centertime;
-extern	cvar_t scr_showram;
-extern	cvar_t scr_showturtle;
-extern	cvar_t scr_showpause;
-extern	cvar_t scr_printspeed;
-extern	cvar_t gl_triplebuffer;
+#endif	/* __SCREEN_H */

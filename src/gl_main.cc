@@ -188,12 +188,10 @@ bool R_CullForEntity(const entity_t *ent/*, vec3_t returned_center*/)
 
 static void R_DrawEntitiesOnList(void)
 {
-	int i;
-
 	if (!r_drawentities.value)
 		return;
 
-	for (i = 0; i < cl_numvisedicts; i++)
+	for (int i = 0; i < cl_numvisedicts; i++)
 	{
 		entity_t *entity = cl_visedicts[i];
 
@@ -381,32 +379,31 @@ static void Q_gluPerspective(GLfloat fovy, GLfloat aspect, GLfloat zNear, GLfloa
 static void R_SetupGL(void)
 {
 	float screenaspect;
-	extern int glwidth, glheight;
 	int x, x2, y2, y, w, h, farclip;
 
 	// set up viewpoint
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
 
-	x = r_refdef.vrect.x * glwidth / vid.width;
-	x2 = (r_refdef.vrect.x + r_refdef.vrect.width) * glwidth / vid.width;
-	y = (vid.height - r_refdef.vrect.y) * glheight / vid.height;
-	y2 = (vid.height - (r_refdef.vrect.y + r_refdef.vrect.height)) * glheight / vid.height;
+	x = r_refdef.vrect.x * vid.width / vid.width;
+	x2 = (r_refdef.vrect.x + r_refdef.vrect.width) * vid.width / vid.width;
+	y = (vid.height - r_refdef.vrect.y) * vid.height / vid.height;
+	y2 = (vid.height - (r_refdef.vrect.y + r_refdef.vrect.height)) * vid.height / vid.height;
 
 	// fudge around because of frac screen scale
 	if (x > 0)
 		x--;
-	if (x2 < glwidth)
+	if (x2 < vid.width)
 		x2++;
 	if (y2 < 0)
 		y2--;
-	if (y < glheight)
+	if (y < vid.height)
 		y++;
 
 	w = x2 - x;
 	h = y - y2;
 
-	glViewport(glx + x, gly + y2, w, h);
+	glViewport(vid.x + x, vid.y + y2, w, h);
 	screenaspect = (float) r_refdef.vrect.width / r_refdef.vrect.height;
 //	yfov = 2*atan((float)r_refdef.vrect.height/r_refdef.vrect.width)*180/M_PI;
 	farclip = max((int )r_farclip.value, 4096);
@@ -936,12 +933,8 @@ static void GL_SetupState(void)
 	glDepthFunc(GL_LEQUAL);
 }
 
-void GL_BeginRendering(int *x, int *y, int *width, int *height)
+void GL_BeginRendering(void)
 {
-	*x = *y = 0;
-	*width = vid.width;
-	*height = vid.height;
-
 	glEnableClientState(GL_VERTEX_ARRAY);
 	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
 }
