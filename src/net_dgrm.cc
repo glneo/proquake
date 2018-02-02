@@ -1373,7 +1373,7 @@ static qsocket_t *_Datagram_Connect(const char *host)
 	dfunc.CloseSocket(newsock);
 	if (m_return_onerror)
 	{
-		IN_Deactivate(modestate == MODE_WINDOWED);
+		IN_Deactivate();
 		key_dest = key_menu;
 		m_state = m_return_state;
 		m_return_onerror = false;

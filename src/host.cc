@@ -1000,6 +1000,11 @@ void Host_Init(quakeparms_t *parms)
 			Sys_Error("Couldn't load gfx/colormap.lmp");
 
 		VID_Init();
+
+		GL_Init();
+
+		TexMgr_LoadPalette();
+
 		IN_Init();
 
 		TexMgr_Init();

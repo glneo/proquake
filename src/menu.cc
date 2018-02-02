@@ -2751,6 +2751,7 @@ void M_Init(void)
 }
 
 void (*m_draw_callbacks[])() = {
+	[m_none] = NULL,
 	[m_main] = M_Main_Draw,
 	[m_singleplayer] = M_SinglePlayer_Draw,
 	[m_load] = M_Load_Draw,
@@ -2758,8 +2759,8 @@ void (*m_draw_callbacks[])() = {
 	[m_multiplayer] = M_MultiPlayer_Draw,
 	[m_setup] = M_Setup_Draw,
 	[m_options] = M_Options_Draw,
-	[m_keys] = M_Keys_Draw,
 	[m_video] = M_Video_Draw,
+	[m_keys] = M_Keys_Draw,
 	[m_help] = M_Help_Draw,
 	[m_quit] = M_Quit_Draw,
 	[m_lanconfig] = M_LanConfig_Draw,
@@ -2787,6 +2788,7 @@ void M_Draw(void)
 }
 
 void (*m_key_callbacks[])(int key, int ascii) = {
+	[m_none] = NULL,
 	[m_main] = M_Main_Key,
 	[m_singleplayer] = M_SinglePlayer_Key,
 	[m_load] = M_Load_Key,

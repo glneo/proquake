@@ -1,5 +1,5 @@
 /*
- * SDL GL vid component
+ * SDL Input component
  *
  * Copyright (C) 1996-2001 Id Software, Inc.
  * Copyright (C) 2002-2009 John Fitzgibbons and others
@@ -20,8 +20,6 @@
 #include "quakedef.h"
 
 #include <SDL2/SDL.h>
-
-#define USE_SDL2
 
 static bool textmode;
 
@@ -44,9 +42,13 @@ static bool no_mouse = false;
 
 bool Key_TextEntry(void);
 
-static int buttonremap[] = { K_MOUSE1, K_MOUSE3, /* right button		*/
-K_MOUSE2, /* middle button	*/
-K_MOUSE4, K_MOUSE5 };
+static int buttonremap[] = {
+	K_MOUSE1,
+	K_MOUSE3, /* right button */
+	K_MOUSE2, /* middle button */
+	K_MOUSE4,
+	K_MOUSE5
+};
 
 /* total accumulated mouse movement since last frame */
 static int total_dx, total_dy = 0;
@@ -92,7 +94,7 @@ void IN_Activate(void)
 	if (no_mouse)
 		return;
 
-//	if (!SDL_SetRelativeMouseMode(SDL_TRUE))
+//	if (SDL_SetRelativeMouseMode(SDL_TRUE))
 //		Con_Printf("WARNING: SDL_SetRelativeMouseMode(SDL_TRUE) failed.\n");
 
 	IN_EndIgnoringMouseEvents();
@@ -101,13 +103,13 @@ void IN_Activate(void)
 	total_dy = 0;
 }
 
-void IN_Deactivate(bool free_cursor)
+void IN_Deactivate()
 {
 	if (no_mouse)
 		return;
 
-	if (free_cursor)
-		SDL_SetRelativeMouseMode(SDL_FALSE);
+	if (SDL_SetRelativeMouseMode(SDL_FALSE))
+		Con_Printf("WARNING: SDL_SetRelativeMouseMode(SDL_FALSE) failed.\n");
 
 	/* discard all mouse events when input is deactivated */
 	IN_BeginIgnoringMouseEvents();
@@ -208,7 +210,7 @@ void IN_Init(void)
 
 void IN_Shutdown(void)
 {
-	IN_Deactivate(true);
+	IN_Deactivate();
 	IN_ShutdownJoystick();
 }
 

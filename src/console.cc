@@ -100,7 +100,7 @@ void Con_ToggleConsole_f(void)
 	}
 	else
 	{
-		IN_Deactivate(modestate == MODE_WINDOWED);
+		IN_Deactivate();
 		key_dest = key_console;
 	}
 

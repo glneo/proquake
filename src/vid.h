@@ -17,10 +17,6 @@
 #ifndef __VID_H
 #define __VID_H
 
-#define MAX_MODE_LIST 600
-
-#define GAMMA_MAX 3.0
-
 typedef struct vrect_s {
 	int x, y, width, height;
 	struct vrect_s *pnext;
@@ -71,15 +67,6 @@ typedef struct {
 	int desktop_areaheight;
 } viddef_t;
 
-extern viddef_t vid;				// global video state
-extern modestate_t modestate;
-extern unsigned d_8to24table[256];
-
-extern void (*vid_menudrawfn)(void);
-extern void (*vid_menukeyfn)(int key);
-extern void (*vid_menucmdfn)(void); //johnfitz
-
-void VID_Init(void);
-void VID_Shutdown(void);
+extern viddef_t vid; // global video state
 
 #endif	/* __VID_H */

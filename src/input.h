@@ -1,5 +1,5 @@
 /*
- * External (non-keyboard) input devices
+ * Input devices
  *
  * Copyright (C) 1996-1997 Id Software, Inc.
  *
@@ -36,7 +36,7 @@ void IN_ClearStates(void); // restores all button and position states to default
 void IN_Keyboard_Acquire(void);
 void IN_Keyboard_Unacquire(void);
 
-void IN_Deactivate(bool free_cursor);
+void IN_Deactivate(void);
 void IN_Activate(void);
 
 void IN_SendKeyEvents(void);

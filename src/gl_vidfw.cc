@@ -174,17 +174,9 @@ void VID_Init(unsigned char *palette)
 
 	glfwMakeContextCurrent(window);
 
-	GL_Init();
-
 	glfwSetKeyCallback(window, key_callback);
 	glfwSetMouseButtonCallback(window, mouse_button_callback);
 	glfwSetWindowCloseCallback(window, window_close_callback);
-
-	snprintf(gldir, sizeof(gldir), "%s/OpenGL", com_gamedir);
-//	Sys_mkdir (gldir);
-
-        Check_GammaOld(palette);
-	VID_SetPaletteOld(palette);
 
 	Con_SafePrintf ("Video mode %dx%d initialized.\n", width, height);
 

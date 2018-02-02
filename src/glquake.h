@@ -155,7 +155,7 @@ void R_DrawBrushModel(entity_t *ent);
 void R_DrawWorld(void);
 void R_MarkLeaves(void);
 
-// gl_vidsdl.c/*
+// gl_vidsdl.c
 void VID_Swap(void);
 void VID_Init(void);
 void VID_Shutdown(void);
