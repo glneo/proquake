@@ -240,15 +240,15 @@ void IN_Move(usercmd_t *cmd)
 	mouse_y *= sensitivity.value;
 
 	/* add mouse X/Y movement to cmd */
-	if ((in_strafe.state & 1) || (lookstrafe.value && mlook_active))    // Baker 3.60 - Freelook cvar support
+	if ((in_strafe.state & 1) || (lookstrafe.value && (freelook.value || (in_mlook.state & 1))))    // Baker 3.60 - Freelook cvar support
 		cmd->sidemove += m_side.value * mouse_x;
 	else
 		cl.viewangles[YAW] -= m_yaw.value * mouse_x;
 
-	if (mlook_active)
+	if ((freelook.value || (in_mlook.state & 1)))
 		V_StopPitchDrift();    // Baker 3.60 - Freelook cvar support
 
-	if (mlook_active && !(in_strafe.state & 1))     // Baker 3.60 - Freelook cvar support
+	if ((freelook.value || (in_mlook.state & 1)) && !(in_strafe.state & 1))     // Baker 3.60 - Freelook cvar support
 	{
 		cl.viewangles[PITCH] += m_pitch.value * mouse_y;
 

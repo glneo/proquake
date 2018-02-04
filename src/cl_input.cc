@@ -126,7 +126,7 @@ void KeyUp(kbutton_t *b)
  void IN_MLookDown (void) {KeyDown(&in_mlook);}
  void IN_MLookUp (void) {
 	KeyUp(&in_mlook);
-	if ( !mlook_active &&  lookspring.value)
+	if ( !(freelook.value || (in_mlook.state & 1)) &&  lookspring.value)
 		V_StartPitchDrift_f();
 }
  void IN_UpDown(void) {KeyDown(&in_up);}

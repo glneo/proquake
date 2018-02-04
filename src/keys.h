@@ -1,196 +1,199 @@
 /*
- * Copyright (C) 1996-1997 Id Software, Inc.
- *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License
- * as published by the Free Software Foundation; either version 2
- * of the License, or (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- */
+Copyright (C) 1996-2001 Id Software, Inc.
+Copyright (C) 2002-2009 John Fitzgibbons and others
+Copyright (C) 2010-2014 QuakeSpasm developers
 
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+
+See the GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+
+*/
+
+#ifndef _QUAKE_KEYS_H
+#define _QUAKE_KEYS_H
+
+//
 // these are the key numbers that should be passed to Key_Event
-typedef enum
-{
-	K_TAB = 9,
-	K_ENTER = 13,
-	K_ESCAPE = 27,
-	K_SPACE	= 32,
+//
+#define	K_TAB			9
+#define	K_ENTER			13
+#define	K_ESCAPE		27
+#define	K_SPACE			32
 
 // normal keys should be passed as lowercased ascii
 
-	K_BACKSPACE = 127,
+#define	K_BACKSPACE		127
+#define	K_UPARROW		128
+#define	K_DOWNARROW		129
+#define	K_LEFTARROW		130
+#define	K_RIGHTARROW	131
 
-	K_CAPSLOCK,
-	K_PRINTSCR,
-	K_SCRLCK,
-	K_PAUSE,
+#define	K_ALT			132
+#define	K_CTRL			133
+#define	K_SHIFT			134
+#define	K_F1			135
+#define	K_F2			136
+#define	K_F3			137
+#define	K_F4			138
+#define	K_F5			139
+#define	K_F6			140
+#define	K_F7			141
+#define	K_F8			142
+#define	K_F9			143
+#define	K_F10			144
+#define	K_F11			145
+#define	K_F12			146
+#define	K_INS			147
+#define	K_DEL			148
+#define	K_PGDN			149
+#define	K_PGUP			150
+#define	K_HOME			151
+#define	K_END			152
 
-	K_UPARROW,
-	K_DOWNARROW,
-	K_LEFTARROW,
-	K_RIGHTARROW,
+#define	K_KP_NUMLOCK		153
+#define	K_KP_SLASH		154
+#define	K_KP_STAR		155
+#define	K_KP_MINUS		156
+#define	K_KP_HOME		157
+#define	K_KP_UPARROW		158
+#define	K_KP_PGUP		159
+#define	K_KP_PLUS		160
+#define	K_KP_LEFTARROW		161
+#define	K_KP_5			162
+#define	K_KP_RIGHTARROW		163
+#define	K_KP_END		164
+#define	K_KP_DOWNARROW		165
+#define	K_KP_PGDN		166
+#define	K_KP_ENTER		167
+#define	K_KP_INS		168
+#define	K_KP_DEL		169
 
-	K_ALT,
-	K_LALT,
-	K_RALT,
-	K_CTRL,
-	K_LCTRL,
-	K_RCTRL,
-	K_SHIFT,
-	K_LSHIFT,
-	K_RSHIFT,
-	K_F1,
-	K_F2,
-	K_F3,
-	K_F4,
-	K_F5,
-	K_F6,
-	K_F7,
-	K_F8,
-	K_F9,
-	K_F10,
-	K_F11,
-	K_F12,
-	K_INS,
-	K_DEL,
-	K_PGDN,
-	K_PGUP,
-	K_HOME,
-	K_END,
+#define	K_COMMAND		170
 
-	K_WIN,
-	K_LWIN,
-	K_RWIN,
-	K_MENU, 
+#define K_PAUSE			255
 
-// keypad keys
-	KP_NUMLOCK,		
-	KP_SLASH,		
-	KP_STAR,
-	KP_MINUS,
-	KP_HOME,
-	KP_UPARROW,
-	KP_PGUP,
-	KP_PLUS,
-	KP_LEFTARROW,
-	KP_5,
-	KP_RIGHTARROW,
-	KP_END,
-	KP_DOWNARROW,
-	KP_PGDN,	
-	KP_ENTER,
-	KP_INS,
-	KP_DEL,
-
+//
 // mouse buttons generate virtual keys
+//
+#define	K_MOUSE1		200
+#define	K_MOUSE2		201
+#define	K_MOUSE3		202
 
-	K_MOUSE1 = 200,
-	K_MOUSE2,
-	K_MOUSE3,
-	K_MOUSE4,
-	K_MOUSE5,
-	K_MOUSE6,
-	K_MOUSE7,
-	K_MOUSE8,
-
+//
 // joystick buttons
-
-	K_JOY1,
-	K_JOY2,
-	K_JOY3,
-	K_JOY4,
-
+//
+#define	K_JOY1			203
+#define	K_JOY2			204
+#define	K_JOY3			205
+#define	K_JOY4			206
 // aux keys are for multi-buttoned joysticks to generate so they can use
 // the normal binding process
-
-	K_AUX1,
-	K_AUX2,
-	K_AUX3,
-	K_AUX4,
-	K_AUX5,
-	K_AUX6,
-	K_AUX7,
-	K_AUX8,
-	K_AUX9,
-	K_AUX10,
-	K_AUX11,
-	K_AUX12,
-	K_AUX13,
-	K_AUX14,
-	K_AUX15,
-	K_AUX16,
-	K_AUX17,
-	K_AUX18,
-	K_AUX19,
-	K_AUX20,
-	K_AUX21,
-	K_AUX22,
-	K_AUX23,
-	K_AUX24,
-	K_AUX25,
-	K_AUX26,
-	K_AUX27,
-	K_AUX28,
-	K_AUX29,
-	K_AUX30,
-	K_AUX31,
-	K_AUX32,
+// aux29-32: reserved for the HAT (POV) switch motion
+#define	K_AUX1			207
+#define	K_AUX2			208
+#define	K_AUX3			209
+#define	K_AUX4			210
+#define	K_AUX5			211
+#define	K_AUX6			212
+#define	K_AUX7			213
+#define	K_AUX8			214
+#define	K_AUX9			215
+#define	K_AUX10			216
+#define	K_AUX11			217
+#define	K_AUX12			218
+#define	K_AUX13			219
+#define	K_AUX14			220
+#define	K_AUX15			221
+#define	K_AUX16			222
+#define	K_AUX17			223
+#define	K_AUX18			224
+#define	K_AUX19			225
+#define	K_AUX20			226
+#define	K_AUX21			227
+#define	K_AUX22			228
+#define	K_AUX23			229
+#define	K_AUX24			230
+#define	K_AUX25			231
+#define	K_AUX26			232
+#define	K_AUX27			233
+#define	K_AUX28			234
+#define	K_AUX29			235
+#define	K_AUX30			236
+#define	K_AUX31			237
+#define	K_AUX32			238
 
 // JACK: Intellimouse(c) Mouse Wheel Support
 
-	K_MWHEELUP,
-	K_MWHEELDOWN,
+#define K_MWHEELUP		239
+#define K_MWHEELDOWN		240
 
-// Special capture when mouse is freed	
-	K_MOUSECLICK_BUTTON1 = 1024,
-	K_MOUSECLICK_BUTTON2,
-	K_MOUSECLICK_BUTTON3,
-	K_MOUSECLICK_BUTTON4,
-	K_MOUSECLICK_BUTTON5
+// thumb buttons
+#define K_MOUSE4		241
+#define K_MOUSE5		242
 
-// 	These are unnecessary; we receive them anyway
-//	K_MOUSECLICK_MWHEELUP
-//	K_MOUSECLICK_MWHEELDOWN
-} keynum_t;
+// SDL2 game controller keys
+#define K_LTHUMB		243
+#define K_RTHUMB		244
+#define K_LSHOULDER		245
+#define K_RSHOULDER		246
+#define K_ABUTTON		247
+#define K_BBUTTON		248
+#define K_XBUTTON		249
+#define K_YBUTTON		250
+#define K_LTRIGGER		251
+#define K_RTRIGGER		252
 
-#define	MAXCMDLINE		256
+#define	MAX_KEYS		256
 
-extern char chat_buffer[];
+#define	MAXCMDLINE	256
 
-typedef enum {
-	key_game, key_console, key_message, key_menu
-} keydest_t;
-
-#define		MAXCMDLINE	256
-#define		CMDLINES	64
-
-extern char key_lines[CMDLINES][MAXCMDLINE];
+typedef enum {key_game, key_console, key_message, key_menu} keydest_t;
 
 extern keydest_t	key_dest;
-extern char *keybindings[256];
-extern	int		key_repeats[256];
-extern	int		key_count;			// incremented every key event
-extern	int		key_lastpress;
-extern	int		history_line;
-extern	int key_linepos;
-extern	int edit_line;
+extern	char	*keybindings[MAX_KEYS];
 
-extern	bool team_message;
+#define		CMDLINES 64
 
-extern	cvar_t	in_keymap;
+extern	char	key_lines[CMDLINES][MAXCMDLINE];
+extern	int		edit_line;
+extern	int		key_linepos;
+extern	int		key_insert;
+extern	double		key_blinktime;
 
-void Key_Event (int key, int ascii, bool down);
+extern	bool	chat_team;
+
 void Key_Init (void);
-void Key_WriteBindings (FILE *f);
-char *Key_KeynumToString(int keynum);
-void Key_SetBinding (int keynum, char *binding);
 void Key_ClearStates (void);
+void Key_UpdateForDest (void);
 
+void Key_BeginInputGrab (void);
+void Key_EndInputGrab (void);
+void Key_GetGrabbedInput (int *lastkey, int *lastchar);
+
+void Key_Event (int key, bool down);
+void Char_Event (int key);
+bool Key_TextEntry (void);
+
+void Key_SetBinding (int keynum, const char *binding);
+const char *Key_KeynumToString (int keynum);
+void Key_WriteBindings (FILE *f);
+
+void Key_EndChat (void);
+const char *Key_GetChatBuffer (void);
+int Key_GetChatMsgLen (void);
+
+void History_Init (void);
 void History_Shutdown (void);
 
-
-bool Key_InternationalON(void);
+#endif	/* _QUAKE_KEYS_H */

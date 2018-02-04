@@ -276,7 +276,7 @@ void M_Main_Key(int key, int ascii)
 		break;
 
 	case K_ENTER:
-	case KP_ENTER:
+	case K_KP_ENTER:
 		m_entersound = true;
 		switch (m_main_cursor)
 		{
@@ -2818,3 +2818,37 @@ void M_ConfigureNetSubsystem(void)
 	Cbuf_AddText("stopdemo\n");
 	net_hostport = lanConfig_port;
 }
+
+void M_Charinput (int key)
+{
+	switch (m_state)
+	{
+	case m_setup:
+		M_Setup_Key(key, 0);
+		return;
+	case m_quit:
+		M_Quit_Key(key, 0);
+		return;
+	case m_lanconfig:
+		M_LanConfig_Key(key, 0);
+		return;
+	default:
+		return;
+	}
+}
+
+//
+//qboolean M_TextEntry (void)
+//{
+//	switch (m_state)
+//	{
+//	case m_setup:
+//		return M_Setup_TextEntry ();
+//	case m_quit:
+//		return M_Quit_TextEntry ();
+//	case m_lanconfig:
+//		return M_LanConfig_TextEntry ();
+//	default:
+//		return false;
+//	}
+//}

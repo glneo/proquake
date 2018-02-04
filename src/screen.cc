@@ -813,16 +813,16 @@ static void SCR_DrawNotifyString(void)
 }
 
 /*
- ==================
- SCR_ModalMessage
-
- Displays a text string in the center of the screen and waits for a Y or N
- keypress.
- ==================
- */
-int SCR_ModalMessage(const char *text, float timeout) //johnfitz -- timeout
+==================
+SCR_ModalMessage
+Displays a text string in the center of the screen and waits for a Y or N
+keypress.
+==================
+*/
+int SCR_ModalMessage (const char *text, float timeout) //johnfitz -- timeout
 {
 	double time1, time2; //johnfitz -- timeout
+	int lastkey, lastchar;
 
 	if (cls.state == ca_dedicated)
 		return true;
@@ -831,21 +831,28 @@ int SCR_ModalMessage(const char *text, float timeout) //johnfitz -- timeout
 
 // draw a fresh screen
 	scr_drawdialog = true;
-	SCR_UpdateScreen();
+	SCR_UpdateScreen ();
 	scr_drawdialog = false;
 
-	S_ClearBuffer();		// so dma doesn't loop current sound
+	S_ClearBuffer ();		// so dma doesn't loop current sound
 
-	time1 = Sys_DoubleTime() + timeout; //johnfitz -- timeout
+	time1 = Sys_DoubleTime () + timeout; //johnfitz -- timeout
 	time2 = 0.0f; //johnfitz -- timeout
 
+	Key_BeginInputGrab ();
 	do
 	{
-		key_count = -1;         // wait for a key down and up
-		IN_SendKeyEvents();
-		if (timeout)
-			time2 = Sys_DoubleTime(); //johnfitz -- zero timeout means wait forever.
-	} while (key_lastpress != 'y' && key_lastpress != 'n' && key_lastpress != K_ESCAPE && time2 <= time1);
+		IN_SendKeyEvents ();
+		Key_GetGrabbedInput (&lastkey, &lastchar);
+//		Sys_Sleep (16);
+		if (timeout) time2 = Sys_DoubleTime (); //johnfitz -- zero timeout means wait forever.
+	} while (lastchar != 'y' && lastchar != 'Y' &&
+		 lastchar != 'n' && lastchar != 'N' &&
+		 lastkey != K_ESCAPE &&
+		 lastkey != K_ABUTTON &&
+		 lastkey != K_BBUTTON &&
+		 time2 <= time1);
+	Key_EndInputGrab ();
 
 //	SCR_UpdateScreen (); //johnfitz -- commented out
 
@@ -854,7 +861,7 @@ int SCR_ModalMessage(const char *text, float timeout) //johnfitz -- timeout
 		return false;
 	//johnfitz
 
-	return key_lastpress == 'y';
+	return (lastchar == 'y' || lastchar == 'Y' || lastkey == K_ABUTTON);
 }
 
 void SRC_DrawTileClear(int x, int y, int w, int h)

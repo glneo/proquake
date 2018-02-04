@@ -36,7 +36,6 @@ char *con_text = NULL;
 cvar_t con_notifytime = { "con_notifytime", "3", CVAR_NONE }; //seconds
 cvar_t con_logcenterprint = { "con_logcenterprint", "1", CVAR_NONE };
 cvar_t _con_notifylines = { "con_notifylines", "4" };
-cvar_t pq_removecr = { "pq_removecr", "1" };		// JPG 3.20 - remove \r from console output
 int con_notifylines;		// scan lines to clear for
 
 #define	CON_LASTCENTERSTRING_SIZE 1024
@@ -173,22 +172,6 @@ void Con_ClearNotify(void)
 
 	for (i = 0; i < NUM_CON_TIMES; i++)
 		con_times[i] = 0;
-}
-
-static void Con_MessageMode_f(void)
-{
-	if (cls.state != ca_connected || cls.demoplayback)
-		return;
-	team_message = false;
-	key_dest = key_message;
-}
-
-static void Con_MessageMode2_f(void)
-{
-	if (cls.state != ca_connected || cls.demoplayback)
-		return;
-	team_message = true;
-	key_dest = key_message;
 }
 
 /* If the line width has changed, reformat the buffer */
@@ -902,19 +885,20 @@ void Con_DrawNotify(void)
 	{
 		clearnotify = 0;
 
-		int msg_start;
-		if (team_message)
-		{
-			Draw_String(8, v, "(say team):");
-			msg_start = 12;
-		}
-		else
-		{
-			Draw_String(8, v, "say:");
-			msg_start = 5;
-		}
+		int msg_start = 0;
+//		if (team_message)
+//		{
+//			Draw_String(8, v, "(say team):");
+//			msg_start = 12;
+//		}
+//		else
+//		{
+//			Draw_String(8, v, "say:");
+//			msg_start = 5;
+//		}
 
 		int x = msg_start;
+		const char *chat_buffer = Key_GetChatBuffer();
 		for (int i = 0; chat_buffer[i]; i++)
 		{
 			Draw_Character(x << 3, v, chat_buffer[i]);
@@ -1000,7 +984,7 @@ void Con_DrawConsole(int lines, bool drawinput)
 	//draw version number in bottom right
 //	y += 8;
 	char ver[32];
-	sprintf(ver, "QuakeSpasm %1.2f.%d", (float) 2, 3);
+	sprintf(ver, "QuickQuake %1.2f.%d", (float) 2, 3);
 	for (int x = 0; x < (int) strlen(ver); x++)
 		Draw_Character((con_linewidth - strlen(ver) + x + 2) << 3, y, ver[x] /*+ 128*/);
 }
@@ -1015,7 +999,6 @@ void Con_Init(void)
 
 	con_text = (char *)Hunk_AllocName(con_buffersize, "con_text");
 	memset(con_text, ' ', con_buffersize);
-	con_linewidth = -1;
 
 	con_linewidth = 38;
 	con_totallines = con_buffersize / con_linewidth;
@@ -1026,11 +1009,7 @@ void Con_Init(void)
 	Cvar_RegisterVariable(&con_logcenterprint);
 	Cvar_RegisterVariable(&_con_notifylines);
 
-	Cvar_RegisterVariable(&pq_removecr);
-
 	Cmd_AddCommand("toggleconsole", Con_ToggleConsole_f);
-	Cmd_AddCommand("messagemode", Con_MessageMode_f);
-	Cmd_AddCommand("messagemode2", Con_MessageMode2_f);
 	Cmd_AddCommand("clear", Con_Clear_f);
 	Cmd_AddCommand("condump", Con_Dump_f);
 

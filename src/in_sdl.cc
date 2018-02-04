@@ -21,26 +21,24 @@
 
 #include <SDL2/SDL.h>
 
-static bool textmode;
+// SDL2 Game Controller cvars
+cvar_t joy_enable = { "joy_enable", "1", CVAR_ARCHIVE };
+cvar_t joy_deadzone = { "joy_deadzone", "0.175", CVAR_ARCHIVE };
+cvar_t joy_deadzone_trigger = { "joy_deadzone_trigger", "0.001", CVAR_ARCHIVE };
+cvar_t joy_sensitivity_yaw = { "joy_sensitivity_yaw", "300", CVAR_ARCHIVE };
+cvar_t joy_sensitivity_pitch = { "joy_sensitivity_pitch", "150", CVAR_ARCHIVE };
+cvar_t joy_invert = { "joy_invert", "0", CVAR_ARCHIVE };
+cvar_t joy_exponent = { "joy_exponent", "3", CVAR_ARCHIVE };
+cvar_t joy_swapmovelook = { "joy_swapmovelook", "0", CVAR_ARCHIVE };
 
 static cvar_t in_debugkeys = { "in_debugkeys", "0", false };
-
-// SDL2 Game Controller cvars
-cvar_t joy_deadzone = { "joy_deadzone", "0.175", true };
-cvar_t joy_deadzone_trigger = { "joy_deadzone_trigger", "0.001", true };
-cvar_t joy_sensitivity_yaw = { "joy_sensitivity_yaw", "300", true };
-cvar_t joy_sensitivity_pitch = { "joy_sensitivity_pitch", "150", true };
-cvar_t joy_invert = { "joy_invert", "0", true };
-cvar_t joy_exponent = { "joy_exponent", "3", true };
-cvar_t joy_swapmovelook = { "joy_swapmovelook", "0", true };
-cvar_t joy_enable = { "joy_enable", "1", true };
 
 static SDL_JoystickID joy_active_instaceid = -1;
 static SDL_GameController *joy_active_controller = NULL;
 
 static bool no_mouse = false;
 
-bool Key_TextEntry(void);
+static bool textmode = false;
 
 static int buttonremap[] = {
 	K_MOUSE1,
@@ -53,175 +51,8 @@ static int buttonremap[] = {
 /* total accumulated mouse movement since last frame */
 static int total_dx, total_dy = 0;
 
-static int IN_FilterMouseEvents(const SDL_Event *event)
-{
-	switch (event->type)
-	{
-	case SDL_MOUSEMOTION:
-		// case SDL_MOUSEBUTTONDOWN:
-		// case SDL_MOUSEBUTTONUP:
-		return 0;
-	}
-
-	return 1;
-}
-
-static int IN_SDL2_FilterMouseEvents(void *userdata, SDL_Event *event)
-{
-	return IN_FilterMouseEvents(event);
-}
-
-static void IN_BeginIgnoringMouseEvents()
-{
-	SDL_EventFilter currentFilter = NULL;
-	void *currentUserdata = NULL;
-	SDL_GetEventFilter(&currentFilter, &currentUserdata);
-
-	if (currentFilter != IN_SDL2_FilterMouseEvents)
-		SDL_SetEventFilter(IN_SDL2_FilterMouseEvents, NULL);
-}
-
-static void IN_EndIgnoringMouseEvents()
-{
-	SDL_EventFilter currentFilter;
-	void *currentUserdata;
-	if (SDL_GetEventFilter(&currentFilter, &currentUserdata) == SDL_TRUE)
-		SDL_SetEventFilter(NULL, NULL);
-}
-
-void IN_Activate(void)
-{
-	if (no_mouse)
-		return;
-
-//	if (SDL_SetRelativeMouseMode(SDL_TRUE))
-//		Con_Printf("WARNING: SDL_SetRelativeMouseMode(SDL_TRUE) failed.\n");
-
-	IN_EndIgnoringMouseEvents();
-
-	total_dx = 0;
-	total_dy = 0;
-}
-
-void IN_Deactivate()
-{
-	if (no_mouse)
-		return;
-
-	if (SDL_SetRelativeMouseMode(SDL_FALSE))
-		Con_Printf("WARNING: SDL_SetRelativeMouseMode(SDL_FALSE) failed.\n");
-
-	/* discard all mouse events when input is deactivated */
-	IN_BeginIgnoringMouseEvents();
-}
-
-void IN_StartupJoystick(void)
-{
-	int i;
-	int nummappings;
-	char controllerdb[MAX_OSPATH];
-	SDL_GameController *gamecontroller;
-
-	if (COM_CheckParm("-nojoy"))
-		return;
-
-	if (SDL_InitSubSystem(SDL_INIT_GAMECONTROLLER) == -1)
-	{
-		Con_Warning("could not initialize SDL Game Controller\n");
-		return;
-	}
-
-	// Load additional SDL2 controller definitions from gamecontrollerdb.txt
-	snprintf(controllerdb, sizeof(controllerdb), "%s/gamecontrollerdb.txt", com_basedir);
-	nummappings = SDL_GameControllerAddMappingsFromFile(controllerdb);
-	if (nummappings > 0)
-		Con_Printf("%d mappings loaded from gamecontrollerdb.txt\n", nummappings);
-
-	// Also try host_parms->userdir
-//	if (host_parms.userdir != host_parms.basedir)
-//	{
-//		snprintf (controllerdb, sizeof(controllerdb), "%s/gamecontrollerdb.txt", host_parms->userdir);
-//		nummappings = SDL_GameControllerAddMappingsFromFile(controllerdb);
-//		if (nummappings > 0)
-//			Con_Printf("%d mappings loaded from gamecontrollerdb.txt\n", nummappings);
-//	}
-
-	for (i = 0; i < SDL_NumJoysticks(); i++)
-	{
-		const char *joyname = SDL_JoystickNameForIndex(i);
-		if (SDL_IsGameController(i))
-		{
-			const char *controllername = SDL_GameControllerNameForIndex(i);
-			gamecontroller = SDL_GameControllerOpen(i);
-			if (gamecontroller)
-			{
-				Con_Printf("detected controller: %s\n", controllername != NULL ? controllername : "NULL");
-
-				joy_active_instaceid = SDL_JoystickInstanceID(SDL_GameControllerGetJoystick(gamecontroller));
-				joy_active_controller = gamecontroller;
-				break;
-			}
-			else
-			{
-				Con_Warning("failed to open controller: %s\n", controllername != NULL ? controllername : "NULL");
-			}
-		}
-		else
-		{
-			Con_Warning("joystick missing controller mappings: %s\n", joyname != NULL ? joyname : "NULL");
-		}
-	}
-}
-
-void IN_ShutdownJoystick(void)
-{
-	SDL_QuitSubSystem(SDL_INIT_GAMECONTROLLER);
-}
-
-void IN_Init(void)
-{
-	textmode = Key_TextEntry();
-
-	if (textmode)
-		SDL_StartTextInput();
-	else
-		SDL_StopTextInput();
-
-	if (COM_CheckParm("-nomouse"))
-	{
-		no_mouse = true;
-		/* discard all mouse events when input is deactivated */
-		IN_BeginIgnoringMouseEvents();
-	}
-
-	Cvar_RegisterVariable(&in_debugkeys);
-	Cvar_RegisterVariable(&joy_sensitivity_yaw);
-	Cvar_RegisterVariable(&joy_sensitivity_pitch);
-	Cvar_RegisterVariable(&joy_deadzone);
-	Cvar_RegisterVariable(&joy_deadzone_trigger);
-	Cvar_RegisterVariable(&joy_invert);
-	Cvar_RegisterVariable(&joy_exponent);
-	Cvar_RegisterVariable(&joy_swapmovelook);
-	Cvar_RegisterVariable(&joy_enable);
-
-	IN_Activate();
-	IN_StartupJoystick();
-}
-
-void IN_Shutdown(void)
-{
-	IN_Deactivate();
-	IN_ShutdownJoystick();
-}
-
 extern cvar_t cl_maxpitch;
 extern cvar_t cl_minpitch;
-
-void IN_MouseMotion(int dx, int dy)
-{
-	total_dx += dx;
-	total_dy += dy;
-}
 
 typedef struct joyaxis_s
 {
@@ -245,13 +76,7 @@ static joyaxisstate_t joy_axisstate;
 static double joy_buttontimer[SDL_CONTROLLER_BUTTON_MAX];
 static double joy_emulatedkeytimer[10];
 
-/*
- ================
- IN_AxisMagnitude
-
- Returns the vector length of the given joystick axis
- ================
- */
+/* Returns the vector length of the given joystick axis */
 static vec_t IN_AxisMagnitude(joyaxis_t axis)
 {
 	vec_t magnitude = sqrtf((axis.x * axis.x) + (axis.y * axis.y));
@@ -259,12 +84,8 @@ static vec_t IN_AxisMagnitude(joyaxis_t axis)
 }
 
 /*
- ================
- IN_ApplyLookEasing
-
- assumes axis values are in [-1, 1] and the vector magnitude has been clamped at 1.
- Raises the axis values to the given exponent, keeping signs.
- ================
+ * assumes axis values are in [-1, 1] and the vector magnitude has been clamped at 1.
+ * Raises the axis values to the given exponent, keeping signs.
  */
 static joyaxis_t IN_ApplyLookEasing(joyaxis_t axis, float exponent)
 {
@@ -283,13 +104,9 @@ static joyaxis_t IN_ApplyLookEasing(joyaxis_t axis, float exponent)
 }
 
 /*
- ================
- IN_ApplyMoveEasing
-
- clamps coordinates to a square with coordinates +/- sqrt(2)/2, then scales them to +/- 1.
- This wastes a bit of stick range, but gives the diagonals coordinates of (+/-1,+/-1),
- so holding the stick on a diagonal gives the same speed boost as holding the forward and strafe keyboard keys.
- ================
+ * clamps coordinates to a square with coordinates +/- sqrt(2)/2, then scales them to +/- 1.
+ * This wastes a bit of stick range, but gives the diagonals coordinates of (+/-1,+/-1),
+ * so holding the stick on a diagonal gives the same speed boost as holding the forward and strafe keyboard keys.
  */
 static joyaxis_t IN_ApplyMoveEasing(joyaxis_t axis)
 {
@@ -306,18 +123,8 @@ static joyaxis_t IN_ApplyMoveEasing(joyaxis_t axis)
 }
 
 /*
- ================
- IN_ApplyDeadzone
-
- in: raw joystick axis values converted to floats in +-1
- out: applies a circular deadzone and clamps the magnitude at 1
- (my 360 controller is slightly non-circular and the stick travels further on the diagonals)
-
- deadzone is expected to satisfy 0 < deadzone < 1
-
- from https://github.com/jeremiah-sypult/Quakespasm-Rift
- and adapted from http://www.third-helix.com/2013/04/12/doing-thumbstick-dead-zones-right.html
- ================
+ * applies a circular deadzone and clamps the magnitude at 1
+ * deadzone is expected to satisfy 0 < deadzone < 1
  */
 static joyaxis_t IN_ApplyDeadzone(joyaxis_t axis, float deadzone)
 {
@@ -358,18 +165,12 @@ static int IN_KeyForControllerButton(SDL_GameControllerButton button)
 }
 
 /*
-================
-IN_JoyKeyEvent
-
-Sends a Key_Event if a unpressed -> pressed or pressed -> unpressed transition occurred,
-and generates key repeats if the button is held down.
-
-Adapted from DarkPlaces by lordhavoc
-================
-*/
+ * Sends a Key_Event if a unpressed -> pressed or pressed -> unpressed transition occurred,
+ * and generates key repeats if the button is held down.
+ */
 static void IN_JoyKeyEvent(bool wasdown, bool isdown, int key, double *timer)
 {
-	// we can't use `realtime` for key repeats because it is not monotomic
+	// we can't use 'realtime' for key repeats because it is not monotomic
 	const double currenttime = Sys_DoubleTime();
 
 	if (wasdown)
@@ -379,13 +180,13 @@ static void IN_JoyKeyEvent(bool wasdown, bool isdown, int key, double *timer)
 			if (currenttime >= *timer)
 			{
 				*timer = currenttime + 0.1;
-				Key_Event(key, 0, true);
+				Key_Event(key, true);
 			}
 		}
 		else
 		{
 			*timer = 0;
-			Key_Event(key, 0, false);
+			Key_Event(key, false);
 		}
 	}
 	else
@@ -393,24 +194,18 @@ static void IN_JoyKeyEvent(bool wasdown, bool isdown, int key, double *timer)
 		if (isdown)
 		{
 			*timer = currenttime + 0.5;
-			Key_Event(key, 0, true);
+			Key_Event(key, true);
 		}
 	}
 }
 
-/*
-================
-IN_Commands
-
-Emit key events for game controller buttons, including emulated buttons for analog sticks/triggers
-================
-*/
+/* Emit key events for game controller buttons, including emulated buttons for analog sticks/triggers */
 void IN_Commands (void)
 {
 	joyaxisstate_t newaxisstate;
 	int i;
 	const float stickthreshold = 0.9;
-//	const float triggerthreshold = joy_deadzone_trigger.value;
+	const float triggerthreshold = joy_deadzone_trigger.value;
 
 	if (!joy_enable.value)
 		return;
@@ -449,13 +244,13 @@ void IN_Commands (void)
 	}
 
 	// emit emulated keys for the analog triggers
-//	IN_JoyKeyEvent(joy_axisstate.axisvalue[SDL_CONTROLLER_AXIS_TRIGGERLEFT] > triggerthreshold,  newaxisstate.axisvalue[SDL_CONTROLLER_AXIS_TRIGGERLEFT] > triggerthreshold, K_LTRIGGER, &joy_emulatedkeytimer[8]);
-//	IN_JoyKeyEvent(joy_axisstate.axisvalue[SDL_CONTROLLER_AXIS_TRIGGERRIGHT] > triggerthreshold, newaxisstate.axisvalue[SDL_CONTROLLER_AXIS_TRIGGERRIGHT] > triggerthreshold, K_RTRIGGER, &joy_emulatedkeytimer[9]);
-//
+	IN_JoyKeyEvent(joy_axisstate.axisvalue[SDL_CONTROLLER_AXIS_TRIGGERLEFT] > triggerthreshold,  newaxisstate.axisvalue[SDL_CONTROLLER_AXIS_TRIGGERLEFT] > triggerthreshold, K_LTRIGGER, &joy_emulatedkeytimer[8]);
+	IN_JoyKeyEvent(joy_axisstate.axisvalue[SDL_CONTROLLER_AXIS_TRIGGERRIGHT] > triggerthreshold, newaxisstate.axisvalue[SDL_CONTROLLER_AXIS_TRIGGERRIGHT] > triggerthreshold, K_RTRIGGER, &joy_emulatedkeytimer[9]);
+
 	joy_axisstate = newaxisstate;
 }
 
-void IN_JoyMove (usercmd_t *cmd)
+static void IN_JoyMove (usercmd_t *cmd)
 {
 	float	speed;
 	joyaxis_t moveRaw, moveDeadzone, moveEased;
@@ -499,16 +294,12 @@ void IN_JoyMove (usercmd_t *cmd)
 	if (lookEased.x != 0 || lookEased.y != 0)
 		V_StopPitchDrift();
 
-	/* johnfitz -- variable pitch clamping */
-	if (cl.viewangles[PITCH] > cl_maxpitch.value)
-		cl.viewangles[PITCH] = cl_maxpitch.value;
-	if (cl.viewangles[PITCH] < cl_minpitch.value)
-		cl.viewangles[PITCH] = cl_minpitch.value;
+	cl.viewangles[PITCH] = CLAMP(cl_minpitch.value, cl.viewangles[PITCH], cl_maxpitch.value);
 }
 
-void IN_MouseMove(usercmd_t *cmd)
+static void IN_MouseMove(usercmd_t *cmd)
 {
-	int		dmx, dmy;
+	int dmx, dmy;
 
 	dmx = total_dx * sensitivity.value;
 	dmy = total_dy * sensitivity.value;
@@ -516,25 +307,22 @@ void IN_MouseMove(usercmd_t *cmd)
 	total_dx = 0;
 	total_dy = 0;
 
-	if ( (in_strafe.state & 1) || (lookstrafe.value && (mlook_active) ))
+	if ( (in_strafe.state & 1) || (lookstrafe.value && ((freelook.value || (in_mlook.state & 1))) ))
 		cmd->sidemove += m_side.value * dmx;
 	else
 		cl.viewangles[YAW] -= m_yaw.value * dmx;
 
-	if (mlook_active)
+	if ((freelook.value || (in_mlook.state & 1)))
 	{
 //		if (dmx || dmy)
 //			V_StopPitchDrift ();
 	}
 
-	if ( (mlook_active) && !(in_strafe.state & 1))
+	if ( ((freelook.value || (in_mlook.state & 1))) && !(in_strafe.state & 1))
 	{
 		cl.viewangles[PITCH] += m_pitch.value * dmy;
-		/* johnfitz -- variable pitch clamping */
-		if (cl.viewangles[PITCH] > cl_maxpitch.value)
-			cl.viewangles[PITCH] = cl_maxpitch.value;
-		if (cl.viewangles[PITCH] < cl_minpitch.value)
-			cl.viewangles[PITCH] = cl_minpitch.value;
+
+		cl.viewangles[PITCH] = CLAMP(cl_minpitch.value, cl.viewangles[PITCH], cl_maxpitch.value);
 	}
 	else
 	{
@@ -549,23 +337,6 @@ void IN_Move(usercmd_t *cmd)
 {
 	IN_JoyMove(cmd);
 	IN_MouseMove(cmd);
-}
-
-void IN_ClearStates (void)
-{
-}
-
-void IN_UpdateInputMode (void)
-{
-	bool want_textmode = Key_TextEntry();
-	if (textmode != want_textmode)
-	{
-		textmode = want_textmode;
-		if (textmode)
-			SDL_StartTextInput();
-		else
-			SDL_StopTextInput();
-	}
 }
 
 static inline int IN_SDL2_ScancodeToQuakeKey(SDL_Scancode scancode)
@@ -689,19 +460,6 @@ static inline int IN_SDL2_ScancodeToQuakeKey(SDL_Scancode scancode)
 	}
 }
 
-static void IN_DebugTextEvent(SDL_Event *event)
-{
-	Con_Printf("SDL_TEXTINPUT '%s'\n", event->text.text);
-}
-
-static void IN_DebugKeyEvent(SDL_Event *event)
-{
-	const char *eventtype = (event->key.state == SDL_PRESSED) ? "SDL_KEYDOWN" : "SDL_KEYUP";
-
-	Con_Printf("%s scancode: '%s' keycode: '%s'\n", eventtype, SDL_GetScancodeName(event->key.keysym.scancode), SDL_GetKeyName(event->key.keysym.sym));
-
-}
-
 void IN_SendKeyEvents(void)
 {
 	SDL_Event event;
@@ -712,7 +470,6 @@ void IN_SendKeyEvents(void)
 	{
 		switch (event.type)
 		{
-
 		case SDL_WINDOWEVENT:
 //			if (event.window.event == SDL_WINDOWEVENT_FOCUS_GAINED)
 //				S_UnblockSound();
@@ -721,31 +478,26 @@ void IN_SendKeyEvents(void)
 			break;
 
 		case SDL_TEXTINPUT:
-			if (in_debugkeys.value)
-				IN_DebugTextEvent(&event);
-
-			// SDL2: We use SDL_TEXTINPUT for typing in the console / chat.
-			// SDL2 uses the local keyboard layout and handles modifiers
-			// (shift for uppercase, etc.) for us.
-//			{
-//				unsigned char *ch;
-//				for (ch = (unsigned char *)event.text.text; *ch; ch++)
-//					if ((*ch & ~0x7F) == 0);
-//						Char_Event (*ch);
-//			}
+			for (unsigned char *ch = (unsigned char *)event.text.text; *ch; ch++)
+				if ((*ch & ~0x7F) == 0)
+					Char_Event(*ch);
 			break;
 
 		case SDL_KEYDOWN:
 		case SDL_KEYUP:
-			down = (event.key.state == SDL_PRESSED);
-
-			if (in_debugkeys.value)
-				IN_DebugKeyEvent(&event);
-
 			// SDL2: we interpret the keyboard as the US layout, so keybindings
 			// are based on key position, not the label on the key cap.
 			key = IN_SDL2_ScancodeToQuakeKey(event.key.keysym.scancode);
-			Key_Event(key, 0, down);
+			down = (event.key.state == SDL_PRESSED);
+
+			if (in_debugkeys.value) {
+				Con_Printf("%s scancode: '%s' keycode: '%s'\n",
+				           down ? "SDL_KEYDOWN" : "SDL_KEYUP",
+				           SDL_GetScancodeName(event.key.keysym.scancode),
+					   SDL_GetKeyName(event.key.keysym.sym));
+			}
+
+			Key_Event(key, down);
 			break;
 
 		case SDL_MOUSEBUTTONDOWN:
@@ -755,24 +507,29 @@ void IN_SendKeyEvents(void)
 				Con_Printf("Ignored event for mouse button %d\n", event.button.button);
 				break;
 			}
-			Key_Event(buttonremap[event.button.button - 1], 0, event.button.state == SDL_PRESSED);
+
+			key = buttonremap[event.button.button - 1];
+			down = (event.button.state == SDL_PRESSED);
+
+			Key_Event(key, down);
 			break;
 
 		case SDL_MOUSEWHEEL:
 			if (event.wheel.y > 0)
 			{
-				Key_Event(K_MWHEELUP, 0, true);
-				Key_Event(K_MWHEELUP, 0, false);
+				Key_Event(K_MWHEELUP, true);
+				Key_Event(K_MWHEELUP, false);
 			}
 			else if (event.wheel.y < 0)
 			{
-				Key_Event(K_MWHEELDOWN, 0, true);
-				Key_Event(K_MWHEELDOWN, 0, false);
+				Key_Event(K_MWHEELDOWN, true);
+				Key_Event(K_MWHEELDOWN, false);
 			}
 			break;
 
 		case SDL_MOUSEMOTION:
-			IN_MouseMotion(event.motion.xrel, event.motion.yrel);
+			total_dx += event.motion.xrel;
+			total_dy += event.motion.yrel;
 			break;
 
 		case SDL_CONTROLLERDEVICEADDED:
@@ -816,4 +573,181 @@ void IN_SendKeyEvents(void)
 			break;
 		}
 	}
+}
+
+void IN_UpdateInputMode (void)
+{
+	bool want_textmode = Key_TextEntry();
+
+	if (textmode != want_textmode)
+	{
+		textmode = want_textmode;
+		if (textmode)
+		{
+			SDL_StartTextInput();
+			if (in_debugkeys.value)
+				Con_Printf("SDL_StartTextInput time: %g\n", Sys_DoubleTime());
+		}
+		else
+		{
+			SDL_StopTextInput();
+			if (in_debugkeys.value)
+				Con_Printf("SDL_StopTextInput time: %g\n", Sys_DoubleTime());
+		}
+	}
+}
+
+static void IN_StartupJoystick(void)
+{
+	if (COM_CheckParm("-nojoy"))
+		return;
+
+	if (SDL_InitSubSystem(SDL_INIT_GAMECONTROLLER) == -1)
+	{
+		Con_Warning("could not initialize SDL Game Controller\n");
+		return;
+	}
+
+	// Load additional SDL2 controller definitions from gamecontrollerdb.txt
+	char controllerdb[MAX_OSPATH];
+	snprintf(controllerdb, sizeof(controllerdb), "%s/gamecontrollerdb.txt", com_basedir);
+	int nummappings = SDL_GameControllerAddMappingsFromFile(controllerdb);
+	if (nummappings > 0)
+		Con_Printf("%d mappings loaded from gamecontrollerdb.txt\n", nummappings);
+
+	// Also try host_parms->userdir
+//	if (host_parms.userdir != host_parms.basedir)
+//	{
+//		snprintf (controllerdb, sizeof(controllerdb), "%s/gamecontrollerdb.txt", host_parms->userdir);
+//		nummappings = SDL_GameControllerAddMappingsFromFile(controllerdb);
+//		if (nummappings > 0)
+//			Con_Printf("%d mappings loaded from gamecontrollerdb.txt\n", nummappings);
+//	}
+
+	for (int i = 0; i < SDL_NumJoysticks(); i++)
+	{
+		const char *joyname = SDL_JoystickNameForIndex(i);
+		if (SDL_IsGameController(i))
+		{
+			const char *controllername = SDL_GameControllerNameForIndex(i);
+			SDL_GameController *gamecontroller = SDL_GameControllerOpen(i);
+			if (gamecontroller)
+			{
+				Con_Printf("detected controller: %s\n", controllername != NULL ? controllername : "NULL");
+
+				joy_active_instaceid = SDL_JoystickInstanceID(SDL_GameControllerGetJoystick(gamecontroller));
+				joy_active_controller = gamecontroller;
+				break;
+			}
+			else
+			{
+				Con_Warning("failed to open controller: %s\n", controllername != NULL ? controllername : "NULL");
+			}
+		}
+		else
+		{
+			Con_Warning("joystick missing controller mappings: %s\n", joyname != NULL ? joyname : "NULL");
+		}
+	}
+}
+
+static void IN_ShutdownJoystick(void)
+{
+	SDL_QuitSubSystem(SDL_INIT_GAMECONTROLLER);
+}
+
+static int IN_FilterMouseEvents(const SDL_Event *event)
+{
+	switch (event->type)
+	{
+	case SDL_MOUSEMOTION:
+//	case SDL_MOUSEBUTTONDOWN:
+//	case SDL_MOUSEBUTTONUP:
+		return 0;
+	}
+
+	return 1;
+}
+
+static int IN_SDL2_FilterMouseEvents(void *userdata, SDL_Event *event)
+{
+	return IN_FilterMouseEvents(event);
+}
+
+static void IN_BeginIgnoringMouseEvents()
+{
+	SDL_EventFilter currentFilter = NULL;
+	void *currentUserdata = NULL;
+	SDL_GetEventFilter(&currentFilter, &currentUserdata);
+
+	if (currentFilter != IN_SDL2_FilterMouseEvents)
+		SDL_SetEventFilter(IN_SDL2_FilterMouseEvents, NULL);
+}
+
+static void IN_EndIgnoringMouseEvents()
+{
+	SDL_EventFilter currentFilter;
+	void *currentUserdata;
+	if (SDL_GetEventFilter(&currentFilter, &currentUserdata) == SDL_TRUE)
+		SDL_SetEventFilter(NULL, NULL);
+}
+
+void IN_Activate(void)
+{
+	if (no_mouse)
+		return;
+
+	total_dx = 0;
+	total_dy = 0;
+
+//	if (SDL_SetRelativeMouseMode(SDL_TRUE))
+//		Con_Printf("WARNING: SDL_SetRelativeMouseMode(SDL_TRUE) failed.\n");
+
+	IN_EndIgnoringMouseEvents();
+}
+
+void IN_Deactivate()
+{
+	if (no_mouse)
+		return;
+
+	if (SDL_SetRelativeMouseMode(SDL_FALSE))
+		Con_Printf("WARNING: SDL_SetRelativeMouseMode(SDL_FALSE) failed.\n");
+
+	/* discard all mouse events when input is deactivated */
+	IN_BeginIgnoringMouseEvents();
+}
+
+void IN_Init(void)
+{
+	if (COM_CheckParm("-nomouse"))
+	{
+		no_mouse = true;
+		IN_BeginIgnoringMouseEvents();
+	}
+
+	textmode = Key_TextEntry();
+	if (textmode)
+		SDL_StartTextInput();
+	else
+		SDL_StopTextInput();
+
+	Cvar_RegisterVariable(&joy_enable);
+	Cvar_RegisterVariable(&joy_sensitivity_yaw);
+	Cvar_RegisterVariable(&joy_sensitivity_pitch);
+	Cvar_RegisterVariable(&joy_deadzone);
+	Cvar_RegisterVariable(&joy_deadzone_trigger);
+	Cvar_RegisterVariable(&joy_invert);
+	Cvar_RegisterVariable(&joy_exponent);
+	Cvar_RegisterVariable(&joy_swapmovelook);
+	Cvar_RegisterVariable(&in_debugkeys);
+
+	IN_Activate();
+	IN_StartupJoystick();
+}
+
+void IN_Shutdown(void)
+{
+	IN_Deactivate();
+	IN_ShutdownJoystick();
 }

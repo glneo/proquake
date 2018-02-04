@@ -776,6 +776,8 @@ void _Host_Frame(double time)
 	}
 
 	// get new key events
+	Key_UpdateForDest ();
+	IN_UpdateInputMode ();
 	IN_SendKeyEvents();
 
 	// polled controllers to add commands

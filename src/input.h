@@ -20,25 +20,18 @@
 extern cvar_t freelook;
 extern cvar_t m_accel;
 
-#define mlook_active (freelook.value || (in_mlook.state & 1))
-
-void IN_Init(void);
-void IN_Shutdown(void);
-
-void IN_Commands(void); // oportunity for devices to stick commands on the script buffer
-
-void IN_Accumulate(void);
+void IN_Commands(void); // opportunity for devices to stick commands on the script buffer
 
 void IN_Move(usercmd_t *cmd); // add additional movement on top of the keyboard move cmd
 
-void IN_ClearStates(void); // restores all button and position states to defaults
+void IN_SendKeyEvents(void);
 
-void IN_Keyboard_Acquire(void);
-void IN_Keyboard_Unacquire(void);
+void IN_UpdateInputMode(void);
 
 void IN_Deactivate(void);
 void IN_Activate(void);
 
-void IN_SendKeyEvents(void);
+void IN_Init(void);
+void IN_Shutdown(void);
 
 #endif /* __INPUT_H */

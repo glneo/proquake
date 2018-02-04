@@ -1182,17 +1182,6 @@ void Host_Say(bool teamonly)
 			snprintf(text, sizeof(text), "%c(%s): ", 1, save->name);
 		else
 			snprintf(text, sizeof(text), "%c%s: ", 1, save->name);
-
-		// JPG 3.20 - optionally remove '\r'
-		if (pq_removecr.value)
-		{
-			char *ch;
-			for (ch = p; *ch; ch++)
-			{
-				if (*ch == '\r')
-					*ch += 128;
-			}
-		}
 	}
 	else
 	{
