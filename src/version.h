@@ -15,27 +15,19 @@
 #ifndef __VERSION_H
 #define __VERSION_H
 
-#define ENGINE_NAME "ProQuake"
-#define ENGINE_VERSION "4.93 Beta"
-#define ENGINE_HOMEPAGE_URL "http:////www.quakeone.com//proquake"
-#define PROQUAKE_SERIES_VERSION 4.93
-
-// Create our own define for Mac OS X
-#if defined(__APPLE__) && defined(__MACH__)
-	#define MACOSX
-#endif
+#define ENGINE_NAME "QuickQuake"
+#define ENGINE_VERSION "0.01 Beta"
+#define ENGINE_HOMEPAGE_URL "https://github.com/glneo/proquake"
+#define PROQUAKE_SERIES_VERSION 0.01
 
 // Define Operating System Names
 #ifdef _WIN32
 	#define OS_NAME "Windows"
-#elif defined(MACOSX)
+#elif defined(__APPLE__) && defined(__MACH__)
 	#define OS_NAME "Mac OSX"
 #else 
-	#define OS_NAME "Linux"
-	#define LINUX // Everything else gets to be Linux for now ;)
+	#define OS_NAME "Linux" // Everything else gets to be Linux for now ;)
 #endif
-
-#define SUPPORTS_TRANSFORM_INTERPOLATION // We are switching to r_interpolate_transform
 
 // Define Renderer Name
 #ifdef OPENGLES
@@ -45,10 +37,6 @@
 #endif
 
 // Define Capabilities
-#define SUPPORTS_HARDWARE_ANIM_INTERPOLATION // The hardware interpolation route
-#define SUPPORTS_GL_OVERBRIGHTS // Overbright method GLQuake is using, WinQuake always had them
-//#define SUPPORTS_VSYNC
-#define SUPPORTS_TRANSPARENT_SBAR
 //#define PARANOID // speed sapping error checking
 
 #endif /* __VERSION_H */

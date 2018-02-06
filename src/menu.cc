@@ -891,10 +891,10 @@ void M_AdjustSliders (int dir)
 		Cvar_SetValue ("sensitivity", f);
 		break;
 	case OPT_SBALPHA:	// statusbar alpha
-		f = cl_sbar.value - dir * 0.05;
+		f = scr_sbaralpha.value - dir * 0.05;
 		if (f < 0)	f = 0;
 		else if (f > 1)	f = 1;
-		Cvar_SetValueQuick(&cl_sbar, f);
+		Cvar_SetValueQuick(&scr_sbaralpha, f);
 		break;
 	case OPT_MUSICVOL:	// music volume
 		f = bgmvolume.value + dir * 0.1;
@@ -1023,7 +1023,7 @@ void M_Options_Draw (void)
 
 	// OPT_SBALPHA:
 	M_Print (16, 32 + 8*OPT_SBALPHA,	"       Statusbar alpha");
-	r = (1.0 - cl_sbar.value) ; // scr_sbaralpha range is 1.0 to 0.0
+	r = (1.0 - scr_sbaralpha.value) ; // scr_sbaralpha range is 1.0 to 0.0
 	M_DrawSlider (220, 32 + 8*OPT_SBALPHA, r);
 
 	// OPT_SNDVOL:

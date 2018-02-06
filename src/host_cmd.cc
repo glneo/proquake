@@ -918,7 +918,8 @@ void Host_Loadgame_f(void)
 	char mapname[MAX_QPATH];
 	float time, tfloat;
 	char str[32768], *start;
-	int i, r;
+	unsigned int i;
+	int r;
 	int version;
 	float spawn_parms[NUM_SPAWN_PARMS];
 

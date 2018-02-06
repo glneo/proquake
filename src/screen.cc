@@ -289,9 +289,6 @@ static void SCR_CalcRefdef(void)
 {
 	float size, scale; //johnfitz -- scale
 
-// force the status bar to redraw
-	Sbar_Changed();
-
 	scr_tileclear_updates = 0; //johnfitz
 
 // bound viewsize
@@ -652,9 +649,6 @@ void SCR_SetUpToDrawConsole(void)
 			scr_con_current = scr_conlines;
 	}
 
-	if (clearconsole++ < vid.numpages)
-		Sbar_Changed();
-
 	if (!con_forcedup && scr_con_current)
 		scr_tileclear_updates = 0; //johnfitz
 }
@@ -753,7 +747,6 @@ void SCR_BeginLoadingPlaque(void)
 	scr_con_current = 0;
 
 	scr_drawloading = true;
-	Sbar_Changed();
 	SCR_UpdateScreen();
 	scr_drawloading = false;
 
@@ -912,8 +905,6 @@ void SCR_FadeScreen(void)
 	Draw_SetCanvas(CANVAS_DEFAULT);
 
 	Draw_Fill(0, 0, vid.width, vid.height, 0, scr_fadealpha.value);
-
-	Sbar_Changed();
 }
 
 static void SCR_DrawSbar(void)

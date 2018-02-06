@@ -175,7 +175,7 @@ extern bool standard_quake, rogue, hipnotic;
 
 // strlcat and strlcpy, from OpenBSD
 // Most (all?) BSDs already have them
-#if defined(__OpenBSD__) || defined(__NetBSD__) || defined(__FreeBSD__) || defined(MACOSX)
+#if defined(__OpenBSD__) || defined(__NetBSD__) || defined(__FreeBSD__) || (defined(__APPLE__) && defined(__MACH__))
 # define HAVE_STRLCAT 1
 # define HAVE_STRLCPY 1
 #endif

@@ -915,10 +915,8 @@ void ED_LoadFromFile(char *data)
 
 void PR_LoadProgs(char *progsname)
 {
-	int i;
-
 	// flush the non-C variable lookup cache
-	for (i = 0; i < GEFV_CACHESIZE; i++)
+	for (int i = 0; i < GEFV_CACHESIZE; i++)
 		gefvCache[i].field[0] = 0;
 
 	if (!progsname || !*progsname)
@@ -931,11 +929,11 @@ void PR_LoadProgs(char *progsname)
 
 	Con_DPrintf("Programs occupy %iK.\n", com_filesize / 1024);
 
-	for (i = 0; i < com_filesize; i++)
+	for (int i = 0; i < com_filesize; i++)
 		CRC_ProcessByte(&pr_crc, ((byte *) progs)[i]);
 
 	// byte swap the header
-	for (i = 0; i < sizeof(*progs) / 4; i++)
+	for (unsigned int i = 0; i < sizeof(*progs) / 4; i++)
 		((int *) progs)[i] = LittleLong(((int *) progs)[i]);
 
 	if (progs->version != PROG_VERSION)
@@ -968,7 +966,7 @@ void PR_LoadProgs(char *progsname)
 	pr_edict_size = progs->entityfields * 4 + sizeof(edict_t) - sizeof(entvars_t);
 
 	// byte swap the lumps
-	for (i = 0; i < progs->numstatements; i++)
+	for (int i = 0; i < progs->numstatements; i++)
 	{
 		pr_statements[i].op = LittleShort(pr_statements[i].op);
 		pr_statements[i].a = LittleShort(pr_statements[i].a);
@@ -976,7 +974,7 @@ void PR_LoadProgs(char *progsname)
 		pr_statements[i].c = LittleShort(pr_statements[i].c);
 	}
 
-	for (i = 0; i < progs->numfunctions; i++)
+	for (int i = 0; i < progs->numfunctions; i++)
 	{
 		pr_functions[i].first_statement = LittleLong(pr_functions[i].first_statement);
 		pr_functions[i].parm_start = LittleLong(pr_functions[i].parm_start);
@@ -986,14 +984,14 @@ void PR_LoadProgs(char *progsname)
 		pr_functions[i].locals = LittleLong(pr_functions[i].locals);
 	}
 
-	for (i = 0; i < progs->numglobaldefs; i++)
+	for (int i = 0; i < progs->numglobaldefs; i++)
 	{
 		pr_globaldefs[i].type = LittleShort(pr_globaldefs[i].type);
 		pr_globaldefs[i].ofs = LittleShort(pr_globaldefs[i].ofs);
 		pr_globaldefs[i].s_name = LittleLong(pr_globaldefs[i].s_name);
 	}
 
-	for (i = 0; i < progs->numfielddefs; i++)
+	for (int i = 0; i < progs->numfielddefs; i++)
 	{
 		pr_fielddefs[i].type = LittleShort(pr_fielddefs[i].type);
 		if (pr_fielddefs[i].type & DEF_SAVEGLOBAL)
@@ -1002,7 +1000,7 @@ void PR_LoadProgs(char *progsname)
 		pr_fielddefs[i].s_name = LittleLong(pr_fielddefs[i].s_name);
 	}
 
-	for (i = 0; i < progs->numglobals; i++)
+	for (int i = 0; i < progs->numglobals; i++)
 		((int *) pr_globals)[i] = LittleLong(((int *) pr_globals)[i]);
 
 	FindEdictFieldOffsets();

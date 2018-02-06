@@ -277,7 +277,6 @@ static void CL_ParseServerInfo(void)
 
 }
 
-#ifdef SUPPORTS_TRANSFORM_INTERPOLATION
 extern cvar_t r_interpolate_transform;
 void CL_EntityInterpolateOrigins(entity_t *ent)
 {
@@ -408,7 +407,6 @@ void CL_ClearInterpolation(entity_t *ent)
 	ent->lastangles[0] = ent->lastangles[1] = ent->lastangles[2] = 0;
 	ent->currangles[0] = ent->currangles[1] = ent->currangles[2] = 0;
 }
-#endif
 
 /*
  ==================
@@ -472,7 +470,6 @@ static void CL_ParseUpdate(int bits)
 		else
 			forcelink = true;	// hack to make null model players work
 
-#ifdef SUPPORTS_TRANSFORM_INTERPOLATION
 		// if the model has changed we must also reset the interpolation data
 		// lastpose and currpose are critical as they might be pointing to invalid frames in the new model!!!
 		CL_ClearInterpolation(ent);
@@ -482,7 +479,7 @@ static void CL_ParseUpdate(int bits)
 			ent->frame = 0;
 		if (!(bits & U_SKIN))
 			ent->skinnum = 0;
-#endif
+
 		if (num > 0 && num <= cl.maxclients)
 			R_TranslatePlayerSkin(num - 1);
 	}
@@ -590,7 +587,6 @@ static void CL_ParseClientdata(int bits)
 	i = MSG_ReadLong();
 	if (cl.items != i)
 	{	// set flash times
-		Sbar_Changed();
 		for (j = 0; j < 32; j++)
 			if ((i & (1 << j)) && !(cl.items & (1 << j)))
 				cl.item_gettime[j] = cl.time;
@@ -606,14 +602,12 @@ static void CL_ParseClientdata(int bits)
 	if (cl.stats[STAT_ARMOR] != i)
 	{
 		cl.stats[STAT_ARMOR] = i;
-		Sbar_Changed();
 	}
 
 	i = (bits & SU_WEAPON) ? MSG_ReadByte() : 0;
 	if (cl.stats[STAT_WEAPON] != i)
 	{
 		cl.stats[STAT_WEAPON] = i;
-		Sbar_Changed();
 	}
 
 	i = MSG_ReadShort();
@@ -622,14 +616,12 @@ static void CL_ParseClientdata(int bits)
 		if (i <= 0)
 			memcpy(cl.death_location, cl_entities[cl.viewentity].origin, sizeof(vec3_t));
 		cl.stats[STAT_HEALTH] = i;
-		Sbar_Changed();
 	}
 
 	i = MSG_ReadByte();
 	if (cl.stats[STAT_AMMO] != i)
 	{
 		cl.stats[STAT_AMMO] = i;
-		Sbar_Changed();
 	}
 
 	for (i = 0; i < 4; i++)
@@ -638,7 +630,6 @@ static void CL_ParseClientdata(int bits)
 		if (cl.stats[STAT_SHELLS + i] != j)
 		{
 			cl.stats[STAT_SHELLS + i] = j;
-			Sbar_Changed();
 		}
 	}
 
@@ -649,7 +640,6 @@ static void CL_ParseClientdata(int bits)
 		if (cl.stats[STAT_ACTIVEWEAPON] != i)
 		{
 			cl.stats[STAT_ACTIVEWEAPON] = i;
-			Sbar_Changed();
 		}
 	}
 	else
@@ -657,7 +647,6 @@ static void CL_ParseClientdata(int bits)
 		if (cl.stats[STAT_ACTIVEWEAPON] != (1 << i))
 		{
 			cl.stats[STAT_ACTIVEWEAPON] = (1 << i);
-			Sbar_Changed();
 		}
 	}
 }
@@ -749,7 +738,6 @@ void CL_ParseProQuakeMessage(void)
 	switch (cmd)
 	{
 	case pqc_new_team:
-		Sbar_Changed();
 		team = MSG_ReadByte() - 16;
 		if (team < 0 || team > 13)
 			Host_Error("CL_ParseProQuakeMessage: pqc_new_team invalid team");
@@ -761,7 +749,6 @@ void CL_ParseProQuakeMessage(void)
 		break;
 
 	case pqc_erase_team:
-		Sbar_Changed();
 		team = MSG_ReadByte() - 16;
 		if (team < 0 || team > 13)
 			Host_Error("CL_ParseProQuakeMessage: pqc_erase_team invalid team");
@@ -771,7 +758,6 @@ void CL_ParseProQuakeMessage(void)
 		break;
 
 	case pqc_team_frags:
-		Sbar_Changed();
 		team = MSG_ReadByte() - 16;
 		if (team < 0 || team > 13)
 			Host_Error("CL_ParseProQuakeMessage: pqc_team_frags invalid team");
@@ -783,7 +769,6 @@ void CL_ParseProQuakeMessage(void)
 		break;
 
 	case pqc_match_time:
-		Sbar_Changed();
 		cl.minutes = MSG_ReadBytePQ();
 		cl.seconds = MSG_ReadBytePQ();
 		cl.last_match_time = cl.time;
@@ -791,7 +776,6 @@ void CL_ParseProQuakeMessage(void)
 		break;
 
 	case pqc_match_reset:
-		Sbar_Changed();
 		for (i = 0; i < 14; i++)
 		{
 			cl.teamscores[i].colors = 0;
@@ -862,7 +846,7 @@ void CL_ParseProQuakeString(char *string)
 
 	// JPG 3.02 - made this more robust.. try to eliminate screwups due to "unconnected" and '\n'
 	s = string;
-	if (!strcmp(string, "Client ping times:\n") && pq_scoreboard_pings.value)
+	if (!strcmp(string, "Client ping times:\n")) /* && pq_scoreboard_pings.value) */
 	{
 		cl.last_ping_time = cl.time;
 		checkping = 0;
@@ -1092,7 +1076,6 @@ void CL_ParseServerMessage(void)
 			break;
 
 		case svc_updatename:
-			Sbar_Changed();
 			i = MSG_ReadByte();
 			if (i >= cl.maxclients)
 				Host_Error("CL_ParseServerMessage: svc_updatename > MAX_SCOREBOARD");
@@ -1100,7 +1083,6 @@ void CL_ParseServerMessage(void)
 			break;
 
 		case svc_updatefrags:
-			Sbar_Changed();
 			i = MSG_ReadByte();
 			if (i >= cl.maxclients)
 				Host_Error("CL_ParseServerMessage: svc_updatefrags > MAX_SCOREBOARD");
@@ -1108,7 +1090,6 @@ void CL_ParseServerMessage(void)
 			break;
 
 		case svc_updatecolors:
-			Sbar_Changed();
 			i = MSG_ReadByte();
 			if (i >= cl.maxclients)
 				Host_Error("CL_ParseServerMessage: svc_updatecolors > MAX_SCOREBOARD");

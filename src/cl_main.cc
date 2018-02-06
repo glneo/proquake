@@ -430,8 +430,8 @@ void CL_RelinkEntities(void)
 	frac = CL_LerpPoint();
 
 // JPG - check to see if we need to update the status bar
-	if (pq_timer.value && ((int)cl.time != (int)cl.oldtime))
-		Sbar_Changed();
+//	if (pq_timer.value && ((int)cl.time != (int)cl.oldtime))
+//		Sbar_Changed();
 
 	cl_numvisedicts = 0;
 
@@ -478,9 +478,8 @@ void CL_RelinkEntities(void)
 // if the object wasn't included in the last packet, remove it
 		if (ent->msgtime != cl.mtime[0])
 		{
-#ifdef SUPPORTS_TRANSFORM_INTERPOLATION
 			CL_ClearInterpolation(ent);
-#endif
+
 			ent->model = NULL;
 			continue;
 		}
@@ -505,10 +504,8 @@ void CL_RelinkEntities(void)
 				}
 			}
 
-#ifdef SUPPORTS_TRANSFORM_INTERPOLATION
 			if (f >= 1)
 				CL_ClearInterpolation(ent);
-#endif
 
 			// interpolate the origin and angles
 			for (j = 0; j < 3; j++)
@@ -525,10 +522,8 @@ void CL_RelinkEntities(void)
 
 		}
 
-#ifdef SUPPORTS_TRANSFORM_INTERPOLATION
 		CL_EntityInterpolateOrigins(ent);
 		CL_EntityInterpolateAngles(ent);
-#endif
 
 // rotate binary objects locally
 		if (ent->model->flags & EF_ROTATE)

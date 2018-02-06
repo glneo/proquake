@@ -754,7 +754,7 @@ void Mod_LoadBrushModel(model_t *mod, void *buffer)
 	brushmodel->isworldmodel = !strcmp(mod_name, va("maps/%s.bsp", host_worldname));
 
 	// swap all the lumps
-	for (int i = 0; i < sizeof(dheader_t) / 4; i++)
+	for (size_t i = 0; i < sizeof(dheader_t) / 4; i++)
 		((int *) header)[i] = LittleLong(((int *) header)[i]);
 
 	// load into heap

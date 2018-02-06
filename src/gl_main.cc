@@ -379,7 +379,7 @@ static void Q_gluPerspective(GLfloat fovy, GLfloat aspect, GLfloat zNear, GLfloa
 static void R_SetupGL(void)
 {
 	float screenaspect;
-	int x, x2, y2, y, w, h, farclip;
+	unsigned int x, x2, y2, y, w, h, farclip;
 
 	// set up viewpoint
 	glMatrixMode(GL_PROJECTION);
