@@ -90,7 +90,6 @@ typedef struct searchpath_s
 
 extern bool com_modified;
 extern searchpath_t *com_searchpaths;
-pack_t *COM_LoadPackFile(char *packfile);
 
 // Kill all the search packs until the game path is found. Kill it, then return
 // the next path to it.
@@ -370,7 +369,6 @@ void Host_Status_f(void)
  */
 void Host_QC_Exec(void)
 {
-	dfunction_t *ED_FindFunction(char *name);
 	dfunction_t *f;
 
 	if (cmd_source == src_command)
@@ -596,7 +594,7 @@ void Host_Ping_f(void)
 	int i, j;
 	float total;
 	client_t *client;
-	char *n;	// JPG - for ping +N
+	const char *n;	// JPG - for ping +N
 
 	if (cmd_source == src_command)
 	{
@@ -917,7 +915,8 @@ void Host_Loadgame_f(void)
 	char name[MAX_OSPATH];
 	char mapname[MAX_QPATH];
 	float time, tfloat;
-	char str[32768], *start;
+	char str[32768];
+	const char *start;
 	unsigned int i;
 	int r;
 	int version;
@@ -991,8 +990,7 @@ void Host_Loadgame_f(void)
 	{
 		if (fscanf(f, "%s\n", str) < 1)
 			Con_Printf("ERROR: couldn't read from file.\n");
-		sv.lightstyles[i] = (char *) Hunk_Alloc(strlen(str) + 1);
-		strcpy(sv.lightstyles[i], str);
+		sv.lightstyles[i] = Q_strdup(str);
 	}
 
 // load the edicts out of the savegame file
@@ -1150,7 +1148,8 @@ void Host_Say(bool teamonly)
 
 	save = host_client;
 
-	p = Cmd_Args();
+	// FIXME: Use STL string
+	p = Q_strdup(Cmd_Args());
 // remove quotes if present
 	if (*p == '"')
 	{
@@ -1190,11 +1189,13 @@ void Host_Say(bool teamonly)
 	}
 
 	j = sizeof(text) - 2 - strlen(text);  // -2 for /n and null terminator
-	if (strlen(p) > j)
+	if ((int)strlen(p) > j)
 		p[j] = 0;
 
 	strlcat(text, p, sizeof(text));
 	strlcat(text, "\n", sizeof(text));
+
+	free(p);
 
 	for (j = 0, client = svs.clients; j < svs.maxclients; j++, client++)
 	{
@@ -1251,7 +1252,8 @@ void Host_Tell_f(void)
 	strlcpy(text, host_client->name, sizeof(text));
 	strlcat(text, ": ", sizeof(text));
 
-	p = Cmd_Args();
+	// FIXME: don't need this
+	p = Q_strdup(Cmd_Args());
 
 // remove quotes if present
 	if (*p == '"')
@@ -1262,11 +1264,13 @@ void Host_Tell_f(void)
 
 // check length & truncate if necessary
 	j = sizeof(text) - 2 - strlen(text);  // -2 for /n and null terminator
-	if (strlen(p) > j)
+	if (j < (int)strlen(p))
 		p[j] = 0;
 
 	strlcat(text, p, sizeof(text));
 	strlcat(text, "\n", sizeof(text));
+
+	free(p);
 
 	save = host_client;
 	for (j = 0, client = svs.clients; j < svs.maxclients; j++, client++)
@@ -1566,8 +1570,8 @@ void Host_Begin_f(void)
  */
 void Host_Kick_f(void)
 {
-	char *who;
-	char *message = NULL;
+	const char *who;
+	const char *message = NULL;
 	client_t *save;
 	int i;
 	bool byNumber = false;
@@ -1653,7 +1657,7 @@ void Host_Kick_f(void)
 
 void Host_Give_f(void)
 {
-	char *t;
+	const char *t;
 	int v;
 	eval_t *val;
 

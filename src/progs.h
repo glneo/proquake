@@ -67,10 +67,10 @@ extern int pr_edict_size;	// in bytes
 void PR_Init(void);
 
 void PR_ExecuteProgram(func_t fnum);
-void PR_LoadProgs(char *progsname);
+void PR_LoadProgs(const char *progsname);
 
-char *PR_GetString(int num);
-int PR_SetEngineString(char *s);
+const char *PR_GetString(int num);
+int PR_SetEngineString(const char *s);
 int PR_AllocString(int bufferlength, char **ptr);
 
 void PR_Profile_f(void);
@@ -83,12 +83,14 @@ int ED_NewString(char *string);
 
 void ED_Print(edict_t *ed);
 void ED_Write(FILE *f, edict_t *ed);
-char *ED_ParseEdict(char *data, edict_t *ent);
+const char *ED_ParseEdict(const char *data, edict_t *ent);
 
 void ED_WriteGlobals(FILE *f);
-void ED_ParseGlobals(char *data);
+void ED_ParseGlobals(const char *data);
 
-void ED_LoadFromFile(char *data);
+void ED_LoadFromFile(const char *data);
+
+dfunction_t *ED_FindFunction(const char *name);
 
 //define EDICT_NUM(n) ((edict_t *)(sv.edicts+ (n)*pr_edict_size))
 //define NUM_FOR_EDICT(e) (((byte *)(e) - sv.edicts)/pr_edict_size)
@@ -128,7 +130,7 @@ extern int pr_xstatement;
 
 extern unsigned short pr_crc;
 
-void PR_RunError(char *error, ...);
+void PR_RunError(const char *error, ...);
 void PF_changeyaw(void);
 
 void ED_PrintEdicts_f(void);

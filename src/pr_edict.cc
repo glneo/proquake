@@ -21,7 +21,7 @@ dfunction_t *pr_functions;
 
 char *pr_strings;
 static int pr_stringssize;
-static char **pr_knownstrings;
+static const char **pr_knownstrings;
 static int pr_maxknownstrings;
 static int pr_numknownstrings;
 ddef_t *pr_fielddefs;
@@ -70,9 +70,9 @@ int eval_ammo_cells1, eval_ammo_plasma;
 // nehahra specific
 int eval_alpha, eval_fullbright;
 
-ddef_t *ED_FindField(char *name);
+ddef_t *ED_FindField(const char *name);
 
-int FindFieldOffset(char *field)
+int FindFieldOffset(const char *field)
 {
 	ddef_t *d;
 
@@ -223,7 +223,7 @@ ddef_t *ED_FindGlobal(char *name)
 	return NULL;
 }
 
-ddef_t *ED_FindField(char *name)
+ddef_t *ED_FindField(const char *name)
 {
 	ddef_t *def;
 	int i;
@@ -238,7 +238,7 @@ ddef_t *ED_FindField(char *name)
 	return NULL;
 }
 
-dfunction_t *ED_FindFunction(char *name)
+dfunction_t *ED_FindFunction(const char *name)
 {
 	dfunction_t *func;
 	int i;
@@ -416,7 +416,7 @@ void ED_Print(edict_t *ed)
 {
 	int l, *v, i, j, type;
 	ddef_t *d;
-	char *name;
+	const char *name;
 
 	if (ed->free)
 	{
@@ -463,7 +463,7 @@ void ED_Write(FILE *f, edict_t *ed)
 {
 	ddef_t *d;
 	int *v, i, j, type;
-	char *name;
+	const char *name;
 
 	fprintf(f, "{\n");
 
@@ -586,7 +586,7 @@ void ED_WriteGlobals(FILE *f)
 {
 	ddef_t *def;
 	int i, type;
-	char *name;
+	const char *name;
 
 	fprintf(f, "{\n");
 	for (i = 0; i < progs->numglobaldefs; i++)
@@ -607,7 +607,7 @@ void ED_WriteGlobals(FILE *f)
 	fprintf(f, "}\n");
 }
 
-void ED_ParseGlobals(char *data)
+void ED_ParseGlobals(const char *data)
 {
 	char keyname[64];
 	ddef_t *key;
@@ -746,7 +746,7 @@ bool ED_ParseEpair(void *base, ddef_t *key, char *s)
  Used for initial level load and for savegames.
  ====================
  */
-char *ED_ParseEdict(char *data, edict_t *ent)
+const char *ED_ParseEdict(const char *data, edict_t *ent)
 {
 	ddef_t *key;
 	bool anglehack;
@@ -846,7 +846,7 @@ char *ED_ParseEdict(char *data, edict_t *ent)
  to call ED_CallSpawnFunctions () to let the objects initialize themselves.
  ================
  */
-void ED_LoadFromFile(char *data)
+void ED_LoadFromFile(const char *data)
 {
 	edict_t *ent = NULL;
 	int inhibit = 0;
@@ -913,7 +913,7 @@ void ED_LoadFromFile(char *data)
 	Con_DPrintf("%i entities inhibited\n", inhibit);
 }
 
-void PR_LoadProgs(char *progsname)
+void PR_LoadProgs(const char *progsname)
 {
 	// flush the non-C variable lookup cache
 	for (int i = 0; i < GEFV_CACHESIZE; i++)
@@ -1056,10 +1056,10 @@ static void PR_AllocStringSlots(void)
 	pr_maxknownstrings += PR_STRING_ALLOCSLOTS;
 	//Con_DPrintf2("PR_AllocStringSlots: realloc'ing for %d slots\n", pr_maxknownstrings);
 	//pr_knownstrings = (const char **) realloc ((void *)pr_knownstrings, pr_maxknownstrings * sizeof(char *));
-	pr_knownstrings = (char **)Q_malloc(pr_maxknownstrings * sizeof(char *));
+	pr_knownstrings = (const char **)Q_malloc(pr_maxknownstrings * sizeof(char *));
 }
 
-char *PR_GetString(int num)
+const char *PR_GetString(int num)
 {
 	if (num >= 0 && num < pr_stringssize)
 		return pr_strings + num;
@@ -1068,18 +1068,18 @@ char *PR_GetString(int num)
 		if (!pr_knownstrings[-1 - num])
 		{
 			Host_Error("PR_GetString: attempt to get a non-existant string %d\n", num);
-			return "";
+			return NULL;
 		}
 		return pr_knownstrings[-1 - num];
 	}
 	else
 	{
 		Host_Error("PR_GetString: invalid string offset %d\n", num);
-		return "";
+		return NULL;
 	}
 }
 
-int PR_SetEngineString(char *s)
+int PR_SetEngineString(const char *s)
 {
 	int i;
 

@@ -44,8 +44,8 @@ void SZ_Alloc(sizebuf_t *buf, int startsize);
 void SZ_Free(sizebuf_t *buf);
 void SZ_Clear(sizebuf_t *buf);
 void *SZ_GetSpace(sizebuf_t *buf, int length);
-void SZ_Write(sizebuf_t *buf, void *data, int length);
-void SZ_Print(sizebuf_t *buf, char *data);	// strcats onto the sizebuf
+void SZ_Write(sizebuf_t *buf, const void *data, int length);
+void SZ_Print(sizebuf_t *buf, const char *data);	// strcats onto the sizebuf
 
 //============================================================================
 
@@ -85,7 +85,7 @@ void MSG_WriteByte(sizebuf_t *sb, int c);
 void MSG_WriteShort(sizebuf_t *sb, int c);
 void MSG_WriteLong(sizebuf_t *sb, int c);
 void MSG_WriteFloat(sizebuf_t *sb, float f);
-void MSG_WriteString(sizebuf_t *sb, char *s);
+void MSG_WriteString(sizebuf_t *sb, const char *s);
 void MSG_WriteCoord(sizebuf_t *sb, float f);
 void MSG_WriteAngle(sizebuf_t *sb, float f);
 void MSG_WritePreciseAngle(sizebuf_t *sb, float f); // JPG - precise aim!!
@@ -112,20 +112,20 @@ float MSG_ReadPreciseAngle(void); // JPG - precise aim!!
 extern char com_token[1024];
 extern bool com_eof;
 
-char *COM_Parse(char *data);
+const char *COM_Parse(const char *data);
 
 extern int com_argc;
 extern char **com_argv;
 
-int COM_CheckParm(char *parm);
-void COM_Init(char *path);
+int COM_CheckParm(const char *parm);
+void COM_Init(const char *path);
 void COM_InitArgv(int argc, char **argv);
 
 char *COM_SkipPath(char *pathname);
 void COM_StripExtension(char *in, char *out);
 char *COM_FileExtension(char *in);
 void COM_FileBase (const char *in, char *out, size_t outsize);
-void COM_DefaultExtension(char *path, char *extension);
+void COM_DefaultExtension(char *path, const char *extension);
 
 // does a varargs printf into a temp buffer
 char *va(const char *format, ...);
@@ -146,21 +146,21 @@ typedef struct pack_s pack_t;
 
 extern char com_gamedir[MAX_OSPATH];
 
-void COM_ForceExtension(char *path, char *extension);	// by joe
+void COM_ForceExtension(char *path, const char *extension);	// by joe
 
-void COM_WriteFile(char *filename, void *data, int len);
+void COM_WriteFile(const char *filename, void *data, int len);
 
-void COM_CreatePath(char *path);
-pack_t *COM_LoadPackFile(char *packfile);
-int COM_OpenFile(char *filename, int *hndl);
-int COM_FOpenFile(char *filename, FILE **file);
+void COM_CreatePath(const char *path);
+pack_t *COM_LoadPackFile(const char *packfile);
+int COM_OpenFile(const char *filename, int *hndl);
+int COM_FOpenFile(const char *filename, FILE **file);
 void COM_CloseFile(int h);
 
-byte *COM_LoadStackFile(char *path, void *buffer, int bufsize);
-byte *COM_LoadTempFile(char *path);
-byte *COM_LoadHunkFile(char *path);
-void COM_LoadCacheFile(char *path, struct cache_user_s *cu);
-byte *COM_LoadMallocFile(char *path);
+byte *COM_LoadStackFile(const char *path, void *buffer, int bufsize);
+byte *COM_LoadTempFile(const char *path);
+byte *COM_LoadHunkFile(const char *path);
+void COM_LoadCacheFile(const char *path, struct cache_user_s *cu);
+byte *COM_LoadMallocFile(const char *path);
 
 // Misc
 int COM_Minutes(int seconds);

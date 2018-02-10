@@ -225,7 +225,7 @@ void VectorScale(vec3_t in, vec_t scale, vec3_t out)
 	out[2] = in[2] * scale;
 }
 
-int ParseFloats(char *s, float *f, int *f_size)
+int ParseFloats(const char *s, float *f, int *f_size)
 {
 	int i, argc;
 

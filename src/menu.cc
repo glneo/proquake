@@ -88,7 +88,7 @@ void M_Print(int cx, int cy, const char *str)
 	}
 }
 
-void M_PrintWhite(int cx, int cy, char *str)
+void M_PrintWhite(int cx, int cy, const char *str)
 {
 	while (*str)
 	{
@@ -1145,7 +1145,7 @@ void M_Options_Key (int key, int ascii)
 /* KEYS MENU */
 
 // Baker 3.60 - more sensible customize controls, same options just organized better
-char *bindnames[][2] = {
+const char *bindnames[][2] = {
 		{ "+attack", "attack" },
 		{ "+jump", "jump" },
 		{ "+forward", "move forward" },
@@ -1190,7 +1190,7 @@ char *bindnames[][2] = {
 
 #define	NUMCOMMANDS	(sizeof(bindnames)/sizeof(bindnames[0]))
 
-int keys_cursor;
+unsigned int keys_cursor;
 int bind_grab;
 
 void M_Menu_Keys_f(void)
@@ -1200,7 +1200,7 @@ void M_Menu_Keys_f(void)
 	m_entersound = true;
 }
 
-void M_FindKeysForCommand(char *command, int *twokeys)
+void M_FindKeysForCommand(const char *command, int *twokeys)
 {
 	int count;
 	int j;
@@ -1226,7 +1226,7 @@ void M_FindKeysForCommand(char *command, int *twokeys)
 	}
 }
 
-void M_UnbindCommand(char *command)
+void M_UnbindCommand(const char *command)
 {
 	int j;
 	int l;
@@ -1246,10 +1246,8 @@ void M_UnbindCommand(char *command)
 
 void M_Keys_Draw(void)
 {
-	int i;
-//	int l;
 	int keys[2];
-	char *name;
+	const char *name;
 	int x, y;
 	qpic_t *p;
 
@@ -1262,7 +1260,7 @@ void M_Keys_Draw(void)
 		M_Print(18, 32, "Enter to change, backspace to clear");
 
 // search for known bindings
-	for (i = 0; i < NUMCOMMANDS; i++)
+	for (size_t i = 0; i < ARRAY_SIZE(bindnames); i++)
 	{
 		y = 48 + 8 * i;
 
@@ -1605,7 +1603,7 @@ void M_Pref_AdjustSliders(int dir)
 void M_Pref_Options_Draw(void)
 {
 	int i = 32;
-	char *title;
+	const char *title;
 	qpic_t *p;
 
 	M_DrawTransPic(16, 4, Draw_CachePic("gfx/qplaque.lmp"));
@@ -1856,7 +1854,7 @@ int msgNumber;
 m_state_t m_quit_prevstate;
 bool wasInMenus;
 
-char *quitMessage[] = {
+const char *quitMessage[] = {
 	"  Are you gonna quit    ", "  this game just like   ", "   everything else?     ", "                        ",
 	" Milord, methinks that  ", "   thou art a lowly     ", " quitter. Is this true? ", "                        ",
 	" Do I need to bust your ", "  face open for trying  ", "        to quit?        ", "                        ",
@@ -1956,8 +1954,8 @@ void M_LanConfig_Draw(void)
 {
 	qpic_t *p;
 	int basex;
-	char *startJoin;
-	char *protocol;
+	const char *startJoin;
+	const char *protocol;
 
 	M_DrawTransPic(16, 4, Draw_CachePic("gfx/qplaque.lmp"));
 	p = Draw_CachePic("gfx/p_multi.lmp");
@@ -2124,8 +2122,8 @@ void M_LanConfig_Key(int key, int ascii)
 
 typedef struct
 {
-	char *name;
-	char *description;
+	const char *name;
+	const char *description;
 } level_t;
 
 level_t levels[] = {
@@ -2226,7 +2224,7 @@ level_t roguelevels[] ={
 
 typedef struct
 {
-	char *description;
+	const char *description;
 	int firstLevel;
 	int levels;
 } episode_t;
@@ -2306,7 +2304,7 @@ void M_GameOptions_Draw(void)
 	M_Print(0, 72, "        Teamplay");
 	if (rogue)
 	{
-		char *msg;
+		const char *msg;
 
 		switch ((int) teamplay.value)
 		{
@@ -2322,7 +2320,7 @@ void M_GameOptions_Draw(void)
 	}
 	else
 	{
-		char *msg;
+		const char *msg;
 
 		switch ((int) teamplay.value)
 		{

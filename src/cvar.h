@@ -73,8 +73,8 @@ typedef void (*cvarcallback_t) (struct cvar_s *);
 
 typedef struct cvar_s
 {
-	char *name;
-	char *string;
+	const char *name;
+	const char *string;
 	unsigned int flags;
 	float value;
 	char *default_string;
@@ -89,11 +89,11 @@ cvar_t *Cvar_FindVarAfter(const char *prev_name, unsigned int with_flags);
 float Cvar_VariableValue(const char *var_name);
 
 // returns an empty string if not defined
-char *Cvar_VariableString(const char *var_name);
+const char *Cvar_VariableString(const char *var_name);
 
 // attempts to match a partial variable name for command line completion
 // returns NULL if nothing fits
-char *Cvar_CompleteVariable(const char *partial);
+const char *Cvar_CompleteVariable(const char *partial);
 
 // equivelant to "<name> <variable>" typed at the console
 void Cvar_Set(const char *var_name, const char *value);

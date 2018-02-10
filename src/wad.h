@@ -56,8 +56,8 @@ typedef struct
 } lumpinfo_t;
 
 void SwapPic(qpic_t *pic);
-void W_LoadWadFile(char *filename);
+void W_LoadWadFile(const char *filename);
 void *W_GetLumpName(const char *name);
-void *W_GetLumpNum(int num);
+void *W_GetLumpNum(size_t num);
 
 #endif /* __WAD_H */

@@ -46,10 +46,10 @@ typedef struct
 	char name[64];			// map name
 	char modelname[64];		// maps/<name>.bsp, for model_precache[0]
 	struct model_s *worldmodel;
-	char *model_precache[MAX_MODELS];	// NULL terminated
+	const char *model_precache[MAX_MODELS];	// NULL terminated
 	struct model_s *models[MAX_MODELS];
-	char *sound_precache[MAX_SOUNDS];	// NULL terminated
-	char *lightstyles[MAX_LIGHTSTYLES];
+	const char *sound_precache[MAX_SOUNDS];	// NULL terminated
+	const char *lightstyles[MAX_LIGHTSTYLES];
 	int num_edicts;
 	int max_edicts;
 	edict_t *edicts;			// can NOT be array indexed, because
@@ -222,13 +222,13 @@ extern edict_t *sv_player;
 /* sv_main.c */
 void SV_Init(void);
 void SV_StartParticle(vec3_t org, vec3_t dir, int color, int count);
-void SV_StartSound(edict_t *entity, int channel, char *sample, int volume, float attenuation);
+void SV_StartSound(edict_t *entity, int channel, const char *sample, int volume, float attenuation);
 void SV_CheckForNewClients(void);
 void SV_ClearDatagram(void);
 //byte *SV_FatPVS(vec3_t org, model_t *worldmodel);
 void SV_WriteClientdataToMessage(edict_t *ent, sizebuf_t *msg);
 void SV_SendClientMessages(void);
-int SV_ModelIndex(char *name);
+int SV_ModelIndex(const char *name);
 void SV_SaveSpawnparms(void);
 void SV_SpawnServer(char *server);
 
@@ -247,6 +247,6 @@ void SV_RunClients(void);
 /* host.c */
 void SV_DropClient(bool crash);
 void SV_ClientPrintf(const char *fmt, ...);
-void SV_BroadcastPrintf(char *fmt, ...);
+void SV_BroadcastPrintf(const char *fmt, ...);
 
 #endif /* __SERVER_H */

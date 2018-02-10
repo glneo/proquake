@@ -282,12 +282,12 @@ void MSG_WriteFloat(sizebuf_t *sb, float f)
 	SZ_Write(sb, &dat.l, 4);
 }
 
-void MSG_WriteString(sizebuf_t *sb, char *s)
+void MSG_WriteString(sizebuf_t *sb, const char *s)
 {
 	if (!s)
 		SZ_Write(sb, (void *)"", 1);
 	else
-		SZ_Write(sb, s, strlen(s) + 1);
+		SZ_Write(sb, (void *)s, strlen(s) + 1);
 }
 
 void MSG_WriteCoord(sizebuf_t *sb, float f)
@@ -505,12 +505,12 @@ void *SZ_GetSpace(sizebuf_t *buf, int length)
 	return data;
 }
 
-void SZ_Write(sizebuf_t *buf, void *data, int length)
+void SZ_Write(sizebuf_t *buf, const void *data, int length)
 {
 	memcpy(SZ_GetSpace(buf, length), data, length);
 }
 
-void SZ_Print(sizebuf_t *buf, char *data)
+void SZ_Print(sizebuf_t *buf, const char *data)
 {
 	int len;
 
@@ -631,7 +631,7 @@ void COM_FileBase (const char *in, char *out, size_t outsize)
  Extension should include the .
  ==================
  */
-void COM_ForceExtension(char *path, char *extension)
+void COM_ForceExtension(char *path, const char *extension)
 {
 	char *src;
 
@@ -655,7 +655,7 @@ void COM_ForceExtension(char *path, char *extension)
  COM_DefaultExtension
  ==================
  */
-void COM_DefaultExtension(char *path, char *extension)
+void COM_DefaultExtension(char *path, const char *extension)
 {
 	char *src;
 //
@@ -675,7 +675,7 @@ void COM_DefaultExtension(char *path, char *extension)
 }
 
 /* Parse a token out of a string */
-char *COM_Parse(char *data)
+const char *COM_Parse(const char *data)
 {
 	int c;
 	int len = 0;
@@ -751,7 +751,7 @@ skipwhite:
  where the given parameter apears, or 0 if not present
  ================
  */
-int COM_CheckParm(char *parm)
+int COM_CheckParm(const char *parm)
 {
 	unsigned int pos = find(largv.begin(), largv.end(), string(parm))  - largv.begin();
 	if (pos == largv.size())
@@ -862,7 +862,7 @@ void COM_InitFilesystem();
  COM_Init
  ================
  */
-void COM_Init(char *basedir)
+void COM_Init(const char *basedir)
 {
 	byte swaptest[2] = { 1, 0 };
 
@@ -890,7 +890,7 @@ void COM_Init(char *basedir)
 
 	Cvar_RegisterVariable(&registered);
 	Cvar_RegisterVariable(&cmdline);  // Baker 3.99c: needed for test2 command
-	Cmd_AddCommand((char *)"path", COM_Path_f);
+	Cmd_AddCommand("path", COM_Path_f);
 
 	COM_InitFilesystem();
 	COM_CheckRegistered();
@@ -982,7 +982,7 @@ void COM_Path_f(void)
  The filename will be prefixed by the current game directory
  ============
  */
-void COM_WriteFile(char *filename, void *data, int len)
+void COM_WriteFile(const char *filename, void *data, int len)
 {
 	int handle;
 	char name[MAX_OSPATH];
@@ -1008,11 +1008,10 @@ void COM_WriteFile(char *filename, void *data, int len)
  COM_CreatePath
  ============
  */
-void COM_CreatePath(char *path)
+void COM_CreatePath(const char *path)
 {
 	char *ofs;
-
-	for (ofs = path + 1; *ofs; ofs++)
+	for(ofs = Q_strdup(path) + 1; *ofs; ofs++)
 	{
 		if (*ofs == '/')
 		{       // create the directory
@@ -1021,6 +1020,7 @@ void COM_CreatePath(char *path)
 			*ofs = '/';
 		}
 	}
+	free(ofs);
 }
 
 /*
@@ -1076,7 +1076,7 @@ long COM_filelength (FILE *f)
  Sets com_filesize and one of handle or file
  ===========
  */
-int COM_FindFile(char *filename, int *handle, FILE **file)
+int COM_FindFile(const char *filename, int *handle, FILE **file)
 {
 	searchpath_t *search;
 	char netpath[MAX_OSPATH];
@@ -1171,7 +1171,7 @@ int COM_FindFile(char *filename, int *handle, FILE **file)
  it may actually be inside a pak file
  ===========
  */
-int COM_OpenFile(char *filename, int *handle)
+int COM_OpenFile(const char *filename, int *handle)
 {
 	return COM_FindFile(filename, handle, NULL);
 }
@@ -1184,7 +1184,7 @@ int COM_OpenFile(char *filename, int *handle)
  into the file.
  ===========
  */
-int COM_FOpenFile(char *filename, FILE **file)
+int COM_FOpenFile(const char *filename, FILE **file)
 {
 	return COM_FindFile(filename, NULL, file);
 }
@@ -1218,7 +1218,7 @@ void COM_CloseFile(int h)
 cache_user_t *loadcache;
 byte *loadbuf;
 int loadsize;
-byte *COM_LoadFile(char *path, int usehunk)
+byte *COM_LoadFile(const char *path, int usehunk)
 {
 	int h;
 	byte *buf;
@@ -1266,24 +1266,24 @@ byte *COM_LoadFile(char *path, int usehunk)
 	return buf;
 }
 
-byte *COM_LoadHunkFile(char *path)
+byte *COM_LoadHunkFile(const char *path)
 {
 	return COM_LoadFile(path, 1);
 }
 
-byte *COM_LoadTempFile(char *path)
+byte *COM_LoadTempFile(const char *path)
 {
 	return COM_LoadFile(path, 2);
 }
 
-void COM_LoadCacheFile(char *path, struct cache_user_s *cu)
+void COM_LoadCacheFile(const char *path, struct cache_user_s *cu)
 {
 	loadcache = cu;
 	COM_LoadFile(path, 3);
 }
 
 // uses temp hunk if larger than bufsize
-byte *COM_LoadStackFile(char *path, void *buffer, int bufsize)
+byte *COM_LoadStackFile(const char *path, void *buffer, int bufsize)
 {
 	byte *buf;
 
@@ -1295,7 +1295,7 @@ byte *COM_LoadStackFile(char *path, void *buffer, int bufsize)
 }
 
 // returns malloc'd memory
-byte *COM_LoadMallocFile(char *path)
+byte *COM_LoadMallocFile(const char *path)
 {
 	return COM_LoadFile(path, 5);
 }
@@ -1311,7 +1311,7 @@ byte *COM_LoadMallocFile(char *path)
  of the list so they override previous pack files.
  =================
  */
-pack_t *COM_LoadPackFile(char *packfile)
+pack_t *COM_LoadPackFile(const char *packfile)
 {
 	dpackheader_t header;
 	int i;

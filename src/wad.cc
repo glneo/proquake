@@ -14,7 +14,7 @@
 
 #include "quakedef.h"
 
-int wad_numlumps;
+size_t wad_numlumps;
 lumpinfo_t *wad_lumps;
 byte *wad_base;
 
@@ -33,11 +33,11 @@ void SwapPic(qpic_t *pic)
  */
 static void W_CleanupName(const char *in, char *out)
 {
-	int i, c;
+	int i;
 
 	for (i = 0; i < 16; i++)
 	{
-		c = in[i];
+		int c = in[i];
 		if (!c)
 			break;
 
@@ -50,50 +50,42 @@ static void W_CleanupName(const char *in, char *out)
 		out[i] = 0;
 }
 
-void W_LoadWadFile(char *filename)
+void W_LoadWadFile(const char *filename)
 {
-	lumpinfo_t *lump_p;
-	wadinfo_t *header;
-	unsigned i;
-	int infotableofs;
-
 	if (!(wad_base = COM_LoadHunkFile(filename)))
 		Sys_Error("couldn't load %s\n\n"
 				"Game data files are required to run;"
 				"usually this means you need Quake shareware or registered version.\n\n"
 				"Are game files in the proper place?", filename);
 
-	header = (wadinfo_t *) wad_base;
+	wadinfo_t *header = (wadinfo_t *) wad_base;
 
 	if (memcmp(header->identification, "WAD2", 4))
 		Sys_Error("Wad file %s doesn't have WAD2 id\n", filename);
 
 	wad_numlumps = LittleLong(header->numlumps);
-	infotableofs = LittleLong(header->infotableofs);
+	int infotableofs = LittleLong(header->infotableofs);
 	wad_lumps = (lumpinfo_t *) (wad_base + infotableofs);
 
-	for (i = 0, lump_p = wad_lumps; i < wad_numlumps; i++, lump_p++)
+	for (size_t i = 0; i < wad_numlumps; i++)
 	{
-		lump_p->filepos = LittleLong(lump_p->filepos);
-		lump_p->size = LittleLong(lump_p->size);
-		W_CleanupName(lump_p->name, lump_p->name);
-		if (lump_p->type == TYP_QPIC)
-			SwapPic((qpic_t *) (wad_base + lump_p->filepos));
+		wad_lumps[i].filepos = LittleLong(wad_lumps[i].filepos);
+		wad_lumps[i].size = LittleLong(wad_lumps[i].size);
+		W_CleanupName(wad_lumps[i].name, wad_lumps[i].name);
+		if (wad_lumps[i].type == TYP_QPIC)
+			SwapPic((qpic_t *) (wad_base + wad_lumps[i].filepos));
 	}
 }
 
 static lumpinfo_t *W_GetLumpinfo(const char *name)
 {
-	int i;
-	lumpinfo_t *lump_p;
 	char clean[16];
-
 	W_CleanupName(name, clean);
 
-	for (lump_p = wad_lumps, i = 0; i < wad_numlumps; i++, lump_p++)
+	for (size_t i = 0; i < wad_numlumps; i++)
 	{
-		if (!strcmp(clean, lump_p->name))
-			return lump_p;
+		if (!strcmp(clean, wad_lumps[i].name))
+			return &wad_lumps[i];
 	}
 
 	Sys_Error("%s not found", name);
@@ -109,12 +101,12 @@ void *W_GetLumpName(const char *name)
 	return (void *) (wad_base + lump->filepos);
 }
 
-void *W_GetLumpNum(int num)
+void *W_GetLumpNum(size_t num)
 {
 	lumpinfo_t *lump;
 
-	if (num < 0 || num > wad_numlumps)
-		Sys_Error("bad number: %i", num);
+	if (num > wad_numlumps)
+		Sys_Error("bad number: %lu", num);
 
 	lump = wad_lumps + num;
 

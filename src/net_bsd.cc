@@ -52,7 +52,7 @@ net_driver_t net_drivers[] =
 		Datagram_Shutdown
 	}
 };
-int net_numdrivers = (sizeof(net_drivers) / sizeof(net_drivers[0]));
+int net_numdrivers = ARRAY_SIZE(net_drivers);
 
 #include "net_udp.h"
 
@@ -82,4 +82,4 @@ net_landriver_t	net_landrivers[] =
 		UDP_SetSocketPort
 	}
 };
-int net_numlandrivers = (sizeof(net_landrivers) / sizeof(net_landrivers[0]));
+int net_numlandrivers = ARRAY_SIZE(net_landrivers);

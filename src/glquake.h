@@ -86,7 +86,6 @@ typedef enum {
 	CANVAS_CROSSHAIR,
 	CANVAS_BOTTOMLEFT,
 	CANVAS_BOTTOMRIGHT,
-	CANVAS_TOPRIGHT,
 	CANVAS_INVALID = -1
 } canvastype;
 
@@ -95,7 +94,7 @@ void R_DrawAliasModel(entity_t *ent);
 
 // gl_draw.c
 qpic_t *Draw_PicFromWad(const char *name);
-qpic_t *Draw_CachePic(char *path);
+qpic_t *Draw_CachePic(const char *path);
 void Draw_Character(int x, int y, int num);
 void Draw_String(int x, int y, const char *str);
 void Draw_Pic(int x, int y, qpic_t *pic, float alpha);

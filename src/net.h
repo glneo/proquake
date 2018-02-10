@@ -166,7 +166,7 @@ extern int net_numsockets;
 
 typedef struct
 {
-	char *name;
+	const char *name;
 	bool initialized;
 	int controlSock;
 	int (*Init)(void);
@@ -195,7 +195,7 @@ extern net_landriver_t net_landrivers[];
 
 typedef struct
 {
-	char *name;
+	const char *name;
 	bool initialized;
 	int (*Init)(void);
 	void (*Listen)(bool state);
@@ -265,7 +265,7 @@ void NET_Shutdown(void);
 struct qsocket_s *NET_CheckNewConnections(void);
 // returns a new connection number if there is one pending, else -1
 
-struct qsocket_s *NET_Connect(char *host);
+struct qsocket_s *NET_Connect(const char *host);
 // called by client to connect to a host.  Returns -1 if not able to
 
 bool NET_CanSendMessage(qsocket_t *sock);

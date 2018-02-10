@@ -33,11 +33,6 @@ typedef struct
 byte conback_buffer[sizeof(qpic_t) + sizeof(glpic_t)];
 qpic_t *conback = (qpic_t *) &conback_buffer;
 
-static gltexture_t *GL_LoadPicTexture(qpic_t *pic)
-{
-	return TexMgr_LoadImage("", pic->width, pic->height, SRC_INDEXED, pic->data, TEX_ALPHA);
-}
-
 canvastype currentcanvas = CANVAS_NONE; //johnfitz -- for GL_SetCanvas
 
 /*
@@ -142,8 +137,6 @@ qpic_t *Draw_PicFromWad(const char *name)
 //	src_offset_t offset;
 
 	p = (qpic_t *) W_GetLumpName(name);
-//	if (!p)
-//		return pic_nul;
 
 	// load little ones into the scrap
 	if (p->width < 64 && p->height < 64)
@@ -183,7 +176,7 @@ qpic_t *Draw_PicFromWad(const char *name)
 	return p;
 }
 
-qpic_t *Draw_CachePic(char *path)
+qpic_t *Draw_CachePic(const char *path)
 {
 	cachepic_t *pic;
 	int i;
@@ -217,7 +210,7 @@ qpic_t *Draw_CachePic(char *path)
 	pic->pic.height = dat->height;
 
 	gl = (glpic_t *) pic->pic.data;
-	gl->gltexture = GL_LoadPicTexture(dat);
+	gl->gltexture = TexMgr_LoadImage("", dat->width, dat->height, SRC_INDEXED, dat->data, TEX_ALPHA);
 	gl->sl = 0;
 	gl->sh = 1;
 	gl->tl = 0;
@@ -538,11 +531,6 @@ void Draw_SetCanvas(canvastype newcanvas)
 		s = (float) vid.width / vid.conwidth; //use console scale
 		Q_glOrthof(0, 320, 200, 0, -99999, 99999);
 		glViewport(vid.x + vid.width - 320 * s, vid.y, 320 * s, 200 * s);
-		break;
-	case CANVAS_TOPRIGHT: //used by disc
-		s = 1;
-		Q_glOrthof(0, 320, 200, 0, -99999, 99999);
-		glViewport(vid.x + vid.width - 320 * s, vid.y + vid.height - 200 * s, 320 * s, 200 * s);
 		break;
 	default:
 		Sys_Error("bad canvas type");

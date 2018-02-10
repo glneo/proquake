@@ -63,9 +63,9 @@ float Cvar_VariableValue(const char *var_name)
 	return var->value;
 }
 
-char *Cvar_VariableString(const char *var_name)
+const char *Cvar_VariableString(const char *var_name)
 {
-	static char *cvar_null_string = "";
+	static const char *cvar_null_string = "";
 
 	cvar_t *var = Cvar_FindVar(var_name);
 	if (!var)
@@ -74,7 +74,7 @@ char *Cvar_VariableString(const char *var_name)
 	return var->string;
 }
 
-char *Cvar_CompleteVariable(const char *partial)
+const char *Cvar_CompleteVariable(const char *partial)
 {
 	cvar_t *cvar;
 
@@ -102,7 +102,7 @@ void Cvar_SetQuick(cvar_t *var, const char *value)
 	if (!strcmp(var->string, value))
 		return;
 
-	free(var->string); // free the old value string
+	free((void*)var->string); // free the old value string
 	var->string = Q_strdup(value);
 	var->value = atof(var->string);
 
@@ -263,7 +263,7 @@ static void Cvar_Reset(const char *name)
 static void Cvar_List_f(void)
 {
 	cvar_t *cvar;
-	char *partial = NULL;
+	const char *partial = NULL;
 	int len = 0, count = 0;
 
 	if (Cmd_Argc() > 1)

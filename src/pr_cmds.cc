@@ -231,7 +231,7 @@ void PF_setsize(void)
 void PF_setmodel(void)
 {
 	edict_t *e;
-	char *m, **check;
+	const char *m, **check;
 	model_t *mod;
 	int i;
 
@@ -495,7 +495,7 @@ void PF_particle(void)
  */
 void PF_ambientsound(void)
 {
-	char **check, *samp;
+	const char **check, *samp;
 	float *pos, vol, attenuation;
 	int i, soundnum;
 
@@ -545,7 +545,7 @@ void PF_ambientsound(void)
  */
 void PF_sound(void)
 {
-	char *sample;
+	const char *sample;
 	int channel, volume;
 	edict_t *entity;
 	float attenuation;
@@ -758,7 +758,7 @@ void PF_checkclient(void)
 void PF_stuffcmd(void)
 {
 	int entnum;
-	char *str;
+	const char *str;
 	client_t *old;
 
 	entnum = G_EDICTNUM(OFS_PARM0);
@@ -783,7 +783,7 @@ void PF_stuffcmd(void)
  */
 void PF_localcmd(void)
 {
-	char *str;
+	const char *str;
 
 	str = G_STRING(OFS_PARM0);
 	Cbuf_AddText(str);
@@ -798,7 +798,7 @@ void PF_localcmd(void)
  */
 void PF_cvar(void)
 {
-	char *str;
+	const char *str;
 
 	str = G_STRING(OFS_PARM0);
 
@@ -814,7 +814,7 @@ void PF_cvar(void)
  */
 void PF_cvar_set(void)
 {
-	char *var, *val;
+	const char *var, *val;
 
 	var = G_STRING(OFS_PARM0);
 	val = G_STRING(OFS_PARM1);
@@ -919,7 +919,7 @@ void PF_Find(void)
 {
 	int e;
 	int f;
-	char *s, *t;
+	const char *s, *t;
 	edict_t *ed;
 
 	e = G_EDICTNUM(OFS_PARM0);
@@ -946,7 +946,7 @@ void PF_Find(void)
 	RETURN_EDICT(sv.edicts);
 }
 
-void PR_CheckEmptyString(char *s)
+void PR_CheckEmptyString(const char *s)
 {
 	if (s[0] <= ' ')
 		PR_RunError("Bad string");
@@ -959,7 +959,7 @@ void PF_precache_file(void)
 
 void PF_precache_sound(void)
 {
-	char *s;
+	const char *s;
 	int i;
 
 	if (sv.state != ss_loading)
@@ -984,7 +984,7 @@ void PF_precache_sound(void)
 
 void PF_precache_model(void)
 {
-	char *s;
+	const char *s;
 	int i;
 
 	if (sv.state != ss_loading)
@@ -1112,7 +1112,7 @@ void PF_droptofloor(void)
 void PF_lightstyle(void)
 {
 	int style;
-	char *val;
+	const char *val;
 	client_t *client;
 	int j;
 
@@ -1410,7 +1410,7 @@ void PF_WriteEntity(void)
 
 //=============================================================================
 
-int SV_ModelIndex(char *name);
+int SV_ModelIndex(const char *name);
 
 void PF_makestatic(void)
 {
@@ -1458,7 +1458,7 @@ void PF_setspawnparms(void)
 
 void PF_changelevel(void)
 {
-	char *s;
+	const char *s;
 
 	// make sure we don't issue two changelevels
 	if (svs.changelevel_issued)

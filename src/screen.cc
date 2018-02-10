@@ -502,16 +502,6 @@ void SCR_DrawCrosshair(void)
 	}
 }
 
-void SCR_DrawRam(void)
-{
-	if (!scr_showram.value)
-		return;
-
-	Draw_SetCanvas (CANVAS_DEFAULT); //johnfitz
-
-	Draw_Pic(scr_vrect.x + 32, scr_vrect.y, scr_ram, 1.0f);
-}
-
 /*
  ==============
  SCR_DrawTurtle
@@ -994,7 +984,6 @@ void SCR_UpdateScreen(void)
 	else
 	{
 		SCR_DrawCrosshair();
-		SCR_DrawRam();
 		SCR_DrawNet();
 		SCR_DrawTurtle();
 		SCR_DrawPause();
@@ -1058,7 +1047,6 @@ void SCR_Init(void)
 	Cmd_AddCommand("sizedown", SCR_SizeDown_f);
 
 	// load game pics
-	scr_ram = Draw_PicFromWad("ram");
 	scr_net = Draw_PicFromWad("net");
 	scr_turtle = Draw_PicFromWad("turtle");
 	scr_backtile = Draw_PicFromWad("backtile");

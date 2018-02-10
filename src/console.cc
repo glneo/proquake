@@ -28,7 +28,7 @@ int con_buffersize;
 bool con_forcedup;		// because no entities to refresh
 
 int con_totallines;		// total lines in console scrollback
-int con_backscroll;		// lines up from bottom to display
+unsigned int con_backscroll;		// lines up from bottom to display
 int con_current;		// where next message will be printed
 int con_x;				// offset in current line for next print
 char *con_text = NULL;

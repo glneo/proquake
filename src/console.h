@@ -13,7 +13,7 @@
  */
 
 extern int con_totallines;
-extern int con_backscroll;
+extern unsigned int con_backscroll;
 extern	bool con_forcedup;	// because no entities to refresh
 extern bool con_initialized;
 extern byte *con_chars;

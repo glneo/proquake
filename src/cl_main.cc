@@ -57,10 +57,6 @@ dlight_t cl_dlights[MAX_DLIGHTS];
 entity_t *cl_visedicts[MAX_VISEDICTS];
 int cl_numvisedicts;
 
-extern cvar_t scr_fov;
-static float savedsensitivity;
-static float savedfov;
-
 void CL_ClearState(void)
 {
 	int i;
@@ -147,7 +143,7 @@ void CL_Disconnect_f(void)
  Host should be either "local" or a net address to be passed on
  =====================
  */
-void CL_EstablishConnection(char *host)
+void CL_EstablishConnection(const char *host)
 {
 	if (cls.state == ca_dedicated)
 		return;
@@ -692,24 +688,6 @@ void CL_SendCmd(void)
 	SZ_Clear(&cls.message);
 }
 
-/* Saves the Sensitivity */
-static void CL_SaveSensitivity_f(void)
-{
-	savedsensitivity = sensitivity.value;
-}
-
-/* Restores Sensitivity to saved level */
-static void CL_RestoreSensitivity_f(void)
-{
-	if (!savedsensitivity)
-	{
-		Con_Printf("RestoreSensitivity: No saved SENSITIVITY to restore\n");
-		return;
-	}
-
-	Cvar_SetValueQuick(&sensitivity, savedsensitivity);
-}
-
 /* display client position and angles */
 void CL_Viewpos_f(void)
 {
@@ -782,9 +760,6 @@ void CL_Init(void)
 	Cmd_AddCommand("playdemo", CL_PlayDemo_f);
 	Cmd_AddCommand("nextstartdemo", CL_PlayDemo_NextStartDemo_f);
 	Cmd_AddCommand("timedemo", CL_TimeDemo_f);
-
-	Cmd_AddCommand("savesensitivity", CL_SaveSensitivity_f);
-	Cmd_AddCommand("restoresensitivity", CL_RestoreSensitivity_f);
 
 	Cmd_AddCommand("viewpos", CL_Viewpos_f);
 	Cmd_AddCommand("campos", CL_Campos_f);

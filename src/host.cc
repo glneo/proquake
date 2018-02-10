@@ -110,7 +110,7 @@ bool isDedicated = false;
  Host_EndGame
  ================
  */
-void Host_EndGame(char *message, ...)
+void Host_EndGame(const char *message, ...)
 {
 	va_list argptr;
 	char string[1024];
@@ -145,7 +145,7 @@ void Host_EndGame(char *message, ...)
  This shuts down both the client and server
  ================
  */
-void Host_Error(char *error, ...)
+void Host_Error(const char *error, ...)
 {
 	va_list argptr;
 	char string[1024];
@@ -337,7 +337,7 @@ void Host_InitLocal(void)
  ===============
  */
 
-void Host_WriteConfig(char *cfgname)
+void Host_WriteConfig(const char *cfgname)
 {
 	FILE *f;
 
@@ -445,7 +445,7 @@ void SV_ClientPrintf(const char *fmt, ...)
  Sends text to all active clients
  =================
  */
-void SV_BroadcastPrintf(char *fmt, ...)
+void SV_BroadcastPrintf(const char *fmt, ...)
 {
 	va_list argptr;
 	char string[1024];
@@ -470,7 +470,7 @@ void SV_BroadcastPrintf(char *fmt, ...)
  Send text over to the client to be executed
  =================
  */
-void Host_ClientCommands(char *fmt, ...)
+void Host_ClientCommands(const char *fmt, ...)
 {
 	va_list argptr;
 	char string[1024];

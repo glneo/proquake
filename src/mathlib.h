@@ -66,6 +66,6 @@ int BoxOnPlaneSide(vec3_t emins, vec3_t emaxs, mplane_t *p);
 
 float anglemod(float a);
 float RadiusFromBounds(vec3_t mins, vec3_t maxs);
-int ParseFloats(char *s, float *f, int *f_size);
+int ParseFloats(const char *s, float *f, int *f_size);
 
 #endif /* __MATHLIB_H */

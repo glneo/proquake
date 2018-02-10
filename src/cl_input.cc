@@ -48,9 +48,8 @@ int in_impulse;
 void KeyDown(kbutton_t *b)
 {
 	int k;
-	char *c;
 
-	c = Cmd_Argv(1);
+	const char *c = Cmd_Argv(1);
 	if (c[0])
 		k = atoi(c);
 	else
@@ -81,9 +80,8 @@ void KeyDown(kbutton_t *b)
 void KeyUp(kbutton_t *b)
 {
 	int k;
-	char *c;
 
-	c = Cmd_Argv(1);
+	const char *c = Cmd_Argv(1);
 	if (c[0])
 		k = atoi(c);
 	else

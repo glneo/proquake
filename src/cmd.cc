@@ -45,7 +45,7 @@ void Cbuf_Init(void)
 }
 
 /* Adds command text at the end of the buffer */
-void Cbuf_AddText(char *text)
+void Cbuf_AddText(const char *text)
 {
 	int l = strlen(text);
 
@@ -55,14 +55,14 @@ void Cbuf_AddText(char *text)
 		return;
 	}
 
-	SZ_Write(&cmd_text, text, strlen(text));
+	SZ_Write(&cmd_text, (void *)text, strlen(text));
 }
 
 /*
  * Adds command text immediately after the current command
  * Adds a \n to the text
  */
-void Cbuf_InsertText(char *text)
+void Cbuf_InsertText(const char *text)
 {
 	char *temp = NULL;
 	int templen = cmd_text.cursize;
@@ -158,8 +158,8 @@ cmd_function_t *cmd_functions = NULL; // possible commands to execute
 
 static int cmd_argc;
 static char *cmd_argv[MAX_ARGS];
-static char *cmd_null_string = "";
-static char *cmd_args = NULL;
+static const char *cmd_null_string = "";
+static const char *cmd_args = NULL;
 
 cmd_source_t cmd_source;
 
@@ -168,14 +168,14 @@ int Cmd_Argc(void)
 	return cmd_argc;
 }
 
-char *Cmd_Argv(int arg)
+const char *Cmd_Argv(int arg)
 {
-	if ((unsigned) arg >= cmd_argc)
+	if (arg >= cmd_argc)
 		return cmd_null_string;
 	return cmd_argv[arg];
 }
 
-char *Cmd_Args(void)
+const char *Cmd_Args(void)
 {
 	return cmd_args;
 }
@@ -194,7 +194,7 @@ bool Cmd_Exists(const char *cmd_name)
 }
 
 /* Parses the given string into command line tokens */
-void Cmd_TokenizeString(char *text)
+void Cmd_TokenizeString(const char *text)
 {
 	int i;
 
@@ -231,15 +231,14 @@ void Cmd_TokenizeString(char *text)
 
 		if (cmd_argc < MAX_ARGS)
 		{
-			cmd_argv[cmd_argc] = (char *)Q_malloc(strlen(com_token) + 1);
-			strcpy(cmd_argv[cmd_argc], com_token);
+			cmd_argv[cmd_argc] = (char *)Q_strdup(com_token);
 			cmd_argc++;
 		}
 	}
 }
 
 /* A complete command line has been parsed, so try to execute it */
-void Cmd_ExecuteString(char *text, cmd_source_t src)
+void Cmd_ExecuteString(const char *text, cmd_source_t src)
 {
 	cmd_function_t *cmd;
 	cmdalias_t *a;
@@ -410,7 +409,6 @@ void Cmd_Alias_f(void)
 	cmdalias_t *a;
 	char cmd[1024];
 	int i, c;
-	char *s;
 
 	switch (Cmd_Argc())
 	{
@@ -430,8 +428,7 @@ void Cmd_Alias_f(void)
 		break;
 
 	default: //set alias string
-		s = Cmd_Argv(1);
-		if (strlen(s) >= MAX_ALIAS_NAME)
+		if (strlen(Cmd_Argv(1)) >= MAX_ALIAS_NAME)
 		{
 			Con_Printf("Alias name is too long\n");
 			return;
@@ -440,7 +437,7 @@ void Cmd_Alias_f(void)
 		// if the alias already exists, reuse it
 		for (a = cmd_alias; a; a = a->next)
 		{
-			if (!strcmp(s, a->name))
+			if (!strcmp(Cmd_Argv(1), a->name))
 			{
 				free(a->value);
 				break;
@@ -453,7 +450,7 @@ void Cmd_Alias_f(void)
 			a->next = cmd_alias;
 			cmd_alias = a;
 		}
-		strcpy(a->name, s);
+		strcpy(a->name, Cmd_Argv(1));
 
 		// copy the rest of the command line
 		cmd[0] = 0; // start out with a null string
@@ -513,7 +510,8 @@ void Cmd_Unaliasall_f(void)
 void Cmd_ForwardToServer_f(void)
 {
 	//from ProQuake --start
-	char *src, *dst, buff[128];			// JPG - used for say/say_team formatting
+	const char *src;
+	char *dst, buff[128];			// JPG - used for say/say_team formatting
 	int minutes, seconds, match_time;	// JPG - used for %t
 	//from ProQuake --end
 
@@ -615,7 +613,7 @@ void Cmd_ForwardToServer_f(void)
 /* List console commands */
 void Cmd_CmdList_f(void)
 {
-	char *partial = NULL;
+	const char *partial = NULL;
 
 	if (Cmd_Argc() > 1)
 		partial = Cmd_Argv(1);

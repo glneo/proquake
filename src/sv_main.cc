@@ -121,7 +121,7 @@ void SV_StartParticle(vec3_t org, vec3_t dir, int color, int count)
  Larger attenuation will drop off.  (max 4 attenuation)
  ==================
  */
-void SV_StartSound(edict_t *entity, int channel, char *sample, int volume, float attenuation)
+void SV_StartSound(edict_t *entity, int channel, const char *sample, int volume, float attenuation)
 {
 	int sound_num, field_mask, i, ent;
 
@@ -191,7 +191,8 @@ void SV_StartSound(edict_t *entity, int channel, char *sample, int volume, float
  */
 static void SV_SendServerinfo(client_t *client)
 {
-	char **s, message[2048];
+	const char **s;
+	char message[2048];
 
 	MSG_WriteByte(&client->message, svc_print);
 	snprintf(message, sizeof(message), "\n%s Server Version %s\n", ENGINE_NAME, ENGINE_VERSION);
@@ -815,7 +816,7 @@ void SV_SendClientMessages(void)
  ==============================================================================
  */
 
-int SV_ModelIndex(char *name)
+int SV_ModelIndex(const char *name)
 {
 	int i;
 

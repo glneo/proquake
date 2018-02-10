@@ -40,14 +40,14 @@ cvar_t cl_keypad = { "cl_keypad", "0", true };
 
 int nostdout = 0;
 
-char *basedir = ".";
-char *cachedir = "/tmp";
+const char *basedir = ".";
+const char *cachedir = "/tmp";
 
 // =======================================================================
 // General routines
 // =======================================================================
 
-void Sys_Printf(char *fmt, ...)
+void Sys_Printf(const char *fmt, ...)
 {
 	va_list argptr;
 	char text[2048]; // JPG 3.30 - increased this from 1024 to 2048
@@ -81,7 +81,7 @@ void Sys_Printf(char *fmt, ...)
 	}
 
 	// JPG 3.00 - rcon (64 doesn't mean anything special, but we need some extra space because NET_MAXMESSAGE == RCON_BUFF_SIZE)
-	if (rcon_active && (rcon_message.cursize < rcon_message.maxsize - strlen(text) - 64))
+	if (rcon_active && ((unsigned)rcon_message.cursize < rcon_message.maxsize - strlen(text) - 64))
 	{
 		rcon_message.cursize--;
 		MSG_WriteString(&rcon_message, text);
@@ -108,7 +108,7 @@ double Sys_DoubleTime (void)
  returns -1 if not present
  ============
  */
-int Sys_FileTime(char *path)
+int Sys_FileTime(const char *path)
 {
 	struct stat buf;
 
@@ -118,12 +118,12 @@ int Sys_FileTime(char *path)
 	return buf.st_mtime;
 }
 
-void Sys_mkdir(char *path)
+void Sys_mkdir(const char *path)
 {
 	mkdir(path, 0777);
 }
 
-int Sys_FileOpenRead(char *path, int *handle)
+int Sys_FileOpenRead(const char *path, int *handle)
 {
 	int h;
 	struct stat fileinfo;
@@ -139,7 +139,7 @@ int Sys_FileOpenRead(char *path, int *handle)
 	return fileinfo.st_size;
 }
 
-int Sys_FileOpenWrite(char *path)
+int Sys_FileOpenWrite(const char *path)
 {
 	int handle;
 

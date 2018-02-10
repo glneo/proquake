@@ -214,7 +214,7 @@ void Hunk_Print_f(void)
 	Hunk_Print(false);
 }
 
-void *Hunk_AllocName(int size, char *name)
+void *Hunk_AllocName(int size, const char *name)
 {
 	hunk_t *h;
 
@@ -287,7 +287,7 @@ void Hunk_FreeToHighMark(int mark)
 	hunk_high_used = mark;
 }
 
-void *Hunk_HighAllocName(int size, char *name)
+void *Hunk_HighAllocName(int size, const char *name)
 {
 	hunk_t *h;
 

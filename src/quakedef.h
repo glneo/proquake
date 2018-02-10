@@ -34,6 +34,7 @@
 #endif
 
 #define BIT(x) (1 << (x))
+#define ARRAY_SIZE(x) (sizeof(x) / sizeof((x)[0]))
 
 #define	MINIMUM_MEMORY		0x550000
 #define	MINIMUM_MEMORY_LEVELPAK	(MINIMUM_MEMORY + 0x100000)
