@@ -266,7 +266,11 @@ static void Character(int x, int y, int num)
 		fcol,        frow + size - offset,
 	};
 
-	GLfloat verts[] = { x, y, x + 8, y, x + 8, y + 8, x, y + 8, };
+	GLfloat verts[] = { (GLfloat)x,     (GLfloat)y,
+			    (GLfloat)x + 8, (GLfloat)y,
+			    (GLfloat)x + 8, (GLfloat)y + 8,
+			    (GLfloat)x,     (GLfloat)y + 8,
+	};
 
 	glTexCoordPointer(2, GL_FLOAT, 0, texts);
 	glVertexPointer(2, GL_FLOAT, 0, verts);
@@ -322,10 +326,10 @@ void Draw_Pic(int x, int y, qpic_t *pic, float alpha)
 	};
 
 	GLfloat verts[] = {
-		x,              y,
-		x + pic->width, y,
-		x + pic->width, y + pic->height,
-		x,              y + pic->height,
+		(GLfloat)x,              (GLfloat)y,
+		(GLfloat)x + pic->width, (GLfloat)y,
+		(GLfloat)x + pic->width, (GLfloat)y + pic->height,
+		(GLfloat)x,              (GLfloat)y + pic->height,
 	};
 
 	glTexCoordPointer(2, GL_FLOAT, 0, texts);
@@ -380,9 +384,19 @@ void Draw_TransPicTranslate(int x, int y, qpic_t *pic, byte *translation)
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-	GLfloat texts[] = { 0, 0, 1, 0, 1, 1, 0, 1, };
+	GLfloat texts[] = {
+		0.0f, 0.0f,
+		1.0f, 0.0f,
+		1.0f, 1.0f,
+		0.0f, 1.0f,
+	};
 
-	GLfloat verts[] = { x, y, x + pic->width, y, x + pic->width, y + pic->height, x, y + pic->height, };
+	GLfloat verts[] = {
+		(GLfloat)x,              (GLfloat)y,
+		(GLfloat)x + pic->width, (GLfloat)y,
+		(GLfloat)x + pic->width, (GLfloat)y + pic->height,
+		(GLfloat)x,              (GLfloat)y + pic->height,
+	};
 
 	glTexCoordPointer(2, GL_FLOAT, 0, texts);
 	glVertexPointer(2, GL_FLOAT, 0, verts);
@@ -396,17 +410,17 @@ void Draw_PicTile(int x, int y, int w, int h, qpic_t *pic, float alpha)
 	GL_Bind(gl->gltexture);
 
 	GLfloat texts[] = {
-		x / 64.0,       y / 64.0,
-		(x + w) / 64.0, y / 64.0,
-		(x + w) / 64.0, (y + h) / 64.0,
-		x / 64.0,       (y + h) / 64.0,
+		(GLfloat)x / 64.0f,       (GLfloat)y / 64.0f,
+		(GLfloat)(x + w) / 64.0f, (GLfloat)y / 64.0f,
+		(GLfloat)(x + w) / 64.0f, (GLfloat)(y + h) / 64.0f,
+		(GLfloat)x / 64.0f,       (GLfloat)(y + h) / 64.0f,
 	};
 
 	GLfloat verts[] = {
-		x,     y,
-		x + w, y,
-		x + w, y + h,
-		x,     y + h,
+		(GLfloat)x,     (GLfloat)y,
+		(GLfloat)x + w, (GLfloat)y,
+		(GLfloat)x + w, (GLfloat)y + h,
+		(GLfloat)x,     (GLfloat)y + h,
 	};
 
 	glTexCoordPointer(2, GL_FLOAT, 0, texts);
@@ -432,10 +446,10 @@ void Draw_Fill(int x, int y, int w, int h, int c, float alpha)
 		  alpha);
 
 	GLfloat verts[] = {
-		x,     y,
-		x + w, y,
-		x + w, y + h,
-		x,     y + h,
+		(GLfloat)x,     (GLfloat)y,
+		(GLfloat)x + w, (GLfloat)y,
+		(GLfloat)x + w, (GLfloat)y + h,
+		(GLfloat)x,     (GLfloat)y + h,
 	};
 
 	glDisableClientState(GL_TEXTURE_COORD_ARRAY);
