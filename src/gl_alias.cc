@@ -29,7 +29,10 @@ const float r_avertexnormal_dots[SHADEDOT_QUANT][256] = {
 static void GL_DrawAliasFrame(entity_t *ent, alias_model_t *aliasmodel, int pose, float alpha)
 {
 	if (alpha < 1.0f)
+	{
 		glEnable(GL_BLEND);
+		glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+	}
 
 	int quantizedangle = ((int)(ent->angles[1] * (SHADEDOT_QUANT / 360.0))) & (SHADEDOT_QUANT - 1);
 	const float *shadedots = r_avertexnormal_dots[quantizedangle];
@@ -47,7 +50,10 @@ static void GL_DrawAliasFrame(entity_t *ent, alias_model_t *aliasmodel, int pose
 	glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
 
 	if (alpha < 1.0f)
+	{
+		glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
 		glDisable(GL_BLEND);
+	}
 }
 
 extern vec3_t lightspot;
@@ -137,9 +143,9 @@ void R_DrawAliasModel(entity_t *ent)
 	{
 		// hack the depth range to prevent view model from poking into walls
 #ifdef OPENGLES
-		glDepthRangef(gldepthmin, gldepthmin + 0.3 * (gldepthmax - gldepthmin));
+		glDepthRangef(0, 0.3f);
 #else
-		glDepthRange(gldepthmin, gldepthmin + 0.3 * (gldepthmax - gldepthmin));
+		glDepthRange(0, 0.3);
 #endif
 
 		// always give the gun some light
@@ -213,24 +219,14 @@ void R_DrawAliasModel(entity_t *ent)
 	if (gl_affinemodels.value)
 		glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_FASTEST);
 
-	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
-
-	float alpha;
-	if (ent != &cl.viewent)
-		alpha = 1.0f;
-	else
-	{
-		if(cl.items & IT_INVISIBILITY)
-			alpha = r_ringalpha.value;
-		else
-			alpha = 1.0f;
-	}
+	float alpha = 1.0f;
+	if (ent == &cl.viewent && (cl.items & IT_INVISIBILITY))
+		alpha = r_ringalpha.value;
 
 	GL_DrawAliasFrame(ent, aliasmodel, pose, alpha);
 
 	if (fb)
 	{
-		glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
 		GL_Bind(fb);
 		glEnable(GL_BLEND);
 		glBlendFunc (GL_ONE, GL_ONE);
@@ -239,7 +235,6 @@ void R_DrawAliasModel(entity_t *ent)
 		glDepthMask(GL_TRUE);
 		glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 		glDisable(GL_BLEND);
-		glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
 	}
 
 	if (gl_affinemodels.value)
@@ -255,9 +250,9 @@ void R_DrawAliasModel(entity_t *ent)
 	if (ent == &cl.viewent)
 	{
 #ifdef OPENGLES
-		glDepthRangef(gldepthmin, gldepthmax);
+		glDepthRangef(0, 1.0f);
 #else
-		glDepthRange(gldepthmin, gldepthmax);
+		glDepthRange(0, 1.0);
 #endif
 	}
 }

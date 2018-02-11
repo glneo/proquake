@@ -86,8 +86,6 @@ void R_DrawSpriteModel(entity_t *ent)
 
 	GL_Bind(frame->gltexture);
 
-	glEnable(GL_ALPHA_TEST);
-
 	GLfloat texts[] = {
 		0, 1,
 		0, 0,
@@ -116,6 +114,4 @@ void R_DrawSpriteModel(entity_t *ent)
 	glTexCoordPointer(2, GL_FLOAT, 0, texts);
 	glVertexPointer(3, GL_FLOAT, 0, verts);
 	glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
-
-	glDisable(GL_ALPHA_TEST);
 }

@@ -129,8 +129,8 @@ void DrawTextureChains(brush_model_t *brushmodel)
 			R_DrawSkyChain(s);
 		else
 		{
-			if ((s->flags & SURF_DRAWTURB) && r_wateralpha.value < 1.0)
-				continue;	// draw translucent water later
+			if (s->flags & SURF_DRAWTURB)
+				continue; // draw water later
 			for (; s; s = s->texturechain)
 				R_RenderBrushPoly(s, 0);
 		}
@@ -193,16 +193,14 @@ void R_RenderBrushPoly(msurface_t *fa, int frame)
 
 	if (t->fullbright != NULL && gl_fullbright.value)
 	{
-		glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
 		glEnable(GL_BLEND);
-		glBlendFunc (GL_ONE, GL_ONE);
+		glBlendFunc(GL_ONE, GL_ONE);
 		glDepthMask(GL_FALSE);
 		GL_Bind(t->fullbright);
 		DrawGLPoly(fa->polys);
 		glDepthMask(GL_TRUE);
-		glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 		glDisable(GL_BLEND);
-		glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
 	}
 }
 
@@ -247,7 +245,7 @@ void R_DrawBrushModel(entity_t *ent)
 	R_ClearLightmapPolys();
 
 	// calculate dynamic lighting for bmodel if it's not an instanced model
-	if (clmodel->brushmodel->firstmodelsurface != 0 && !gl_flashblend.value)
+	if (clmodel->brushmodel->firstmodelsurface != 0)
 	{
 		for (int k = 0; k < MAX_DLIGHTS; k++)
 		{
@@ -259,6 +257,7 @@ void R_DrawBrushModel(entity_t *ent)
 	}
 
 	glPushMatrix();
+
 	ent->angles[0] = -ent->angles[0];	// stupid quake bug
 	GL_RotateForEntity(ent);
 	ent->angles[0] = -ent->angles[0];	// stupid quake bug
@@ -282,5 +281,4 @@ void R_DrawBrushModel(entity_t *ent)
 	R_BlendLightmaps();
 
 	glPopMatrix();
-
 }

@@ -287,96 +287,6 @@ void R_AnimateLight(void)
 /*
  =============================================================================
 
- DYNAMIC LIGHTS BLEND RENDERING
-
- =============================================================================
- */
-
-static void AddLightBlend(float r, float g, float b, float a2)
-{
-	float a;
-
-	v_blend[3] = a = v_blend[3] + a2 * (1 - v_blend[3]);
-
-	a2 = a2 / a;
-
-	v_blend[0] = v_blend[1] * (1 - a2) + r * a2;
-	v_blend[1] = v_blend[1] * (1 - a2) + g * a2;
-	v_blend[2] = v_blend[2] * (1 - a2) + b * a2;
-}
-
-static void R_RenderDlight(dlight_t *light)
-{
-//	static vec4_t color_start = { 0.2f, 0.1f, 0.0f, 1.0f };
-//	static vec4_t color_end = { 0.0f, 0.0f, 0.0f, 1.0f };
-	static vec4_t color_start = { 1.0f, 1.0f, 1.0f, 1.0f };
-	static vec4_t color_end = { 1.0f, 1.0f, 1.0f, 1.0f };
-
-	float rad = light->radius * 0.35;
-
-	vec3_t v;
-	VectorSubtract(light->origin, r_origin, v);
-	if (VectorLength(v) < rad)
-	{	// view is inside the dlight
-		AddLightBlend(1, 0.5, 0, light->radius * 0.0003);
-		return;
-	}
-
-	vec3_t verts[18];
-	vec4_t colors[18];
-	rad *= 5;
-	for (int i = 0; i < 3; i++)
-		verts[0][i] = light->origin[i] - vpn[i] * rad;
-	memcpy(colors[0], color_start, sizeof(color_start));
-	for (int i = 16; i >= 0; i--)
-	{
-		float a = (i / 16.0) * (M_PI * 2);
-		for (int j = 0; j < 3; j++)
-			verts[i + 1][j] = light->origin[j] +
-			                  vright[j] * cos(a) * rad +
-			                  vup[j] * sin(a) * rad;
-		memcpy(colors[i + 1], color_end, sizeof(color_end));
-	}
-
-	glColorPointer(4, GL_FLOAT, 0, &colors[0][0]);
-	glVertexPointer(3, GL_FLOAT, 0, &verts[0][0]);
-	glDrawArrays(GL_TRIANGLE_FAN, 0, 18);
-}
-
-void R_RenderDlights(void)
-{
-	if (!gl_flashblend.value)
-		return;
-
-//	r_dlightframecount = r_framecount + 1;	// because the count hasn't
-						//  advanced yet for this frame
-//	glDepthMask(0);
-//	glDisable(GL_TEXTURE_2D);
-//	glDisable(GL_ALPHA_TEST);
-//	glDisable(GL_DEPTH_TEST);
-//	glEnable(GL_BLEND);
-//	glBlendFunc(GL_ONE, GL_ONE);
-
-	for (int i = 0; i < MAX_DLIGHTS; i++)
-	{
-		if (cl_dlights[i].die < cl.time || !cl_dlights[i].radius)
-			continue;
-
-		R_RenderDlight(&cl_dlights[i]);
-	}
-
-//	glColor4ub(color_white[0], color_white[1], color_white[2], color_white[3]);
-//	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-//	glDisable(GL_BLEND);
-//	glEnable(GL_DEPTH_TEST);
-//	glEnable(GL_ALPHA_TEST);
-//	glEnable(GL_TEXTURE_2D);
-//	glDepthMask(1);
-}
-
-/*
- =============================================================================
-
  DYNAMIC LIGHTS
 
  =============================================================================
@@ -418,9 +328,8 @@ void R_MarkLights(dlight_t *light, int bit, mnode_t *node)
 
 void R_PushDlights(void)
 {
-	if (gl_flashblend.value)
-	// FIXME: This is broken, need to just always return here
-		return;
+	// FIXME: This is broken when r_wateralpha < 1.0
+//	return;
 
 	r_dlightframecount = r_framecount + 1;	// because the count hasn't
 						//  advanced yet for this frame

@@ -21,7 +21,6 @@ cvar_t r_norefresh = { "r_norefresh", "0" };
 cvar_t r_drawentities = { "r_drawentities", "1" };
 cvar_t r_speeds = { "r_speeds", "0" };
 cvar_t r_shadows = { "r_shadows", "0" };
-cvar_t r_clearcolor = { "r_clearcolor", "0" };
 
 // For draw stats
 int c_brush_polys, c_alias_polys;
@@ -440,17 +439,6 @@ void R_NewMap(void)
 	}
 }
 
-static void R_SetClearColor_f(struct cvar_s *cvar)
-{
-	byte *rgb;
-	int s;
-	extern cvar_t r_clearcolor;
-
-	s = (int) r_clearcolor.value & 0xFF;
-	rgb = (byte*) (d_8to24table + s);
-	glClearColor(rgb[0] / 255.0, rgb[1] / 255.0, rgb[2] / 255.0, 0);
-}
-
 /* r_refdef must be set before the first call */
 void R_RenderView(void)
 {
@@ -479,7 +467,6 @@ void R_RenderView(void)
 	R_MarkLeaves();
 	R_DrawWorld();
 	R_DrawEntitiesOnList();
-	R_RenderDlights();
 	R_DrawParticles();
 
 	R_DrawViewModel();
@@ -545,8 +532,6 @@ void R_Init(void)
 	Cvar_RegisterVariable(&r_interpolate_weapon);
 
 	Cvar_RegisterVariable(&gl_clear);
-	Cvar_RegisterVariable(&r_clearcolor);
-	Cvar_SetCallback(&r_clearcolor, R_SetClearColor_f);
 
 	R_InitParticles();
 	R_InitParticleTexture();

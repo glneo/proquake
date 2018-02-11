@@ -34,8 +34,6 @@ int r_framecount; // used for dlight push checking
 
 int d_lightstylevalue[256]; // 8.8 fraction of base light value
 
-float gldepthmin, gldepthmax;
-
 cvar_t r_wateralpha = { "r_wateralpha", "1", true };
 cvar_t r_dynamic = { "r_dynamic", "1" };
 cvar_t r_novis = { "r_novis", "0" };
@@ -51,7 +49,6 @@ cvar_t gl_cull = { "gl_cull", "1" };
 cvar_t gl_smoothmodels = { "gl_smoothmodels", "1" };
 cvar_t gl_affinemodels = { "gl_affinemodels", "0" };
 cvar_t gl_polyblend = { "gl_polyblend", "1", true };
-cvar_t gl_flashblend = { "gl_flashblend", "0", true };
 cvar_t gl_playermip = { "gl_playermip", "0", true };
 
 cvar_t r_truegunangle = { "r_truegunangle", "0", true };  // Baker 3.80x - Optional "true" gun positioning on viewmodel
@@ -82,7 +79,6 @@ void GL_PolyBlend(void)
 	if (!gl_polyblend.value)
 		return;
 
-	glDisable(GL_ALPHA_TEST);
 	glEnable(GL_BLEND);
 	glDisable(GL_DEPTH_TEST);
 	glDisable(GL_TEXTURE_2D);
@@ -112,7 +108,6 @@ void GL_PolyBlend(void)
 	glEnable(GL_TEXTURE_2D);
 	glEnable(GL_DEPTH_TEST);
 	glDisable(GL_BLEND);
-	glEnable(GL_ALPHA_TEST);
 }
 
 void R_Clear(void)
@@ -124,17 +119,6 @@ void R_Clear(void)
 		clearbits |= GL_COLOR_BUFFER_BIT;
 
 	glClear(clearbits);
-
-	glDepthFunc(GL_LEQUAL);
-
-	gldepthmin = 0;
-	gldepthmax = 1;
-
-#ifdef OPENGLES
-	glDepthRangef(gldepthmin, gldepthmax);
-#else
-	glDepthRange(gldepthmin, gldepthmax);
-#endif
 }
 
 static void Q_glFrustumf(GLfloat left, GLfloat right, GLfloat bottom, GLfloat top, GLfloat zNear, GLfloat zFar)
@@ -192,8 +176,6 @@ void GL_Setup(void)
 	farclip = max((int )gl_farclip.value, 4096);
 	Q_gluPerspective(r_refdef.fov_y, screenaspect, 4, farclip); // 4096
 
-	glCullFace(GL_FRONT);
-
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
 
@@ -212,7 +194,6 @@ void GL_Setup(void)
 		glDisable(GL_CULL_FACE);
 
 	glDisable(GL_BLEND);
-	glDisable(GL_ALPHA_TEST);
 	glEnable(GL_DEPTH_TEST);
 }
 
@@ -359,21 +340,12 @@ static void GL_SetupState(void)
 	glCullFace(GL_FRONT);
 	glEnable(GL_TEXTURE_2D);
 	glEnable(GL_ALPHA_TEST);
-	glAlphaFunc(GL_GREATER, 0.666);
-//	glPolygonMode (GL_FRONT_AND_BACK, GL_FILL);
+	glAlphaFunc(GL_GREATER, 0.1);
+//	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 	glShadeModel(GL_FLAT);
 	glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
-	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-#ifdef OPENGLES
-	glDepthRangef(gldepthmin, gldepthmax);
-#else
-	glDepthRange(gldepthmin, gldepthmax);
-#endif
 	glDepthFunc(GL_LEQUAL);
 }
 
@@ -386,7 +358,6 @@ void GL_Init(void)
 	Cvar_RegisterVariable(&gl_smoothmodels);
 	Cvar_RegisterVariable(&gl_affinemodels);
 	Cvar_RegisterVariable(&gl_polyblend);
-	Cvar_RegisterVariable(&gl_flashblend);
 	Cvar_RegisterVariable(&gl_playermip);
 	Cvar_RegisterVariable(&gl_fullbright);
 	Cvar_RegisterVariable(&gl_overbright);

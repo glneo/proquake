@@ -300,13 +300,8 @@ void Draw_Pic(int x, int y, qpic_t *pic, float alpha)
 		Scrap_Upload();
 
 	alpha = CLAMP(0, alpha, 1.0f);
-
 	if (alpha < 1.0f)
-	{
-		glEnable(GL_BLEND);
-		glDisable(GL_ALPHA_TEST);
 		glColor4f(1.0f, 1.0f, 1.0f, alpha);
-	}
 
 	glpic_t *gl = (glpic_t *) pic->data;
 	GL_Bind(gl->gltexture);
@@ -330,11 +325,7 @@ void Draw_Pic(int x, int y, qpic_t *pic, float alpha)
 	glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 
 	if (alpha < 1.0f)
-	{
 		glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
-		glEnable(GL_ALPHA_TEST);
-		glDisable(GL_BLEND);
-	}
 }
 
 void Draw_TransPic(int x, int y, qpic_t *pic)
@@ -349,52 +340,52 @@ void Draw_TransPic(int x, int y, qpic_t *pic)
 }
 
 /* Only used for the player color selection menu */
-void Draw_TransPicTranslate(int x, int y, qpic_t *pic, byte *translation)
-{
-	int v, u;
-	unsigned trans[64 * 64], *dest;
-	byte *src;
-	int p;
-
+//void Draw_TransPicTranslate(int x, int y, qpic_t *pic, byte *translation)
+//{
+//	int v, u;
+//	unsigned trans[64 * 64], *dest;
+//	byte *src;
+//	int p;
+//
 //	GL_Bind(translate_texture);
-
-	dest = trans;
-	for (v = 0; v < 64; v++, dest += 64)
-	{
-		src = &menuplyr_pixels[((v * pic->height) >> 6) * pic->width];
-		for (u = 0; u < 64; u++)
-		{
-			p = src[(u * pic->width) >> 6];
-			if (p == 255)
-				dest[u] = p;
-			else
-				dest[u] = d_8to24table[translation[p]];
-		}
-	}
-
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 64, 64, 0, GL_RGBA, GL_UNSIGNED_BYTE, trans);
-
-	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-	GLfloat texts[] = {
-		0.0f, 0.0f,
-		1.0f, 0.0f,
-		1.0f, 1.0f,
-		0.0f, 1.0f,
-	};
-
-	GLfloat verts[] = {
-		(GLfloat)x,              (GLfloat)y,
-		(GLfloat)x + pic->width, (GLfloat)y,
-		(GLfloat)x + pic->width, (GLfloat)y + pic->height,
-		(GLfloat)x,              (GLfloat)y + pic->height,
-	};
-
-	glTexCoordPointer(2, GL_FLOAT, 0, texts);
-	glVertexPointer(2, GL_FLOAT, 0, verts);
-	glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
-}
+//
+//	dest = trans;
+//	for (v = 0; v < 64; v++, dest += 64)
+//	{
+//		src = &menuplyr_pixels[((v * pic->height) >> 6) * pic->width];
+//		for (u = 0; u < 64; u++)
+//		{
+//			p = src[(u * pic->width) >> 6];
+//			if (p == 255)
+//				dest[u] = p;
+//			else
+//				dest[u] = d_8to24table[translation[p]];
+//		}
+//	}
+//
+//	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 64, 64, 0, GL_RGBA, GL_UNSIGNED_BYTE, trans);
+//
+//	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+//	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+//
+//	GLfloat texts[] = {
+//		0.0f, 0.0f,
+//		1.0f, 0.0f,
+//		1.0f, 1.0f,
+//		0.0f, 1.0f,
+//	};
+//
+//	GLfloat verts[] = {
+//		(GLfloat)x,              (GLfloat)y,
+//		(GLfloat)x + pic->width, (GLfloat)y,
+//		(GLfloat)x + pic->width, (GLfloat)y + pic->height,
+//		(GLfloat)x,              (GLfloat)y + pic->height,
+//	};
+//
+//	glTexCoordPointer(2, GL_FLOAT, 0, texts);
+//	glVertexPointer(2, GL_FLOAT, 0, verts);
+//	glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+//}
 
 /* Tile graphic to fill the screen */
 void Draw_PicTile(int x, int y, int w, int h, qpic_t *pic, float alpha)
@@ -428,11 +419,6 @@ void Draw_Fill(int x, int y, int w, int h, int c, float alpha)
 	alpha = CLAMP(0, alpha, 1.0f);
 
 	glDisable(GL_TEXTURE_2D);
-	if (alpha < 1.0f)
-	{
-		glEnable(GL_BLEND);
-		glDisable(GL_ALPHA_TEST);
-	}
 	glColor4f(pal[c * 4] / 255.0,
 		  pal[c * 4 + 1] / 255.0,
 		  pal[c * 4 + 2] / 255.0,
@@ -453,11 +439,6 @@ void Draw_Fill(int x, int y, int w, int h, int c, float alpha)
 	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
 
 	glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
-	if (alpha < 1.0f)
-	{
-		glEnable(GL_ALPHA_TEST);
-		glDisable(GL_BLEND);
-	}
 	glEnable(GL_TEXTURE_2D);
 }
 
@@ -557,7 +538,6 @@ void GL_Set2D(void)
 	glDisable(GL_DEPTH_TEST);
 	glDisable(GL_CULL_FACE);
 	glDisable(GL_BLEND);
-	glEnable(GL_ALPHA_TEST);
 	glColor4f(1, 1, 1, 1);
 }
 
