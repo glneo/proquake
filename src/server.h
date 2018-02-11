@@ -204,8 +204,6 @@ extern cvar_t sv_idealpitchscale;
 extern cvar_t sv_aim;
 extern cvar_t sv_altnoclip; //johnfitz
 
-extern cvar_t pq_fullpitch;	// JPG 2.01
-
 extern cvar_t sv_cullentities;
 
 extern server_static_t svs; // persistant server info

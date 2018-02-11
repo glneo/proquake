@@ -1098,7 +1098,7 @@ int PR_SetEngineString(const char *s)
 			return -1 - i;
 	}
 	// new unknown engine string
-	//Con_DPrintf ("PR_SetEngineString: new engine string %p\n", s);
+	Con_DPrintf ("PR_SetEngineString: new engine string %p\n", s);
 #if 0
 	for (i = 0; i < pr_numknownstrings; i++)
 	{

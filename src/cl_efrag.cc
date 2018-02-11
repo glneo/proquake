@@ -57,7 +57,7 @@ void R_RemoveEfrags(entity_t *ent)
 	ent->efrag = NULL;
 }
 
-void R_SplitEntityOnNode(mnode_t *node)
+static void R_SplitEntityOnNode(mnode_t *node)
 {
 	efrag_t *ef;
 	mplane_t *splitplane;

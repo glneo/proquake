@@ -230,8 +230,9 @@ void EmitSkyPolys(msurface_t *fa)
 void R_DrawSkyChain(msurface_t *fa)
 {
 	GL_Bind(solidskytexture);
+
 	GL_EnableMultitexture();
-	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+
 	glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_DECAL);
 	GL_Bind(alphaskytexture);
 

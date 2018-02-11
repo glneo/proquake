@@ -133,9 +133,19 @@ void R_DrawAliasModel(entity_t *ent)
 	// get lighting information
 	ambientlight = shadelight = R_LightPoint(ent->origin);
 
-	// always give the gun some light
-	if (ent == &cl.viewent && ambientlight < 24)
-		ambientlight = shadelight = 24;
+	if (ent == &cl.viewent)
+	{
+		// hack the depth range to prevent view model from poking into walls
+#ifdef OPENGLES
+		glDepthRangef(gldepthmin, gldepthmin + 0.3 * (gldepthmax - gldepthmin));
+#else
+		glDepthRange(gldepthmin, gldepthmin + 0.3 * (gldepthmax - gldepthmin));
+#endif
+
+		// always give the gun some light
+		if (ambientlight < 24)
+			ambientlight = shadelight = 24;
+	}
 
 	for (int lnum = 0; lnum < MAX_DLIGHTS; lnum++)
 	{
@@ -178,7 +188,7 @@ void R_DrawAliasModel(entity_t *ent)
 	// draw all the triangles
 
 	glPushMatrix();
-	R_RotateForEntity(ent);
+	GL_RotateForEntity(ent);
 
 	int anim = (int) (cl.time * 10) & 3;
 	if ((ent->skinnum < 0) ||
@@ -241,4 +251,13 @@ void R_DrawAliasModel(entity_t *ent)
 		GL_DrawAliasShadow(ent, aliasmodel, pose);
 
 	glPopMatrix();
+
+	if (ent == &cl.viewent)
+	{
+#ifdef OPENGLES
+		glDepthRangef(gldepthmin, gldepthmax);
+#else
+		glDepthRange(gldepthmin, gldepthmax);
+#endif
+	}
 }

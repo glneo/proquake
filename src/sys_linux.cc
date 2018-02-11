@@ -199,6 +199,11 @@ void Sys_CopyToClipboard(char *text)
 	SDL_SetClipboardText(text);
 }
 
+void Sys_Sleep(unsigned long msecs)
+{
+	SDL_Delay (msecs);
+}
+
 char *Sys_ConsoleInput(void)
 {
 	static char text[256];

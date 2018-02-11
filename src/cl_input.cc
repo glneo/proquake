@@ -124,7 +124,7 @@ void KeyUp(kbutton_t *b)
  void IN_MLookDown (void) {KeyDown(&in_mlook);}
  void IN_MLookUp (void) {
 	KeyUp(&in_mlook);
-	if ( !(freelook.value || (in_mlook.state & 1)) &&  lookspring.value)
+	if ( !(in_mlook.state & 1) && lookspring.value)
 		V_StartPitchDrift_f();
 }
  void IN_UpDown(void) {KeyDown(&in_up);}
@@ -226,7 +226,7 @@ cvar_t cl_pitchspeed = { "cl_pitchspeed", "150" };
 cvar_t cl_anglespeedkey = { "cl_anglespeedkey", "1.5" };
 
 cvar_t m_accel = { "m_accel", "0" };
-cvar_t freelook = { "freelook", "1", true }; // Freelook cvar support
+
 cvar_t pq_lag = { "pq_lag", "0" }; // synthetic lag
 
 /* Moves the local angle positions */

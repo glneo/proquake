@@ -39,7 +39,6 @@
 #define __SPRITEGEN_H
 
 #define SPRITE_VERSION 1
-#define SPRITE32_VERSION 32 // Baker: ProQuake doesn't use this; JoeQuake does
 
 // must match definition in modelgen.h
 #ifndef SYNCTYPE_T
@@ -52,13 +51,13 @@ typedef enum {
 
 // TODO: shorten these?
 typedef struct {
-	int ident;
-	int version;
-	int type;
+	int32_t ident;
+	int32_t version;
+	int32_t type;
 	float boundingradius;
-	int width;
-	int height;
-	int numframes;
+	int32_t width;
+	int32_t height;
+	int32_t numframes;
 	float beamlength;
 	synctype_t synctype;
 } dsprite_t;
@@ -70,13 +69,13 @@ typedef struct {
 #define SPR_VP_PARALLEL_ORIENTED        4
 
 typedef struct {
-	int origin[2];
-	int width;
-	int height;
+	int32_t origin[2];
+	int32_t width;
+	int32_t height;
 } dspriteframe_t;
 
 typedef struct {
-	int numframes;
+	int32_t numframes;
 } dspritegroup_t;
 
 typedef struct {

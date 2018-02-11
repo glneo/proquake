@@ -76,6 +76,7 @@ void GL_EnableMultitexture(void)
 	{
 		GL_SelectTextureUnit(GL_TEXTURE1);
 		glClientActiveTexture(GL_TEXTURE1);
+		glEnableClientState(GL_TEXTURE_COORD_ARRAY);
 		glEnable(GL_TEXTURE_2D);
 		mtexenabled = true;
 	}
@@ -87,6 +88,7 @@ void GL_DisableMultitexture(void)
 	if (mtexenabled)
 	{
 		glDisable(GL_TEXTURE_2D);
+		glDisableClientState(GL_TEXTURE_COORD_ARRAY);
 		glClientActiveTexture(GL_TEXTURE0);
 		GL_SelectTextureUnit(GL_TEXTURE0);
 		mtexenabled = false;

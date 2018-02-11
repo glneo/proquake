@@ -132,11 +132,9 @@ byte menuplyr_pixels[4096];
 
 qpic_t *Draw_PicFromWad(const char *name)
 {
-	qpic_t *p;
 	glpic_t gl;
-//	src_offset_t offset;
 
-	p = (qpic_t *) W_GetLumpName(name);
+	qpic_t *p = (qpic_t *) W_GetLumpName(name);
 
 	// load little ones into the scrap
 	if (p->width < 64 && p->height < 64)
@@ -226,16 +224,6 @@ static void OnChange_gl_smoothfont(struct cvar_s *cvar)
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, cvar->value ? GL_LINEAR : GL_NEAREST);
 }
 
-/*
- ================
- Draw_Character
-
- Draws one 8*8 graphics character with 0 being transparent.
- It can be clipped to the top of the screen to allow the console to be
- smoothly scrolled off.
- ================
- */
-
 static bool IsValid(int y, int num)
 {
 	if ((num & 127) == 32)
@@ -277,6 +265,11 @@ static void Character(int x, int y, int num)
 	glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 }
 
+/*
+ * Draws one 8*8 graphics character with 0 being transparent.
+ * It can be clipped to the top of the screen to allow the console to be
+ * smoothly scrolled off.
+ */
 void Draw_Character(int x, int y, int num)
 {
 	if (!IsValid(y, num))
@@ -312,8 +305,8 @@ void Draw_Pic(int x, int y, qpic_t *pic, float alpha)
 	{
 		glEnable(GL_BLEND);
 		glDisable(GL_ALPHA_TEST);
+		glColor4f(1.0f, 1.0f, 1.0f, alpha);
 	}
-	glColor4f(1.0f, 1.0f, 1.0f, alpha);
 
 	glpic_t *gl = (glpic_t *) pic->data;
 	GL_Bind(gl->gltexture);
@@ -336,9 +329,9 @@ void Draw_Pic(int x, int y, qpic_t *pic, float alpha)
 	glVertexPointer(2, GL_FLOAT, 0, verts);
 	glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 
-	glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
 	if (alpha < 1.0f)
 	{
+		glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
 		glEnable(GL_ALPHA_TEST);
 		glDisable(GL_BLEND);
 	}

@@ -14,6 +14,9 @@
  * General Public License for more details.
  */
 
+#ifndef __RENDER_H
+#define __RENDER_H
+
 #define	TOP_RANGE       16 // soldier uniform colors
 #define	BOTTOM_RANGE    96
 
@@ -130,8 +133,6 @@ void R_ViewChanged(vrect_t *pvrect, int lineadj, float aspect); // called whenev
 
 void R_InitSky(struct texture_s *mt);	// called at level load
 
-void R_AddEfrags(entity_t *ent);
-void R_RemoveEfrags(entity_t *ent);
 
 void R_NewMap(void);
 
@@ -166,3 +167,5 @@ void R_LavaSplash(vec3_t org);
 void R_TeleportSplash(vec3_t org);
 
 void R_PushDlights(void);
+
+#endif /* __RENDER_H */

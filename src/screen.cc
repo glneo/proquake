@@ -84,25 +84,23 @@ cvar_t scr_conwidth = { "scr_conwidth", "0", CVAR_ARCHIVE };
 cvar_t scr_conspeed = { "scr_conspeed", "500", CVAR_ARCHIVE };
 
 cvar_t crosshair = { "crosshair", "1", CVAR_ARCHIVE };
-cvar_t scr_crosshairalpha = { "crosshairalpha", "1", CVAR_ARCHIVE };
+cvar_t scr_crosshairalpha = { "scr_crosshairalpha", "1", CVAR_ARCHIVE };
 cvar_t scr_crosshairscale = { "scr_crosshairscale", "1", CVAR_ARCHIVE };
 cvar_t scr_crosshaircentered = { "scr_crosshaircentered", "1", CVAR_ARCHIVE };
 
 cvar_t scr_fadealpha = { "scr_fadealpha", "0.5", CVAR_ARCHIVE };
 
-cvar_t scr_showfps = { "scr_showfps", "0", CVAR_NONE };
-cvar_t scr_showram = { "showram", "1", CVAR_NONE };
+cvar_t scr_showfps = { "showfps", "0", CVAR_NONE };
 cvar_t scr_showturtle = { "showturtle", "0", CVAR_NONE };
 cvar_t scr_showpause = { "showpause", "1", CVAR_NONE };
-cvar_t scr_showclock = { "scr_clock", "0", CVAR_NONE };
+cvar_t scr_showclock = { "showclock", "0", CVAR_ARCHIVE };
+cvar_t scr_devstats = {"showdevstats","0", CVAR_NONE};
 
 cvar_t scr_fov = { "fov", "90", CVAR_NONE }; // 10 - 170
 cvar_t scr_fov_adapt = { "fov_adapt", "1", CVAR_ARCHIVE };
 cvar_t scr_viewsize = { "viewsize", "100", CVAR_ARCHIVE };
 cvar_t scr_centertime = { "scr_centertime", "2", CVAR_NONE };
 cvar_t scr_printspeed = { "scr_printspeed", "8", CVAR_NONE };
-
-cvar_t gl_triplebuffer = { "gl_triplebuffer", "1", CVAR_ARCHIVE };
 
 bool scr_initialized; // ready to draw
 
@@ -364,15 +362,6 @@ void SCR_Conwidth_f(cvar_t *var)
 
 //============================================================================
 
-
-
-//============================================================================
-
-/*
- ==============
- SCR_DrawFPS -- johnfitz
- ==============
- */
 void SCR_DrawFPS(void)
 {
 	static double oldtime = 0;
@@ -413,26 +402,18 @@ void SCR_DrawFPS(void)
 	}
 }
 
-/*
- ==============
- SCR_DrawClock -- johnfitz
- ==============
- */
 void SCR_DrawClock(void)
 {
-	char str[12];
-
-	if (scr_showclock.value == 1)
-	{
-		int minutes, seconds;
-
-		minutes = cl.time / 60;
-		seconds = ((int) cl.time) % 60;
-
-		sprintf(str, "%i:%i%i", minutes, seconds / 10, seconds % 10);
-	}
-	else
+	if (!scr_showclock.value)
 		return;
+
+	int minutes, seconds;
+
+	minutes = cl.time / 60;
+	seconds = ((int) cl.time) % 60;
+
+	char str[12];
+	sprintf(str, "%i:%i%i", minutes, seconds / 10, seconds % 10);
 
 	//draw it
 	Draw_SetCanvas (CANVAS_BOTTOMRIGHT);
@@ -441,51 +422,34 @@ void SCR_DrawClock(void)
 	scr_tileclear_updates = 0;
 }
 
-/*
- ==============
- SCR_DrawDevStats
- ==============
- */
-//void SCR_DrawDevStats (void)
-//{
-//	char	str[40];
-//	int		y = 25-9; //9=number of lines to print
-//	int		x = 0; //margin
-//
-//	if (!devstats.value)
-//		return;
-//
-//	Draw_SetCanvas (CANVAS_BOTTOMLEFT);
-//
-//	Draw_Fill (x, y*8, 19*8, 9*8, 0, 0.5); //dark rectangle
-//
-//	sprintf (str, "devstats |Curr Peak");
-//	Draw_String (x, (y++)*8-x, str);
-//
-//	sprintf (str, "---------+---------");
-//	Draw_String (x, (y++)*8-x, str);
-//
-//	sprintf (str, "Edicts   |%4i %4i", dev_stats.edicts, dev_peakstats.edicts);
-//	Draw_String (x, (y++)*8-x, str);
-//
-//	sprintf (str, "Packet   |%4i %4i", dev_stats.packetsize, dev_peakstats.packetsize);
-//	Draw_String (x, (y++)*8-x, str);
-//
-//	sprintf (str, "Visedicts|%4i %4i", dev_stats.visedicts, dev_peakstats.visedicts);
-//	Draw_String (x, (y++)*8-x, str);
-//
-//	sprintf (str, "Efrags   |%4i %4i", dev_stats.efrags, dev_peakstats.efrags);
-//	Draw_String (x, (y++)*8-x, str);
-//
-//	sprintf (str, "Dlights  |%4i %4i", dev_stats.dlights, dev_peakstats.dlights);
-//	Draw_String (x, (y++)*8-x, str);
-//
-//	sprintf (str, "Beams    |%4i %4i", dev_stats.beams, dev_peakstats.beams);
-//	Draw_String (x, (y++)*8-x, str);
-//
-//	sprintf (str, "Tempents |%4i %4i", dev_stats.tempents, dev_peakstats.tempents);
-//	Draw_String (x, (y++)*8-x, str);
-//}
+void SCR_DrawDevStats(void)
+{
+	char	str[40];
+	int		y = 25-9; //9=number of lines to print
+	int		x = 0; //margin
+
+	if (!scr_devstats.value)
+		return;
+
+	Draw_SetCanvas (CANVAS_BOTTOMLEFT);
+
+	Draw_Fill (x, y*8, 19*8, 9*8, 0, 0.5); //dark rectangle
+
+	sprintf (str, "devstats |Curr Max");
+	Draw_String (x, (y++)*8-x, str);
+
+	sprintf (str, "---------+---------");
+	Draw_String (x, (y++)*8-x, str);
+
+	sprintf (str, "Packet   |%4i %4i", 0, 0);
+	Draw_String (x, (y++)*8-x, str);
+
+	sprintf (str, "Visedicts|%4i %4i", cl_numvisedicts, MAX_VISEDICTS);
+	Draw_String (x, (y++)*8-x, str);
+
+	sprintf (str, "Dlights  |%4i %4i", 0, 0);
+	Draw_String (x, (y++)*8-x, str);
+}
 
 void SCR_DrawCrosshair(void)
 {
@@ -555,6 +519,7 @@ void SCR_DrawPause(void)
 {
 	qpic_t *pic;
 
+	//FIXME: Pause is broken, try it
 	if (!cl.paused)
 		return;
 
@@ -989,12 +954,14 @@ void SCR_UpdateScreen(void)
 		SCR_DrawPause();
 		SCR_CheckDrawCenterString();
 		SCR_DrawSbar();
-//		SCR_DrawDevStats ();
+		SCR_DrawDevStats();
 		SCR_DrawFPS();
 		SCR_DrawClock();
 		SCR_DrawConsole();
 		SCR_DrawMenu();
 	}
+
+//	Sbar_IntermissionOverlay();
 
 //	Draw_SetCanvas(CANVAS_SBAR);
 //	Draw_Fill(0, 0, vid.width, vid.height, 0, scr_fadealpha.value);
@@ -1024,10 +991,10 @@ void SCR_Init(void)
 	Cvar_RegisterVariable(&scr_fadealpha);
 
 	Cvar_RegisterVariable(&scr_showfps);
-	Cvar_RegisterVariable(&scr_showram);
 	Cvar_RegisterVariable(&scr_showturtle);
 	Cvar_RegisterVariable(&scr_showpause);
 	Cvar_RegisterVariable(&scr_showclock);
+	Cvar_RegisterVariable(&scr_devstats);
 
 	Cvar_RegisterVariable(&scr_fov);
 	Cvar_RegisterVariable(&scr_fov_adapt);

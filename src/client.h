@@ -416,6 +416,11 @@ void CL_TimeDemo_f(void);
 
 void CL_Clear_Demos_Queue(void);
 
+// cl_efrag.c
+void R_RemoveEfrags(entity_t *ent);
+void R_AddEfrags(entity_t *ent);
+void R_StoreEfrags(efrag_t **ppefrag);
+
 // cl_parse.c
 void CL_ParseServerMessage(void);
 void CL_NewTranslation(int slot);

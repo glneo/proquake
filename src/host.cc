@@ -662,9 +662,8 @@ bool Host_FilterTime(double time)
 
 	if (!cls.capturedemo && !cls.timedemo && realtime - oldrealtime < 1.0 / fps)
 	{
-
-		//if (host_sleep.value)
-		//	Sys_Sleep (); // Lower cpu
+		if (host_sleep.value)
+			Sys_Sleep(1); // Lower cpu
 
 		return false;		// framerate is too high
 	}
@@ -826,6 +825,8 @@ void _Host_Frame(double time)
 		CL_ReadFromServer();
 
 	CL_RunParticles();
+
+	R_PushDlights();
 
 	// update video
 	if (host_speeds.value)
@@ -1002,35 +1003,19 @@ void Host_Init(quakeparms_t *parms)
 			Sys_Error("Couldn't load gfx/colormap.lmp");
 
 		VID_Init();
-
 		GL_Init();
-
 		TexMgr_LoadPalette();
-
 		IN_Init();
-
 		TexMgr_Init();
 		R_Init();
-
 		Draw_Init();
 		SCR_Init();
-
 		S_Init();
-
-//		CDAudio_Init ();
 		Sbar_Init();
 		CL_Init();
 	}
 
 	Cbuf_InsertText("exec quake.rc\n");
-
-	// Baker 3.80x: this is a hack
-
-	if (!isDedicated)
-	{
-		Cbuf_AddText("\nsavefov\n");
-		Cbuf_AddText("savesensitivity\n");
-	}
 
 	Hunk_AllocName(0, "-HOST_HUNKLEVEL-");
 	host_hunklevel = Hunk_LowMark();

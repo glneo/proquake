@@ -16,7 +16,7 @@
 
 extern cvar_t pausable;
 
-cvar_t cl_confirmquit = { "cl_confirmquit", "1", true }; // Baker 3.60
+cvar_t cl_confirmquit = { "cl_confirmquit", "1", CVAR_ARCHIVE };
 
 // JPG - added these for spam protection
 extern cvar_t pq_spam_rate;
@@ -28,9 +28,6 @@ extern cvar_t pq_tempmute;
 
 // JPG - feature request from Slot
 extern cvar_t pq_showedict;
-
-// JPG 3.20 - optionally remove '\r'
-extern cvar_t pq_removecr;
 
 // JPG 3.20 - optionally write player binds to server log
 extern cvar_t pq_logbinds;
@@ -50,13 +47,12 @@ void Host_Quit(void)
 
 void Host_Quit_f(void)
 {
-	if (cl_confirmquit.value)
+	if ((key_dest != key_console && !con_forcedup) &&
+	    cls.state != ca_dedicated &&
+	    cl_confirmquit.value)
 	{
-		if ((key_dest != key_console && !con_forcedup) && cls.state != ca_dedicated)
-		{
-			M_Menu_Quit_f();
-			return;
-		}
+		M_Menu_Quit_f();
+		return;
 	}
 
 	Host_Quit();
@@ -330,7 +326,7 @@ void Host_Status_f(void)
 		print = SV_ClientPrintf;
 
 	print("host:    %s (anti-wallhack %s)\n", Cvar_VariableString(hostname.name), sv_cullentities.value ? "on [mode: players]" : "off");
-	print("version: %s %4.2f\n", ENGINE_NAME, PROQUAKE_SERIES_VERSION);
+	print("version: %s %s\n", ENGINE_NAME, ENGINE_VERSION);
 	if (tcpipAvailable)
 		print("tcp/ip:  %s\n", my_tcpip_address);
 	print("map:     %s\n", sv.name);

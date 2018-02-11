@@ -734,7 +734,6 @@ void CL_Init(void)
 	Cvar_RegisterVariable(&lookspring);
 	Cvar_RegisterVariable(&lookstrafe);
 	Cvar_RegisterVariable(&sensitivity);
-	Cvar_RegisterVariable(&freelook);
 
 	Cvar_RegisterVariable(&cl_maxpitch);
 	Cvar_RegisterVariable(&cl_minpitch);

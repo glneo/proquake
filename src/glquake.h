@@ -24,7 +24,11 @@
 #endif
 #include <math.h>
 
+#include "render.h"
+
 #include "gl_texmgr.h"
+
+#define BACKFACE_EPSILON 0.01
 
 extern int d_lightstylevalue[256]; // 8.8 fraction of base light value
 
@@ -35,6 +39,8 @@ extern bool gl_texture_NPOT;
 
 extern int r_framecount;
 extern int c_brush_polys, c_alias_polys;
+
+extern float gldepthmin, gldepthmax;
 
 // view origin
 extern vec3_t vup;
@@ -74,6 +80,8 @@ extern cvar_t gl_playermip;
 extern cvar_t gl_fullbright;
 extern cvar_t r_ringalpha;
 
+extern cvar_t vid_vsync;
+
 extern qpic_t *draw_disc;
 
 typedef enum {
@@ -107,12 +115,8 @@ void GL_Set2D(void);
 qpic_t *Draw_MakePic(const char *name, int width, int height, byte *data);
 void Draw_Init(void);
 
-// gl_fullbright.c
-int FindFullbrightTexture (byte *pixels, int num_pix);
-void ConvertPixels (byte *pixels, int num_pixels);
-void DrawFullBrightTextures(entity_t *ent);
-
 // gl_light.c
+void R_ClearLightmapPolys();
 void R_BlendLightmaps(void);
 void R_BuildLightMap(msurface_t *surf, byte *dest, int stride);
 void R_RenderDynamicLightmaps(msurface_t *fa);
@@ -124,15 +128,18 @@ int R_LightPoint(vec3_t p);
 void GL_BuildLightmaps(void);
 
 // gl_main.c
-void R_RotateForEntity(entity_t *ent);
+void GL_RotateForEntity(entity_t *ent);
+void GL_PolyBlend(void);
 bool R_CullBox(vec3_t mins, vec3_t maxs);
 bool R_CullForEntity(const entity_t *ent);
+void GL_Setup(void);
 void R_TranslatePlayerSkin(int playernum);
 void R_NewMap(void);
 void R_RenderView(void);
 void GL_Init(void);
 void GL_BeginRendering();
 void GL_EndRendering(void);
+void R_Clear(void);
 void R_Init(void);
 
 // gl_particle.c
@@ -147,6 +154,7 @@ void DrawGLPoly(glpoly_t *p);
 void DrawGLPolyLight(glpoly_t *p);
 texture_t *R_TextureAnimation(int frame, texture_t *base);
 void R_DrawWaterSurfaces(void);
+void DrawTextureChains(brush_model_t *brushmodel);
 void DrawGLWaterPoly(glpoly_t *p);
 void DrawGLWaterPolyLight(glpoly_t *p);
 void R_RenderBrushPoly(msurface_t *fa, int frame);

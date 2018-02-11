@@ -82,32 +82,6 @@ void Sbar_DontShowScores(void)
 // drawing routines are relative to the status bar location
 
 /*
- =============
- Sbar_DrawPic -- johnfitz -- rewritten now that Draw_SetCanvas is doing the work
- =============
- */
-void Sbar_DrawPic(int x, int y, qpic_t *pic)
-{
-	Draw_Pic(x, y + 24, pic, 1.0f);
-}
-
-/*
- =============
- Sbar_DrawPicAlpha -- johnfitz
- =============
- */
-void Sbar_DrawPicAlpha(int x, int y, qpic_t *pic, float alpha)
-{
-//	glDisable (GL_ALPHA_TEST);
-//	glEnable (GL_BLEND);
-//	glColor4f(1,1,1,alpha);
-	Draw_Pic(x, y + 24, pic, alpha);
-//	glColor4f(1,1,1,1); // ericw -- changed from glColor3f to work around intel 855 bug with "r_oldwater 0" and "scr_sbaralpha 0"
-//	glDisable (GL_BLEND);
-//	glEnable (GL_ALPHA_TEST);
-}
-
-/*
  ================
  Sbar_DrawCharacter -- johnfitz -- rewritten now that Draw_SetCanvas is doing the work
  ================
@@ -133,7 +107,7 @@ void Sbar_DrawNum(int x, int y, int num, int color)
 	for (int j = 0; j < 3; j++)
 	{
 		int digit = val % 10;
-		Sbar_DrawPic(x + (24 * (2 - j)), y, sb_nums[color][digit]);
+		Draw_Pic(x + (24 * (2 - j)), y, sb_nums[color][digit], 1.0f);
 		val /= 10;
 		if (val == 0)
 			break;
@@ -304,12 +278,12 @@ void Sbar_DrawInventory(void)
 	if (rogue)
 	{
 		if (cl.stats[STAT_ACTIVEWEAPON] >= RIT_LAVA_NAILGUN)
-			Sbar_DrawPicAlpha(0, -24, rsb_invbar[0], scr_sbaralpha.value);
+			Draw_Pic(0, 0, rsb_invbar[0], scr_sbaralpha.value);
 		else
-			Sbar_DrawPicAlpha(0, -24, rsb_invbar[1], scr_sbaralpha.value);
+			Draw_Pic(0, 0, rsb_invbar[1], scr_sbaralpha.value);
 	}
 	else
-		Sbar_DrawPicAlpha(0, -24, sb_ibar, scr_sbaralpha.value);
+		Draw_Pic(0, 0, sb_ibar, scr_sbaralpha.value);
 
 	// weapons
 	for (int i = 0; i < 7; i++)
@@ -328,7 +302,7 @@ void Sbar_DrawInventory(void)
 			else
 				flashon = (flashon % 5) + 2;
 
-			Sbar_DrawPic(i * 24, -16, sb_weapons[flashon][i]);
+			Draw_Pic(i * 24, 8, sb_weapons[flashon][i], 1.0f);
 		}
 	}
 
@@ -361,7 +335,7 @@ void Sbar_DrawInventory(void)
 						if (flashon)
 						{
 							grenadeflashing = 1;
-							Sbar_DrawPic(96, -16, hsb_weapons[flashon][2]);
+							Draw_Pic(96, 8, hsb_weapons[flashon][2], 1.0f);
 						}
 					}
 				}
@@ -370,15 +344,15 @@ void Sbar_DrawInventory(void)
 					if (cl.items & (IT_SHOTGUN << 4))
 					{
 						if (flashon && !grenadeflashing)
-							Sbar_DrawPic(96, -16, hsb_weapons[flashon][3]);
+							Draw_Pic(96, 8, hsb_weapons[flashon][3], 1.0f);
 						else if (!grenadeflashing)
-							Sbar_DrawPic(96, -16, hsb_weapons[0][3]);
+							Draw_Pic(96, 8, hsb_weapons[0][3], 1.0f);
 					}
 					else
-						Sbar_DrawPic(96, -16, hsb_weapons[flashon][4]);
+						Draw_Pic(96, 8, hsb_weapons[flashon][4], 1.0f);
 				}
 				else
-					Sbar_DrawPic(176 + (i * 24), -16, hsb_weapons[flashon][i]);
+					Draw_Pic(176 + (i * 24), 8, hsb_weapons[flashon][i], 1.0f);
 			}
 		}
 	}
@@ -387,7 +361,7 @@ void Sbar_DrawInventory(void)
 		if (cl.stats[STAT_ACTIVEWEAPON] >= RIT_LAVA_NAILGUN) // check for powered up weapon.
 			for (int i = 0; i < 5; i++)
 				if (cl.stats[STAT_ACTIVEWEAPON] == (RIT_LAVA_NAILGUN << i))
-					Sbar_DrawPic((i + 2) * 24, -16, rsb_weapons[i]);
+					Draw_Pic((i + 2) * 24, 8, rsb_weapons[i], 1.0f);
 
 	// ammo counts
 	for (int i = 0; i < 4; i++)
@@ -414,7 +388,7 @@ void Sbar_DrawInventory(void)
 			{
 				//MED 01/04/97 changed keys
 				if (!hipnotic || (i > 1))
-					Sbar_DrawPic(192 + i * 16, -16, sb_items[i]);
+					Draw_Pic(192 + i * 16, 8, sb_items[i], 1.0f);
 			}
 		}
 	}
@@ -428,7 +402,7 @@ void Sbar_DrawInventory(void)
 			{
 				float time = cl.item_gettime[24 + i];
 				if (!time || time <= cl.time - 2 || !flashon)
-					Sbar_DrawPic(288 + i * 16, -16, hsb_items[i]);
+					Draw_Pic(288 + i * 16, 8, hsb_items[i], 1.0f);
 			}
 		}
 	}
@@ -441,7 +415,7 @@ void Sbar_DrawInventory(void)
 			{
 				float time = cl.item_gettime[29 + i];
 				if (!time || time <= cl.time - 2 || !flashon)
-					Sbar_DrawPic(288 + i * 16, -16, rsb_items[i]);
+					Draw_Pic(288 + i * 16, 8, rsb_items[i], 1.0f);
 			}
 		}
 	}
@@ -454,7 +428,7 @@ void Sbar_DrawInventory(void)
 			{
 				float time = cl.item_gettime[28 + i];
 				if (!time || time <= cl.time - 2 || !flashon)
-					Sbar_DrawPic(320 - 32 + i * 8, -16, sb_sigil[i]);
+					Draw_Pic(320 - 32 + i * 8, 8, sb_sigil[i], 1.0f);
 			}
 		}
 	}
@@ -595,7 +569,7 @@ static void Sbar_DrawFace(void)
 		else
 			xofs = ((vid.width - 320) >> 1) + 113;
 
-		Sbar_DrawPic(112, 0, rsb_teambord);
+		Draw_Pic(112, 24, rsb_teambord, 1.0f);
 		Draw_Fill(xofs, /*vid.height-*/
 		24 + 3, 22, 9, top, 1); //johnfitz -- sbar coords are now relative
 		Draw_Fill(xofs, /*vid.height-*/
@@ -627,22 +601,22 @@ static void Sbar_DrawFace(void)
 	if ((cl.items & IT_INVISIBILITY) &&
 	    (cl.items & IT_INVULNERABILITY))
 	{
-		Sbar_DrawPic(112, 0, sb_face_invis_invuln);
+		Draw_Pic(112, 24, sb_face_invis_invuln, 1.0f);
 		return;
 	}
 	if (cl.items & IT_QUAD)
 	{
-		Sbar_DrawPic(112, 0, sb_face_quad);
+		Draw_Pic(112, 24, sb_face_quad, 1.0f);
 		return;
 	}
 	if (cl.items & IT_INVISIBILITY)
 	{
-		Sbar_DrawPic(112, 0, sb_face_invis);
+		Draw_Pic(112, 24, sb_face_invis, 1.0f);
 		return;
 	}
 	if (cl.items & IT_INVULNERABILITY)
 	{
-		Sbar_DrawPic(112, 0, sb_face_invuln);
+		Draw_Pic(112, 24, sb_face_invuln, 1.0f);
 		return;
 	}
 
@@ -652,7 +626,7 @@ static void Sbar_DrawFace(void)
 		anim = 1;
 	else
 		anim = 0;
-	Sbar_DrawPic(112, 0, sb_faces[face][anim]);
+	Draw_Pic(112, 24, sb_faces[face][anim], 1.0f);
 }
 
 void Sbar_Draw(void)
@@ -691,49 +665,49 @@ void Sbar_Draw(void)
 
 	if (sb_showscores || cl.stats[STAT_HEALTH] <= 0)
 	{
-		Sbar_DrawPicAlpha(0, 0, sb_scorebar, scr_sbaralpha.value);
+		Draw_Pic(0, 24, sb_scorebar, scr_sbaralpha.value);
 		Sbar_DrawScoreboard();
 	}
 	else if (scr_viewsize.value < 120)
 	{
-		Sbar_DrawPicAlpha(0, 0, sb_sbar, scr_sbaralpha.value);
+		Draw_Pic(0, 24, sb_sbar, scr_sbaralpha.value);
 
 		// keys (hipnotic only)
 		//MED 01/04/97 moved keys here so they would not be overwritten
 		if (hipnotic)
 		{
 			if (cl.items & IT_KEY1)
-				Sbar_DrawPic(209, 3, sb_items[0]);
+				Draw_Pic(209, 27, sb_items[0], 1.0f);
 			if (cl.items & IT_KEY2)
-				Sbar_DrawPic(209, 12, sb_items[1]);
+				Draw_Pic(209, 36, sb_items[1], 1.0f);
 		}
 		// armor
 		if (cl.items & IT_INVULNERABILITY)
 		{
-			Sbar_DrawNum(24, 0, 666, 1);
-//			Sbar_DrawPic (0, 0, draw_disc);
+			Sbar_DrawNum(24, 24, 666, 1);
+//			Draw_Pic(0, 24, draw_disc);
 		}
 		else
 		{
 			if (rogue)
 			{
-				Sbar_DrawNum(24, 0, cl.stats[STAT_ARMOR], cl.stats[STAT_ARMOR] <= 25);
+				Sbar_DrawNum(24, 24, cl.stats[STAT_ARMOR], cl.stats[STAT_ARMOR] <= 25);
 				if (cl.items & RIT_ARMOR3)
-					Sbar_DrawPic(0, 0, sb_armor[2]);
+					Draw_Pic(0, 24, sb_armor[2], 1.0f);
 				else if (cl.items & RIT_ARMOR2)
-					Sbar_DrawPic(0, 0, sb_armor[1]);
+					Draw_Pic(0, 24, sb_armor[1], 1.0f);
 				else if (cl.items & RIT_ARMOR1)
-					Sbar_DrawPic(0, 0, sb_armor[0]);
+					Draw_Pic(0, 24, sb_armor[0], 1.0f);
 			}
 			else
 			{
-				Sbar_DrawNum(24, 0, cl.stats[STAT_ARMOR], cl.stats[STAT_ARMOR] <= 25);
+				Sbar_DrawNum(24, 24, cl.stats[STAT_ARMOR], cl.stats[STAT_ARMOR] <= 25);
 				if (cl.items & IT_ARMOR3)
-					Sbar_DrawPic(0, 0, sb_armor[2]);
+					Draw_Pic(0, 24, sb_armor[2], 1.0f);
 				else if (cl.items & IT_ARMOR2)
-					Sbar_DrawPic(0, 0, sb_armor[1]);
+					Draw_Pic(0, 24, sb_armor[1], 1.0f);
 				else if (cl.items & IT_ARMOR1)
-					Sbar_DrawPic(0, 0, sb_armor[0]);
+					Draw_Pic(0, 24, sb_armor[0], 1.0f);
 			}
 		}
 
@@ -741,39 +715,39 @@ void Sbar_Draw(void)
 		Sbar_DrawFace();
 
 		// health
-		Sbar_DrawNum(136, 0, cl.stats[STAT_HEALTH], cl.stats[STAT_HEALTH] <= 25);
+		Sbar_DrawNum(136, 24, cl.stats[STAT_HEALTH], cl.stats[STAT_HEALTH] <= 25);
 
 		// ammo icon
 		if (rogue)
 		{
 			if (cl.items & RIT_SHELLS)
-				Sbar_DrawPic(224, 0, sb_ammo[0]);
+				Draw_Pic(224, 24, sb_ammo[0], 1.0f);
 			else if (cl.items & RIT_NAILS)
-				Sbar_DrawPic(224, 0, sb_ammo[1]);
+				Draw_Pic(224, 24, sb_ammo[1], 1.0f);
 			else if (cl.items & RIT_ROCKETS)
-				Sbar_DrawPic(224, 0, sb_ammo[2]);
+				Draw_Pic(224, 24, sb_ammo[2], 1.0f);
 			else if (cl.items & RIT_CELLS)
-				Sbar_DrawPic(224, 0, sb_ammo[3]);
+				Draw_Pic(224, 24, sb_ammo[3], 1.0f);
 			else if (cl.items & RIT_LAVA_NAILS)
-				Sbar_DrawPic(224, 0, rsb_ammo[0]);
+				Draw_Pic(224, 24, rsb_ammo[0], 1.0f);
 			else if (cl.items & RIT_PLASMA_AMMO)
-				Sbar_DrawPic(224, 0, rsb_ammo[1]);
+				Draw_Pic(224, 24, rsb_ammo[1], 1.0f);
 			else if (cl.items & RIT_MULTI_ROCKETS)
-				Sbar_DrawPic(224, 0, rsb_ammo[2]);
+				Draw_Pic(224, 24, rsb_ammo[2], 1.0f);
 		}
 		else
 		{
 			if (cl.items & IT_SHELLS)
-				Sbar_DrawPic(224, 0, sb_ammo[0]);
+				Draw_Pic(224, 24, sb_ammo[0], 1.0f);
 			else if (cl.items & IT_NAILS)
-				Sbar_DrawPic(224, 0, sb_ammo[1]);
+				Draw_Pic(224, 24, sb_ammo[1], 1.0f);
 			else if (cl.items & IT_ROCKETS)
-				Sbar_DrawPic(224, 0, sb_ammo[2]);
+				Draw_Pic(224, 24, sb_ammo[2], 1.0f);
 			else if (cl.items & IT_CELLS)
-				Sbar_DrawPic(224, 0, sb_ammo[3]);
+				Draw_Pic(224, 24, sb_ammo[3], 1.0f);
 		}
 
-		Sbar_DrawNum(248, 0, cl.stats[STAT_AMMO], cl.stats[STAT_AMMO] <= 10);
+		Sbar_DrawNum(248, 24, cl.stats[STAT_AMMO], cl.stats[STAT_AMMO] <= 10);
 	}
 
 	if (cl.gametype == GAME_DEATHMATCH)

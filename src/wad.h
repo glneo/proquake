@@ -33,31 +33,30 @@
 
 typedef struct
 {
-	int width, height;
+	int32_t width, height;
 	byte data[4]; // variably sized
 } qpic_t;
 
 typedef struct
 {
-	char identification[4]; // should be WAD2 or 2DAW
-	int numlumps;
-	int infotableofs;
+	byte identification[4]; // should be WAD2 or 2DAW
+	int32_t numlumps;
+	int32_t infotableofs;
 } wadinfo_t;
 
 typedef struct
 {
-	int filepos;
-	int disksize;
-	int size; // uncompressed
-	char type;
-	char compression;
-	char pad1, pad2;
-	char name[16]; // must be null terminated
+	int32_t filepos;
+	int32_t disksize;
+	int32_t size; // uncompressed
+	byte type;
+	byte compression;
+	byte pad1, pad2;
+	byte name[16]; // must be null terminated
 } lumpinfo_t;
 
 void SwapPic(qpic_t *pic);
 void W_LoadWadFile(const char *filename);
 void *W_GetLumpName(const char *name);
-void *W_GetLumpNum(size_t num);
 
 #endif /* __WAD_H */

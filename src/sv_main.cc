@@ -47,7 +47,6 @@ void SV_Init(void)
 	Cvar_RegisterVariable(&sv_aim);
 	Cvar_RegisterVariable(&sv_nostep);
 	Cvar_RegisterVariable(&sv_altnoclip); //johnfitz
-	Cvar_RegisterVariable(&pq_fullpitch);	// JPG 2.01
 
 	Cvar_RegisterVariable(&sv_cullentities);	// JPG 2.01
 	Cvar_RegisterVariable(&sv_cullentities_notify);	// JPG 2.01

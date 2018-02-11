@@ -26,6 +26,7 @@ set(PROQUAKE_SOURCES
 	src/console.cc
 	src/in_sdl.cc
 	src/menu.cc
+	src/r_main.cc
 	src/sbar.cc
 	src/screen.cc
 	src/view.cc

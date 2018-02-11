@@ -17,9 +17,6 @@
 #ifndef __INPUT_H
 #define __INPUT_H
 
-extern cvar_t freelook;
-extern cvar_t m_accel;
-
 void IN_Commands(void); // opportunity for devices to stick commands on the script buffer
 
 void IN_Move(usercmd_t *cmd); // add additional movement on top of the keyboard move cmd

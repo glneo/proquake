@@ -18,7 +18,6 @@
 #define ENGINE_NAME "QuickQuake"
 #define ENGINE_VERSION "0.01 Beta"
 #define ENGINE_HOMEPAGE_URL "https://github.com/glneo/proquake"
-#define PROQUAKE_SERIES_VERSION 0.01
 
 // Define Operating System Names
 #ifdef _WIN32

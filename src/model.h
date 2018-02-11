@@ -263,8 +263,6 @@ typedef struct
 	mspriteframedesc_t *framedescs;
 } sprite_model_t;
 
-void R_DrawSpriteModel(entity_t *ent);
-
 /*
  ==============================================================================
 

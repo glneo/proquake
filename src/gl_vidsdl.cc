@@ -45,6 +45,9 @@ int texture_mode = GL_LINEAR;
 
 viddef_t vid; // global video state
 
+//static cvar_t vid_fullscreen = { "vid_fullscreen", "1", CVAR_ARCHIVE };
+//static cvar_t vid_width = { "vid_width", "1680", CVAR_ARCHIVE };
+//static cvar_t vid_height = { "vid_height", "1050", CVAR_ARCHIVE };
 static cvar_t vid_fullscreen = { "vid_fullscreen", "0", CVAR_ARCHIVE };
 static cvar_t vid_width = { "vid_width", "800", CVAR_ARCHIVE };
 static cvar_t vid_height = { "vid_height", "600", CVAR_ARCHIVE };
@@ -168,7 +171,7 @@ static void VID_SetMode(int width, int height, int bpp, bool fullscreen)
 
 //	SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_DEBUG_FLAG);
 
-	snprintf(caption, sizeof(caption), "QuickQuake %1.2f", (float)PROQUAKE_SERIES_VERSION);
+	snprintf(caption, sizeof(caption), "QuickQuake %s", ENGINE_VERSION);
 
 	/* Create the window if needed, hidden */
 	if (!draw_context)
@@ -223,9 +226,20 @@ static void VID_SetMode(int width, int height, int bpp, bool fullscreen)
 	}
 
 	if (SDL_GL_SetSwapInterval((vid_vsync.value) ? 1 : 0) == -1)
+	{
 		gl_swap_control = false;
+		Con_Warning("vertical sync not supported (SDL_GL_SetSwapInterval failed)\n");
+	}
+	else if (vid_vsync.value != SDL_GL_GetSwapInterval())
+	{
+		gl_swap_control = false;
+		Con_Warning("vertical sync not supported (swap_control doesn't match vid_vsync)\n");
+	}
 	else
+	{
 		gl_swap_control = true;
+		Con_Printf("FOUND: SDL_GL_SetSwapInterval\n");
+	}
 
 	vid.width = mode.width;
 	vid.height = mode.height;

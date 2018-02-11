@@ -23,8 +23,6 @@
 
 #define	MAX_LIGHTMAPS   64
 
-#define BACKFACE_EPSILON 0.01
-
 typedef struct glRect_s
 {
 	unsigned char l, t, w, h;
@@ -111,7 +109,7 @@ void R_DrawWaterSurfaces(void)
 	}
 }
 
-static void DrawTextureChains(brush_model_t *brushmodel)
+void DrawTextureChains(brush_model_t *brushmodel)
 {
 	int i;
 	msurface_t *s;
@@ -246,7 +244,7 @@ void R_DrawBrushModel(entity_t *ent)
 		modelorg[2] = DotProduct(temp, up);
 	}
 
-	memset(lightmap_polys, 0, sizeof(lightmap_polys));
+	R_ClearLightmapPolys();
 
 	// calculate dynamic lighting for bmodel if it's not an instanced model
 	if (clmodel->brushmodel->firstmodelsurface != 0 && !gl_flashblend.value)
@@ -262,7 +260,7 @@ void R_DrawBrushModel(entity_t *ent)
 
 	glPushMatrix();
 	ent->angles[0] = -ent->angles[0];	// stupid quake bug
-	R_RotateForEntity(ent);
+	GL_RotateForEntity(ent);
 	ent->angles[0] = -ent->angles[0];	// stupid quake bug
 
 	// draw texture
@@ -285,185 +283,4 @@ void R_DrawBrushModel(entity_t *ent)
 
 	glPopMatrix();
 
-}
-
-/*
- ===============================================================================
-
- WORLD MODEL
-
- ===============================================================================
- */
-
-int r_visframecount; // bumped when going to a new PVS
-
-//FIXME: move to header
-void R_StoreEfrags(efrag_t **ppefrag);
-
-static void R_RecursiveWorldNode(mnode_t *node)
-{
-	int c, side;
-	mplane_t *plane;
-	msurface_t *surf, **mark;
-	mleaf_t *pleaf;
-	double dot;
-
-	if (node->contents == CONTENTS_SOLID)
-		return;		// solid
-
-	if (node->visframe != r_visframecount)
-		return;
-
-	if (R_CullBox(node->minmaxs, node->minmaxs + 3))
-		return;
-
-// if a leaf node, draw stuff
-	if (node->contents < 0)
-	{
-		pleaf = (mleaf_t *) node;
-		mark = pleaf->firstmarksurface;
-		c = pleaf->nummarksurfaces;
-
-		if (c)
-		{
-			do
-			{
-				(*mark)->visframe = r_framecount;
-				mark++;
-			} while (--c);
-		}
-
-		// deal with model fragments in this leaf
-		if (pleaf->efrags)
-			R_StoreEfrags(&pleaf->efrags);
-
-		return;
-	}
-
-	// node is just a decision point, so go down the appropriate sides
-
-	// find which side of the node we are on
-	plane = node->plane;
-
-	switch (plane->type)
-	{
-	case PLANE_X:
-		dot = r_refdef.vieworg[0] - plane->dist;
-		break;
-	case PLANE_Y:
-		dot = r_refdef.vieworg[1] - plane->dist;
-		break;
-	case PLANE_Z:
-		dot = r_refdef.vieworg[2] - plane->dist;
-		break;
-	default:
-		dot = DotProduct (r_refdef.vieworg, plane->normal) - plane->dist;
-		break;
-	}
-
-	side = (dot >= 0) ? 0 : 1;
-
-	// recurse down the children, front side first
-	R_RecursiveWorldNode(node->children[side]);
-
-	// draw stuff
-	c = node->numsurfaces;
-
-	if (c)
-	{
-		if (dot < 0 - BACKFACE_EPSILON)
-			side = SURF_PLANEBACK;
-		else if (dot > BACKFACE_EPSILON)
-			side = 0;
-
-		for (surf = cl.worldmodel->brushmodel->surfaces + node->firstsurface; c; c--, surf++)
-		{
-			if (surf->visframe != r_framecount)
-				continue;
-
-			// don't backface underwater surfaces, because they warp // JPG - added r_waterwarp
-			if ((!(surf->flags & SURF_UNDERWATER) || !r_waterwarp.value) && ((dot < 0) ^ !!(surf->flags & SURF_PLANEBACK)))
-				continue;		// wrong side
-
-			surf->texturechain = surf->texinfo->texture->texturechain;
-			surf->texinfo->texture->texturechain = surf;
-		}
-	}
-
-	// recurse down the back side
-	R_RecursiveWorldNode(node->children[!side]);
-}
-
-void R_DrawWorld(void)
-{
-	entity_t ent;
-
-	memset(&ent, 0, sizeof(ent));
-	ent.model = cl.worldmodel;
-
-	memset(lightmap_polys, 0, sizeof(lightmap_polys));
-
-	R_RecursiveWorldNode(cl.worldmodel->brushmodel->nodes);
-
-	DrawTextureChains(cl.worldmodel->brushmodel);
-
-	R_BlendLightmaps();
-}
-
-void R_MarkLeaves(void)
-{
-	int i;
-	byte *vis, solid[4096];
-	mnode_t *node;
-	extern cvar_t gl_nearwater_fix;
-	msurface_t **mark;
-	bool nearwaterportal = false;
-
-	// Check if near water to avoid HOMs when crossing the surface
-	if (gl_nearwater_fix.value)
-		for (i = 0, mark = r_viewleaf->firstmarksurface; i < r_viewleaf->nummarksurfaces; i++, mark++)
-		{
-			if ((*mark)->flags & SURF_DRAWTURB)
-			{
-				nearwaterportal = true;
-				//	Con_SafePrintf ("R_MarkLeaves: nearwaterportal, surfs=%d\n", r_viewleaf->nummarksurfaces);
-				break;
-			}
-		}
-
-	if ((r_oldviewleaf == r_viewleaf) && !r_novis.value && !nearwaterportal)
-		return;
-
-	r_visframecount++;
-	r_oldviewleaf = r_viewleaf;
-
-	if (r_novis.value)
-	{
-		vis = solid;
-		memset(solid, 0xff, (cl.worldmodel->brushmodel->numleafs + 7) >> 3);
-	}
-	else if (nearwaterportal)
-	{
-		extern byte *SV_FatPVS(vec3_t org, model_t *worldmodel);
-		vis = SV_FatPVS(r_origin, cl.worldmodel);
-	}
-	else
-	{
-		vis = Mod_LeafPVS(r_viewleaf, cl.worldmodel->brushmodel);
-	}
-
-	for (i = 0; i < cl.worldmodel->brushmodel->numleafs; i++)
-	{
-		if (vis[i >> 3] & (1 << (i & 7)))
-		{
-			node = (mnode_t *) &cl.worldmodel->brushmodel->leafs[i + 1];
-			do
-			{
-				if (node->visframe == r_visframecount)
-					break;
-				node->visframe = r_visframecount;
-				node = node->parent;
-			} while (node);
-		}
-	}
 }

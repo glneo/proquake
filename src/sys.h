@@ -54,6 +54,7 @@ void Sys_SendKeyEvents(void); // Perform Key_Event () callbacks until the input 
 
 char *Sys_GetClipboardData(void);
 void Sys_CopyToClipboard(char *);
+void Sys_Sleep(unsigned long msecs);
 void Sys_Init(void);
 
 void Sys_SetWindowCaption(char *newcaption);

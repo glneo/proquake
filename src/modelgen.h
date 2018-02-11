@@ -36,32 +36,32 @@ typedef enum {
 } aliasskintype_t;
 
 typedef struct {
-	int ident;
-	int version;
+	int32_t ident;
+	int32_t version;
 	vec3_t scale;
 	vec3_t scale_origin;
 	float boundingradius;
 	vec3_t eyeposition;
-	int numskins;
-	int skinwidth;
-	int skinheight;
-	int numverts;
-	int numtris;
-	int numframes;
+	int32_t numskins;
+	int32_t skinwidth;
+	int32_t skinheight;
+	int32_t numverts;
+	int32_t numtris;
+	int32_t numframes;
 	synctype_t synctype;
-	int flags;
+	int32_t flags;
 	float size;
 } mdl_t;
 
 typedef struct {
-	int onseam;
-	int s;
-	int t;
+	int32_t onseam;
+	int32_t s;
+	int32_t t;
 } dstvert_t;
 
 typedef struct dtriangle_s {
-	int facesfront;
-	int vertindex[3];
+	int32_t facesfront;
+	int32_t vertindex[3];
 } dtriangle_t;
 
 #define DT_FACES_FRONT 0x0010
@@ -78,13 +78,13 @@ typedef struct {
 } daliasframe_t;
 
 typedef struct {
-	int numframes;
+	int32_t numframes;
 	dtrivertx_t bboxmin; // lightnormal isn't used
 	dtrivertx_t bboxmax; // lightnormal isn't used
 } daliasgroup_t;
 
 typedef struct {
-	int numskins;
+	int32_t numskins;
 } daliasskingroup_t;
 
 typedef struct {

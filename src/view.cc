@@ -48,7 +48,6 @@ cvar_t v_ipitch_level = { "v_ipitch_level", "0.3", false };
 cvar_t v_idlescale = { "v_idlescale", "0", false };
 
 cvar_t r_viewmodeloffset = { "r_viewmodeloffset", "0", true };
-cvar_t cl_colorshow = { "cl_colorshow", "0", true }; // Baker 3.99n - Show pants color @ top of screen
 
 cvar_t gl_cshiftpercent = { "gl_cshiftpercent", "100", false };
 
@@ -782,16 +781,10 @@ void V_RenderView(void)
 	}
 
 	if (cl.intermission) // intermission / finale rendering
-	{
 		V_CalcIntermissionRefdef();
-	}
-	else
-	{
-		if (!cl.paused)
-			V_CalcRefdef();
-	}
+	else if (!cl.paused)
+		V_CalcRefdef();
 
-	R_PushDlights();
 	R_RenderView();
 }
 
@@ -816,7 +809,6 @@ void V_Init(void)
 	Cvar_RegisterVariable(&v_idlescale);
 	Cvar_RegisterVariable(&r_viewmodeloffset);
 
-	Cvar_RegisterVariable(&cl_colorshow);
 	Cvar_RegisterVariable(&gl_cshiftpercent);
 
 	Cvar_RegisterVariable(&scr_ofsx);
