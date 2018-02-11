@@ -78,13 +78,13 @@ void R_BlendLightmaps(void)
 
 	glDepthMask(GL_FALSE); // don't bother writing Z
 
-	if (gl_overbright.value)
-		glBlendFunc(GL_DST_COLOR, GL_SRC_COLOR);
-	else
-		glBlendFunc(GL_ZERO, GL_SRC_COLOR);
-
 	if (!r_lightmap.value)
-		glEnable(GL_BLEND);
+	{
+		if (gl_overbright.value)
+			glBlendFunc(GL_DST_COLOR, GL_SRC_COLOR);
+		else if (!r_lightmap.value)
+			glBlendFunc(GL_ZERO, GL_SRC_COLOR);
+	}
 
 	for (int i = 0; i < MAX_LIGHTMAPS; i++)
 	{
@@ -100,7 +100,6 @@ void R_BlendLightmaps(void)
 		}
 	}
 
-	glDisable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	glDepthMask(GL_TRUE); // back to normal Z buffering
 }

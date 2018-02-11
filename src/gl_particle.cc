@@ -29,7 +29,6 @@ void R_DrawParticles(void)
 	VectorScale(vright, 1.5, right);
 
 	GL_Bind(particletexture);
-	glEnable(GL_BLEND);
 	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
 
 	GLfloat texts[] = {
@@ -74,7 +73,6 @@ void R_DrawParticles(void)
 
 	glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
 	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
-	glDisable(GL_BLEND);
 }
 
 static byte dottexture[8][8] =

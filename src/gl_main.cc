@@ -79,7 +79,6 @@ void GL_PolyBlend(void)
 	if (!gl_polyblend.value)
 		return;
 
-	glEnable(GL_BLEND);
 	glDisable(GL_DEPTH_TEST);
 	glDisable(GL_TEXTURE_2D);
 
@@ -107,7 +106,6 @@ void GL_PolyBlend(void)
 
 	glEnable(GL_TEXTURE_2D);
 	glEnable(GL_DEPTH_TEST);
-	glDisable(GL_BLEND);
 }
 
 void R_Clear(void)
@@ -192,9 +190,6 @@ void GL_Setup(void)
 		glEnable(GL_CULL_FACE);
 	else
 		glDisable(GL_CULL_FACE);
-
-	glDisable(GL_BLEND);
-	glEnable(GL_DEPTH_TEST);
 }
 
 /* Translates a skin texture by the per-player color lookup */
@@ -338,14 +333,22 @@ static void GL_SetupState(void)
 {
 	glClearColor(0.15, 0.15, 0.15, 0);
 	glCullFace(GL_FRONT);
-	glEnable(GL_TEXTURE_2D);
+
 	glEnable(GL_ALPHA_TEST);
 	glAlphaFunc(GL_GREATER, 0.1);
+
 //	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+	glEnable(GL_TEXTURE_2D);
+	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+
 	glShadeModel(GL_FLAT);
 	glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+
+	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LEQUAL);
 }
 

@@ -530,15 +530,19 @@ void Draw_SetCanvas(canvastype newcanvas)
 	currentcanvas = newcanvas;
 }
 
-void GL_Set2D(void)
+void GL_Begin2D(void)
 {
 	currentcanvas = CANVAS_INVALID;
 	Draw_SetCanvas(CANVAS_DEFAULT);
 
 	glDisable(GL_DEPTH_TEST);
 	glDisable(GL_CULL_FACE);
-	glDisable(GL_BLEND);
-	glColor4f(1, 1, 1, 1);
+}
+
+void GL_End2D(void)
+{
+	glEnable(GL_DEPTH_TEST);
+	glEnable(GL_CULL_FACE);
 }
 
 /* generate pics from internal data */

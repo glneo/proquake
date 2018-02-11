@@ -29,10 +29,7 @@ const float r_avertexnormal_dots[SHADEDOT_QUANT][256] = {
 static void GL_DrawAliasFrame(entity_t *ent, alias_model_t *aliasmodel, int pose, float alpha)
 {
 	if (alpha < 1.0f)
-	{
-		glEnable(GL_BLEND);
 		glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
-	}
 
 	int quantizedangle = ((int)(ent->angles[1] * (SHADEDOT_QUANT / 360.0))) & (SHADEDOT_QUANT - 1);
 	const float *shadedots = r_avertexnormal_dots[quantizedangle];
@@ -50,10 +47,7 @@ static void GL_DrawAliasFrame(entity_t *ent, alias_model_t *aliasmodel, int pose
 	glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
 
 	if (alpha < 1.0f)
-	{
 		glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
-		glDisable(GL_BLEND);
-	}
 }
 
 extern vec3_t lightspot;
@@ -61,7 +55,6 @@ extern vec3_t lightspot;
 static void GL_DrawAliasShadow(entity_t *ent, alias_model_t *aliasmodel, int pose)
 {
 	glDisable(GL_TEXTURE_2D);
-	glEnable(GL_BLEND);
 	glColor4f(0.0f, 0.0f, 0.0f, r_shadows.value);
 
 	vec3_t point;
@@ -90,7 +83,6 @@ static void GL_DrawAliasShadow(entity_t *ent, alias_model_t *aliasmodel, int pos
 	glDrawElements(GL_TRIANGLES, aliasmodel->numtris * 3, GL_UNSIGNED_SHORT, aliasmodel->triangles);
 
 	glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
-	glDisable(GL_BLEND);
 	glEnable(GL_TEXTURE_2D);
 }
 
@@ -228,13 +220,11 @@ void R_DrawAliasModel(entity_t *ent)
 	if (fb)
 	{
 		GL_Bind(fb);
-		glEnable(GL_BLEND);
 		glBlendFunc (GL_ONE, GL_ONE);
 		glDepthMask(GL_FALSE);
 		GL_DrawAliasFrame(ent, aliasmodel, pose, alpha);
 		glDepthMask(GL_TRUE);
 		glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-		glDisable(GL_BLEND);
 	}
 
 	if (gl_affinemodels.value)

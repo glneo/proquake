@@ -77,7 +77,6 @@ void R_DrawWaterSurfaces(void)
 
 	if (r_wateralpha.value < 1.0)
 	{
-		glEnable(GL_BLEND);
 		glColor4f(1.0f, 1.0f, 1.0f, r_wateralpha.value);
 		glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
 	}
@@ -105,7 +104,6 @@ void R_DrawWaterSurfaces(void)
 	{
 		glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
 		glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
-		glDisable(GL_BLEND);
 	}
 }
 
@@ -193,14 +191,12 @@ void R_RenderBrushPoly(msurface_t *fa, int frame)
 
 	if (t->fullbright != NULL && gl_fullbright.value)
 	{
-		glEnable(GL_BLEND);
 		glBlendFunc(GL_ONE, GL_ONE);
 		glDepthMask(GL_FALSE);
 		GL_Bind(t->fullbright);
 		DrawGLPoly(fa->polys);
 		glDepthMask(GL_TRUE);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-		glDisable(GL_BLEND);
 	}
 }
 

@@ -111,7 +111,8 @@ void Draw_TransPicTranslate(int x, int y, qpic_t *pic, byte *translation);
 void Draw_PicTile(int x, int y, int w, int h, qpic_t *pic, float alpha);
 void Draw_Fill(int x, int y, int w, int h, int c, float alpha);
 void Draw_SetCanvas(canvastype newcanvas);
-void GL_Set2D(void);
+void GL_Begin2D(void);
+void GL_End2D(void);
 qpic_t *Draw_MakePic(const char *name, int width, int height, byte *data);
 void Draw_Init(void);
 

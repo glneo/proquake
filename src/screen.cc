@@ -918,7 +918,7 @@ void SCR_UpdateScreen(void)
 
 	V_RenderView();
 
-	GL_Set2D();
+	GL_Begin2D();
 
 	//FIXME: only call this when needed
 	SCR_TileClear();
@@ -967,6 +967,8 @@ void SCR_UpdateScreen(void)
 //	Draw_Fill(0, 0, vid.width, vid.height, 0, scr_fadealpha.value);
 
 	V_UpdatePalette_Static(false);
+
+	GL_End2D();
 
 	GL_EndRendering();
 }
