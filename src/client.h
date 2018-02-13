@@ -294,6 +294,8 @@ extern cvar_t cl_shownet;
 extern cvar_t cl_nolerp;
 
 extern cvar_t cl_pitchdriftspeed;
+
+extern cvar_t freelook;
 extern cvar_t lookspring;
 extern cvar_t lookstrafe;
 extern cvar_t sensitivity;

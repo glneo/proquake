@@ -49,6 +49,16 @@ bool con_debuglog = false;
 
 bool con_initialized;
 
+void Con_DrawPic(int x, int y, qpic_t *pic)
+{
+	Draw_Pic(x, y, pic, scr_conalpha.value);
+}
+
+void Con_DrawCharacter(int x, int y, int num)
+{
+	Draw_Character(x, y, num, 1.0f);
+}
+
 /*
  * Prints a bar of the desired length, but never wider than the console
  * includes a newline, unless len >= con_linewidth
@@ -876,7 +886,7 @@ void Con_DrawNotify(void)
 		clearnotify = 0;
 
 		for (int x = 0; x < con_linewidth; x++)
-			Draw_Character((x + 1) << 3, v, text[x]);
+			Con_DrawCharacter((x + 1) << 3, v, text[x]);
 
 		v += 8;
 	}
@@ -901,7 +911,7 @@ void Con_DrawNotify(void)
 		const char *chat_buffer = Key_GetChatBuffer();
 		for (int i = 0; chat_buffer[i]; i++)
 		{
-			Draw_Character(x << 3, v, chat_buffer[i]);
+			Con_DrawCharacter(x << 3, v, chat_buffer[i]);
 			x++;
 
 			if (x > con_linewidth)
@@ -911,7 +921,7 @@ void Con_DrawNotify(void)
 			}
 		}
 
-		Draw_Character(x << 3, v, 10 + ((int) (realtime * con_cursorspeed) & 1));
+		Con_DrawCharacter(x << 3, v, 10 + ((int) (realtime * con_cursorspeed) & 1));
 		v += 8;
 	}
 
@@ -933,13 +943,13 @@ static void Con_DrawInput(int con_vislines)
 	// draw input string
 	int i;
 	for (i = 0; key_lines[edit_line][i+ofs] && i < con_linewidth; i++)
-		Draw_Character ((i+1)<<3, vid.conheight - 16, key_lines[edit_line][i+ofs]);
+		Con_DrawCharacter ((i+1)<<3, vid.conheight - 16, key_lines[edit_line][i+ofs]);
 
 	// draw cursor
 	if ((int)((realtime)*con_cursorspeed) & 1)
 	{
 		i = key_linepos - ofs;
-		Draw_Character((i + 1) << 3, vid.conheight - 16, 11);
+		Con_DrawCharacter((i + 1) << 3, vid.conheight - 16, 11);
 	}
 }
 
@@ -963,7 +973,7 @@ void Con_DrawConsole(int lines, bool drawinput)
 
 		const char *text = con_text + (j % con_totallines) * con_linewidth;
 		for (int x = 0; x < con_linewidth; x++)
-			Draw_Character((x + 1) << 3, y, text[x]);
+			Con_DrawCharacter((x + 1) << 3, y, text[x]);
 
 		y += 8;
 	}
@@ -973,7 +983,7 @@ void Con_DrawConsole(int lines, bool drawinput)
 	{
 		y += 8; // blank line
 		for (int x = 0; x < con_linewidth; x += 4)
-			Draw_Character((x + 1) << 3, y, '^');
+			Con_DrawCharacter((x + 1) << 3, y, '^');
 		y += 8;
 	}
 
@@ -986,7 +996,7 @@ void Con_DrawConsole(int lines, bool drawinput)
 	char ver[32];
 	sprintf(ver, "QuickQuake %1.2f.%d", (float) 2, 3);
 	for (int x = 0; x < (int) strlen(ver); x++)
-		Draw_Character((con_linewidth - strlen(ver) + x + 2) << 3, y, ver[x] /*+ 128*/);
+		Con_DrawCharacter((con_linewidth - strlen(ver) + x + 2) << 3, y, ver[x] /*+ 128*/);
 }
 
 void Con_Init(void)

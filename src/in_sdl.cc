@@ -307,30 +307,26 @@ static void IN_MouseMove(usercmd_t *cmd)
 	total_dx = 0;
 	total_dy = 0;
 
-	if ((in_strafe.state & 1) || (lookstrafe.value && (in_mlook.state & 1)))
+	if ((in_strafe.state & 1) || (lookstrafe.value && (freelook.value || (in_mlook.state & 1))))
 		cmd->sidemove += m_side.value * dmx;
 	else
 		cl.viewangles[YAW] -= m_yaw.value * dmx;
 
-//	if ((freelook.value || (in_mlook.state & 1)))
-//	{
-////		if (dmx || dmy)
-////			V_StopPitchDrift ();
-//	}
+	if (freelook.value || (in_mlook.state & 1))
+	{
+//		if (dmx || dmy)
+//			V_StopPitchDrift ();
+	}
 
-	if ((in_mlook.state & 1) && !(in_strafe.state & 1))
+	if ((freelook.value || (in_mlook.state & 1)) && !(in_strafe.state & 1))
 	{
 		cl.viewangles[PITCH] += m_pitch.value * dmy;
-
 		cl.viewangles[PITCH] = CLAMP(cl_minpitch.value, cl.viewangles[PITCH], cl_maxpitch.value);
 	}
+	else if (in_strafe.state & 1)
+		cmd->upmove -= m_forward.value * dmy;
 	else
-	{
-		if ((in_strafe.state & 1))
-			cmd->upmove -= m_forward.value * dmy;
-		else
-			cmd->forwardmove -= m_forward.value * dmy;
-	}
+		cmd->forwardmove -= m_forward.value * dmy;
 }
 
 void IN_Move(usercmd_t *cmd)

@@ -26,6 +26,7 @@ extern int clearnotify; // set to 0 whenever notify text is drawn
 extern bool scr_disabled_for_loading;
 
 extern cvar_t scr_menuscale;
+extern cvar_t scr_menualpha;
 
 extern cvar_t scr_sbarscale;
 extern cvar_t scr_sbaralpha;

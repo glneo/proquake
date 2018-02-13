@@ -130,42 +130,28 @@ static void R_RecursiveWorldNode(mnode_t *node)
 	R_RecursiveWorldNode(node->children[!side]);
 }
 
-void R_DrawWorld(void)
+static void R_MarkLeaves(void)
 {
-	entity_t ent;
-
-	memset(&ent, 0, sizeof(ent));
-	ent.model = cl.worldmodel;
-
-	R_ClearLightmapPolys();
-
-	R_RecursiveWorldNode(cl.worldmodel->brushmodel->nodes);
-
-	DrawTextureChains(cl.worldmodel->brushmodel);
-
-	R_BlendLightmaps();
-}
-
-void R_MarkLeaves(void)
-{
-	int i;
 	byte *vis, solid[4096];
 	mnode_t *node;
 	extern cvar_t gl_nearwater_fix;
-	msurface_t **mark;
 	bool nearwaterportal = false;
 
 	// Check if near water to avoid HOMs when crossing the surface
 	if (gl_nearwater_fix.value)
-		for (i = 0, mark = r_viewleaf->firstmarksurface; i < r_viewleaf->nummarksurfaces; i++, mark++)
+	{
+		msurface_t **mark = r_viewleaf->firstmarksurface;
+
+		for (int i = 0; i < r_viewleaf->nummarksurfaces; i++)
 		{
-			if ((*mark)->flags & SURF_DRAWTURB)
+			if (mark[i]->flags & SURF_DRAWTURB)
 			{
 				nearwaterportal = true;
-				//	Con_SafePrintf ("R_MarkLeaves: nearwaterportal, surfs=%d\n", r_viewleaf->nummarksurfaces);
+				// Con_SafePrintf("R_MarkLeaves: nearwaterportal, surfs=%d\n", r_viewleaf->nummarksurfaces);
 				break;
 			}
 		}
+	}
 
 	if ((r_oldviewleaf == r_viewleaf) && !r_novis.value && !nearwaterportal)
 		return;
@@ -180,7 +166,6 @@ void R_MarkLeaves(void)
 	}
 	else if (nearwaterportal)
 	{
-		extern byte *SV_FatPVS(vec3_t org, model_t *worldmodel);
 		vis = SV_FatPVS(r_origin, cl.worldmodel);
 	}
 	else
@@ -188,7 +173,7 @@ void R_MarkLeaves(void)
 		vis = Mod_LeafPVS(r_viewleaf, cl.worldmodel->brushmodel);
 	}
 
-	for (i = 0; i < cl.worldmodel->brushmodel->numleafs; i++)
+	for (int i = 0; i < cl.worldmodel->brushmodel->numleafs; i++)
 	{
 		if (vis[i >> 3] & (1 << (i & 7)))
 		{
@@ -202,6 +187,19 @@ void R_MarkLeaves(void)
 			} while (node);
 		}
 	}
+}
+
+void R_DrawWorld(void)
+{
+	R_ClearLightmapPolys();
+
+	R_MarkLeaves();
+
+	R_RecursiveWorldNode(cl.worldmodel->brushmodel->nodes);
+
+	DrawTextureChains(cl.worldmodel->brushmodel);
+
+	R_BlendLightmaps();
 }
 
 /* Returns true if the box is completely outside the frustum */
@@ -389,8 +387,6 @@ static void R_SetFrustum(void)
 
 static void R_SetupFrame(void)
 {
-	R_AnimateLight();
-
 	r_framecount++;
 
 	// build the transformation matrix for the given view angles
@@ -461,16 +457,14 @@ void R_RenderView(void)
 	R_Clear();
 
 	// render normal view
+	R_AnimateLight();
 	R_SetupFrame();
 	R_SetFrustum();
 	GL_Setup();
-	R_MarkLeaves();
 	R_DrawWorld();
 	R_DrawEntitiesOnList();
 	R_DrawParticles();
-
 	R_DrawViewModel();
-
 	GL_PolyBlend();
 
 	if (r_speeds.value)

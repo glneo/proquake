@@ -235,7 +235,7 @@ static bool IsValid(int y, int num)
 	return true;
 }
 
-static void Character(int x, int y, int num)
+static void Character(int x, int y, int num, float alpha)
 {
 	num &= 255;
 	int row = num >> 4;
@@ -260,9 +260,22 @@ static void Character(int x, int y, int num)
 			    (GLfloat)x,     (GLfloat)y + 8,
 	};
 
+	alpha = CLAMP(0, alpha, 1.0f);
+	if (alpha < 1.0f)
+	{
+		glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+		glColor4f(1.0f, 1.0f, 1.0f, alpha);
+	}
+
 	glTexCoordPointer(2, GL_FLOAT, 0, texts);
 	glVertexPointer(2, GL_FLOAT, 0, verts);
 	glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+
+	if (alpha < 1.0f)
+	{
+		glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+		glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+	}
 }
 
 /*
@@ -270,24 +283,24 @@ static void Character(int x, int y, int num)
  * It can be clipped to the top of the screen to allow the console to be
  * smoothly scrolled off.
  */
-void Draw_Character(int x, int y, int num)
+void Draw_Character(int x, int y, int num, float alpha)
 {
 	if (!IsValid(y, num))
 		return;
 
 	GL_Bind(char_texture);
 
-	Character(x, y, num);
+	Character(x, y, num, alpha);
 }
 
-void Draw_String(int x, int y, const char *str)
+void Draw_String(int x, int y, const char *str, float alpha)
 {
 	GL_Bind(char_texture);
 
 	while (*str)
 	{
 		if (IsValid(y, *str))
-			Character(x, y, *str);
+			Character(x, y, *str, alpha);
 
 		str++;
 		x += 8;
@@ -298,10 +311,6 @@ void Draw_Pic(int x, int y, qpic_t *pic, float alpha)
 {
 	if (scrap_dirty)
 		Scrap_Upload();
-
-	alpha = CLAMP(0, alpha, 1.0f);
-	if (alpha < 1.0f)
-		glColor4f(1.0f, 1.0f, 1.0f, alpha);
 
 	glpic_t *gl = (glpic_t *) pic->data;
 	GL_Bind(gl->gltexture);
@@ -320,15 +329,25 @@ void Draw_Pic(int x, int y, qpic_t *pic, float alpha)
 		(GLfloat)x,              (GLfloat)y + pic->height,
 	};
 
+	alpha = CLAMP(0, alpha, 1.0f);
+	if (alpha < 1.0f)
+	{
+		glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+		glColor4f(1.0f, 1.0f, 1.0f, alpha);
+	}
+
 	glTexCoordPointer(2, GL_FLOAT, 0, texts);
 	glVertexPointer(2, GL_FLOAT, 0, verts);
 	glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 
 	if (alpha < 1.0f)
+	{
 		glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+		glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+	}
 }
 
-void Draw_TransPic(int x, int y, qpic_t *pic)
+void Draw_TransPic(int x, int y, qpic_t *pic, float alpha)
 {
 	if (x < 0 ||
 	    y < 0 ||
@@ -336,7 +355,7 @@ void Draw_TransPic(int x, int y, qpic_t *pic)
 	    (unsigned)(y + pic->height) > vid.height)
 		Sys_Error("bad coordinates");
 
-	Draw_Pic(x, y, pic, 1.0f);
+	Draw_Pic(x, y, pic, alpha);
 }
 
 /* Only used for the player color selection menu */

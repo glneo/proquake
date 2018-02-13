@@ -28,10 +28,6 @@ float gl_max_anisotropy;
 
 int r_framecount; // used for dlight push checking
 
-
-
-
-
 int d_lightstylevalue[256]; // 8.8 fraction of base light value
 
 cvar_t r_wateralpha = { "r_wateralpha", "1", true };
@@ -44,7 +40,7 @@ cvar_t gl_farclip = { "gl_farclip", "16384", true };
 cvar_t gl_nearwater_fix = { "gl_nearwater_fix", "1", true };
 cvar_t gl_fadescreen_alpha = { "gl_fadescreen_alpha", "0.7", true };
 
-cvar_t gl_clear = { "gl_clear", "0" };
+cvar_t gl_clear = { "gl_clear", "0", true};
 cvar_t gl_cull = { "gl_cull", "1" };
 cvar_t gl_smoothmodels = { "gl_smoothmodels", "1" };
 cvar_t gl_affinemodels = { "gl_affinemodels", "0" };
@@ -316,14 +312,14 @@ static void GL_CheckExtensions(void)
 
 void GL_BeginRendering(void)
 {
-	glEnableClientState(GL_VERTEX_ARRAY);
-	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+//	glEnableClientState(GL_VERTEX_ARRAY);
+//	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
 }
 
 void GL_EndRendering(void)
 {
-	glDisableClientState(GL_VERTEX_ARRAY);
-	glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+//	glDisableClientState(GL_VERTEX_ARRAY);
+//	glDisableClientState(GL_TEXTURE_COORD_ARRAY);
 
 	VID_Swap();
 }
@@ -350,6 +346,9 @@ static void GL_SetupState(void)
 
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LEQUAL);
+
+	glEnableClientState(GL_VERTEX_ARRAY);
+	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
 }
 
 void GL_Init(void)

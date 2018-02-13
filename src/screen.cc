@@ -74,12 +74,13 @@ static byte crosshairdata[NUMCROSSHAIRS][64] =
 };
 
 cvar_t scr_menuscale = { "scr_menuscale", "1", CVAR_ARCHIVE };
+cvar_t scr_menualpha = { "scr_menualpha", "1", CVAR_ARCHIVE };
 
 cvar_t scr_sbarscale = { "scr_sbarscale", "1", CVAR_ARCHIVE };
 cvar_t scr_sbaralpha = { "scr_sbaralpha", "0.75", CVAR_ARCHIVE };
 
-cvar_t scr_conalpha = { "scr_conalpha", "0.5", CVAR_ARCHIVE };
 cvar_t scr_conscale = { "scr_conscale", "1", CVAR_ARCHIVE };
+cvar_t scr_conalpha = { "scr_conalpha", "0.85", CVAR_ARCHIVE };
 cvar_t scr_conwidth = { "scr_conwidth", "0", CVAR_ARCHIVE };
 cvar_t scr_conspeed = { "scr_conspeed", "500", CVAR_ARCHIVE };
 
@@ -196,10 +197,10 @@ void SCR_DrawCenterString(void) //actually do the drawing
 		for (l = 0; l < 40; l++)
 			if (start[l] == '\n' || !start[l])
 				break;
-		x = (320 - l * 8) / 2;	//johnfitz -- 320x200 coordinate system
+		x = (320 - l * 8) / 2; //johnfitz -- 320x200 coordinate system
 		for (j = 0; j < l; j++, x += 8)
 		{
-			Draw_Character(x, y, start[j]);	//johnfitz -- stretch overlays
+			Draw_Character(x, y, start[j], 1.0f);
 			if (!remaining--)
 				return;
 		}
@@ -307,7 +308,7 @@ static void SCR_CalcRefdef(void)
 	size = scr_viewsize.value;
 	scale = CLAMP(1.0, scr_sbarscale.value, (float )vid.width / 320.0);
 
-	if (size >= 120 || cl.intermission || scr_sbaralpha.value < 1) //johnfitz -- scr_sbaralpha.value
+	if (size >= 120 || cl.intermission || scr_sbaralpha.value < 1.0f)
 		sb_lines = 0;
 	else if (size >= 110)
 		sb_lines = 24 * scale;
@@ -397,7 +398,7 @@ void SCR_DrawFPS(void)
 		if (scr_showclock.value)
 			y -= 8; //make room for clock
 		Draw_SetCanvas (CANVAS_BOTTOMRIGHT);
-		Draw_String(x, y, st);
+		Draw_String(x, y, st, 1.0f);
 		scr_tileclear_updates = 0;
 	}
 }
@@ -417,7 +418,7 @@ void SCR_DrawClock(void)
 
 	//draw it
 	Draw_SetCanvas (CANVAS_BOTTOMRIGHT);
-	Draw_String(320 - (strlen(str) << 3), 200 - 8, str);
+	Draw_String(320 - (strlen(str) << 3), 200 - 8, str, 1.0f);
 
 	scr_tileclear_updates = 0;
 }
@@ -436,19 +437,19 @@ void SCR_DrawDevStats(void)
 	Draw_Fill (x, y*8, 19*8, 9*8, 0, 0.5); //dark rectangle
 
 	sprintf (str, "devstats |Curr Max");
-	Draw_String (x, (y++)*8-x, str);
+	Draw_String (x, (y++)*8-x, str, 1.0f);
 
 	sprintf (str, "---------+---------");
-	Draw_String (x, (y++)*8-x, str);
+	Draw_String (x, (y++)*8-x, str, 1.0f);
 
 	sprintf (str, "Packet   |%4i %4i", 0, 0);
-	Draw_String (x, (y++)*8-x, str);
+	Draw_String (x, (y++)*8-x, str, 1.0f);
 
 	sprintf (str, "Visedicts|%4i %4i", cl_numvisedicts, MAX_VISEDICTS);
-	Draw_String (x, (y++)*8-x, str);
+	Draw_String (x, (y++)*8-x, str, 1.0f);
 
 	sprintf (str, "Dlights  |%4i %4i", 0, 0);
-	Draw_String (x, (y++)*8-x, str);
+	Draw_String (x, (y++)*8-x, str, 1.0f);
 }
 
 void SCR_DrawCrosshair(void)
@@ -460,9 +461,9 @@ void SCR_DrawCrosshair(void)
 	else if (crosshair.value)
 	{
 		if (scr_crosshaircentered.value) // Centered crosshair
-			Draw_Character(-4, -4, '+');
+			Draw_Character(-4, -4, '+', scr_crosshairalpha.value);
 		else // Standard off-center Quake crosshair
-			Draw_Character(0, 0, '+');
+			Draw_Character(0, 0, '+', scr_crosshairalpha.value);
 	}
 }
 
@@ -747,7 +748,7 @@ static void SCR_DrawNotifyString(void)
 				break;
 		x = (320 - l * 8) / 2; //johnfitz -- stretched overlays
 		for (j = 0; j < l; j++, x += 8)
-			Draw_Character(x, y, start[j]);
+			Draw_Character(x, y, start[j], 1.0f);
 
 		y += 8;
 
@@ -976,12 +977,13 @@ void SCR_UpdateScreen(void)
 void SCR_Init(void)
 {
 	Cvar_RegisterVariable(&scr_menuscale);
+	Cvar_RegisterVariable(&scr_menualpha);
 
 	Cvar_RegisterVariable(&scr_sbaralpha);
 	Cvar_RegisterVariable(&scr_sbarscale);
 
-	Cvar_RegisterVariable(&scr_conalpha);
 	Cvar_RegisterVariable(&scr_conscale);
+	Cvar_RegisterVariable(&scr_conalpha);
 	Cvar_RegisterVariable(&scr_conwidth);
 	Cvar_RegisterVariable(&scr_conspeed);
 

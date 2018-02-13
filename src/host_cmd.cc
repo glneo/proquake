@@ -603,7 +603,7 @@ void Host_Ping_f(void)
 			n = Cmd_Argv(1);
 			if (*n == '+')
 			{
-				Cvar_SetQuick(&pq_lag, n + 1);
+//				Cvar_SetQuick(&pq_lag, n + 1);
 				return;
 			}
 		}

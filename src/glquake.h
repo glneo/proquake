@@ -103,10 +103,10 @@ void R_DrawAliasModel(entity_t *ent);
 // gl_draw.c
 qpic_t *Draw_PicFromWad(const char *name);
 qpic_t *Draw_CachePic(const char *path);
-void Draw_Character(int x, int y, int num);
-void Draw_String(int x, int y, const char *str);
+void Draw_Character(int x, int y, int num, float alpha);
+void Draw_String(int x, int y, const char *str, float alpha);
 void Draw_Pic(int x, int y, qpic_t *pic, float alpha);
-void Draw_TransPic(int x, int y, qpic_t *pic);
+void Draw_TransPic(int x, int y, qpic_t *pic, float alpha);
 void Draw_TransPicTranslate(int x, int y, qpic_t *pic, byte *translation);
 void Draw_PicTile(int x, int y, int w, int h, qpic_t *pic, float alpha);
 void Draw_Fill(int x, int y, int w, int h, int c, float alpha);
@@ -161,7 +161,6 @@ void DrawGLWaterPolyLight(glpoly_t *p);
 void R_RenderBrushPoly(msurface_t *fa, int frame);
 void R_DrawBrushModel(entity_t *ent);
 void R_DrawWorld(void);
-void R_MarkLeaves(void);
 
 // gl_vidsdl.c
 void VID_Swap(void);

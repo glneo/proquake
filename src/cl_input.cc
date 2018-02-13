@@ -73,8 +73,8 @@ void KeyDown(kbutton_t *b)
 	}
 
 	if (b->state & 1)
-		return;		// still down
-	b->state |= 1 + 2;	// down + impulse down
+		return; // still down
+	b->state |= 1 + 2; // down + impulse down
 }
 
 void KeyUp(kbutton_t *b)
@@ -119,67 +119,49 @@ void KeyUp(kbutton_t *b)
 	b->state |= 4; 		// impulse up
 }
 
- void IN_KLookDown (void) {KeyDown(&in_klook);}
- void IN_KLookUp (void) {KeyUp(&in_klook);}
- void IN_MLookDown (void) {KeyDown(&in_mlook);}
- void IN_MLookUp (void) {
+void IN_KLookDown (void) {KeyDown(&in_klook);}
+void IN_KLookUp (void) {KeyUp(&in_klook);}
+void IN_MLookDown (void) {KeyDown(&in_mlook);}
+void IN_MLookUp (void) {
 	KeyUp(&in_mlook);
 	if ( !(in_mlook.state & 1) && lookspring.value)
 		V_StartPitchDrift_f();
 }
- void IN_UpDown(void) {KeyDown(&in_up);}
- void IN_UpUp(void) {KeyUp(&in_up);}
- void IN_DownDown(void) {KeyDown(&in_down);}
- void IN_DownUp(void) {KeyUp(&in_down);}
- void IN_LeftDown(void) {KeyDown(&in_left);}
- void IN_LeftUp(void) {KeyUp(&in_left);}
- void IN_RightDown(void) {KeyDown(&in_right);}
- void IN_RightUp(void) {KeyUp(&in_right);}
- void IN_ForwardDown(void) {KeyDown(&in_forward);}
- void IN_ForwardUp(void) {KeyUp(&in_forward);}
- void IN_BackDown(void) {KeyDown(&in_back);}
- void IN_BackUp(void) {KeyUp(&in_back);}
- void IN_LookupDown(void) {KeyDown(&in_lookup);}
- void IN_LookupUp(void) {KeyUp(&in_lookup);}
- void IN_LookdownDown(void) {KeyDown(&in_lookdown);}
- void IN_LookdownUp(void) {KeyUp(&in_lookdown);}
- void IN_MoveleftDown(void) {KeyDown(&in_moveleft);}
- void IN_MoveleftUp(void) {KeyUp(&in_moveleft);}
- void IN_MoverightDown(void) {KeyDown(&in_moveright);}
- void IN_MoverightUp(void) {KeyUp(&in_moveright);}
+void IN_UpDown(void) {KeyDown(&in_up);}
+void IN_UpUp(void) {KeyUp(&in_up);}
+void IN_DownDown(void) {KeyDown(&in_down);}
+void IN_DownUp(void) {KeyUp(&in_down);}
+void IN_LeftDown(void) {KeyDown(&in_left);}
+void IN_LeftUp(void) {KeyUp(&in_left);}
+void IN_RightDown(void) {KeyDown(&in_right);}
+void IN_RightUp(void) {KeyUp(&in_right);}
+void IN_ForwardDown(void) {KeyDown(&in_forward);}
+void IN_ForwardUp(void) {KeyUp(&in_forward);}
+void IN_BackDown(void) {KeyDown(&in_back);}
+void IN_BackUp(void) {KeyUp(&in_back);}
+void IN_LookupDown(void) {KeyDown(&in_lookup);}
+void IN_LookupUp(void) {KeyUp(&in_lookup);}
+void IN_LookdownDown(void) {KeyDown(&in_lookdown);}
+void IN_LookdownUp(void) {KeyUp(&in_lookdown);}
+void IN_MoveleftDown(void) {KeyDown(&in_moveleft);}
+void IN_MoveleftUp(void) {KeyUp(&in_moveleft);}
+void IN_MoverightDown(void) {KeyDown(&in_moveright);}
+void IN_MoverightUp(void) {KeyUp(&in_moveright);}
 
- void IN_SpeedDown(void) {KeyDown(&in_speed);}
- void IN_SpeedUp(void) {KeyUp(&in_speed);}
- void IN_StrafeDown(void) {KeyDown(&in_strafe);}
- void IN_StrafeUp(void) {KeyUp(&in_strafe);}
+void IN_SpeedDown(void) {KeyDown(&in_speed);}
+void IN_SpeedUp(void) {KeyUp(&in_speed);}
+void IN_StrafeDown(void) {KeyDown(&in_strafe);}
+void IN_StrafeUp(void) {KeyUp(&in_strafe);}
 
- void IN_AttackDown(void) {KeyDown(&in_attack);}
- void IN_AttackUp(void) {KeyUp(&in_attack);}
+void IN_AttackDown(void) {KeyDown(&in_attack);}
+void IN_AttackUp(void) {KeyUp(&in_attack);}
 
- void IN_UseDown (void) {KeyDown(&in_use);}
- void IN_UseUp (void) {KeyUp(&in_use);}
- void IN_JumpDown (void) {KeyDown(&in_jump);}
- void IN_JumpUp (void) {KeyUp(&in_jump);}
+void IN_UseDown (void) {KeyDown(&in_use);}
+void IN_UseUp (void) {KeyUp(&in_use);}
+void IN_JumpDown (void) {KeyDown(&in_jump);}
+void IN_JumpUp (void) {KeyUp(&in_jump);}
 
- void IN_Impulse (void) {in_impulse=atoi(Cmd_Argv(1));}
-
-static int weaponstat[7] = { STAT_SHELLS, STAT_SHELLS, STAT_NAILS, STAT_NAILS, STAT_ROCKETS, STAT_ROCKETS, STAT_CELLS };
-
-/* bestweapon from QuakePro+ */
-static void IN_BestWeapon(void)
-{
-	int i, impulse;
-
-	for (i = 1; i < Cmd_Argc(); i++)
-	{
-		impulse = atoi(Cmd_Argv(i));
-		if (impulse > 0 && impulse < 9 && (impulse == 1 || ((cl.items & (IT_SHOTGUN << (impulse - 2))) && cl.stats[weaponstat[impulse - 2]])))
-		{
-			in_impulse = impulse;
-			break;
-		}
-	}
-}
+void IN_Impulse (void) {in_impulse=atoi(Cmd_Argv(1));}
 
 /*
  * Returns 0.25 if a key was pressed and released during the frame,
@@ -206,7 +188,7 @@ float CL_KeyState(kbutton_t *key)
 	if (impulsedown && impulseup)
 		val = down ? 0.75 : 0.25;
 
-	key->state &= 1;		// clear impulses
+	key->state &= 1; // clear impulses
 
 	return val;
 }
@@ -217,17 +199,11 @@ cvar_t cl_upspeed = { "cl_upspeed", "200", true };
 cvar_t cl_forwardspeed = { "cl_forwardspeed", "400", true }; // Defaults to 400 (always run) instead of 200
 cvar_t cl_backspeed = { "cl_backspeed", "400", true }; // Defaults to 400 (always run) instead of 200
 cvar_t cl_sidespeed = { "cl_sidespeed", "350", true };
-
 cvar_t cl_movespeedkey = { "cl_movespeedkey", "2.0" };
-
 cvar_t cl_yawspeed = { "cl_yawspeed", "140" };
 cvar_t cl_pitchspeed = { "cl_pitchspeed", "150" };
-
 cvar_t cl_anglespeedkey = { "cl_anglespeedkey", "1.5" };
-
 cvar_t m_accel = { "m_accel", "0" };
-
-cvar_t pq_lag = { "pq_lag", "0" }; // synthetic lag
 
 /* Moves the local angle positions */
 void CL_AdjustAngles(void)
@@ -274,13 +250,7 @@ void CL_AdjustAngles(void)
 
 }
 
-/*
- ================
- CL_BaseMove
-
- Send the intended movement message to the server
- ================
- */
+/* Send the intended movement message to the server */
 void CL_BaseMove(usercmd_t *cmd)
 {
 	if (cls.signon != SIGNONS)
@@ -308,9 +278,7 @@ void CL_BaseMove(usercmd_t *cmd)
 		cmd->forwardmove -= cl_backspeed.value * CL_KeyState(&in_back);
 	}
 
-//
-// adjust for speed key
-//
+	// adjust for speed key
 	if (in_speed.state & 1)
 	{
 		cmd->forwardmove *= cl_movespeedkey.value;
@@ -368,7 +336,7 @@ void CL_SendMove(usercmd_t *cmd)
 	buf->maxsize = 128;
 	buf->cursize = 0;
 	buf->data = lag_data[lag_head & 31]; // JPG - added head index
-	lag_sendtime[lag_head++ & 31] = realtime + (pq_lag.value / 1000.0);
+	lag_sendtime[lag_head++ & 31] = realtime;
 
 	cl.cmd = *cmd;
 
@@ -435,11 +403,6 @@ void CL_SendMove(usercmd_t *cmd)
 	CL_SendLagMove();
 }
 
-/*
- ============
- CL_InitInput
- ============
- */
 void CL_InitInput(void)
 {
 	Cmd_AddCommand("+moveup", IN_UpDown);
@@ -477,8 +440,4 @@ void CL_InitInput(void)
 	Cmd_AddCommand("-klook", IN_KLookUp);
 	Cmd_AddCommand("+mlook", IN_MLookDown);
 	Cmd_AddCommand("-mlook", IN_MLookUp);
-
-	Cmd_AddCommand("bestweapon", IN_BestWeapon);	// JPG 3.30 - bestweapon from QuakePro+
-
-	Cvar_RegisterVariable(&pq_lag); // JPG - synthetic lag
 }

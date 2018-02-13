@@ -24,6 +24,7 @@ cvar_t cl_shownet = { "cl_shownet", "0" }; // can be 0, 1, or 2
 cvar_t cl_nolerp = { "cl_nolerp", "0" };
 cvar_t cl_gameplayhack_monster_lerp = { "cl_gameplayhack_monster_lerp", "1" };
 
+cvar_t freelook = { "freelook", "1", CVAR_ARCHIVE };
 cvar_t lookspring = { "lookspring", "0", CVAR_ARCHIVE };
 cvar_t lookstrafe = { "lookstrafe", "0", CVAR_ARCHIVE };
 cvar_t sensitivity = { "sensitivity", "3", CVAR_ARCHIVE };
@@ -731,6 +732,7 @@ void CL_Init(void)
 	Cvar_RegisterVariable(&cl_anglespeedkey);
 	Cvar_RegisterVariable(&cl_shownet);
 	Cvar_RegisterVariable(&cl_nolerp);
+	Cvar_RegisterVariable(&freelook);
 	Cvar_RegisterVariable(&lookspring);
 	Cvar_RegisterVariable(&lookstrafe);
 	Cvar_RegisterVariable(&sensitivity);
