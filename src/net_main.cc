@@ -701,27 +701,26 @@ bool NET_CanSendMessage(qsocket_t *sock)
 
 int NET_SendToAll(sizebuf_t *data, int blocktime)
 {
-	double start;
-	int i, count = 0;
+	int count = 0;
 	bool state1[MAX_SCOREBOARD];
 	bool state2[MAX_SCOREBOARD];
 
-	for (i = 0, host_client = svs.clients; i < svs.maxclients; i++, host_client++)
+	for (int i = 0; i < svs.maxclients; i++)
 	{
-		if (!host_client->netconnection)
-			continue;
-		if (host_client->active)
+		if (svs.clients[i].netconnection && svs.clients[i].active)
 		{
-			if (host_client->netconnection->driver == 0)
+			if (svs.clients[i].netconnection->driver == 0)
 			{
-				NET_SendMessage(host_client->netconnection, data);
+				NET_SendMessage(svs.clients[i].netconnection, data);
 				state1[i] = true;
 				state2[i] = true;
-				continue;
 			}
-			count++;
-			state1[i] = false;
-			state2[i] = false;
+			else
+			{
+				count++;
+				state1[i] = false;
+				state2[i] = false;
+			}
 		}
 		else
 		{
@@ -730,41 +729,38 @@ int NET_SendToAll(sizebuf_t *data, int blocktime)
 		}
 	}
 
-	start = Sys_DoubleTime();
+	double start = Sys_DoubleTime();
 	while (count)
 	{
 		count = 0;
-		for (i = 0, host_client = svs.clients; i < svs.maxclients; i++, host_client++)
+		for (int i = 0; i < svs.maxclients; i++)
 		{
 			if (!state1[i])
 			{
-				if (NET_CanSendMessage(host_client->netconnection))
+				if (NET_CanSendMessage(svs.clients[i].netconnection))
 				{
 					state1[i] = true;
-					NET_SendMessage(host_client->netconnection, data);
+					NET_SendMessage(svs.clients[i].netconnection, data);
 				}
 				else
 				{
-					NET_GetMessage(host_client->netconnection);
+					NET_GetMessage(svs.clients[i].netconnection);
 				}
 				count++;
-				continue;
 			}
-
-			if (!state2[i])
+			else if (!state2[i])
 			{
-				if (NET_CanSendMessage(host_client->netconnection))
+				if (NET_CanSendMessage(svs.clients[i].netconnection))
 					state2[i] = true;
 				else
-					NET_GetMessage(host_client->netconnection);
-
+					NET_GetMessage(svs.clients[i].netconnection);
 				count++;
-				continue;
 			}
 		}
 		if ((Sys_DoubleTime() - start) > blocktime)
 			break;
 	}
+
 	return count;
 }
 

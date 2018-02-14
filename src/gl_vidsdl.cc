@@ -48,9 +48,9 @@ viddef_t vid; // global video state
 //static cvar_t vid_fullscreen = { "vid_fullscreen", "1", CVAR_ARCHIVE };
 //static cvar_t vid_width = { "vid_width", "1680", CVAR_ARCHIVE };
 //static cvar_t vid_height = { "vid_height", "1050", CVAR_ARCHIVE };
-static cvar_t vid_fullscreen = { "vid_fullscreen", "0", CVAR_ARCHIVE };
-static cvar_t vid_width = { "vid_width", "800", CVAR_ARCHIVE };
-static cvar_t vid_height = { "vid_height", "600", CVAR_ARCHIVE };
+static cvar_t vid_fullscreen = { "vid_fullscreen", "1", CVAR_ARCHIVE };
+static cvar_t vid_width = { "vid_width", "1680", CVAR_ARCHIVE };
+static cvar_t vid_height = { "vid_height", "1050", CVAR_ARCHIVE };
 static cvar_t vid_bpp = { "vid_bpp", "16", CVAR_ARCHIVE };
 cvar_t vid_vsync = { "vid_vsync", "0", CVAR_ARCHIVE };
 static cvar_t vid_desktopfullscreen = { "vid_desktopfullscreen", "0", CVAR_ARCHIVE };

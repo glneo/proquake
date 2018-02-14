@@ -57,48 +57,44 @@ canvastype currentcanvas = CANVAS_NONE; //johnfitz -- for GL_SetCanvas
 byte scrap_texels[MAX_SCRAPS][BLOCK_WIDTH * BLOCK_HEIGHT * 4];
 bool scrap_dirty;
 gltexture_t *scrap_textures[MAX_SCRAPS]; //johnfitz
+int scrap_allocated[MAX_SCRAPS][BLOCK_WIDTH];
 int scrap_texnum;
 
-// returns a texture number and the position inside it
+/* returns a texture number and the position inside it */
 static int Scrap_AllocBlock(int w, int h, int *x, int *y)
 {
-	int i, j;
-	int best, best2;
-	static int scrap_allocated[MAX_SCRAPS][BLOCK_WIDTH];
-
 	for (int texnum = 0; texnum < MAX_SCRAPS; texnum++)
 	{
-		best = BLOCK_HEIGHT;
+		int best = BLOCK_HEIGHT;
 
-		for (i = 0; i < BLOCK_WIDTH - w; i++)
+		for (int i = 0; i < BLOCK_WIDTH - w; i++)
 		{
-			best2 = 0;
-
+			int j, local_best = 0;
 			for (j = 0; j < w; j++)
 			{
 				if (scrap_allocated[texnum][i + j] >= best)
 					break;
-				if (scrap_allocated[texnum][i + j] > best2)
-					best2 = scrap_allocated[texnum][i + j];
+				if (scrap_allocated[texnum][i + j] > local_best)
+					local_best = scrap_allocated[texnum][i + j];
 			}
 			if (j == w)
 			{	// this is a valid spot
 				*x = i;
-				*y = best = best2;
+				*y = best = local_best;
 			}
 		}
 
 		if (best + h > BLOCK_HEIGHT)
 			continue;
 
-		for (i = 0; i < w; i++)
+		for (int i = 0; i < w; i++)
 			scrap_allocated[texnum][*x + i] = best + h;
 
 		return texnum;
 	}
 
-	Sys_Error("full");
-	return (0);
+	Sys_Error("LightMaps full");
+	return 0;
 }
 
 static void Scrap_Upload(void)

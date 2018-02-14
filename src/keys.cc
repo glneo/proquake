@@ -175,6 +175,75 @@ keyname_t keynames[] =
 ==============================================================================
 */
 
+
+
+void History_Init (void)
+{
+	int i, c;
+	FILE *hf;
+
+	for (i = 0; i < CMDLINES; i++)
+	{
+		key_lines[i][0] = ']';
+		key_lines[i][1] = 0;
+	}
+	key_linepos = 1;
+
+	hf = fopen(va("%s/%s", host_parms.userdir, HISTORY_FILE_NAME), "rt");
+	if (hf != NULL)
+	{
+		do
+		{
+			i = 1;
+			do
+			{
+				c = fgetc(hf);
+				key_lines[edit_line][i++] = c;
+			} while (c != '\r' && c != '\n' && c != EOF && i < MAXCMDLINE);
+			key_lines[edit_line][i - 1] = 0;
+			edit_line = (edit_line + 1) & (CMDLINES - 1);
+			/* for people using a windows-generated history file on unix: */
+			if (c == '\r' || c == '\n')
+			{
+				do
+					c = fgetc(hf);
+				while (c == '\r' || c == '\n');
+				if (c != EOF)
+					ungetc(c, hf);
+				else	c = 0; /* loop once more, otherwise last line is lost */
+			}
+		} while (c != EOF && edit_line < CMDLINES);
+		fclose(hf);
+
+		history_line = edit_line = (edit_line - 1) & (CMDLINES - 1);
+		key_lines[edit_line][0] = ']';
+		key_lines[edit_line][1] = 0;
+	}
+}
+
+void History_Shutdown (void)
+{
+	int i;
+	FILE *hf;
+
+	hf = fopen(va("%s/%s", host_parms.userdir, HISTORY_FILE_NAME), "wt");
+	if (hf != NULL)
+	{
+		i = edit_line;
+		do
+		{
+			i = (i + 1) & (CMDLINES - 1);
+		} while (i != edit_line && !key_lines[i][1]);
+
+		while (i != edit_line && key_lines[i][1])
+		{
+			fprintf(hf, "%s\n", key_lines[i] + 1);
+			i = (i + 1) & (CMDLINES - 1);
+		}
+		fclose(hf);
+	}
+}
+
 static void PasteToConsole (void)
 {
 	char *cbd, *p, *workline;
@@ -530,55 +599,46 @@ void Char_Message (int key)
 
 
 /*
-===================
-Key_StringToKeynum
-
-Returns a key number to be used to index keybindings[] by looking at
-the given string.  Single ascii characters return themselves, while
-the K_* names are matched up.
-===================
-*/
+ * Returns a key number to be used to index keybindings[] by looking at
+ * the given string.  Single ascii characters return themselves, while
+ * the K_* names are matched up
+ */
 int Key_StringToKeynum (const char *str)
 {
-	keyname_t	*kn;
-
 	if (!str || !str[0])
 		return -1;
 	if (!str[1])
 		return str[0];
 
-	for (kn=keynames ; kn->name ; kn++)
+	for (keyname_t *kn = keynames; kn->name ;kn++)
 	{
 		if (!strcasecmp(str,kn->name))
 			return kn->keynum;
 	}
+
 	return -1;
 }
 
 /*
-===================
-Key_KeynumToString
-
-Returns a string (either a single ascii char, or a K_* name) for the
-given keynum.
-FIXME: handle quote special (general escape sequence?)
-===================
-*/
+ * Returns a string (either a single ascii char, or a K_* name) for the given keynum.
+ * FIXME: handle quote special (general escape sequence?)
+ */
 const char *Key_KeynumToString (int keynum)
 {
-	static	char	tinystr[2];
-	keyname_t	*kn;
+	static char tinystr[2];
 
 	if (keynum == -1)
 		return "<KEY NOT FOUND>";
+
+	// printable ascii
 	if (keynum > 32 && keynum < 127)
-	{	// printable ascii
+	{
 		tinystr[0] = keynum;
 		tinystr[1] = 0;
 		return tinystr;
 	}
 
-	for (kn = keynames; kn->name; kn++)
+	for (keyname_t *kn = keynames; kn->name; kn++)
 	{
 		if (keynum == kn->keynum)
 			return kn->name;
@@ -587,105 +647,34 @@ const char *Key_KeynumToString (int keynum)
 	return "<UNKNOWN KEYNUM>";
 }
 
-
-/*
-===================
-Key_SetBinding
-===================
-*/
-void Key_SetBinding (int keynum, const char *binding)
+void Key_SetBinding(int keynum, const char *binding)
 {
 	if (keynum == -1)
 		return;
 
-// free old bindings
+	// free old bindings
 	if (keybindings[keynum])
 	{
-		free (keybindings[keynum]);
+		free(keybindings[keynum]);
 		keybindings[keynum] = NULL;
 	}
 
-// allocate memory for new binding
+	// allocate memory for new binding
 	if (binding)
 		keybindings[keynum] = Q_strdup(binding);
 }
 
-/*
-===================
-Key_Unbind_f
-===================
-*/
-void Key_Unbind_f (void)
-{
-	int	b;
-
-	if (Cmd_Argc() != 2)
-	{
-		Con_Printf ("unbind <key> : remove commands from a key\n");
-		return;
-	}
-
-	b = Key_StringToKeynum (Cmd_Argv(1));
-	if (b == -1)
-	{
-		Con_Printf ("\"%s\" isn't a valid key\n", Cmd_Argv(1));
-		return;
-	}
-
-	Key_SetBinding (b, NULL);
-}
-
-void Key_Unbindall_f (void)
-{
-	int	i;
-
-	for (i = 0; i < MAX_KEYS; i++)
-	{
-		if (keybindings[i])
-			Key_SetBinding (i, NULL);
-	}
-}
-
-/*
-============
-Key_Bindlist_f -- johnfitz
-============
-*/
-void Key_Bindlist_f (void)
-{
-	int	i, count;
-
-	count = 0;
-	for (i = 0; i < MAX_KEYS; i++)
-	{
-		if (keybindings[i] && *keybindings[i])
-		{
-			Con_SafePrintf ("   %s \"%s\"\n", Key_KeynumToString(i), keybindings[i]);
-			count++;
-		}
-	}
-	Con_SafePrintf ("%i bindings\n", count);
-}
-
-/*
-===================
-Key_Bind_f
-===================
-*/
 void Key_Bind_f (void)
 {
-	int	i, c, b;
-	char	cmd[1024];
-
-	c = Cmd_Argc();
-
+	int c = Cmd_Argc();
 	if (c != 2 && c != 3)
 	{
 		Con_Printf ("bind <key> [command] : attach a command to a key\n");
 		return;
 	}
-	b = Key_StringToKeynum (Cmd_Argv(1));
-	if (b == -1)
+
+	int keynum = Key_StringToKeynum(Cmd_Argv(1));
+	if (keynum == -1)
 	{
 		Con_Printf ("\"%s\" isn't a valid key\n", Cmd_Argv(1));
 		return;
@@ -693,131 +682,357 @@ void Key_Bind_f (void)
 
 	if (c == 2)
 	{
-		if (keybindings[b])
-			Con_Printf ("\"%s\" = \"%s\"\n", Cmd_Argv(1), keybindings[b] );
+		if (keybindings[keynum])
+			Con_Printf ("\"%s\" = \"%s\"\n", Cmd_Argv(1), keybindings[keynum] );
 		else
 			Con_Printf ("\"%s\" is not bound\n", Cmd_Argv(1) );
 		return;
 	}
 
-// copy the rest of the command line
+	// copy the rest of the command line
+	char cmd[1024];
 	cmd[0] = 0;
-	for (i = 2; i < c; i++)
+	for (int i = 2; i < c; i++)
 	{
-		strlcat (cmd, Cmd_Argv(i), sizeof(cmd));
+		strlcat(cmd, Cmd_Argv(i), sizeof(cmd));
 		if (i != (c-1))
-			strlcat (cmd, " ", sizeof(cmd));
+			strlcat(cmd, " ", sizeof(cmd));
 	}
 
-	Key_SetBinding (b, cmd);
+	Key_SetBinding(keynum, cmd);
 }
 
-/*
-============
-Key_WriteBindings
-
-Writes lines containing "bind key value"
-============
-*/
-void Key_WriteBindings (FILE *f)
+void Key_Unbind_f (void)
 {
-	int	i;
+	if (Cmd_Argc() != 2)
+	{
+		Con_Printf ("unbind <key> : remove commands from a key\n");
+		return;
+	}
 
-	// unbindall before loading stored bindings:
+	int keynum = Key_StringToKeynum(Cmd_Argv(1));
+	if (keynum == -1)
+	{
+		Con_Printf ("\"%s\" isn't a valid key\n", Cmd_Argv(1));
+		return;
+	}
+
+	Key_SetBinding(keynum, NULL);
+}
+
+void Key_Unbindall_f (void)
+{
+	for (size_t keynum = 0; keynum < MAX_KEYS; keynum++)
+	{
+		if (keybindings[keynum])
+			Key_SetBinding(keynum, NULL);
+	}
+}
+
+void Key_Bindlist_f (void)
+{
+	int count = 0;
+	for (size_t keynum = 0; keynum < MAX_KEYS; keynum++)
+	{
+		if (keybindings[keynum] && *keybindings[keynum])
+		{
+			Con_SafePrintf ("   %s \"%s\"\n", Key_KeynumToString(keynum), keybindings[keynum]);
+			count++;
+		}
+	}
+	Con_SafePrintf ("%i bindings\n", count);
+}
+
+
+/* Writes lines containing "bind key value" */
+void Key_WriteBindings(FILE *f)
+{
+	// unbindall before loading stored bindings
 	if (cfg_unbindall.value)
-		fprintf (f, "unbindall\n");
-	for (i = 0; i < MAX_KEYS; i++)
+		fprintf(f, "unbindall\n");
+
+	for (size_t i = 0; i < MAX_KEYS; i++)
 	{
 		if (keybindings[i] && *keybindings[i])
-			fprintf (f, "bind \"%s\" \"%s\"\n", Key_KeynumToString(i), keybindings[i]);
+			fprintf(f, "bind \"%s\" \"%s\"\n", Key_KeynumToString(i), keybindings[i]);
 	}
 }
 
+static struct {
+	bool active;
+	int lastkey;
+	int lastchar;
+} key_inputgrab = { false, -1, -1 };
 
-void History_Init (void)
+static void Key_ClearStates(void)
 {
-	int i, c;
-	FILE *hf;
-
-	for (i = 0; i < CMDLINES; i++)
-	{
-		key_lines[i][0] = ']';
-		key_lines[i][1] = 0;
-	}
-	key_linepos = 1;
-
-	hf = fopen(va("%s/%s", host_parms.userdir, HISTORY_FILE_NAME), "rt");
-	if (hf != NULL)
-	{
-		do
-		{
-			i = 1;
-			do
-			{
-				c = fgetc(hf);
-				key_lines[edit_line][i++] = c;
-			} while (c != '\r' && c != '\n' && c != EOF && i < MAXCMDLINE);
-			key_lines[edit_line][i - 1] = 0;
-			edit_line = (edit_line + 1) & (CMDLINES - 1);
-			/* for people using a windows-generated history file on unix: */
-			if (c == '\r' || c == '\n')
-			{
-				do
-					c = fgetc(hf);
-				while (c == '\r' || c == '\n');
-				if (c != EOF)
-					ungetc(c, hf);
-				else	c = 0; /* loop once more, otherwise last line is lost */
-			}
-		} while (c != EOF && edit_line < CMDLINES);
-		fclose(hf);
-
-		history_line = edit_line = (edit_line - 1) & (CMDLINES - 1);
-		key_lines[edit_line][0] = ']';
-		key_lines[edit_line][1] = 0;
-	}
+	for (size_t i = 0; i < MAX_KEYS; i++)
+		if (keydown[i])
+			Key_Event(i, false);
 }
 
-void History_Shutdown (void)
+void Key_BeginInputGrab (void)
 {
-	int i;
-	FILE *hf;
+	Key_ClearStates ();
 
-	hf = fopen(va("%s/%s", host_parms.userdir, HISTORY_FILE_NAME), "wt");
-	if (hf != NULL)
-	{
-		i = edit_line;
-		do
-		{
-			i = (i + 1) & (CMDLINES - 1);
-		} while (i != edit_line && !key_lines[i][1]);
+	key_inputgrab.active = true;
+	key_inputgrab.lastkey = -1;
+	key_inputgrab.lastchar = -1;
 
-		while (i != edit_line && key_lines[i][1])
-		{
-			fprintf(hf, "%s\n", key_lines[i] + 1);
-			i = (i + 1) & (CMDLINES - 1);
-		}
-		fclose(hf);
-	}
+	IN_UpdateInputMode();
+}
+
+void Key_EndInputGrab (void)
+{
+	Key_ClearStates ();
+
+	key_inputgrab.active = false;
+
+	IN_UpdateInputMode();
+}
+
+void Key_GetGrabbedInput (int *lastkey, int *lastchar)
+{
+	if (lastkey)
+		*lastkey = key_inputgrab.lastkey;
+	if (lastchar)
+		*lastchar = key_inputgrab.lastchar;
 }
 
 /*
-===================
-Key_Init
-===================
-*/
+ * Called by the system between frames for both key up and key down events
+ * Should NOT be called during an interrupt!
+ */
+void Key_Event (int key, bool down)
+{
+	char	*kb;
+	char	cmd[1024];
+
+	if (key < 0 || key >= MAX_KEYS)
+		return;
+
+	// handle autorepeats and stray key up events
+	if (down)
+	{
+		if (keydown[key])
+		{
+			if (key_dest == key_game && !con_forcedup)
+				return; // ignore autorepeats in game mode
+		}
+		else if (key >= 200 && !keybindings[key])
+			Con_Printf ("%s is unbound, hit F4 to set.\n", Key_KeynumToString(key));
+	}
+	else if (!keydown[key])
+		return; // ignore stray key up events
+
+	keydown[key] = down;
+
+	if (key_inputgrab.active)
+	{
+		if (down)
+			key_inputgrab.lastkey = key;
+		return;
+	}
+
+	// handle escape specialy, so the user can never unbind it
+	if (key == K_ESCAPE)
+	{
+		if (!down)
+			return;
+
+		if (keydown[K_SHIFT])
+		{
+			Con_ToggleConsole_f();
+			return;
+		}
+
+		switch (key_dest)
+		{
+		case key_message:
+			Key_Message (key);
+			break;
+		case key_menu:
+			M_Keydown (key, 0, down);
+			break;
+		case key_game:
+		case key_console:
+			M_ToggleMenu_f ();
+			break;
+		default:
+			Sys_Error ("Bad key_dest");
+		}
+
+		return;
+	}
+
+	// key up events only generate commands if the game key binding is
+	// a button command (leading + sign).  These will occur even in console mode,
+	// to keep the character from continuing an action started before a console
+	// switch.  Button commands include the kenum as a parameter, so multiple
+	// downs can be matched with ups
+	if (!down)
+	{
+		kb = keybindings[key];
+		if (kb && kb[0] == '+')
+		{
+			sprintf (cmd, "-%s %i\n", kb+1, key);
+			Cbuf_AddText (cmd);
+		}
+		return;
+	}
+
+	// during demo playback, most keys bring up the main menu
+	if (cls.demoplayback && down && consolekeys[key] && key_dest == key_game && key != K_TAB)
+	{
+		M_ToggleMenu_f ();
+		return;
+	}
+
+	// if not a consolekey, send to the interpreter no matter what mode is
+	if ((key_dest == key_menu && menubound[key]) ||
+	    (key_dest == key_console && !consolekeys[key]) ||
+	    (key_dest == key_game && (!con_forcedup || !consolekeys[key])))
+	{
+		kb = keybindings[key];
+		if (kb)
+		{
+			if (kb[0] == '+')
+			{	// button commands add keynum as a parm
+				sprintf (cmd, "%s %i\n", kb, key);
+				Cbuf_AddText (cmd);
+			}
+			else
+			{
+				Cbuf_AddText (kb);
+				Cbuf_AddText ("\n");
+			}
+		}
+		return;
+	}
+
+	if (!down)
+		return; // other systems only care about key down events
+
+	switch (key_dest)
+	{
+	case key_message:
+		Key_Message (key);
+		break;
+	case key_menu:
+		M_Keydown (key, 0, down);
+		break;
+
+	case key_game:
+	case key_console:
+		Key_Console (key);
+		break;
+	default:
+		Sys_Error ("Bad key_dest");
+	}
+}
+
+/* Called by the backend when the user has input a character */
+void Char_Event (int key)
+{
+	if (key < 32 || key > 126)
+		return;
+
+#if defined(PLATFORM_OSX) || defined(PLATFORM_MAC)
+	if (keydown[K_COMMAND])
+		return;
+#endif
+	if (keydown[K_CTRL])
+		return;
+
+	if (key_inputgrab.active)
+	{
+		key_inputgrab.lastchar = key;
+		return;
+	}
+
+	switch (key_dest)
+	{
+	case key_message:
+		Char_Message (key);
+		break;
+	case key_menu:
+//		M_Charinput (key);
+		break;
+	case key_game:
+		if (!con_forcedup)
+			break;
+		/* fallthrough */
+	case key_console:
+		Char_Console(key);
+		break;
+	default:
+		break;
+	}
+}
+
+bool Key_TextEntry (void)
+{
+	if (key_inputgrab.active)
+		return true;
+
+	switch (key_dest)
+	{
+	case key_message:
+		return true;
+	case key_menu:
+//		return M_TextEntry();
+		return true;
+	case key_game:
+		if (!con_forcedup)
+			return false;
+		/* fallthrough */
+	case key_console:
+		return true;
+	default:
+		return false;
+	}
+}
+
+void Key_UpdateForDest (void)
+{
+	static bool forced = false;
+
+	if (cls.state == ca_dedicated)
+		return;
+
+	switch (key_dest)
+	{
+	case key_console:
+		if (forced && cls.state == ca_connected)
+		{
+			forced = false;
+			IN_Activate();
+			key_dest = key_game;
+		}
+		break;
+	case key_game:
+		if (cls.state != ca_connected)
+		{
+			forced = true;
+			IN_Deactivate();
+			key_dest = key_console;
+			break;
+		}
+	/* fallthrough */
+	default:
+		forced = false;
+		break;
+	}
+}
+
 void Key_Init (void)
 {
-	int	i;
+	History_Init();
 
-	History_Init ();
+	key_blinktime = realtime;
 
-	key_blinktime = realtime; //johnfitz
-
-//
-// initialize consolekeys[]
-//
-	for (i = 32; i < 127; i++) // ascii characters
+	// initialize consolekeys[]
+	for (size_t i = 32; i < 127; i++) // ascii characters
 		consolekeys[i] = true;
 	consolekeys['`'] = false;
 	consolekeys['~'] = false;
@@ -860,336 +1075,13 @@ void Key_Init (void)
 	consolekeys[K_MWHEELUP] = true;
 	consolekeys[K_MWHEELDOWN] = true;
 
-//
-// initialize menubound[]
-//
+	// initialize menubound[]
 	menubound[K_ESCAPE] = true;
-	for (i = 0; i < 12; i++)
+	for (size_t i = 0; i < 12; i++)
 		menubound[K_F1+i] = true;
 
-//
-// register our functions
-//
-	Cmd_AddCommand ("bindlist",Key_Bindlist_f); //johnfitz
-	Cmd_AddCommand ("bind",Key_Bind_f);
-	Cmd_AddCommand ("unbind",Key_Unbind_f);
-	Cmd_AddCommand ("unbindall",Key_Unbindall_f);
-}
-
-static struct {
-	bool active;
-	int lastkey;
-	int lastchar;
-} key_inputgrab = { false, -1, -1 };
-
-/*
-===================
-Key_BeginInputGrab
-===================
-*/
-void Key_BeginInputGrab (void)
-{
-	Key_ClearStates ();
-
-	key_inputgrab.active = true;
-	key_inputgrab.lastkey = -1;
-	key_inputgrab.lastchar = -1;
-
-	IN_UpdateInputMode();
-}
-
-/*
-===================
-Key_EndInputGrab
-===================
-*/
-void Key_EndInputGrab (void)
-{
-	Key_ClearStates ();
-
-	key_inputgrab.active = false;
-
-	IN_UpdateInputMode();
-}
-
-/*
-===================
-Key_GetGrabbedInput
-===================
-*/
-void Key_GetGrabbedInput (int *lastkey, int *lastchar)
-{
-	if (lastkey)
-		*lastkey = key_inputgrab.lastkey;
-	if (lastchar)
-		*lastchar = key_inputgrab.lastchar;
-}
-
-/*
-===================
-Key_Event
-
-Called by the system between frames for both key up and key down events
-Should NOT be called during an interrupt!
-===================
-*/
-void Key_Event (int key, bool down)
-{
-	char	*kb;
-	char	cmd[1024];
-
-	if (key < 0 || key >= MAX_KEYS)
-		return;
-
-// handle fullscreen toggle
-	if (down && (key == K_ENTER || key == K_KP_ENTER) && keydown[K_ALT])
-	{
-//		VID_Toggle();
-		return;
-	}
-
-// handle autorepeats and stray key up events
-	if (down)
-	{
-		if (keydown[key])
-		{
-			if (key_dest == key_game && !con_forcedup)
-				return; // ignore autorepeats in game mode
-		}
-		else if (key >= 200 && !keybindings[key])
-			Con_Printf ("%s is unbound, hit F4 to set.\n", Key_KeynumToString(key));
-	}
-	else if (!keydown[key])
-		return; // ignore stray key up events
-
-	keydown[key] = down;
-
-	if (key_inputgrab.active)
-	{
-		if (down)
-			key_inputgrab.lastkey = key;
-		return;
-	}
-
-// handle escape specialy, so the user can never unbind it
-	if (key == K_ESCAPE)
-	{
-		if (!down)
-			return;
-
-		if (keydown[K_SHIFT])
-		{
-			Con_ToggleConsole_f();
-			return;
-		}
-
-		switch (key_dest)
-		{
-		case key_message:
-			Key_Message (key);
-			break;
-		case key_menu:
-			M_Keydown (key, 0, down);
-			break;
-		case key_game:
-		case key_console:
-			M_ToggleMenu_f ();
-			break;
-		default:
-			Sys_Error ("Bad key_dest");
-		}
-
-		return;
-	}
-
-// key up events only generate commands if the game key binding is
-// a button command (leading + sign).  These will occur even in console mode,
-// to keep the character from continuing an action started before a console
-// switch.  Button commands include the kenum as a parameter, so multiple
-// downs can be matched with ups
-	if (!down)
-	{
-		kb = keybindings[key];
-		if (kb && kb[0] == '+')
-		{
-			sprintf (cmd, "-%s %i\n", kb+1, key);
-			Cbuf_AddText (cmd);
-		}
-		return;
-	}
-
-// during demo playback, most keys bring up the main menu
-	if (cls.demoplayback && down && consolekeys[key] && key_dest == key_game && key != K_TAB)
-	{
-		M_ToggleMenu_f ();
-		return;
-	}
-
-// if not a consolekey, send to the interpreter no matter what mode is
-	if ((key_dest == key_menu && menubound[key]) ||
-	    (key_dest == key_console && !consolekeys[key]) ||
-	    (key_dest == key_game && (!con_forcedup || !consolekeys[key])))
-	{
-		kb = keybindings[key];
-		if (kb)
-		{
-			if (kb[0] == '+')
-			{	// button commands add keynum as a parm
-				sprintf (cmd, "%s %i\n", kb, key);
-				Cbuf_AddText (cmd);
-			}
-			else
-			{
-				Cbuf_AddText (kb);
-				Cbuf_AddText ("\n");
-			}
-		}
-		return;
-	}
-
-	if (!down)
-		return;		// other systems only care about key down events
-
-	switch (key_dest)
-	{
-	case key_message:
-		Key_Message (key);
-		break;
-	case key_menu:
-		M_Keydown (key, 0, down);
-		break;
-
-	case key_game:
-	case key_console:
-		Key_Console (key);
-		break;
-	default:
-		Sys_Error ("Bad key_dest");
-	}
-}
-
-/*
-===================
-Char_Event
-
-Called by the backend when the user has input a character.
-===================
-*/
-void Char_Event (int key)
-{
-	if (key < 32 || key > 126)
-		return;
-
-#if defined(PLATFORM_OSX) || defined(PLATFORM_MAC)
-	if (keydown[K_COMMAND])
-		return;
-#endif
-	if (keydown[K_CTRL])
-		return;
-
-	if (key_inputgrab.active)
-	{
-		key_inputgrab.lastchar = key;
-		return;
-	}
-
-	switch (key_dest)
-	{
-	case key_message:
-		Char_Message (key);
-		break;
-	case key_menu:
-//		M_Charinput (key);
-		break;
-	case key_game:
-		if (!con_forcedup)
-			break;
-		/* fallthrough */
-	case key_console:
-		Char_Console (key);
-		break;
-	default:
-		break;
-	}
-}
-
-/*
-===================
-Key_TextEntry
-===================
-*/
-bool Key_TextEntry (void)
-{
-	if (key_inputgrab.active)
-		return true;
-
-	switch (key_dest)
-	{
-	case key_message:
-		return true;
-	case key_menu:
-//		return M_TextEntry();
-		return true;
-	case key_game:
-		if (!con_forcedup)
-			return false;
-		/* fallthrough */
-	case key_console:
-		return true;
-	default:
-		return false;
-	}
-}
-
-/*
-===================
-Key_ClearStates
-===================
-*/
-void Key_ClearStates (void)
-{
-	int	i;
-
-	for (i = 0; i < MAX_KEYS; i++)
-	{
-		if (keydown[i])
-			Key_Event (i, false);
-	}
-}
-
-/*
-===================
-Key_UpdateForDest
-===================
-*/
-void Key_UpdateForDest (void)
-{
-	static bool forced = false;
-
-	if (cls.state == ca_dedicated)
-		return;
-
-	switch (key_dest)
-	{
-	case key_console:
-		if (forced && cls.state == ca_connected)
-		{
-			forced = false;
-			IN_Activate();
-			key_dest = key_game;
-		}
-		break;
-	case key_game:
-		if (cls.state != ca_connected)
-		{
-			forced = true;
-			IN_Deactivate();
-			key_dest = key_console;
-			break;
-		}
-	/* fallthrough */
-	default:
-		forced = false;
-		break;
-	}
+	Cmd_AddCommand("bind", Key_Bind_f);
+	Cmd_AddCommand("unbind", Key_Unbind_f);
+	Cmd_AddCommand("unbindall", Key_Unbindall_f);
+	Cmd_AddCommand("bindlist", Key_Bindlist_f);
 }

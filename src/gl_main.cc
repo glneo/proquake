@@ -139,36 +139,20 @@ static void Q_gluPerspective(GLfloat fovy, GLfloat aspect, GLfloat zNear, GLfloa
 
 void GL_Setup(void)
 {
-	float screenaspect;
-	unsigned int x, x2, y2, y, w, h, farclip;
-
 	// set up viewpoint
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
 
-	x = r_refdef.vrect.x * vid.width / vid.width;
-	x2 = (r_refdef.vrect.x + r_refdef.vrect.width) * vid.width / vid.width;
-	y = (vid.height - r_refdef.vrect.y) * vid.height / vid.height;
-	y2 = (vid.height - (r_refdef.vrect.y + r_refdef.vrect.height)) * vid.height / vid.height;
+	int x = vid.x + r_refdef.vrect.x;
+	int y = vid.y + (vid.height - (r_refdef.vrect.y + r_refdef.vrect.height));
+	int w = r_refdef.vrect.width;
+	int h = r_refdef.vrect.height;
 
-	// fudge around because of frac screen scale
-	if (x > 0)
-		x--;
-	if (x2 < vid.width)
-		x2++;
-	if (y2 < 0)
-		y2--;
-	if (y < vid.height)
-		y++;
+	glViewport(x, y, w, h);
 
-	w = x2 - x;
-	h = y - y2;
-
-	glViewport(vid.x + x, vid.y + y2, w, h);
-	screenaspect = (float) r_refdef.vrect.width / r_refdef.vrect.height;
-//	yfov = 2*atan((float)r_refdef.vrect.height/r_refdef.vrect.width)*180/M_PI;
-	farclip = max((int )gl_farclip.value, 4096);
-	Q_gluPerspective(r_refdef.fov_y, screenaspect, 4, farclip); // 4096
+	float screenaspect = (float) r_refdef.vrect.width / r_refdef.vrect.height;
+	float farclip = max(gl_farclip.value, 4096.0f);
+	Q_gluPerspective(r_refdef.fov_y, screenaspect, 4, farclip);
 
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();

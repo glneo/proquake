@@ -1,43 +1,35 @@
 /*
-Copyright (C) 1996-2001 Id Software, Inc.
-Copyright (C) 2002-2009 John Fitzgibbons and others
-Copyright (C) 2010-2014 QuakeSpasm developers
-
-This program is free software; you can redistribute it and/or
-modify it under the terms of the GNU General Public License
-as published by the Free Software Foundation; either version 2
-of the License, or (at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
-
-See the GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program; if not, write to the Free Software
-Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
-
-*/
+ * Copyright (C) 1996-2001 Id Software, Inc.
+ * Copyright (C) 2002-2009 John Fitzgibbons and others
+ * Copyright (C) 2007-2008 Kristian Duske
+ * Copyright (C) 2010-2014 QuakeSpasm developers
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * General Public License for more details.
+ */
 
 #ifndef _QUAKE_KEYS_H
 #define _QUAKE_KEYS_H
 
-//
 // these are the key numbers that should be passed to Key_Event
-//
 #define	K_TAB			9
 #define	K_ENTER			13
 #define	K_ESCAPE		27
 #define	K_SPACE			32
 
 // normal keys should be passed as lowercased ascii
-
 #define	K_BACKSPACE		127
 #define	K_UPARROW		128
 #define	K_DOWNARROW		129
 #define	K_LEFTARROW		130
-#define	K_RIGHTARROW	131
+#define	K_RIGHTARROW            131
 
 #define	K_ALT			132
 #define	K_CTRL			133
@@ -83,16 +75,12 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #define K_PAUSE			255
 
-//
 // mouse buttons generate virtual keys
-//
 #define	K_MOUSE1		200
 #define	K_MOUSE2		201
 #define	K_MOUSE3		202
 
-//
 // joystick buttons
-//
 #define	K_JOY1			203
 #define	K_JOY2			204
 #define	K_JOY3			205
@@ -133,8 +121,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #define	K_AUX31			237
 #define	K_AUX32			238
 
-// JACK: Intellimouse(c) Mouse Wheel Support
-
+// mouse wheel
 #define K_MWHEELUP		239
 #define K_MWHEELDOWN		240
 
@@ -142,7 +129,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #define K_MOUSE4		241
 #define K_MOUSE5		242
 
-// SDL2 game controller keys
+// game controller keys
 #define K_LTHUMB		243
 #define K_RTHUMB		244
 #define K_LSHOULDER		245
@@ -156,44 +143,46 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #define	MAX_KEYS		256
 
-#define	MAXCMDLINE	256
+#define	MAXCMDLINE              256
 
-typedef enum {key_game, key_console, key_message, key_menu} keydest_t;
+typedef enum
+{
+	key_game, key_console, key_message, key_menu
+} keydest_t;
 
-extern keydest_t	key_dest;
-extern	char	*keybindings[MAX_KEYS];
+extern keydest_t key_dest;
+extern char *keybindings[MAX_KEYS];
 
 #define		CMDLINES 64
 
-extern	char	key_lines[CMDLINES][MAXCMDLINE];
-extern	int		edit_line;
-extern	int		key_linepos;
-extern	int		key_insert;
-extern	double		key_blinktime;
+extern char key_lines[CMDLINES][MAXCMDLINE];
+extern int edit_line;
+extern int key_linepos;
+extern int key_insert;
+extern double key_blinktime;
 
-extern	bool	chat_team;
+extern bool chat_team;
 
-void Key_Init (void);
-void Key_ClearStates (void);
-void Key_UpdateForDest (void);
+void Key_Init(void);
+void Key_UpdateForDest(void);
 
-void Key_BeginInputGrab (void);
-void Key_EndInputGrab (void);
-void Key_GetGrabbedInput (int *lastkey, int *lastchar);
+void Key_BeginInputGrab(void);
+void Key_EndInputGrab(void);
+void Key_GetGrabbedInput(int *lastkey, int *lastchar);
 
-void Key_Event (int key, bool down);
-void Char_Event (int key);
-bool Key_TextEntry (void);
+void Key_Event(int key, bool down);
+void Char_Event(int key);
+bool Key_TextEntry(void);
 
-void Key_SetBinding (int keynum, const char *binding);
-const char *Key_KeynumToString (int keynum);
-void Key_WriteBindings (FILE *f);
+void Key_SetBinding(int keynum, const char *binding);
+const char *Key_KeynumToString(int keynum);
+void Key_WriteBindings(FILE *f);
 
-void Key_EndChat (void);
-const char *Key_GetChatBuffer (void);
-int Key_GetChatMsgLen (void);
+void Key_EndChat(void);
+const char *Key_GetChatBuffer(void);
+int Key_GetChatMsgLen(void);
 
-void History_Init (void);
-void History_Shutdown (void);
+void History_Init(void);
+void History_Shutdown(void);
 
 #endif	/* _QUAKE_KEYS_H */

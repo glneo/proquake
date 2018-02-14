@@ -20,7 +20,7 @@
 cvar_t r_norefresh = { "r_norefresh", "0" };
 cvar_t r_drawentities = { "r_drawentities", "1" };
 cvar_t r_speeds = { "r_speeds", "0" };
-cvar_t r_shadows = { "r_shadows", "0" };
+cvar_t r_shadows = { "r_shadows", "0.3", CVAR_ARCHIVE };
 
 // For draw stats
 int c_brush_polys, c_alias_polys;

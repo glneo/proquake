@@ -470,27 +470,24 @@ void Cmd_Alias_f(void)
 
 void Cmd_Unalias_f(void)
 {
-	cmdalias_t *a, *prev;
-
+	cmdalias_t *prev = cmd_alias;
 	switch (Cmd_Argc())
 	{
-	default:
-	case 1:
-		Con_Printf("unalias <name> : delete alias\n");
-		break;
 	case 2:
-		for (prev = a = cmd_alias; a; a = a->next)
+		for (cmdalias_t *a = cmd_alias; a; a = a->next)
 		{
 			if (!strcmp(Cmd_Argv(1), a->name))
 			{
 				prev->next = a->next;
 				free(a->value);
 				free(a);
-				prev = a;
 				return;
 			}
 			prev = a;
 		}
+		break;
+	default:
+		Con_Printf("unalias <name> : delete alias\n");
 		break;
 	}
 }

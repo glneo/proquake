@@ -57,25 +57,21 @@ static void GL_DrawAliasShadow(entity_t *ent, alias_model_t *aliasmodel, int pos
 	glDisable(GL_TEXTURE_2D);
 	glColor4f(0.0f, 0.0f, 0.0f, r_shadows.value);
 
-	vec3_t point;
-	float height, lheight;
-
 	vec3_t shadevector;
-
 	float an = ent->angles[1] / 180 * M_PI;
 	shadevector[0] = cos(-an);
 	shadevector[1] = sin(-an);
 	shadevector[2] = 1;
 	VectorNormalize(shadevector);
 
-	lheight = ent->origin[2] - lightspot[2];
-	height = -lheight + 1.0;
+	float lheight = ent->origin[2] - lightspot[2];
+	float height = -lheight + 1.0;
 
 	vec3_t shadowverts[aliasmodel->numverts];
 	for (int i = 0; i < aliasmodel->numverts; i++)
 	{
-		shadowverts[i][0] = aliasmodel->poseverts[pose][i].v[0] - (shadevector[0] * (point[2] + lheight));
-		shadowverts[i][1] = aliasmodel->poseverts[pose][i].v[1] - (shadevector[1] * (point[2] + lheight));
+		shadowverts[i][0] = aliasmodel->poseverts[pose][i].v[0] - (shadevector[0] * lheight);
+		shadowverts[i][1] = aliasmodel->poseverts[pose][i].v[1] - (shadevector[1] * lheight);
 		shadowverts[i][2] = height;
 	}
 
