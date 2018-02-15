@@ -17,26 +17,17 @@
 #ifndef __SYS_H
 #define __SYS_H
 
-//
 // file IO
-//
-// returns the file size
-// return -1 if file is not present
-// the file should be in BINARY mode for stupid OSs that care
-int Sys_FileOpenRead(const char *path, int *hndl);
+int Sys_FileTime(const char *path);
+void Sys_mkdir(const char *path);
+int Sys_FileOpenRead(const char *path, int *handle);
 int Sys_FileOpenWrite(const char *path);
+int Sys_FileWrite(int handle, void *src, int count);
 void Sys_FileClose(int handle);
 void Sys_FileSeek(int handle, int position);
 int Sys_FileRead(int handle, void *dest, int count);
-int Sys_FileWrite(int handle, void *data, int count);
-int Sys_FileTime(const char *path);
-void Sys_mkdir(const char *path);
 
-//
 // system IO
-//
-void Sys_DebugLog(char *file, char *fmt, ...);
-
 #define Sys_Error(...) do { \
 	fprintf(stderr, "Error: %s: ", __func__); \
 	fprintf(stderr, __VA_ARGS__); \
@@ -46,19 +37,13 @@ void Sys_DebugLog(char *file, char *fmt, ...);
 } while ( 0 )
 
 void Sys_Printf(const char *fmt, ...); // send text to the console
-void Sys_Quit(void);
-double Sys_DoubleTime(void);
+char *Sys_GetClipboardData(void);
+void Sys_CopyToClipboard(char *text);
 char *Sys_ConsoleInput(void);
 
-void Sys_SendKeyEvents(void); // Perform Key_Event () callbacks until the input que is empty
-
-char *Sys_GetClipboardData(void);
-void Sys_CopyToClipboard(char *);
+double Sys_DoubleTime (void);
 void Sys_Sleep(unsigned long msecs);
-void Sys_Init(void);
 
-void Sys_SetWindowCaption(char *newcaption);
-void Sys_OpenFolder_f(void);
-int Sys_GetHardDriveSerial(const char* mydir);
+void Sys_Quit(void);
 
 #endif /* __SYS_H */

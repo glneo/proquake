@@ -1484,7 +1484,7 @@ void M_Pref_AdjustSliders(int dir)
 
 	case 10:
 
-		Cvar_SetQuick(&cl_keypad, cl_keypad.value ? "0" : "1");
+//		Cvar_SetQuick(&cl_keypad, cl_keypad.value ? "0" : "1");
 		break;
 
 		/*		case 11:
@@ -1615,7 +1615,7 @@ void M_Pref_Options_Draw(void)
 	i += 8;							  // 8
 	i += 8;													// 9
 	M_Print(16, i, "     keypad binding ");
-	M_Print(220, i, cl_keypad.value ? "on" : "off");
+//	M_Print(220, i, cl_keypad.value ? "on" : "off");
 	i += 8; 	  // 10
 	M_Print(16, i, "     jump is moveup ");
 	M_Print(220, i, pq_moveup.value ? "on" : "off");

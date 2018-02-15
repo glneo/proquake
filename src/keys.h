@@ -143,46 +143,26 @@
 
 #define	MAX_KEYS		256
 
-#define	MAXCMDLINE              256
-
 typedef enum
 {
 	key_game, key_console, key_message, key_menu
 } keydest_t;
 
 extern keydest_t key_dest;
+
 extern char *keybindings[MAX_KEYS];
 
-#define		CMDLINES 64
-
-extern char key_lines[CMDLINES][MAXCMDLINE];
-extern int edit_line;
-extern int key_linepos;
-extern int key_insert;
-extern double key_blinktime;
-
-extern bool chat_team;
-
-void Key_Init(void);
-void Key_UpdateForDest(void);
-
+const char *Key_GetChatBuffer(void);
+const char *Key_KeynumToString(int keynum);
+void Key_SetBinding(int keynum, const char *binding);
+void Key_WriteBindings(FILE *f);
 void Key_BeginInputGrab(void);
 void Key_EndInputGrab(void);
 void Key_GetGrabbedInput(int *lastkey, int *lastchar);
-
 void Key_Event(int key, bool down);
 void Char_Event(int key);
 bool Key_TextEntry(void);
-
-void Key_SetBinding(int keynum, const char *binding);
-const char *Key_KeynumToString(int keynum);
-void Key_WriteBindings(FILE *f);
-
-void Key_EndChat(void);
-const char *Key_GetChatBuffer(void);
-int Key_GetChatMsgLen(void);
-
-void History_Init(void);
-void History_Shutdown(void);
+void Key_UpdateForDest(void);
+void Key_Init(void);
 
 #endif	/* _QUAKE_KEYS_H */

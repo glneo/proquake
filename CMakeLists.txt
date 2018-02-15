@@ -12,7 +12,7 @@ set(PROQUAKE_SOURCES
 	src/mathlib.cc
 	src/zone.cc
 	src/wad.cc
-	src/sys_linux.cc
+	src/sys_sdl.cc
 # Client
 	src/cl_demo.cc
 	src/cl_efrag.cc

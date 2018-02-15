@@ -20,6 +20,12 @@
 #define CON_TEXTSIZE 65536 // new default size
 #define CON_MINSIZE  16384 // old default, now the minimum size
 
+#define HISTORY_FILE_NAME "history.txt"
+
+
+#define CMDLINES        64
+#define	MAXCMDLINE      256
+
 static const float con_cursorspeed = 4;
 
 int con_linewidth;
@@ -49,6 +55,17 @@ bool con_debuglog = false;
 
 bool con_initialized;
 
+char		key_lines[CMDLINES][MAXCMDLINE];
+
+int		key_linepos;
+int		key_insert;	//johnfitz -- insert key toggle (for editing)
+double		key_blinktime; //johnfitz -- fudge cursor blinking to make it easier to spot in certain cases
+
+int		edit_line = 0;
+int		history_line = 0;
+
+extern bool keydown[256];
+
 void Con_DrawPic(int x, int y, qpic_t *pic)
 {
 	Draw_Pic(x, y, pic, scr_conalpha.value);
@@ -57,6 +74,373 @@ void Con_DrawPic(int x, int y, qpic_t *pic)
 void Con_DrawCharacter(int x, int y, int num)
 {
 	Draw_Character(x, y, num, 1.0f);
+}
+
+/*
+==============================================================================
+
+			LINE TYPING INTO THE CONSOLE
+
+==============================================================================
+*/
+
+void History_Init (void)
+{
+	int i, c;
+	FILE *hf;
+
+	for (i = 0; i < CMDLINES; i++)
+	{
+		key_lines[i][0] = ']';
+		key_lines[i][1] = 0;
+	}
+	key_linepos = 1;
+
+	hf = fopen(va("%s/%s", host_parms.userdir, HISTORY_FILE_NAME), "rt");
+	if (hf != NULL)
+	{
+		do
+		{
+			i = 1;
+			do
+			{
+				c = fgetc(hf);
+				key_lines[edit_line][i++] = c;
+			} while (c != '\r' && c != '\n' && c != EOF && i < MAXCMDLINE);
+			key_lines[edit_line][i - 1] = 0;
+			edit_line = (edit_line + 1) & (CMDLINES - 1);
+			/* for people using a windows-generated history file on unix: */
+			if (c == '\r' || c == '\n')
+			{
+				do
+					c = fgetc(hf);
+				while (c == '\r' || c == '\n');
+				if (c != EOF)
+					ungetc(c, hf);
+				else	c = 0; /* loop once more, otherwise last line is lost */
+			}
+		} while (c != EOF && edit_line < CMDLINES);
+		fclose(hf);
+
+		history_line = edit_line = (edit_line - 1) & (CMDLINES - 1);
+		key_lines[edit_line][0] = ']';
+		key_lines[edit_line][1] = 0;
+	}
+}
+
+void History_Shutdown(void)
+{
+	int i;
+	FILE *hf;
+
+	hf = fopen(va("%s/%s", host_parms.userdir, HISTORY_FILE_NAME), "wt");
+	if (hf != NULL)
+	{
+		i = edit_line;
+		do
+		{
+			i = (i + 1) & (CMDLINES - 1);
+		} while (i != edit_line && !key_lines[i][1]);
+
+		while (i != edit_line && key_lines[i][1])
+		{
+			fprintf(hf, "%s\n", key_lines[i] + 1);
+			i = (i + 1) & (CMDLINES - 1);
+		}
+		fclose(hf);
+	}
+}
+
+static void PasteToConsole (void)
+{
+	char *cbd, *p, *workline;
+	int mvlen, inslen;
+
+	if (key_linepos == MAXCMDLINE - 1)
+		return;
+
+//	if ((cbd = PL_GetClipboardData()) == NULL)
+		return;
+
+	p = cbd;
+	while (*p)
+	{
+		if (*p == '\n' || *p == '\r' || *p == '\b')
+		{
+			*p = 0;
+			break;
+		}
+		p++;
+	}
+
+	inslen = (int) (p - cbd);
+	if (inslen + key_linepos > MAXCMDLINE - 1)
+		inslen = MAXCMDLINE - 1 - key_linepos;
+	if (inslen <= 0) goto done;
+
+	workline = key_lines[edit_line];
+	workline += key_linepos;
+	mvlen = (int) strlen(workline);
+	if (mvlen + inslen + key_linepos > MAXCMDLINE - 1)
+	{
+		mvlen = MAXCMDLINE - 1 - key_linepos - inslen;
+		if (mvlen < 0) mvlen = 0;
+	}
+
+	// insert the string
+	if (mvlen != 0)
+		memmove (workline + inslen, workline, mvlen);
+	memcpy (workline, cbd, inslen);
+	key_linepos += inslen;
+	workline[mvlen + inslen] = '\0';
+  done:
+	free(cbd);
+}
+
+/*
+====================
+Key_Console -- johnfitz -- heavy revision
+
+Interactive line editing and console scrollback
+====================
+*/
+extern	char *con_text, key_tabpartial[MAXCMDLINE];
+extern	int con_current, con_linewidth, con_vislines;
+
+void Key_Console (int key)
+{
+	static	char current[MAXCMDLINE] = "";
+	int	history_line_last;
+	size_t		len;
+	char *workline = key_lines[edit_line];
+
+	switch (key)
+	{
+	case K_ENTER:
+	case K_KP_ENTER:
+		key_tabpartial[0] = 0;
+		Cbuf_AddText (workline + 1);	// skip the prompt
+		Cbuf_AddText ("\n");
+		Con_Printf ("%s\n", workline);
+
+		// If the last two lines are identical, skip storing this line in history
+		// by not incrementing edit_line
+		if (strcmp(workline, key_lines[(edit_line-1)&31]))
+			edit_line = (edit_line + 1) & 31;
+
+		history_line = edit_line;
+		key_lines[edit_line][0] = ']';
+		key_lines[edit_line][1] = 0; //johnfitz -- otherwise old history items show up in the new edit line
+		key_linepos = 1;
+		if (cls.state == ca_disconnected)
+			SCR_UpdateScreen (); // force an update, because the command may take some time
+		return;
+
+	case K_TAB:
+		Con_TabComplete ();
+		return;
+
+	case K_BACKSPACE:
+		key_tabpartial[0] = 0;
+		if (key_linepos > 1)
+		{
+			workline += key_linepos - 1;
+			if (workline[1])
+			{
+				len = strlen(workline);
+				memmove (workline, workline + 1, len);
+			}
+			else	*workline = 0;
+			key_linepos--;
+		}
+		return;
+
+	case K_DEL:
+		key_tabpartial[0] = 0;
+		workline += key_linepos;
+		if (*workline)
+		{
+			if (workline[1])
+			{
+				len = strlen(workline);
+				memmove (workline, workline + 1, len);
+			}
+			else	*workline = 0;
+		}
+		return;
+
+	case K_HOME:
+		if (keydown[K_CTRL])
+		{
+			//skip initial empty lines
+			int i, x;
+			char *line;
+
+			for (i = con_current - con_totallines + 1; i <= con_current; i++)
+			{
+				line = con_text + (i % con_totallines) * con_linewidth;
+				for (x = 0; x < con_linewidth; x++)
+				{
+					if (line[x] != ' ')
+						break;
+				}
+				if (x != con_linewidth)
+					break;
+			}
+			con_backscroll = con_current - (i % con_totallines) - 2;
+			con_backscroll = CLAMP(0, con_backscroll, con_totallines-(vid.height>>3)-1);
+		}
+		else	key_linepos = 1;
+		return;
+
+	case K_END:
+		if (keydown[K_CTRL])
+			con_backscroll = 0;
+		else	key_linepos = strlen(workline);
+		return;
+
+	case K_PGUP:
+	case K_MWHEELUP:
+		con_backscroll += 2;
+		if (con_backscroll > con_totallines - (vid.height>>3) - 1)
+			con_backscroll = con_totallines - (vid.height>>3) - 1;
+		return;
+
+	case K_PGDN:
+	case K_MWHEELDOWN:
+		con_backscroll -= 2;
+		if (con_backscroll < 0)
+			con_backscroll = 0;
+		return;
+
+	case K_LEFTARROW:
+		if (key_linepos > 1)
+		{
+			key_linepos--;
+			key_blinktime = realtime;
+		}
+		return;
+
+	case K_RIGHTARROW:
+		len = strlen(workline);
+		if ((int)len == key_linepos)
+		{
+			len = strlen(key_lines[(edit_line + 31) & 31]);
+			if ((int)len <= key_linepos)
+				return; // no character to get
+			workline += key_linepos;
+			*workline = key_lines[(edit_line + 31) & 31][key_linepos];
+			workline[1] = 0;
+			key_linepos++;
+		}
+		else
+		{
+			key_linepos++;
+			key_blinktime = realtime;
+		}
+		return;
+
+	case K_UPARROW:
+		if (history_line == edit_line)
+			strcpy(current, workline);
+
+		history_line_last = history_line;
+		do
+		{
+			history_line = (history_line - 1) & 31;
+		} while (history_line != edit_line && !key_lines[history_line][1]);
+
+		if (history_line == edit_line)
+		{
+			history_line = history_line_last;
+			return;
+		}
+
+		key_tabpartial[0] = 0;
+		strcpy(workline, key_lines[history_line]);
+		key_linepos = strlen(workline);
+		return;
+
+	case K_DOWNARROW:
+		if (history_line == edit_line)
+			return;
+
+		key_tabpartial[0] = 0;
+
+		do
+		{
+			history_line = (history_line + 1) & 31;
+		} while (history_line != edit_line && !key_lines[history_line][1]);
+
+		if (history_line == edit_line)
+			strcpy(workline, current);
+		else	strcpy(workline, key_lines[history_line]);
+		key_linepos = strlen(workline);
+		return;
+
+	case K_INS:
+		if (keydown[K_SHIFT])		/* Shift-Ins paste */
+			PasteToConsole();
+		else	key_insert ^= 1;
+		return;
+
+	case 'v':
+	case 'V':
+#if defined(PLATFORM_OSX) || defined(PLATFORM_MAC)
+		if (keydown[K_COMMAND]) {	/* Cmd+v paste (Mac-only) */
+			PasteToConsole();
+			return;
+		}
+#endif
+		if (keydown[K_CTRL]) {		/* Ctrl+v paste */
+			PasteToConsole();
+			return;
+		}
+		break;
+
+	case 'c':
+	case 'C':
+		if (keydown[K_CTRL]) {		/* Ctrl+C: abort the line -- S.A */
+			Con_Printf ("%s\n", workline);
+			workline[0] = ']';
+			workline[1] = 0;
+			key_linepos = 1;
+			history_line= edit_line;
+			return;
+		}
+		break;
+	}
+}
+
+void Char_Console (int key)
+{
+	size_t		len;
+	char *workline = key_lines[edit_line];
+
+	if (key_linepos < MAXCMDLINE-1)
+	{
+		bool endpos = !workline[key_linepos];
+
+		key_tabpartial[0] = 0; //johnfitz
+		// if inserting, move the text to the right
+		if (key_insert && !endpos)
+		{
+			workline[MAXCMDLINE - 2] = 0;
+			workline += key_linepos;
+			len = strlen(workline) + 1;
+			memmove (workline + 1, workline, len);
+			*workline = key;
+		}
+		else
+		{
+			workline += key_linepos;
+			*workline = key;
+			// null terminate if at the end
+			if (endpos)
+				workline[1] = 0;
+		}
+		key_linepos++;
+	}
 }
 
 /*
@@ -516,7 +900,7 @@ typedef struct tab_s
 tab_t *tablist;
 
 //defs from elsewhere
-extern bool keydown[256];
+
 typedef struct cmd_function_s
 {
 	struct cmd_function_s *next;
@@ -1025,4 +1409,8 @@ void Con_Init(void)
 
 	con_initialized = true;
 	Con_Printf("Console initialized.\n");
+
+	History_Init();
+
+	key_blinktime = realtime;
 }

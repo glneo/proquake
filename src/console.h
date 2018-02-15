@@ -19,6 +19,9 @@ extern bool con_initialized;
 extern byte *con_chars;
 extern	int	con_notifylines;		// scan lines to clear for notify lines
 
+void Key_Console (int key);
+void Char_Console (int key);
+
 void Con_DrawCharacter (int cx, int line, int num);
 
 void Con_CheckResize (void);
@@ -38,3 +41,5 @@ void Con_ToggleConsole_f (void);
 void Con_TabComplete(void);
 
 void Con_Quakebar(int len);
+
+void History_Shutdown(void);
