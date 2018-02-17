@@ -633,12 +633,12 @@ int CL_ReadFromServer(void)
 	if (cl_shownet.value)
 		Con_Printf("\n");
 
+	// bring the links up to date
 	CL_RelinkEntities();
 	CL_UpdateTEnts();
+	CL_RunParticles();
+	CL_DecayLights();
 
-//
-// bring the links up to date
-//
 	return 0;
 }
 

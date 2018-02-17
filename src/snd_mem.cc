@@ -17,153 +17,19 @@
 
 #include "quakedef.h"
 
-/*
-================
-ResampleSfx
-================
-*/
-static void ResampleSfx (sfx_t *sfx, int inrate, int inwidth, byte *data)
+/* WAV loading */
+
+#define WAV_FORMAT_PCM	1
+
+typedef struct
 {
-	int		outcount;
-	int		srcsample;
-	float	stepscale;
-	int		i;
-	int		sample, samplefrac, fracstep;
-	sfxcache_t	*sc;
-
-	sc = (sfxcache_t *) Cache_Check (&sfx->cache);
-	if (!sc)
-		return;
-
-	stepscale = (float)inrate / shm->speed;	// this is usually 0.5, 1, or 2
-
-	outcount = sc->length / stepscale;
-	sc->length = outcount;
-	if (sc->loopstart != -1)
-		sc->loopstart = sc->loopstart / stepscale;
-
-	sc->speed = shm->speed;
-	if (loadas8bit.value)
-		sc->width = 1;
-	else
-		sc->width = inwidth;
-	sc->stereo = 0;
-
-// resample / decimate to the current source rate
-
-	if (stepscale == 1 && inwidth == 1 && sc->width == 1)
-	{
-// fast special case
-		for (i = 0; i < outcount; i++)
-			((signed char *)sc->data)[i] = (int)( (unsigned char)(data[i]) - 128);
-	}
-	else
-	{
-// general case
-		samplefrac = 0;
-		fracstep = stepscale*256;
-		for (i = 0; i < outcount; i++)
-		{
-			srcsample = samplefrac >> 8;
-			samplefrac += fracstep;
-			if (inwidth == 2)
-				sample = LittleShort ( ((short *)data)[srcsample] );
-			else
-				sample = (int)( (unsigned char)(data[srcsample]) - 128) << 8;
-			if (sc->width == 2)
-				((short *)sc->data)[i] = sample;
-			else
-				((signed char *)sc->data)[i] = sample >> 8;
-		}
-	}
-}
-
-//=============================================================================
-
-/*
-==============
-S_LoadSound
-==============
-*/
-sfxcache_t *S_LoadSound (sfx_t *s)
-{
-	char	namebuffer[256];
-	byte	*data;
-	wavinfo_t	info;
-	int		len;
-	float	stepscale;
-	sfxcache_t	*sc;
-	byte	stackbuf[1*1024];		// avoid dirtying the cache heap
-
-// see if still in memory
-	sc = (sfxcache_t *) Cache_Check (&s->cache);
-	if (sc)
-		return sc;
-
-//	Con_Printf ("S_LoadSound: %x\n", (int)stackbuf);
-
-// load it in
-	strlcpy(namebuffer, "sound/", sizeof(namebuffer));
-	strlcat(namebuffer, s->name, sizeof(namebuffer));
-
-//	Con_Printf ("loading %s\n",namebuffer);
-
-	data = COM_LoadStackFile(namebuffer, stackbuf, sizeof(stackbuf));
-
-	if (!data)
-	{
-		Con_Printf ("Couldn't load %s\n", namebuffer);
-		return NULL;
-	}
-
-	info = GetWavinfo (s->name, data, com_filesize);
-	if (info.channels != 1)
-	{
-		Con_Printf ("%s is a stereo sample\n",s->name);
-		return NULL;
-	}
-
-	if (info.width != 1 && info.width != 2)
-	{
-		Con_Printf("%s is not 8 or 16 bit\n", s->name);
-		return NULL;
-	}
-
-	stepscale = (float)info.rate / shm->speed;
-	len = info.samples / stepscale;
-
-	len = len * info.width * info.channels;
-
-	if (info.samples == 0 || len == 0)
-	{
-		Con_Printf("%s has zero samples\n", s->name);
-		return NULL;
-	}
-
-	sc = (sfxcache_t *) Cache_Alloc ( &s->cache, len + sizeof(sfxcache_t), s->name);
-	if (!sc)
-		return NULL;
-
-	sc->length = info.samples;
-	sc->loopstart = info.loopstart;
-	sc->speed = info.rate;
-	sc->width = info.width;
-	sc->stereo = info.channels;
-
-	ResampleSfx (s, sc->speed, sc->width, data + info.dataofs);
-
-	return sc;
-}
-
-
-
-/*
-===============================================================================
-
-WAV loading
-
-===============================================================================
-*/
+	int rate;
+	int width;
+	int channels;
+	int loopstart;
+	int samples;
+	int dataofs; /* chunk starts this many bytes from file start */
+} wavinfo_t;
 
 static byte	*data_p;
 static byte	*iff_end;
@@ -223,30 +89,7 @@ static void FindChunk (const char *name)
 	FindNextChunk (name);
 }
 
-#if 0
-static void DumpChunks (void)
-{
-	char	str[5];
-
-	str[4] = 0;
-	data_p = iff_data;
-	do
-	{
-		memcpy (str, data_p, 4);
-		data_p += 4;
-		iff_chunk_len = GetLittleLong();
-		Con_Printf ("0x%x : %s (%d)\n", (int)(data_p - 4), str, iff_chunk_len);
-		data_p += (iff_chunk_len + 1) & ~1;
-	} while (data_p < iff_end);
-}
-#endif
-
-/*
-============
-GetWavinfo
-============
-*/
-wavinfo_t GetWavinfo (const char *name, byte *wav, int wavlength)
+static wavinfo_t GetWavinfo (const char *name, byte *wav, int wavlength)
 {
 	wavinfo_t	info;
 	int	i;
@@ -271,9 +114,6 @@ wavinfo_t GetWavinfo (const char *name, byte *wav, int wavlength)
 
 // get "fmt " chunk
 	iff_data = data_p + 12;
-#if 0
-	DumpChunks ();
-#endif
 
 	FindChunk("fmt ");
 	if (!data_p)
@@ -343,4 +183,112 @@ wavinfo_t GetWavinfo (const char *name, byte *wav, int wavlength)
 	info.dataofs = data_p - wav;
 
 	return info;
+}
+
+static void ResampleSfx(sfx_t *sfx, int inrate, int inwidth, byte *data)
+{
+	int sample, samplefrac, fracstep;
+
+	sfxcache_t *sc = (sfxcache_t *) Cache_Check(&sfx->cache);
+	if (!sc)
+		return;
+
+	float stepscale = (float) inrate / shm->speed; // this is usually 0.5, 1, or 2
+
+	int outcount = sc->length / stepscale;
+	sc->length = outcount;
+	if (sc->loopstart != -1)
+		sc->loopstart = sc->loopstart / stepscale;
+
+	sc->speed = shm->speed;
+	if (loadas8bit.value)
+		sc->width = 1;
+	else
+		sc->width = inwidth;
+	sc->stereo = 0;
+
+// resample / decimate to the current source rate
+
+	if (stepscale == 1 && inwidth == 1 && sc->width == 1)
+	{
+// fast special case
+		for (int i = 0; i < outcount; i++)
+			((signed char *) sc->data)[i] = (int) ((unsigned char) (data[i]) - 128);
+	}
+	else
+	{
+// general case
+		samplefrac = 0;
+		fracstep = stepscale * 256;
+		for (int i = 0; i < outcount; i++)
+		{
+			int srcsample = samplefrac >> 8;
+			samplefrac += fracstep;
+			if (inwidth == 2)
+				sample = LittleShort(((short *) data)[srcsample]);
+			else
+				sample = (int) ((unsigned char) (data[srcsample]) - 128) << 8;
+			if (sc->width == 2)
+				((short *) sc->data)[i] = sample;
+			else
+				((signed char *) sc->data)[i] = sample >> 8;
+		}
+	}
+}
+
+sfxcache_t *S_LoadSound(sfx_t *s)
+{
+	// see if still in memory
+	sfxcache_t *sc = (sfxcache_t *) Cache_Check (&s->cache);
+	if (sc)
+		return sc;
+
+	// load it in
+	char namebuffer[256];
+	strlcpy(namebuffer, "sound/", sizeof(namebuffer));
+	strlcat(namebuffer, s->name, sizeof(namebuffer));
+	byte stackbuf[1*1024]; // avoid dirtying the cache heap
+	byte *data = COM_LoadStackFile(namebuffer, stackbuf, sizeof(stackbuf));
+	if (!data)
+	{
+		Con_Printf ("Couldn't load %s\n", namebuffer);
+		return NULL;
+	}
+
+	wavinfo_t info = GetWavinfo(s->name, data, com_filesize);
+	if (info.channels != 1)
+	{
+		Con_Printf ("%s is not mono channeled\n",s->name);
+		return NULL;
+	}
+	if (info.width != 1 && info.width != 2)
+	{
+		Con_Printf("%s is not 8 or 16 bit\n", s->name);
+		return NULL;
+	}
+
+	float stepscale = (float)info.rate / shm->speed;
+	int len = info.samples / stepscale;
+	len *= info.width;
+	len *= info.channels;
+
+	if (info.samples == 0 || len == 0)
+	{
+		Con_Printf("%s has zero samples\n", s->name);
+		return NULL;
+	}
+
+	sc = (sfxcache_t *) Cache_Alloc ( &s->cache, len + sizeof(sfxcache_t), s->name);
+	if (!sc)
+		return NULL;
+
+	sc->length = info.samples;
+	sc->loopstart = info.loopstart;
+	sc->speed = info.rate;
+	sc->width = info.width;
+	sc->stereo = info.channels;
+
+	ResampleSfx (s, sc->speed, sc->width, data + info.dataofs);
+
+	return sc;
 }

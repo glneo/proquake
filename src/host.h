@@ -48,6 +48,8 @@ extern cvar_t pq_showedict;
 extern cvar_t pq_dequake;
 extern cvar_t pq_maxfps;
 
+extern bool isDedicated;
+
 extern bool host_initialized;		// true if into command execution
 extern double host_frametime;
 extern byte *host_basepal;

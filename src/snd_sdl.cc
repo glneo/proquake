@@ -28,6 +28,31 @@
 
 static int buffersize;
 
+int SNDDMA_GetDMAPos(void)
+{
+	return shm->samplepos;
+}
+
+void SNDDMA_LockBuffer(void)
+{
+	SDL_LockAudio();
+}
+
+void SNDDMA_Submit(void)
+{
+	SDL_UnlockAudio();
+}
+
+void SNDDMA_BlockSound(void)
+{
+	SDL_PauseAudio(1);
+}
+
+void SNDDMA_UnblockSound(void)
+{
+	SDL_PauseAudio(0);
+}
+
 static void paint_audio(void *unused, Uint8 *stream, int len)
 {
 	int pos, tobufend;
@@ -170,11 +195,6 @@ bool SNDDMA_Init(dma_t *dma)
 	return true;
 }
 
-int SNDDMA_GetDMAPos(void)
-{
-	return shm->samplepos;
-}
-
 void SNDDMA_Shutdown(void)
 {
 	if (shm)
@@ -187,24 +207,4 @@ void SNDDMA_Shutdown(void)
 		shm->buffer = NULL;
 		shm = NULL;
 	}
-}
-
-void SNDDMA_LockBuffer(void)
-{
-	SDL_LockAudio();
-}
-
-void SNDDMA_Submit(void)
-{
-	SDL_UnlockAudio();
-}
-
-void SNDDMA_BlockSound(void)
-{
-	SDL_PauseAudio(1);
-}
-
-void SNDDMA_UnblockSound(void)
-{
-	SDL_PauseAudio(0);
 }

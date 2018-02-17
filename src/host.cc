@@ -36,8 +36,7 @@ bool host_initialized;		// true if into command execution
 
 double host_frametime;
 double host_time;
-double realtime;				// without any filtering or bounding
-double oldrealtime;			// last frame run
+double realtime; // without any filtering or bounding
 int host_framecount;
 
 int host_hunklevel;
@@ -50,14 +49,11 @@ jmp_buf host_abortserver;
 
 byte *host_colormap;
 
-cvar_t host_framerate = { "host_framerate", "0" };	// set for slow motion
-cvar_t host_speeds = { "host_speeds", "0" };			// set for running times
-cvar_t host_timescale = { "host_timescale", "0" }; //johnfitz
+cvar_t host_timescale = { "host_timescale", "0" }; // scale server time (for slow motion or fast-forward)
 
 cvar_t host_sleep = { "host_sleep", "0" };
 
 cvar_t sys_ticrate = { "sys_ticrate", "0.05", false, true };
-cvar_t serverprofile = { "serverprofile", "0" };
 
 cvar_t fraglimit = { "fraglimit", "0", false, true };
 cvar_t timelimit = { "timelimit", "0", false, true };
@@ -138,13 +134,7 @@ void Host_EndGame(const char *message, ...)
 	longjmp(host_abortserver, 1);
 }
 
-/*
- ================
- Host_Error
-
- This shuts down both the client and server
- ================
- */
+/* This shuts down both the client and server */
 void Host_Error(const char *error, ...)
 {
 	va_list argptr;
@@ -177,19 +167,11 @@ void Host_Error(const char *error, ...)
 	longjmp(host_abortserver, 1);
 }
 
-/*
- ================
- Host_FindMaxClients
- ================
- */
-void Host_FindMaxClients(void)
+static void Host_FindMaxClients(void)
 {
-	int cmdline_dedicated;
-	int cmdline_listen;
-
 	svs.maxclients = 1;
 
-	cmdline_dedicated = COM_CheckParm("-dedicated");
+	int cmdline_dedicated = COM_CheckParm("-dedicated");
 	if (cmdline_dedicated)
 	{
 		cls.state = ca_dedicated;
@@ -201,7 +183,7 @@ void Host_FindMaxClients(void)
 	else
 		cls.state = ca_disconnected;
 
-	cmdline_listen = COM_CheckParm("-listen");
+	int cmdline_listen = COM_CheckParm("-listen");
 	if (cmdline_listen)
 	{
 		if (cls.state == ca_dedicated)
@@ -276,57 +258,6 @@ void Host_InitDeQuake(void)
 	dequake[130] = ')';
 	dequake[131] = '*';
 	dequake[141] = '>';
-}
-
-/*
- =======================
- Host_InitLocal
- ======================
- */
-void Host_InitLocal(void)
-{
-	Host_InitCommands();
-
-	Cvar_RegisterVariable(&host_framerate);
-	Cvar_RegisterVariable(&host_speeds);
-	Cvar_RegisterVariable(&host_timescale); //johnfitz
-
-	Cvar_RegisterVariable(&host_sleep);
-
-	Cvar_RegisterVariable(&sys_ticrate);
-	Cvar_RegisterVariable(&serverprofile);
-
-	Cvar_RegisterVariable(&fraglimit);
-	Cvar_RegisterVariable(&timelimit);
-	Cvar_RegisterVariable(&teamplay);
-	Cvar_RegisterVariable(&samelevel);
-	Cvar_RegisterVariable(&noexit);
-	Cvar_RegisterVariable(&skill);
-	Cvar_RegisterVariable(&developer);
-	Cvar_RegisterVariable(&deathmatch);
-	Cvar_RegisterVariable(&coop);
-
-	Cvar_RegisterVariable(&pausable);
-
-	Cvar_RegisterVariable(&temp1);
-
-	Cmd_AddCommand("writeconfig", Host_WriteConfig_f);	// by joe
-
-	Cvar_RegisterVariable(&proquake);		// JPG - added this so QuakeC can find it
-	Cvar_RegisterVariable(&pq_spam_rate);	// JPG - spam protection
-	Cvar_RegisterVariable(&pq_spam_grace);	// JPG - spam protection
-	Cvar_RegisterVariable(&pq_connectmute);	// Baker 3.99g: from Rook, protection against repeatedly connecting + spamming
-	Cvar_RegisterVariable(&pq_tempmute);	// JPG 3.20 - temporary muting
-	Cvar_RegisterVariable(&pq_showedict);	// JPG 3.11 - feature request from Slot Zero
-	Cvar_RegisterVariable(&pq_dequake);	// JPG 1.05 - translate dedicated console output to plain text
-	Cvar_RegisterVariable(&pq_maxfps);		// JPG 1.05
-	Cvar_RegisterVariable(&pq_logbinds);	// JPG 3.20 - log player binds
-
-	Host_FindMaxClients();
-
-	host_time = 1.0;		// so a think at time 0 won't get called
-
-	Host_InitDeQuake();	// JPG 1.05 - initialize dequake array
 }
 
 void Host_WriteConfig(const char *cfgname)
@@ -420,13 +351,7 @@ void SV_ClientPrintf(const char *fmt, ...)
 	MSG_WriteString(&host_client->message, string);
 }
 
-/*
- =================
- SV_BroadcastPrintf
-
- Sends text to all active clients
- =================
- */
+/* Sends text to all active clients */
 void SV_BroadcastPrintf(const char *fmt, ...)
 {
 	va_list argptr;
@@ -445,13 +370,7 @@ void SV_BroadcastPrintf(const char *fmt, ...)
 		}
 }
 
-/*
- =================
- Host_ClientCommands
-
- Send text over to the client to be executed
- =================
- */
+/* Send text over to the client to be executed */
 void Host_ClientCommands(const char *fmt, ...)
 {
 	va_list argptr;
@@ -466,20 +385,14 @@ void Host_ClientCommands(const char *fmt, ...)
 }
 
 /*
- =====================
- SV_DropClient
-
- Called when the player is getting totally kicked off the host
- if (crash = true), don't bother sending signofs
- =====================
+ * Called when the player is getting totally kicked off the host
+ * if (crash = true), don't bother sending signofs
  */
 void SV_DropClient(bool crash)
 {
 	int saveSelf;
-	int i;
-	client_t *client;
 
-// JPG 3.00 - don't drop a client that's already been dropped!
+	// don't drop a client that's already been dropped!
 	if (!host_client->active)
 		return;
 
@@ -505,74 +418,62 @@ void SV_DropClient(bool crash)
 		Sys_Printf("Client %s removed\n", host_client->name);
 	}
 
-// break the net connection
+	// break the net connection
 	NET_Close(host_client->netconnection);
 	host_client->netconnection = NULL;
 
-// free the client (the body stays around)
+	// free the client (the body stays around)
 	host_client->active = false;
 	host_client->name[0] = 0;
 	host_client->old_frags = -999999;
 	net_activeconnections--;
 
-// send notification to all clients
-	for (i = 0, client = svs.clients; i < svs.maxclients; i++, client++)
+	// send notification to all clients
+	for (int i = 0; i < svs.maxclients; i++)
 	{
-		if (!client->active)
+		if (!svs.clients[i].active)
 			continue;
-		MSG_WriteByte(&client->message, svc_updatename);
-		MSG_WriteByte(&client->message, host_client - svs.clients);
-		MSG_WriteString(&client->message, "");
-		MSG_WriteByte(&client->message, svc_updatefrags);
-		MSG_WriteByte(&client->message, host_client - svs.clients);
-		MSG_WriteShort(&client->message, 0);
-		MSG_WriteByte(&client->message, svc_updatecolors);
-		MSG_WriteByte(&client->message, host_client - svs.clients);
-		MSG_WriteByte(&client->message, 0);
+		MSG_WriteByte(&svs.clients[i].message, svc_updatename);
+		MSG_WriteByte(&svs.clients[i].message, host_client - svs.clients);
+		MSG_WriteString(&svs.clients[i].message, "");
+		MSG_WriteByte(&svs.clients[i].message, svc_updatefrags);
+		MSG_WriteByte(&svs.clients[i].message, host_client - svs.clients);
+		MSG_WriteShort(&svs.clients[i].message, 0);
+		MSG_WriteByte(&svs.clients[i].message, svc_updatecolors);
+		MSG_WriteByte(&svs.clients[i].message, host_client - svs.clients);
+		MSG_WriteByte(&svs.clients[i].message, 0);
 	}
 }
 
-/*
- ==================
- Host_ShutdownServer
-
- This only happens at the end of a game, not between levels
- ==================
- */
+/* This only happens at the end of a game, not between levels */
 void Host_ShutdownServer(bool crash)
 {
-	int i;
-	int count;
-	sizebuf_t buf;
-	byte message[4];
-	double start;
-
 	if (!sv.active)
 		return;
 
 	sv.active = false;
 
-// stop all client sounds immediately
 	if (cls.state == ca_connected)
 		CL_Disconnect();
 
-// flush any pending messages - like the score!!!
-	start = Sys_DoubleTime();
+	// flush any pending messages - like the score!!!
+	int count;
+	double start = Sys_DoubleTime();
 	do
 	{
 		count = 0;
-		for (i = 0, host_client = svs.clients; i < svs.maxclients; i++, host_client++)
+		for (int i = 0; i < svs.maxclients; i++)
 		{
-			if (host_client->active && host_client->message.cursize)
+			if (svs.clients[i].active && svs.clients[i].message.cursize)
 			{
-				if (NET_CanSendMessage(host_client->netconnection))
+				if (NET_CanSendMessage(svs.clients[i].netconnection))
 				{
-					NET_SendMessage(host_client->netconnection, &host_client->message);
-					SZ_Clear(&host_client->message);
+					NET_SendMessage(svs.clients[i].netconnection, &svs.clients[i].message);
+					SZ_Clear(&svs.clients[i].message);
 				}
 				else
 				{
-					NET_GetMessage(host_client->netconnection);
+					NET_GetMessage(svs.clients[i].netconnection);
 					count++;
 				}
 			}
@@ -581,7 +482,9 @@ void Host_ShutdownServer(bool crash)
 			break;
 	} while (count);
 
-// make sure all the clients know we're disconnecting
+	// make sure all the clients know we're disconnecting
+	sizebuf_t buf;
+	byte message[4];
 	buf.data = message;
 	buf.maxsize = 4;
 	buf.cursize = 0;
@@ -590,24 +493,18 @@ void Host_ShutdownServer(bool crash)
 	if (count)
 		Con_Printf("Host_ShutdownServer: NET_SendToAll failed for %u clients\n", count);
 
-	for (i = 0, host_client = svs.clients; i < svs.maxclients; i++, host_client++)
-		if (host_client->active)
+	for (int i = 0; i < svs.maxclients; i++)
+		if (svs.clients[i].active)
 			SV_DropClient(crash);
 
-//
-// clear structures
-//
+	// clear structures
 	memset(&sv, 0, sizeof(sv));
 	memset(svs.clients, 0, svs.maxclientslimit * sizeof(client_t));
 }
 
 /*
- ================
- Host_ClearMemory
-
- This clears all the memory used by both the client and server, but does
- not reinitialize anything.
- ================
+ * This clears all the memory used by both the client and server, but does
+ * not reinitialize anything
  */
 void Host_ClearMemory(void)
 {
@@ -627,40 +524,31 @@ void Host_ClearMemory(void)
 //
 //==============================================================================
 
-/*
- ===================
- Host_FilterTime
-
- Returns false if the time is too short to run a frame
- ===================
- */
-bool Host_FilterTime(double time)
+/* Returns false if the time is too short to run a frame */
+static bool Host_FilterTime(double time)
 {
-	double fps;
+	static double oldrealtime;
+	double time_delta = realtime - oldrealtime;
+	double fps = max(10, pq_maxfps.value);
+	double time_per_frame = 1.0 / fps;
 
-	realtime += time;
-
-	fps = max(10, pq_maxfps.value);
-
-	if (!cls.capturedemo && !cls.timedemo && realtime - oldrealtime < 1.0 / fps)
+	if (!cls.capturedemo &&
+	    !cls.timedemo &&
+	    time_delta < time_per_frame)
 	{
 		if (host_sleep.value)
 			Sys_Sleep(1); // Lower cpu
 
-		return false;		// framerate is too high
+		return false; // not ready for host frame
 	}
 
-	host_frametime = realtime - oldrealtime;
+	host_frametime = time_delta;
 	if (cls.demoplayback && cls.demospeed)
 		host_frametime *= CLAMP(0, cls.demospeed, 20);
 	oldrealtime = realtime;
 
-	//johnfitz -- host_timescale is more intuitive than host_framerate
 	if (host_timescale.value > 0)
 		host_frametime *= host_timescale.value;
-	//johnfitz
-	else if (host_framerate.value > 0)
-		host_frametime = host_framerate.value;
 	else
 		// don't allow really long or short frames
 		host_frametime = CLAMP(0.001, host_frametime, 0.1);
@@ -668,13 +556,7 @@ bool Host_FilterTime(double time)
 	return true;
 }
 
-/*
- ===================
- Host_GetConsoleCommands
-
- Add them exactly as if they had been typed at the console
- ===================
- */
+/* Add them exactly as if they had been typed at the console */
 void Host_GetConsoleCommands(void)
 {
 	char *cmd;
@@ -688,23 +570,8 @@ void Host_GetConsoleCommands(void)
 	}
 }
 
-/*
- ==================
- Host_ServerFrame
- ==================
- */
-
 void Host_ServerFrame(void)
 {
-	// JPG 3.00 - stuff the port number into the server console once every minute
-	static double port_time = 0;
-
-	if (port_time > sv.time + 1 || port_time < sv.time - 60)
-	{
-		port_time = sv.time;
-		Cmd_ExecuteString(va("port %d\n", net_hostport), src_command);
-	}
-
 	// run the world state
 	pr_global_struct->frametime = host_frametime;
 
@@ -726,39 +593,29 @@ void Host_ServerFrame(void)
 	SV_SendClientMessages();
 }
 
-/*
- ==================
- Host_Frame
-
- Runs all active servers
- ==================
- */
-void _Host_Frame(double time)
+void Host_Frame(double time)
 {
-	static double time1 = 0;
-	static double time2 = 0;
-	static double time3 = 0;
-	int pass1, pass2, pass3;
-
 	if (setjmp(host_abortserver))
 		return; // something bad happened, or the server disconnected
 
-	// keep the random time dependent
-	rand();
+	// update time
+	realtime += time;
 
 	// decide the simulation time
 	if (!Host_FilterTime(time))
 	{
-		// JPG - if we're not doing a frame, still check for lagged moves to send
+		// if we're not doing a frame, still check for lagged moves to send
 		if (!sv.active && (cl.movemessages > 2))
 			CL_SendLagMove();
-		return;			// don't run too fast, or packets will flood out
-
+		return; // don't run too fast, or packets will flood out
 	}
 
+	// keep the random time dependent
+	rand();
+
 	// get new key events
-	Key_UpdateForDest ();
-	IN_UpdateInputMode ();
+	Key_UpdateForDest();
+	IN_UpdateInputMode();
 	IN_SendKeyEvents();
 
 	// polled controllers to add commands
@@ -772,15 +629,9 @@ void _Host_Frame(double time)
 	// if running the server locally, make intentions now
 	if (sv.active)
 		CL_SendCmd(); // This is where mouse input is read
-#ifdef WINDOWS_SCROLLWHEEL_PEEK
-	else if (con_forcedup && key_dest == key_game) // Allows console scrolling when con_forcedup
-		IN_MouseWheel(); // Grab mouse wheel input
-#endif
 
 	//-------------------
-	//
 	// server operations
-	//
 	//-------------------
 
 	// check for commands typed to the host
@@ -790,9 +641,7 @@ void _Host_Frame(double time)
 		Host_ServerFrame();
 
 	//-------------------
-	//
 	// client operations
-	//
 	//-------------------
 
 	// if running the server remotely, send intentions now after
@@ -806,74 +655,62 @@ void _Host_Frame(double time)
 	if (cls.state == ca_connected)
 		CL_ReadFromServer();
 
-	CL_RunParticles();
-
-	R_PushDlights();
-
 	// update video
-	if (host_speeds.value)
-		time1 = Sys_DoubleTime();
-
 	SCR_UpdateScreen();
-
-	if (host_speeds.value)
-		time2 = Sys_DoubleTime();
 
 	// update audio
 	if (cls.signon == SIGNONS)
-	{
 		S_Update(r_origin, vpn, vright, vup);
-		CL_DecayLights();
-	}
 	else
 		S_Update(vec3_origin, vec3_origin, vec3_origin, vec3_origin);
-
-	if (host_speeds.value)
-	{
-		pass1 = (time1 - time3) * 1000;
-		time3 = Sys_DoubleTime();
-		pass2 = (time2 - time1) * 1000;
-		pass3 = (time3 - time2) * 1000;
-		Con_Printf("%3i tot %3i server %3i gfx %3i snd\n", pass1 + pass2 + pass3, pass1, pass2, pass3);
-	}
 
 	host_framecount++;
 }
 
-void Host_Frame(double time)
+void Host_InitLocal(void)
 {
-	double time1, time2;
-	static double timetotal;
-	static int timecount;
-	int i, c, m;
+	Host_InitCommands();
 
-	if (!serverprofile.value)
-	{
-		_Host_Frame(time);
-		return;
-	}
+	Cvar_RegisterVariable(&host_timescale); //johnfitz
 
-	time1 = Sys_DoubleTime();
-	_Host_Frame(time);
-	time2 = Sys_DoubleTime();
+	Cvar_RegisterVariable(&host_sleep);
 
-	timetotal += time2 - time1;
-	timecount++;
+	Cvar_RegisterVariable(&sys_ticrate);
 
-	if (timecount < 1000)
-		return;
+	Cvar_RegisterVariable(&fraglimit);
+	Cvar_RegisterVariable(&timelimit);
+	Cvar_RegisterVariable(&teamplay);
+	Cvar_RegisterVariable(&samelevel);
+	Cvar_RegisterVariable(&noexit);
+	Cvar_RegisterVariable(&skill);
+	Cvar_RegisterVariable(&developer);
+	Cvar_RegisterVariable(&deathmatch);
+	Cvar_RegisterVariable(&coop);
 
-	m = timetotal * 1000 / timecount;
-	timecount = timetotal = 0;
-	c = 0;
-	for (i = 0; i < svs.maxclients; i++)
-	{
-		if (svs.clients[i].active)
-			c++;
-	}
+	Cvar_RegisterVariable(&pausable);
 
-	Con_Printf("serverprofile: %2i clients %2i msec\n", c, m);
+	Cvar_RegisterVariable(&temp1);
+
+	Cmd_AddCommand("writeconfig", Host_WriteConfig_f);	// by joe
+
+	Cvar_RegisterVariable(&proquake);		// JPG - added this so QuakeC can find it
+	Cvar_RegisterVariable(&pq_spam_rate);	// JPG - spam protection
+	Cvar_RegisterVariable(&pq_spam_grace);	// JPG - spam protection
+	Cvar_RegisterVariable(&pq_connectmute);	// Baker 3.99g: from Rook, protection against repeatedly connecting + spamming
+	Cvar_RegisterVariable(&pq_tempmute);	// JPG 3.20 - temporary muting
+	Cvar_RegisterVariable(&pq_showedict);	// JPG 3.11 - feature request from Slot Zero
+	Cvar_RegisterVariable(&pq_dequake);	// JPG 1.05 - translate dedicated console output to plain text
+	Cvar_RegisterVariable(&pq_maxfps);		// JPG 1.05
+	Cvar_RegisterVariable(&pq_logbinds);	// JPG 3.20 - log player binds
+
+	Host_FindMaxClients();
+
+	host_time = 1.0;		// so a think at time 0 won't get called
+
+	Host_InitDeQuake();	// JPG 1.05 - initialize dequake array
 }
+
+
 
 //============================================================================
 
@@ -1044,4 +881,3 @@ void Host_Shutdown(void)
 		VID_Shutdown();
 	}
 }
-

@@ -904,6 +904,8 @@ void SCR_UpdateScreen(void)
 	if (!scr_initialized || !con_initialized)
 		return;				// not initialized yet
 
+	R_PushDlights();
+
 	GL_BeginRendering();
 
 	//

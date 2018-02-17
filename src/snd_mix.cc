@@ -24,8 +24,6 @@ int snd_scaletable[32][256];
 int *snd_p, snd_linear_count;
 short *snd_out;
 
-static int snd_vol;
-
 static void Snd_WriteLinearBlastStereo16(void)
 {
 	int i;
@@ -335,8 +333,61 @@ static void S_LowpassFilter(int *data, int stride, int count, filter_t *memory)
  ===============================================================================
  */
 
-static void SND_PaintChannelFrom8(channel_t *ch, sfxcache_t *sc, int endtime, int paintbufferstart);
-static void SND_PaintChannelFrom16(channel_t *ch, sfxcache_t *sc, int endtime, int paintbufferstart);
+static void SND_PaintChannelFrom8(channel_t *ch, sfxcache_t *sc, int count, int paintbufferstart)
+{
+	int data;
+	int *lscale, *rscale;
+	unsigned char *sfx;
+	int i;
+
+	if (ch->leftvol > 255)
+		ch->leftvol = 255;
+	if (ch->rightvol > 255)
+		ch->rightvol = 255;
+
+	lscale = snd_scaletable[ch->leftvol >> 3];
+	rscale = snd_scaletable[ch->rightvol >> 3];
+	sfx = (unsigned char *) sc->data + ch->pos;
+
+	for (i = 0; i < count; i++)
+	{
+		data = sfx[i];
+		paintbuffer[paintbufferstart + i].left += lscale[data];
+		paintbuffer[paintbufferstart + i].right += rscale[data];
+	}
+
+	ch->pos += count;
+}
+
+static void SND_PaintChannelFrom16(channel_t *ch, sfxcache_t *sc, int count, int paintbufferstart)
+{
+	int data;
+	int left, right;
+	int leftvol, rightvol;
+	signed short *sfx;
+	int i;
+
+	leftvol = ch->leftvol * sfxvolume.value * 256;
+	rightvol = ch->rightvol * sfxvolume.value * 256;
+	leftvol >>= 8;
+	rightvol >>= 8;
+	sfx = (signed short *) sc->data + ch->pos;
+
+	for (i = 0; i < count; i++)
+	{
+		data = sfx[i];
+		// this was causing integer overflow as observed in quakespasm
+		// with the warpspasm mod moved >>8 to left/right volume above.
+		//	left = (data * leftvol) >> 8;
+		//	right = (data * rightvol) >> 8;
+		left = data * leftvol;
+		right = data * rightvol;
+		paintbuffer[paintbufferstart + i].left += left;
+		paintbuffer[paintbufferstart + i].right += right;
+	}
+
+	ch->pos += count;
+}
 
 void S_PaintChannels(int endtime)
 {
@@ -344,8 +395,6 @@ void S_PaintChannels(int endtime)
 	int end, ltime, count;
 	channel_t *ch;
 	sfxcache_t *sc;
-
-	snd_vol = sfxvolume.value * 256;
 
 	while (paintedtime < endtime)
 	{
@@ -453,13 +502,10 @@ void S_PaintChannels(int endtime)
 
 void SND_InitScaletable(void)
 {
-	int i, j;
-	int scale;
-
-	for (i = 0; i < 32; i++)
+	for (int i = 0; i < 32; i++)
 	{
-		scale = i * 8 * 256 * sfxvolume.value;
-		for (j = 0; j < 256; j++)
+		int scale = i * 8 * 256 * sfxvolume.value;
+		for (int j = 0; j < 256; j++)
 		{
 			/* When compiling with gcc-4.1.0 at optimisations O1 and
 			 higher, the tricky signed char type conversion is not
@@ -467,64 +513,8 @@ void SND_InitScaletable(void)
 			 value from the index as required. From Kevin Shanahan.
 			 See: http://gcc.gnu.org/bugzilla/show_bug.cgi?id=26719
 			 */
-			//	snd_scaletable[i][j] = ((signed char)j) * scale;
+			// snd_scaletable[i][j] = ((signed char)j) * scale;
 			snd_scaletable[i][j] = ((j < 128) ? j : j - 256) * scale;
 		}
 	}
-}
-
-static void SND_PaintChannelFrom8(channel_t *ch, sfxcache_t *sc, int count, int paintbufferstart)
-{
-	int data;
-	int *lscale, *rscale;
-	unsigned char *sfx;
-	int i;
-
-	if (ch->leftvol > 255)
-		ch->leftvol = 255;
-	if (ch->rightvol > 255)
-		ch->rightvol = 255;
-
-	lscale = snd_scaletable[ch->leftvol >> 3];
-	rscale = snd_scaletable[ch->rightvol >> 3];
-	sfx = (unsigned char *) sc->data + ch->pos;
-
-	for (i = 0; i < count; i++)
-	{
-		data = sfx[i];
-		paintbuffer[paintbufferstart + i].left += lscale[data];
-		paintbuffer[paintbufferstart + i].right += rscale[data];
-	}
-
-	ch->pos += count;
-}
-
-static void SND_PaintChannelFrom16(channel_t *ch, sfxcache_t *sc, int count, int paintbufferstart)
-{
-	int data;
-	int left, right;
-	int leftvol, rightvol;
-	signed short *sfx;
-	int i;
-
-	leftvol = ch->leftvol * snd_vol;
-	rightvol = ch->rightvol * snd_vol;
-	leftvol >>= 8;
-	rightvol >>= 8;
-	sfx = (signed short *) sc->data + ch->pos;
-
-	for (i = 0; i < count; i++)
-	{
-		data = sfx[i];
-		// this was causing integer overflow as observed in quakespasm
-		// with the warpspasm mod moved >>8 to left/right volume above.
-		//	left = (data * leftvol) >> 8;
-		//	right = (data * rightvol) >> 8;
-		left = data * leftvol;
-		right = data * rightvol;
-		paintbuffer[paintbufferstart + i].left += left;
-		paintbuffer[paintbufferstart + i].right += right;
-	}
-
-	ch->pos += count;
 }
