@@ -1499,7 +1499,7 @@ void M_Pref_AdjustSliders(int dir)
 
 	case 12:
 
-		Cvar_SetQuick(&ambient_level, ambient_level.value ? "0" : "0.3");
+		Cvar_SetQuick(&ambientvolume, ambientvolume.value ? "0" : "0.3");
 		break;
 
 	case 13:
@@ -1621,7 +1621,7 @@ void M_Pref_Options_Draw(void)
 	M_Print(220, i, pq_moveup.value ? "on" : "off");
 	i += 8; 	  // 11
 	M_Print(16, i, "     ambient sound  ");
-	M_Print(220, i, ambient_level.value ? "on" : "off");
+	M_Print(220, i, ambientvolume.value ? "on" : "off");
 	i += 8; 	  // 12
 #ifdef SUPPORTS_VSYNC
 			M_Print (16, i, "     vsync          "); M_Print (220, i, vid_vsync.value ? "on" : "off" ); i += 8; // 13

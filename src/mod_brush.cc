@@ -722,9 +722,16 @@ void Mod_MakeHull0(brush_model_t *brushmodel)
 
 	hull_t *hull = &brushmodel->hulls[0];
 	hull->clipnodes = out;
+	hull->planes = brushmodel->planes;
 	hull->firstclipnode = 0;
 	hull->lastclipnode = count - 1;
-	hull->planes = brushmodel->planes;
+	hull->clip_mins[0] = 0;
+	hull->clip_mins[1] = 0;
+	hull->clip_mins[2] = 0;
+	hull->clip_maxs[0] = 0;
+	hull->clip_maxs[1] = 0;
+	hull->clip_maxs[2] = 0;
+	hull->available = true;
 
 	for (int i = 0; i < count; i++, out++, in++)
 	{

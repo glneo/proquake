@@ -20,23 +20,20 @@
 
 #include "quakedef.h"
 
+#define	sound_nominal_clip_dist	1000.0
+
 channel_t snd_channels[MAX_CHANNELS];
 int total_channels;
-
-static bool snd_blocked = false;
-
 
 static dma_t sn;
 volatile dma_t *shm = NULL;
 
-vec3_t listener_origin;
-vec3_t listener_forward;
-vec3_t listener_right;
-vec3_t listener_up;
+static vec3_t listener_origin;
+static vec3_t listener_forward;
+static vec3_t listener_right;
+static vec3_t listener_up;
 
-#define	sound_nominal_clip_dist	1000.0
-
-int paintedtime;	// sample PAIRS
+int paintedtime;
 
 int s_rawend;
 portable_samplepair_t s_rawsamples[MAX_RAW_SAMPLES];
@@ -48,28 +45,20 @@ static unsigned int num_sfx;
 static sfx_t *ambient_sfx[NUM_AMBIENTS];
 
 static bool sound_started = false;
+static bool snd_blocked = false;
 
-cvar_t bgmvolume = { "bgmvolume", "1", true };
-cvar_t sfxvolume = { "volume", "0.7", true };
+cvar_t bgmvolume = { "bgmvolume", "1", CVAR_ARCHIVE };
+cvar_t sfxvolume = { "sfxvolume", "0.7", CVAR_ARCHIVE };
+cvar_t ambientvolume = { "ambientvolume", "0.3", CVAR_ARCHIVE };
 
-cvar_t precache = { "precache", "1", false };
-cvar_t loadas8bit = { "loadas8bit", "0", false };
+cvar_t sndspeed = { "sndspeed", "11025", CVAR_NONE };
+cvar_t snd_filterquality = { "snd_filterquality", "1", CVAR_NONE };
 
-cvar_t sndspeed = { "sndspeed", "11025", false };
-cvar_t snd_mixspeed = { "snd_mixspeed", "44100", false };
-
-#define SND_FILTERQUALITY_DEFAULT "1"
-
-cvar_t snd_filterquality = { "snd_filterquality", SND_FILTERQUALITY_DEFAULT, false };
-
-static cvar_t nosound = { "nosound", "0", false };
-cvar_t ambient_level = { "ambient_level", "0.3", false };
-static cvar_t ambient_fade = { "ambient_fade", "100", false };
-static cvar_t snd_noextraupdate = { "snd_noextraupdate", "0", false };
-static cvar_t snd_show = { "snd_show", "0", false };
-static cvar_t _snd_mixahead = { "_snd_mixahead", "0.1", true };
-
-
+static cvar_t nosound = { "nosound", "0", CVAR_NONE };
+static cvar_t ambient_fade = { "ambient_fade", "100", CVAR_NONE };
+static cvar_t snd_noextraupdate = { "snd_noextraupdate", "0", CVAR_NONE };
+static cvar_t snd_show = { "snd_show", "0", CVAR_NONE };
+static cvar_t _snd_mixahead = { "_snd_mixahead", "0.1", CVAR_NONE };
 
 static void SND_Callback_sfxvolume(cvar_t *var)
 {
@@ -81,10 +70,9 @@ static void SND_Callback_snd_filterquality(cvar_t *var)
 	if (snd_filterquality.value < 1 || snd_filterquality.value > 5)
 	{
 		Con_Printf("snd_filterquality must be between 1 and 5\n");
-		Cvar_SetQuick(&snd_filterquality, SND_FILTERQUALITY_DEFAULT);
+		Cvar_SetValueQuick(&snd_filterquality, CLAMP(1, snd_filterquality.value, 5));
 	}
 }
-
 
 static sfx_t *S_FindName(const char *name)
 {
@@ -126,8 +114,7 @@ sfx_t *S_PrecacheSound(const char *name)
 	sfx_t *sfx = S_FindName(name);
 
 	// cache it in
-	if (precache.value)
-		S_LoadSound(sfx);
+	S_LoadSound(sfx);
 
 	return sfx;
 }
@@ -458,7 +445,7 @@ static void S_UpdateAmbientSounds(void)
 		return;
 
 	mleaf_t *l = Mod_PointInLeaf(listener_origin, cl.worldmodel->brushmodel);
-	if (!l || !ambient_level.value)
+	if (!l || !ambientvolume.value)
 	{
 		for (size_t ambient_channel = 0; ambient_channel < NUM_AMBIENTS; ambient_channel++)
 			snd_channels[ambient_channel].sfx = NULL;
@@ -470,7 +457,7 @@ static void S_UpdateAmbientSounds(void)
 		channel_t *chan = &snd_channels[ambient_channel];
 		chan->sfx = ambient_sfx[ambient_channel];
 
-		int vol = (int)(ambient_level.value * l->ambient_sound_level[ambient_channel]);
+		int vol = (int)(ambientvolume.value * l->ambient_sound_level[ambient_channel]);
 		if (vol < 8)
 			vol = 0;
 
@@ -676,21 +663,20 @@ void S_Init(void)
 		return;
 	}
 
-	Cvar_RegisterVariable(&nosound);
+	Cvar_RegisterVariable(&bgmvolume);
 	Cvar_RegisterVariable(&sfxvolume);
 	Cvar_SetCallback(&sfxvolume, SND_Callback_sfxvolume);
-	Cvar_RegisterVariable(&precache);
-	Cvar_RegisterVariable(&loadas8bit);
-	Cvar_RegisterVariable(&bgmvolume);
-	Cvar_RegisterVariable(&ambient_level);
+	Cvar_RegisterVariable(&ambientvolume);
+
+	Cvar_RegisterVariable(&sndspeed);
+	Cvar_RegisterVariable(&snd_filterquality);
+	Cvar_SetCallback(&snd_filterquality, SND_Callback_snd_filterquality);
+
+	Cvar_RegisterVariable(&nosound);
 	Cvar_RegisterVariable(&ambient_fade);
 	Cvar_RegisterVariable(&snd_noextraupdate);
 	Cvar_RegisterVariable(&snd_show);
 	Cvar_RegisterVariable(&_snd_mixahead);
-	Cvar_RegisterVariable(&sndspeed);
-	Cvar_RegisterVariable(&snd_mixspeed);
-	Cvar_RegisterVariable(&snd_filterquality);
-	Cvar_SetCallback(&snd_filterquality, SND_Callback_snd_filterquality);
 
 	if (COM_CheckParm("-nosound"))
 		return;
@@ -707,18 +693,6 @@ void S_Init(void)
 	if (i && i < com_argc - 1)
 	{
 		Cvar_SetQuick(&sndspeed, com_argv[i + 1]);
-	}
-
-	i = COM_CheckParm("-mixspeed");
-	if (i && i < com_argc - 1)
-	{
-		Cvar_SetQuick(&snd_mixspeed, com_argv[i + 1]);
-	}
-
-	if (host_parms.memsize < 0x800000)
-	{
-		Cvar_SetQuick(&loadas8bit, "1");
-		Con_Printf("loading all sounds as 8bit\n");
 	}
 
 	SND_InitScaletable();
@@ -739,8 +713,8 @@ void S_Init(void)
 		   shm->speed);
 
 	// provides a tick sound until washed clean
-	if (shm->buffer)
-		shm->buffer[4] = shm->buffer[5] = 0x7f;	// force a pop for debugging
+//	if (shm->buffer)
+//		shm->buffer[4] = shm->buffer[5] = 0x7f;	// force a pop for debugging
 
 	ambient_sfx[AMBIENT_WATER] = S_PrecacheSound("ambience/water1.wav");
 	ambient_sfx[AMBIENT_SKY] = S_PrecacheSound("ambience/wind2.wav");

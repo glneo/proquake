@@ -95,13 +95,13 @@ void CL_ClearState(void)
  */
 void CL_Disconnect(void)
 {
-// stop sounds (especially looping!)
+	// stop sounds (especially looping!)
 	S_StopAllSounds(true);
 
-//	// This makes sure ambient sounds remain silent
-//	cl.worldmodel = NULL;
+	// This makes sure ambient sounds remain silent
+	cl.worldmodel = NULL;
 
-// if running a local server, shut it down
+	// if running a local server, shut it down
 	if (cls.demoplayback)
 		CL_StopPlayback();
 	else if (cls.state == ca_connected)
@@ -121,16 +121,15 @@ void CL_Disconnect(void)
 			Host_ShutdownServer(false);
 	}
 
-	cls.demoplayback = cls.timedemo = false;
 	cls.signon = 0;
 	cl.intermission = 0; // Baker: So critical.  SCR_UpdateScreen uses this.
 //	SCR_EndLoadingPlaque (); // Baker: NOOOOOO.  This shows between start demos.  We need this.
-
 }
 
 void CL_Disconnect_f(void)
 {
-	CL_Clear_Demos_Queue(); // disconnect is a very intentional action so clear out startdemos
+	// disconnect is a very intentional action so clear out startdemos
+	CL_Clear_Demos_Queue();
 
 	CL_Disconnect();
 	if (sv.active)

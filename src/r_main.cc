@@ -457,6 +457,7 @@ void R_RenderView(void)
 	R_Clear();
 
 	// render normal view
+	R_PushDlights();
 	R_AnimateLight();
 	R_SetupFrame();
 	R_SetFrustum();

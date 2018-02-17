@@ -124,9 +124,10 @@ typedef struct {
 	bool capturedemo;			// Indicates if we are capturing demo playback
 	bool capturedemo_and_exit;	// Quit after capturedemo
 
-	bool timedemo;
 	int forcetrack;			// -1 = use normal cd track
 	FILE *demofile;
+
+	bool timedemo;
 	int td_lastframe;		// to meter out one message a frame
 	int td_startframe;		// host_framecount at start
 	float td_starttime;		// realtime at second frame of timedemo
@@ -323,7 +324,7 @@ extern cvar_t pq_suitblend;
 extern cvar_t cl_keypad;
 extern cvar_t cl_rollangle;
 extern cvar_t pq_moveup;
-extern cvar_t ambient_level;
+extern cvar_t ambientvolume;
 extern cvar_t m_directinput;
 extern cvar_t vid_consize;
 

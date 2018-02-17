@@ -124,7 +124,8 @@ static int CL_GetDemoMessage()
 			if (host_framecount == cls.td_startframe + 1)
 				cls.td_starttime = realtime;
 		}
-		else if ((!cls.demorewind && cl.ctime <= cl.mtime[0]) || (cls.demorewind && cl.ctime >= cl.mtime[0]))
+		else if ((!cls.demorewind && cl.ctime <= cl.mtime[0]) ||
+			  (cls.demorewind && cl.ctime >= cl.mtime[0]))
 			return 0; // don't need another message yet
 
 		// fill in the stack of frames' positions

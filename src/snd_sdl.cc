@@ -96,10 +96,6 @@ static void paint_audio(void *unused, Uint8 *stream, int len)
 
 bool SNDDMA_Init(dma_t *dma)
 {
-	SDL_AudioSpec desired, obtained;
-	int tmp, val;
-	char drivername[128];
-
 	if (SDL_InitSubSystem(SDL_INIT_AUDIO) < 0)
 	{
 		Con_Printf("Couldn't init SDL audio: %s\n", SDL_GetError());
@@ -107,8 +103,9 @@ bool SNDDMA_Init(dma_t *dma)
 	}
 
 	/* Set up the desired format */
-	desired.freq = tmp = snd_mixspeed.value;
-	desired.format = (loadas8bit.value) ? AUDIO_U8 : AUDIO_S16SYS;
+	SDL_AudioSpec desired;
+	desired.freq = sndspeed.value;
+	desired.format = AUDIO_S16SYS;
 	desired.channels = 2; /* = desired_channels; */
 	if (desired.freq <= 11025)
 		desired.samples = 256;
@@ -124,6 +121,7 @@ bool SNDDMA_Init(dma_t *dma)
 	desired.userdata = NULL;
 
 	/* Open the audio device */
+	SDL_AudioSpec obtained;
 	if (SDL_OpenAudio(&desired, &obtained) == -1)
 	{
 		Con_Printf("Couldn't open SDL audio: %s\n", SDL_GetError());
@@ -152,20 +150,20 @@ bool SNDDMA_Init(dma_t *dma)
 	/* Fill the audio DMA information block */
 	shm->samplebits = (obtained.format & 0xFF); /* first byte of format is bits */
 	shm->signed8 = (obtained.format == AUDIO_S8);
-	if (obtained.freq != tmp)
-		Con_Printf("Warning: Rate set (%d) didn't match requested rate (%d)!\n", obtained.freq, tmp);
+	if (obtained.freq != sndspeed.value)
+		Con_Printf("Warning: Rate set (%d) didn't match requested rate (%d)!\n", obtained.freq, (int)sndspeed.value);
 	shm->speed = obtained.freq;
 	shm->channels = obtained.channels;
-	tmp = (obtained.samples * obtained.channels) * 10;
-	if (tmp & (tmp - 1))
-	{ /* make it a power of two */
-		val = 1;
-		while (val < tmp)
+	int samples = (obtained.samples * obtained.channels) * 10;
+	if (samples & (samples - 1))
+	{
+		/* make it a power of two */
+		int val = 1;
+		while (val < samples)
 			val <<= 1;
-
-		tmp = val;
+		samples = val;
 	}
-	shm->samples = tmp;
+	shm->samples = samples;
 	shm->samplepos = 0;
 	shm->submission_chunk = 1;
 
@@ -173,6 +171,7 @@ bool SNDDMA_Init(dma_t *dma)
 
 	const char *driver = SDL_GetCurrentAudioDriver();
 	const char *device = SDL_GetAudioDeviceName(0, SDL_FALSE);
+	char drivername[128];
 	snprintf(drivername, sizeof(drivername), "%s - %s",
 			driver != NULL ? driver : "(UNKNOWN)",
 			device != NULL ? device : "(UNKNOWN)");

@@ -92,12 +92,12 @@ extern int total_channels;
 extern int paintedtime;
 extern int s_rawend;
 
-extern cvar_t sndspeed;
-extern cvar_t snd_mixspeed;
-extern cvar_t snd_filterquality;
-extern cvar_t sfxvolume;
-extern cvar_t loadas8bit;
 extern cvar_t bgmvolume;
+extern cvar_t sfxvolume;
+extern cvar_t ambientvolume;
+
+extern cvar_t sndspeed;
+extern cvar_t snd_filterquality;
 
 // snd_dma.cc
 void S_TouchSound(const char *name);

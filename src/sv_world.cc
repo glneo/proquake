@@ -119,6 +119,16 @@ static hull_t *SV_HullForEntity(edict_t *ent, vec3_t mins, vec3_t maxs, vec3_t o
 			hull = &model->brushmodel->hulls[2];
 
 		// calculate an offset value to center the origin
+
+		volatile int x = 0;
+		if (hull->clip_mins[0] == 20)
+			x = 1;
+		if (mins[0] == 22)
+			x = 2;
+		if (ent->v.origin[0] == 24)
+			x = 3;
+
+
 		VectorSubtract(hull->clip_mins, mins, offset);
 		VectorAdd(offset, ent->v.origin, offset);
 	}
@@ -465,36 +475,35 @@ edict_t *SV_TestEntityPosition(edict_t *ent)
 
 bool SV_RecursiveHullCheck(hull_t *hull, int num, float p1f, float p2f, vec3_t p1, vec3_t p2, trace_t *trace)
 {
-	dclipnode_t *node;
-	mplane_t *plane;
-	float t1, t2, frac, midf;
-	int i, side;
-	vec3_t mid;
-
-// check for empty
+	// check for empty
 	if (num < 0)
 	{
-		if (num != CONTENTS_SOLID)
+		switch (num)
 		{
-			trace->allsolid = false;
-			if (num == CONTENTS_EMPTY)
-				trace->inopen = true;
-			else
-				trace->inwater = true;
-		}
-		else
-		{
+		case CONTENTS_SOLID:
 			trace->startsolid = true;
+			break;
+		case CONTENTS_EMPTY:
+			trace->allsolid = false;
+			trace->inopen = true;
+			break;
+		default:
+			trace->allsolid = false;
+			trace->inwater = true;
+			break;
 		}
-		return true;		// empty
+
+		return true; // empty
 	}
 
 	if (num < hull->firstclipnode || num > hull->lastclipnode)
 		Sys_Error("bad node number");
 
-// find the point distances
-	node = hull->clipnodes + num;
-	plane = hull->planes + node->planenum;
+	// find the point distances
+	float t1, t2;
+
+	dclipnode_t *node = &hull->clipnodes[num];
+	mplane_t *plane = &hull->planes[node->planenum];
 
 	if (plane->type < 3)
 	{
@@ -503,8 +512,8 @@ bool SV_RecursiveHullCheck(hull_t *hull, int num, float p1f, float p2f, vec3_t p
 	}
 	else
 	{
-		t1 = DotProduct (plane->normal, p1) - plane->dist;
-		t2 = DotProduct (plane->normal, p2) - plane->dist;
+		t1 = DotProduct(plane->normal, p1) - plane->dist;
+		t2 = DotProduct(plane->normal, p2) - plane->dist;
 	}
 
 	if (t1 >= 0 && t2 >= 0)
@@ -512,7 +521,8 @@ bool SV_RecursiveHullCheck(hull_t *hull, int num, float p1f, float p2f, vec3_t p
 	if (t1 < 0 && t2 < 0)
 		return SV_RecursiveHullCheck(hull, node->children[1], p1f, p2f, p1, p2, trace);
 
-// put the crosspoint DIST_EPSILON pixels on the near side
+	// put the crosspoint DIST_EPSILON pixels on the near side
+	float frac;
 	if (t1 < 0)
 		frac = (t1 + DIST_EPSILON) / (t1 - t2);
 	else
@@ -522,20 +532,22 @@ bool SV_RecursiveHullCheck(hull_t *hull, int num, float p1f, float p2f, vec3_t p
 	if (frac > 1)
 		frac = 1;
 
-	midf = p1f + (p2f - p1f) * frac;
-	for (i = 0; i < 3; i++)
+	vec3_t mid;
+	for (size_t i = 0; i < 3; i++)
 		mid[i] = p1[i] + frac * (p2[i] - p1[i]);
 
-	side = (t1 < 0);
+	float midf = p1f + (p2f - p1f) * frac;
 
-// move up to the node
+	int side = (t1 < 0);
+
+	// move up to the node
 	if (!SV_RecursiveHullCheck(hull, node->children[side], p1f, midf, p1, mid, trace))
 		return false;
 
 #ifdef PARANOID
-	if (SV_HullPointContents (sv_hullmodel, mid, node->children[side]) == CONTENTS_SOLID)
+	if (SV_HullPointContents(sv_hullmodel, mid, node->children[side]) == CONTENTS_SOLID)
 	{
-		Con_Printf ("mid PointInHullSolid\n");
+		Con_Printf("mid PointInHullSolid\n");
 		return false;
 	}
 #endif
@@ -544,9 +556,9 @@ bool SV_RecursiveHullCheck(hull_t *hull, int num, float p1f, float p2f, vec3_t p
 		return SV_RecursiveHullCheck(hull, node->children[side ^ 1], midf, p2f, mid, p2, trace);
 
 	if (trace->allsolid)
-		return false;		// never got out of the solid area
+		return false; // never got out of the solid area
 
-// the other side of the node is solid, this is the impact point
+	// the other side of the node is solid, this is the impact point
 	if (!side)
 	{
 		VectorCopy(plane->normal, trace->plane.normal);
@@ -558,18 +570,19 @@ bool SV_RecursiveHullCheck(hull_t *hull, int num, float p1f, float p2f, vec3_t p
 		trace->plane.dist = -plane->dist;
 	}
 
+	// shouldn't really happen, but does occasionally
 	while (SV_HullPointContents(hull, hull->firstclipnode, mid) == CONTENTS_SOLID)
-	{ // shouldn't really happen, but does occasionally
+	{
 		frac -= 0.1;
 		if (frac < 0)
 		{
 			trace->fraction = midf;
 			VectorCopy(mid, trace->endpos);
-			//Con_DPrintf ("backup past 0\n"); // JPG - removed this (it was spamming big time)
+			// Con_DPrintf ("backup past 0\n"); // JPG - removed this (it was spamming big time)
 			return false;
 		}
 		midf = p1f + (p2f - p1f) * frac;
-		for (i = 0; i < 3; i++)
+		for (size_t i = 0; i < 3; i++)
 			mid[i] = p1[i] + frac * (p2[i] - p1[i]);
 	}
 
