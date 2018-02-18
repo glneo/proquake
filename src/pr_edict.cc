@@ -37,7 +37,6 @@ unsigned short pr_crc;
 int type_size[8] = { 1, sizeof(string_t) / 4, 1, 3, 1, 1, sizeof(func_t) / 4, sizeof(void *) / 4 };
 
 ddef_t *ED_FieldAtOfs(int ofs);
-bool ED_ParseEpair(void *base, ddef_t *key, char *s);
 
 cvar_t nomonsters = { "nomonsters", "0" };
 cvar_t gamecfg = { "gamecfg", "0" };
@@ -98,29 +97,137 @@ void FindEdictFieldOffsets(void)
 	eval_fullbright = FindFieldOffset("fullbright");
 }
 
-/*
- =================
- ED_ClearEdict
+//===========================================================================
 
- Sets everything to NULL
- =================
- */
-void ED_ClearEdict(edict_t *e)
+
+#define	PR_STRING_ALLOCSLOTS 1024
+
+static void PR_AllocStringSlots(void)
+{
+	pr_maxknownstrings += PR_STRING_ALLOCSLOTS;
+	//Con_DPrintf2("PR_AllocStringSlots: realloc'ing for %d slots\n", pr_maxknownstrings);
+	//pr_knownstrings = (const char **) realloc ((void *)pr_knownstrings, pr_maxknownstrings * sizeof(char *));
+	pr_knownstrings = (const char **)Q_malloc(pr_maxknownstrings * sizeof(char *));
+}
+
+static int PR_AllocString(int size, char **ptr)
+{
+	int i;
+
+	if (!size)
+		return 0;
+	for (i = 0; i < pr_numknownstrings; i++)
+	{
+		if (!pr_knownstrings[i])
+			break;
+	}
+//	if (i >= pr_numknownstrings)
+//	{
+	if (i >= pr_maxknownstrings)
+		PR_AllocStringSlots();
+	pr_numknownstrings++;
+//	}
+	pr_knownstrings[i] = (char *) Hunk_AllocName(size, "string");
+	if (ptr)
+		*ptr = (char *) pr_knownstrings[i];
+	return -1 - i;
+}
+
+/* returns a copy of the string allocated from the server's string heap */
+static int ED_NewString(char *string)
+{
+	char *new_p;
+	int l = strlen(string) + 1;
+	int new_int = PR_AllocString(l, &new_p);
+
+	for (int i = 0; i < l; i++)
+	{
+		if (string[i] == '\\' && i < l - 1)
+		{
+			i++;
+			*new_p++ = (string[i] == 'n') ? '\n' : '\\';
+		}
+		else
+			*new_p++ = string[i];
+	}
+
+	return new_int;
+}
+
+const char *PR_GetString(int num)
+{
+	if (num >= 0 && num < pr_stringssize)
+		return pr_strings + num;
+	else if (num < 0 && num >= -pr_numknownstrings)
+	{
+		if (!pr_knownstrings[-1 - num])
+		{
+			Host_Error("PR_GetString: attempt to get a non-existant string %d\n", num);
+			return NULL;
+		}
+		return pr_knownstrings[-1 - num];
+	}
+	else
+	{
+		Host_Error("PR_GetString: invalid string offset %d\n", num);
+		return NULL;
+	}
+}
+
+int PR_SetEngineString(const char *s)
+{
+	int i;
+
+	if (!s)
+		return 0;
+#if 0	/* can't: sv.model_precache & sv.sound_precache points to pr_strings */
+	if (s >= pr_strings && s <= pr_strings + pr_stringssize)
+		Host_Error("PR_SetEngineString: \"%s\" in pr_strings area\n", s);
+#else
+	if (s >= pr_strings && s <= pr_strings + pr_stringssize - 2)
+		return (int) (s - pr_strings);
+#endif
+	for (i = 0; i < pr_numknownstrings; i++)
+	{
+		if (pr_knownstrings[i] == s)
+			return -1 - i;
+	}
+	// new unknown engine string
+	Con_DPrintf ("PR_SetEngineString: new engine string %p\n", s);
+#if 0
+	for (i = 0; i < pr_numknownstrings; i++)
+	{
+		if (!pr_knownstrings[i])
+		break;
+	}
+#endif
+//	if (i >= pr_numknownstrings)
+//	{
+	if (i >= pr_maxknownstrings)
+		PR_AllocStringSlots();
+	pr_numknownstrings++;
+//	}
+	pr_knownstrings[i] = s;
+	return -1 - i;
+}
+
+
+
+// ----------------------------------------------------
+
+/* Sets everything to NULL */
+static void ED_ClearEdict(edict_t *e)
 {
 	memset(&e->v, 0, progs->entityfields * 4);
 	e->free = false;
 }
 
 /*
- =================
- ED_Alloc
-
- Either finds a free edict, or allocates a new one.
- Try to avoid reusing an entity that was recently freed, because it
- can cause the client to think the entity morphed into something else
- instead of being removed and recreated, which can cause interpolated
- angles and bad trails.
- =================
+ * Either finds a free edict, or allocates a new one.
+ * Try to avoid reusing an entity that was recently freed, because it
+ * can cause the client to think the entity morphed into something else
+ * instead of being removed and recreated, which can cause interpolated
+ * angles and bad trails.
  */
 edict_t *ED_Alloc(void)
 {
@@ -149,17 +256,11 @@ edict_t *ED_Alloc(void)
 	return e;
 }
 
-/*
- =================
- ED_Free
-
- Marks the edict as free
- FIXME: walk all entities and NULL out references to this entity
- =================
- */
+/* Marks the edict as free */
+/* FIXME: walk all entities and NULL out references to this entity */
 void ED_Free(edict_t *ed)
 {
-	SV_UnlinkEdict(ed);		// unlink from world bsp
+	SV_UnlinkEdict(ed); // unlink from world bsp
 
 	ed->free = true;
 	ed->v.model = 0;
@@ -306,58 +407,6 @@ char *PR_ValueString(etype_t type, eval_t *val)
 	return line;
 }
 
-/*
- * Returns a string describing *data in a type specific manner
- * Easier to parse than PR_ValueString
- */
-char *PR_UglyValueString(etype_t type, eval_t *val)
-{
-	static char line[256];
-	ddef_t *def;
-	dfunction_t *f;
-
-	type = (etype_t)(type & ~DEF_SAVEGLOBAL);
-
-	switch (type)
-	{
-	case ev_string:
-		snprintf(line, sizeof(line), "%s", PR_GetString(val->string));
-		break;
-
-	case ev_entity:
-		snprintf(line, sizeof(line), "%i", NUM_FOR_EDICT(PROG_TO_EDICT(val->edict)));
-		break;
-
-	case ev_function:
-		f = pr_functions + val->function;
-		snprintf(line, sizeof(line), "%s", PR_GetString(f->s_name));
-		break;
-
-	case ev_field:
-		def = ED_FieldAtOfs(val->_int);
-		snprintf(line, sizeof(line), "%s", PR_GetString(def->s_name));
-		break;
-
-	case ev_void:
-		snprintf(line, sizeof(line), "void");
-		break;
-
-	case ev_float:
-		snprintf(line, sizeof(line), "%f", val->_float);
-		break;
-
-	case ev_vector:
-		snprintf(line, sizeof(line), "%f %f %f", val->vector[0], val->vector[1], val->vector[2]);
-		break;
-
-	default:
-		snprintf(line, sizeof(line), "bad type %i", type);
-		break;
-	}
-
-	return line;
-}
-
 /* Returns a string with a description and the contents of a global */
 char *PR_GlobalString(int ofs)
 {
@@ -406,37 +455,79 @@ char *PR_GlobalStringNoContents(int ofs)
 }
 
 /*
- =============
- ED_Print
-
- For debugging
- =============
+ * Returns a string describing *data in a type specific manner
+ * Easier to parse than PR_ValueString
  */
+static char *PR_UglyValueString(etype_t type, eval_t *val)
+{
+	static char line[256];
+	ddef_t *def;
+	dfunction_t *f;
+
+	type = (etype_t)(type & ~DEF_SAVEGLOBAL);
+
+	switch (type)
+	{
+	case ev_string:
+		snprintf(line, sizeof(line), "%s", PR_GetString(val->string));
+		break;
+
+	case ev_entity:
+		snprintf(line, sizeof(line), "%i", NUM_FOR_EDICT(PROG_TO_EDICT(val->edict)));
+		break;
+
+	case ev_function:
+		f = pr_functions + val->function;
+		snprintf(line, sizeof(line), "%s", PR_GetString(f->s_name));
+		break;
+
+	case ev_field:
+		def = ED_FieldAtOfs(val->_int);
+		snprintf(line, sizeof(line), "%s", PR_GetString(def->s_name));
+		break;
+
+	case ev_void:
+		snprintf(line, sizeof(line), "void");
+		break;
+
+	case ev_float:
+		snprintf(line, sizeof(line), "%f", val->_float);
+		break;
+
+	case ev_vector:
+		snprintf(line, sizeof(line), "%f %f %f", val->vector[0], val->vector[1], val->vector[2]);
+		break;
+
+	default:
+		snprintf(line, sizeof(line), "bad type %i", type);
+		break;
+	}
+
+	return line;
+}
+
+/* For debugging */
 void ED_Print(edict_t *ed)
 {
-	int l, *v, i, j, type;
-	ddef_t *d;
-	const char *name;
-
 	if (ed->free)
 	{
 		Con_SafePrintf("FREE\n");
 		return;
 	}
 
-	Con_SafePrintf("\nEDICT %i:\n", NUM_FOR_EDICT(ed));	// Baker: make it speedy!
-	for (i = 1; i < progs->numfielddefs; i++)
+	Con_SafePrintf("\nEDICT %i:\n", NUM_FOR_EDICT(ed));
+	for (int i = 1; i < progs->numfielddefs; i++)
 	{
-		d = &pr_fielddefs[i];
-		name = PR_GetString(d->s_name);
+		ddef_t *d = &pr_fielddefs[i];
+		const char *name = PR_GetString(d->s_name);
 		if (name[strlen(name) - 2] == '_')
 			continue;	// skip _x, _y, _z vars
 
-		v = (int *) ((char *) &ed->v + d->ofs * 4);
+		int *v = (int *) ((char *) &ed->v + d->ofs * 4);
 
 		// if the value is still all 0, skip the field
-		type = d->type & ~DEF_SAVEGLOBAL;
-
+		int type = d->type & ~DEF_SAVEGLOBAL;
+		int j;
 		for (j = 0; j < type_size[type]; j++)
 			if (v[j])
 				break;
@@ -444,7 +535,7 @@ void ED_Print(edict_t *ed)
 			continue;
 
 		Con_SafePrintf("%s", name);  // Baker: make it speedy!
-		l = strlen(name);
+		int l = strlen(name);
 		while (l++ < 15)
 			Con_SafePrintf(" ");
 
@@ -452,19 +543,9 @@ void ED_Print(edict_t *ed)
 	}
 }
 
-/*
- =============
- ED_Write
-
- For savegames
- =============
- */
+/* For savegames */
 void ED_Write(FILE *f, edict_t *ed)
 {
-	ddef_t *d;
-	int *v, i, j, type;
-	const char *name;
-
 	fprintf(f, "{\n");
 
 	if (ed->free)
@@ -473,17 +554,18 @@ void ED_Write(FILE *f, edict_t *ed)
 		return;
 	}
 
-	for (i = 1; i < progs->numfielddefs; i++)
+	for (int i = 1; i < progs->numfielddefs; i++)
 	{
-		d = &pr_fielddefs[i];
-		name = PR_GetString(d->s_name);
+		ddef_t *d = &pr_fielddefs[i];
+		const char *name = PR_GetString(d->s_name);
 		if (name[strlen(name) - 2] == '_')
 			continue;	// skip _x, _y, _z vars
 
-		v = (int *) ((char *) &ed->v + d->ofs * 4);
+		int *v = (int *) ((char *) &ed->v + d->ofs * 4);
 
 		// if the value is still all 0, skip the field
-		type = d->type & ~DEF_SAVEGLOBAL;
+		int j;
+		int type = d->type & ~DEF_SAVEGLOBAL;
 		for (j = 0; j < type_size[type]; j++)
 			if (v[j])
 				break;
@@ -502,178 +584,13 @@ void ED_PrintNum(int ent)
 	ED_Print(EDICT_NUM(ent));
 }
 
-/*
- =============
- ED_PrintEdicts_f
 
- For debugging, prints all the entities in the current server
- =============
- */
-void ED_PrintEdicts_f(void)
-{
-	int i;
-
-	Con_SafePrintf("%i entities\n", sv.num_edicts);
-	for (i = 0; i < sv.num_edicts; i++)
-		ED_PrintNum(i);
-}
 
 /*
- =============
- ED_PrintEdict_f
-
- For debugging, prints a single edicy
- =============
+ * Can parse either fields or globals
+ * returns false if error
  */
-void ED_PrintEdict_f(void)
-{
-	int i;
-
-	i = atoi(Cmd_Argv(1));
-	if (i >= sv.num_edicts)
-	{
-		Con_SafePrintf("Bad edict number\n");
-		return;
-	}
-	ED_PrintNum(i);
-}
-
-/*
- =============
- ED_Count_f
-
- For debugging
- =============
- */
-void ED_Count_f(void)
-{
-	int i, active, models, solid, step;
-	edict_t *ent;
-
-	active = models = solid = step = 0;
-	for (i = 0; i < sv.num_edicts; i++)
-	{
-		ent = EDICT_NUM(i);
-		if (ent->free)
-			continue;
-		active++;
-		if (ent->v.solid)
-			solid++;
-		if (ent->v.model)
-			models++;
-		if (ent->v.movetype == MOVETYPE_STEP)
-			step++;
-	}
-
-	Con_SafePrintf("num_edicts:%3i\n", sv.num_edicts);
-	Con_SafePrintf("active    :%3i\n", active);
-	Con_SafePrintf("view      :%3i\n", models);
-	Con_SafePrintf("touch     :%3i\n", solid);
-	Con_SafePrintf("step      :%3i\n", step);
-
-}
-
-/*
- ==============================================================================
-
- ARCHIVING GLOBALS
-
- FIXME: need to tag constants, doesn't really work
- ==============================================================================
- */
-
-void ED_WriteGlobals(FILE *f)
-{
-	ddef_t *def;
-	int i, type;
-	const char *name;
-
-	fprintf(f, "{\n");
-	for (i = 0; i < progs->numglobaldefs; i++)
-	{
-		def = &pr_globaldefs[i];
-		type = def->type;
-		if (!(def->type & DEF_SAVEGLOBAL))
-			continue;
-		type &= ~DEF_SAVEGLOBAL;
-
-		if (type != ev_string && type != ev_float && type != ev_entity)
-			continue;
-
-		name = PR_GetString(def->s_name);
-		fprintf(f, "\"%s\" ", name);
-		fprintf(f, "\"%s\"\n", PR_UglyValueString((etype_t)type, (eval_t *) &pr_globals[def->ofs]));
-	}
-	fprintf(f, "}\n");
-}
-
-void ED_ParseGlobals(const char *data)
-{
-	char keyname[64];
-	ddef_t *key;
-
-	while (1)
-	{
-		// parse key
-		data = COM_Parse(data);
-		if (com_token[0] == '}')
-			break;
-		if (!data)
-			Sys_Error("EOF without closing brace");
-
-		strcpy(keyname, com_token);
-
-		// parse value
-		if (!(data = COM_Parse(data)))
-			Sys_Error("EOF without closing brace");
-
-		if (com_token[0] == '}')
-			Sys_Error("closing brace without data");
-
-		if (!(key = ED_FindGlobal(keyname)))
-		{
-			Con_SafePrintf("'%s' is not a global\n", keyname);
-			continue;
-		}
-
-		if (!ED_ParseEpair((void *) pr_globals, key, com_token))
-			Host_Error("ED_ParseGlobals: parse error");
-	}
-}
-
-//============================================================================
-
-int ED_NewString(char *string)
-{
-	char *new_p;
-	int i, l, new_int;
-
-	l = strlen(string) + 1;
-	new_int = PR_AllocString(l, &new_p);
-
-	for (i = 0; i < l; i++)
-	{
-		if (string[i] == '\\' && i < l - 1)
-		{
-			i++;
-			*new_p++ = (string[i] == 'n') ? '\n' : '\\';
-		}
-		else
-			*new_p++ = string[i];
-	}
-
-	return new_int;
-}
-
-/*
- ==============
- ED_ParseEpair
-
- Can parse either fields or globals
- returns false if error
- ==============
- */
-bool ED_ParseEpair(void *base, ddef_t *key, char *s)
+static bool ED_ParseEpair(void *base, ddef_t *key, char *s)
 {
 	int i;
 	char string[128];
@@ -738,21 +655,87 @@ bool ED_ParseEpair(void *base, ddef_t *key, char *s)
 }
 
 /*
- ====================
- ED_ParseEdict
+ ==============================================================================
 
- Parses an edict out of the given string, returning the new position
- ed should be a properly initialized empty edict.
- Used for initial level load and for savegames.
- ====================
+ ARCHIVING GLOBALS
+
+ FIXME: need to tag constants, doesn't really work
+ ==============================================================================
+ */
+
+void ED_WriteGlobals(FILE *f)
+{
+	ddef_t *def;
+	int i, type;
+	const char *name;
+
+	fprintf(f, "{\n");
+	for (i = 0; i < progs->numglobaldefs; i++)
+	{
+		def = &pr_globaldefs[i];
+		type = def->type;
+		if (!(def->type & DEF_SAVEGLOBAL))
+			continue;
+		type &= ~DEF_SAVEGLOBAL;
+
+		if (type != ev_string && type != ev_float && type != ev_entity)
+			continue;
+
+		name = PR_GetString(def->s_name);
+		fprintf(f, "\"%s\" ", name);
+		fprintf(f, "\"%s\"\n", PR_UglyValueString((etype_t)type, (eval_t *) &pr_globals[def->ofs]));
+	}
+	fprintf(f, "}\n");
+}
+
+void ED_ParseGlobals(const char *data)
+{
+	char keyname[64];
+	ddef_t *key;
+
+	while (true)
+	{
+		// parse key
+		data = COM_Parse(data);
+		if (com_token[0] == '}')
+			break;
+		if (!data)
+			Sys_Error("EOF without closing brace");
+
+		strcpy(keyname, com_token);
+
+		// parse value
+		if (!(data = COM_Parse(data)))
+			Sys_Error("EOF without closing brace");
+
+		if (com_token[0] == '}')
+			Sys_Error("closing brace without data");
+
+		if (!(key = ED_FindGlobal(keyname)))
+		{
+			Con_SafePrintf("'%s' is not a global\n", keyname);
+			continue;
+		}
+
+		if (!ED_ParseEpair((void *) pr_globals, key, com_token))
+			Host_Error("ED_ParseGlobals: parse error");
+	}
+}
+
+//============================================================================
+
+
+
+
+/*
+ * Parses an edict out of the given string, returning the new position
+ * ent should be a properly initialized empty edict.
+ * Used for initial level load and for savegames.
  */
 const char *ED_ParseEdict(const char *data, edict_t *ent)
 {
-	ddef_t *key;
 	bool anglehack;
 	bool init = false;
-	char keyname[256];
-	int n;
 
 	// clear it
 	if (ent != sv.edicts)	// hack
@@ -782,10 +765,11 @@ const char *ED_ParseEdict(const char *data, edict_t *ent)
 		if (!strcmp(com_token, "light"))
 			strcpy(com_token, "light_lev");	// hack for single light def
 
+		char keyname[256];
 		strcpy(keyname, com_token);
 
 		// another hack to fix keynames with trailing spaces
-		n = strlen(keyname);
+		int n = strlen(keyname);
 		while (n && keyname[n - 1] == ' ')
 		{
 			keyname[n - 1] = 0;
@@ -806,7 +790,8 @@ const char *ED_ParseEdict(const char *data, edict_t *ent)
 		if (keyname[0] == '_')
 			continue;
 
-		if (!(key = ED_FindField(keyname)))
+		ddef_t *key = ED_FindField(keyname);
+		if (!key)
 		{
 			if (strcmp(keyname, "sky") && strcmp(keyname, "fog")) // Now supported in worldspawn
 				Con_SafePrintf("'%s' is not a field\n", keyname);
@@ -832,30 +817,23 @@ const char *ED_ParseEdict(const char *data, edict_t *ent)
 }
 
 /*
- ================
- ED_LoadFromFile
-
- The entities are directly placed in the array, rather than allocated with
- ED_Alloc, because otherwise an error loading the map would have entity
- number references out of order.
-
- Creates a server's entity / program execution context by
- parsing textual entity definitions out of an ent file.
-
- Used for both fresh maps and savegame loads.  A fresh map would also need
- to call ED_CallSpawnFunctions () to let the objects initialize themselves.
- ================
+ * The entities are directly placed in the array, rather than allocated with
+ * ED_Alloc, because otherwise an error loading the map would have entity
+ * number references out of order.
+ *
+ * Creates a server's entity / program execution context by
+ * parsing textual entity definitions out of an ent file.
+ *
+ * Used for both fresh maps and savegame loads.  A fresh map would also need
+ * to call ED_CallSpawnFunctions () to let the objects initialize themselves.
  */
 void ED_LoadFromFile(const char *data)
 {
-	edict_t *ent = NULL;
 	int inhibit = 0;
-	dfunction_t *func;
-
 	pr_global_struct->time = sv.time;
 
 	// parse ents
-	while (1)
+	while (true)
 	{
 		// parse the opening brace
 		data = COM_Parse(data);
@@ -864,22 +842,14 @@ void ED_LoadFromFile(const char *data)
 		if (com_token[0] != '{')
 			Sys_Error("found %s when expecting {", com_token);
 
-		ent = (!ent) ? EDICT_NUM(0) : ED_Alloc();
+		edict_t *ent = (!ent) ? EDICT_NUM(0) : ED_Alloc();
 		data = ED_ParseEdict(data, ent);
 
 		// remove things from different skill levels or deathmatch
-		if (deathmatch.value)
-		{
-			if (((int) ent->v.spawnflags & SPAWNFLAG_NOT_DEATHMATCH))
-			{
-				ED_Free(ent);
-				inhibit++;
-				continue;
-			}
-		}
-		else if ((current_skill == 0 && ((int) ent->v.spawnflags & SPAWNFLAG_NOT_EASY))
-				|| (current_skill == 1 && ((int) ent->v.spawnflags & SPAWNFLAG_NOT_MEDIUM))
-				|| (current_skill >= 2 && ((int) ent->v.spawnflags & SPAWNFLAG_NOT_HARD)))
+		if (( deathmatch.value && /* no skill check */  ((int) ent->v.spawnflags & SPAWNFLAG_NOT_DEATHMATCH)) ||
+		    (!deathmatch.value && current_skill == 0 && ((int) ent->v.spawnflags & SPAWNFLAG_NOT_EASY)) ||
+		    (!deathmatch.value && current_skill == 1 && ((int) ent->v.spawnflags & SPAWNFLAG_NOT_MEDIUM)) ||
+		    (!deathmatch.value && current_skill >= 2 && ((int) ent->v.spawnflags & SPAWNFLAG_NOT_HARD)))
 		{
 			ED_Free(ent);
 			inhibit++;
@@ -896,8 +866,7 @@ void ED_LoadFromFile(const char *data)
 		}
 
 		// look for the spawn function
-		func = ED_FindFunction(PR_GetString(ent->v.classname));
-
+		dfunction_t *func = ED_FindFunction(PR_GetString(ent->v.classname));
 		if (!func)
 		{
 			Con_SafePrintf("No spawn function for:\n"); // Baker: makes it speedy!
@@ -1006,6 +975,56 @@ void PR_LoadProgs(const char *progsname)
 	FindEdictFieldOffsets();
 }
 
+/* For debugging, prints all the entities in the current server */
+void ED_PrintEdicts_f(void)
+{
+	Con_SafePrintf("%i entities\n", sv.num_edicts);
+	for (int i = 0; i < sv.num_edicts; i++)
+		ED_PrintNum(i);
+}
+
+/* For debugging, prints a single edict */
+static void ED_PrintEdict_f(void)
+{
+	int i = atoi(Cmd_Argv(1));
+	if (i >= sv.num_edicts)
+	{
+		Con_SafePrintf("Bad edict number\n");
+		return;
+	}
+	ED_PrintNum(i);
+}
+
+/* For debugging */
+static void ED_Count_f(void)
+{
+	int active = 0;
+	int models = 0;
+	int solid = 0;
+	int step = 0;
+
+	for (int i = 0; i < sv.num_edicts; i++)
+	{
+		edict_t *ent = EDICT_NUM(i);
+		if (ent->free)
+			continue;
+
+		active++;
+		if (ent->v.model)
+			models++;
+		if (ent->v.solid)
+			solid++;
+		if (ent->v.movetype == MOVETYPE_STEP)
+			step++;
+	}
+
+	Con_SafePrintf("num_edicts:%3i\n", sv.num_edicts);
+	Con_SafePrintf("active    :%3i\n", active);
+	Con_SafePrintf("view      :%3i\n", models);
+	Con_SafePrintf("touch     :%3i\n", solid);
+	Con_SafePrintf("step      :%3i\n", step);
+}
+
 void PR_Init(void)
 {
 	Cmd_AddCommand("edict", ED_PrintEdict_f);
@@ -1024,117 +1043,4 @@ void PR_Init(void)
 	Cvar_RegisterVariable(&saved2);
 	Cvar_RegisterVariable(&saved3);
 	Cvar_RegisterVariable(&saved4);
-}
-
-edict_t *EDICT_NUM(int n)
-{
-	if (n < 0 || n >= sv.max_edicts)
-		Sys_Error("bad number %i", n);
-
-	return (edict_t *)((byte *) sv.edicts + (n) * pr_edict_size);
-}
-
-int NUM_FOR_EDICT(edict_t *e)
-{
-	int b;
-
-	b = (byte *) e - (byte *) sv.edicts;
-	b = b / pr_edict_size;
-
-	if (b < 0 || b >= sv.num_edicts)
-		Sys_Error("bad pointer");
-
-	return b;
-}
-
-//===========================================================================
-
-#define	PR_STRING_ALLOCSLOTS 1024
-
-static void PR_AllocStringSlots(void)
-{
-	pr_maxknownstrings += PR_STRING_ALLOCSLOTS;
-	//Con_DPrintf2("PR_AllocStringSlots: realloc'ing for %d slots\n", pr_maxknownstrings);
-	//pr_knownstrings = (const char **) realloc ((void *)pr_knownstrings, pr_maxknownstrings * sizeof(char *));
-	pr_knownstrings = (const char **)Q_malloc(pr_maxknownstrings * sizeof(char *));
-}
-
-const char *PR_GetString(int num)
-{
-	if (num >= 0 && num < pr_stringssize)
-		return pr_strings + num;
-	else if (num < 0 && num >= -pr_numknownstrings)
-	{
-		if (!pr_knownstrings[-1 - num])
-		{
-			Host_Error("PR_GetString: attempt to get a non-existant string %d\n", num);
-			return NULL;
-		}
-		return pr_knownstrings[-1 - num];
-	}
-	else
-	{
-		Host_Error("PR_GetString: invalid string offset %d\n", num);
-		return NULL;
-	}
-}
-
-int PR_SetEngineString(const char *s)
-{
-	int i;
-
-	if (!s)
-		return 0;
-#if 0	/* can't: sv.model_precache & sv.sound_precache points to pr_strings */
-	if (s >= pr_strings && s <= pr_strings + pr_stringssize)
-		Host_Error("PR_SetEngineString: \"%s\" in pr_strings area\n", s);
-#else
-	if (s >= pr_strings && s <= pr_strings + pr_stringssize - 2)
-		return (int) (s - pr_strings);
-#endif
-	for (i = 0; i < pr_numknownstrings; i++)
-	{
-		if (pr_knownstrings[i] == s)
-			return -1 - i;
-	}
-	// new unknown engine string
-	Con_DPrintf ("PR_SetEngineString: new engine string %p\n", s);
-#if 0
-	for (i = 0; i < pr_numknownstrings; i++)
-	{
-		if (!pr_knownstrings[i])
-		break;
-	}
-#endif
-//	if (i >= pr_numknownstrings)
-//	{
-	if (i >= pr_maxknownstrings)
-		PR_AllocStringSlots();
-	pr_numknownstrings++;
-//	}
-	pr_knownstrings[i] = s;
-	return -1 - i;
-}
-
-int PR_AllocString(int size, char **ptr)
-{
-	int i;
-
-	if (!size)
-		return 0;
-	for (i = 0; i < pr_numknownstrings; i++)
-	{
-		if (!pr_knownstrings[i])
-			break;
-	}
-//	if (i >= pr_numknownstrings)
-//	{
-	if (i >= pr_maxknownstrings)
-		PR_AllocStringSlots();
-	pr_numknownstrings++;
-//	}
-	pr_knownstrings[i] = (char *) Hunk_AllocName(size, "string");
-	if (ptr)
-		*ptr = (char *) pr_knownstrings[i];
-	return -1 - i;
 }
