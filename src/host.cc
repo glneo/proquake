@@ -43,7 +43,7 @@ int host_hunklevel;
 
 int minimum_memory;
 
-client_t *host_client;			// current client
+client_t *host_client; // current client
 
 jmp_buf host_abortserver;
 
@@ -495,7 +495,11 @@ void Host_ShutdownServer(bool crash)
 
 	for (int i = 0; i < svs.maxclients; i++)
 		if (svs.clients[i].active)
+		{
+			// FIXME: make host_client less global
+			host_client = &svs.clients[i];
 			SV_DropClient(crash);
+		}
 
 	// clear structures
 	memset(&sv, 0, sizeof(sv));

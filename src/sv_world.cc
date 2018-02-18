@@ -119,16 +119,6 @@ static hull_t *SV_HullForEntity(edict_t *ent, vec3_t mins, vec3_t maxs, vec3_t o
 			hull = &model->brushmodel->hulls[2];
 
 		// calculate an offset value to center the origin
-
-		volatile int x = 0;
-		if (hull->clip_mins[0] == 20)
-			x = 1;
-		if (mins[0] == 22)
-			x = 2;
-		if (ent->v.origin[0] == 24)
-			x = 3;
-
-
 		VectorSubtract(hull->clip_mins, mins, offset);
 		VectorAdd(offset, ent->v.origin, offset);
 	}

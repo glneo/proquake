@@ -260,7 +260,7 @@ static void CL_ParseServerInfo(void)
 
 	for (i = 1; i < numsounds; i++)
 	{
-		cl.sound_precache[i] = S_PrecacheSound(sound_precache[i]);
+		cl.sound_precache[i] = S_ForName(sound_precache[i]);
 		CL_KeepaliveMessage();
 	}
 

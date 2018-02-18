@@ -90,7 +90,7 @@ if(DISABLE_AUDIO)
 else()
 	set(PROQUAKE_SOURCES
 		${PROQUAKE_SOURCES}
-		src/snd_dma.cc
+		src/snd_main.cc
 		src/snd_mem.cc
 		src/snd_mix.cc
 		src/snd_sdl.cc

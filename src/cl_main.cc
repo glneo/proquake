@@ -211,7 +211,6 @@ void CL_SignonReply(void)
 	case 3:
 		MSG_WriteByte(&cls.message, clc_stringcmd);
 		MSG_WriteString(&cls.message, "begin");
-		Cache_Report();		// print remaining memory
 
 		// JPG 3.50
 		if (cls.netcon)
@@ -717,7 +716,6 @@ void CL_Init(void)
 	SZ_Alloc(&cls.message, 1024);
 
 	CL_InitInput();
-	CL_InitTEnts();
 
 	Cvar_RegisterVariable(&cl_name);
 	Cvar_RegisterVariable(&cl_color);

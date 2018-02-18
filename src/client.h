@@ -438,7 +438,6 @@ void V_ParseDamage(void);
 void V_SetContentsColor(int contents);
 
 // cl_tent.c
-void CL_InitTEnts(void);
 void CL_ParseTEnt(void);
 void CL_UpdateTEnts(void);
 void CL_SignonReply(void);

@@ -193,7 +193,7 @@ void Host_Game_f(void)
 		}
 
 		//clear out and reload appropriate data
-		Cache_Flush_f();
+		//Cache_Flush_f();
 		/*if (!isDedicated)
 		 {
 		 W_LoadWadFile ("gfx.wad");  // Baker 3.78 - I'm not so sure about this

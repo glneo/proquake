@@ -21,11 +21,15 @@
 
 #include "quakedef.h"
 
-cvar_t ambient_level = { "ambient_level", "0.3", false };
+cvar_t bgmvolume = { "bgmvolume", "1", CVAR_ARCHIVE };
+cvar_t sfxvolume = { "sfxvolume", "0.7", CVAR_ARCHIVE };
+cvar_t ambientvolume = { "ambientvolume", "0.3", CVAR_ARCHIVE };
 
 void S_Init(void)
 {
-	Cvar_RegisterVariable(&ambient_level);
+	Cvar_RegisterVariable(&bgmvolume);
+	Cvar_RegisterVariable(&sfxvolume);
+	Cvar_RegisterVariable(&ambientvolume);
 
 	Con_Printf("Built without sound support, audio will be unavailable\n");
 }

@@ -374,7 +374,7 @@ typedef enum
 typedef struct model_s
 {
 	char name[MAX_QPATH];
-	bool needload; // bmodels and sprites don't cache normally
+	bool needload;
 
 	int numframes;
 	synctype_t synctype;

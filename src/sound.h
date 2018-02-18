@@ -34,12 +34,6 @@ typedef struct
 	int right;
 } portable_samplepair_t;
 
-typedef struct sfx_s
-{
-	char name[MAX_QPATH];
-	cache_user_t cache;
-} sfx_t;
-
 typedef struct
 {
 	int length;
@@ -47,8 +41,15 @@ typedef struct
 	int speed;
 	int width;
 	int stereo;
-	byte data[1]; /* variable sized	*/
+	byte data[1];
 } sfxcache_t;
+
+typedef struct sfx_s
+{
+	char name[MAX_QPATH];
+	bool needload;
+	sfxcache_t *sc;
+} sfx_t;
 
 typedef struct
 {
@@ -99,9 +100,17 @@ extern cvar_t ambientvolume;
 extern cvar_t sndspeed;
 extern cvar_t snd_filterquality;
 
+
+
+#define	MAX_SFX 1024
+extern sfx_t known_sfx[MAX_SFX]; // FIXME: Make dynamic
+extern unsigned int num_sfx;
+
+
+
 // snd_dma.cc
 void S_TouchSound(const char *name);
-sfx_t *S_PrecacheSound(const char *name);
+sfx_t *S_ForName(const char *name);
 void S_StartSound(int entnum, int entchannel, sfx_t *sfx, vec3_t origin, float fvol, float attenuation);
 void S_StopSound(int entnum, int entchannel);
 void S_StopAllSounds(bool clear);

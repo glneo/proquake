@@ -17,6 +17,10 @@
 
 #include "quakedef.h"
 
+#define	MAX_SFX 1024
+sfx_t known_sfx[MAX_SFX]; // FIXME: Make dynamic
+unsigned int num_sfx;
+
 /* WAV loading */
 
 #define WAV_FORMAT_PCM	1
@@ -175,7 +179,11 @@ static wavinfo_t GetWavinfo(const char *name, byte *wav, int wavlength)
 
 static void ResampleSfx(sfx_t *sfx, int inrate, int inwidth, byte *data)
 {
-	sfxcache_t *sc = (sfxcache_t *) Cache_Check(&sfx->cache);
+	// see if still in memory
+	if (!sfx->needload)
+		return;
+
+	sfxcache_t *sc = sfx->sc;
 	if (!sc)
 		return;
 
@@ -216,9 +224,8 @@ static void ResampleSfx(sfx_t *sfx, int inrate, int inwidth, byte *data)
 sfxcache_t *S_LoadSound(sfx_t *s)
 {
 	// see if still in memory
-	sfxcache_t *sc = (sfxcache_t *) Cache_Check(&s->cache);
-	if (sc)
-		return sc;
+	if (!s->needload)
+		return s->sc;
 
 	// load it in
 	char namebuffer[256];
@@ -255,17 +262,59 @@ sfxcache_t *S_LoadSound(sfx_t *s)
 		return NULL;
 	}
 
-	sc = (sfxcache_t *) Cache_Alloc(&s->cache, len + sizeof(sfxcache_t), s->name);
-	if (!sc)
+	s->sc = (sfxcache_t *) Q_malloc(len + sizeof(sfxcache_t));
+	if (!s->sc)
 		return NULL;
 
-	sc->length = info.samples;
-	sc->loopstart = info.loopstart;
-	sc->speed = info.rate;
-	sc->width = info.width;
-	sc->stereo = info.channels;
+	s->sc->length = info.samples;
+	s->sc->loopstart = info.loopstart;
+	s->sc->speed = info.rate;
+	s->sc->width = info.width;
+	s->sc->stereo = info.channels;
 
-	ResampleSfx(s, sc->speed, sc->width, data + info.dataofs);
+	ResampleSfx(s, s->sc->speed, s->sc->width, data + info.dataofs);
 
-	return sc;
+	s->needload = false;
+
+	return s->sc;
+}
+
+static sfx_t *S_FindName(const char *name)
+{
+	if (!name)
+		Sys_Error("NULL");
+
+	if (strlen(name) >= MAX_QPATH)
+		Sys_Error("Sound name too long: %s", name);
+
+	// see if already loaded
+	size_t i;
+	for (i = 0; i < num_sfx; i++)
+		if (!strcmp(known_sfx[i].name, name))
+			return &known_sfx[i];
+
+	if (num_sfx++ == MAX_SFX)
+		Sys_Error("out of sfx_t");
+
+	sfx_t *sfx = &known_sfx[i];
+	strlcpy(sfx->name, name, sizeof(sfx->name));
+	sfx->needload = true;
+
+	return sfx;
+}
+
+void S_TouchSound(const char *name)
+{
+	S_FindName(name);
+}
+
+/* Loads in a sound for the given name */
+sfx_t *S_ForName(const char *name)
+{
+	sfx_t *sfx = S_FindName(name);
+
+	// cache it in
+	S_LoadSound(sfx);
+
+	return sfx;
 }
