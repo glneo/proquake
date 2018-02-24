@@ -12,6 +12,9 @@
  * General Public License for more details.
  */
 
+#ifndef __NET_VCR_H
+#define __NET_VCR_H
+
 #define VCR_OP_CONNECT          1
 #define VCR_OP_GETMESSAGE       2
 #define VCR_OP_SENDMESSAGE      3
@@ -28,3 +31,5 @@ int VCR_SendMessage(qsocket_t *sock, sizebuf_t *data);
 bool VCR_CanSendMessage(qsocket_t *sock);
 void VCR_Close(qsocket_t *sock);
 void VCR_Shutdown(void);
+
+#endif	/* __NET_VCR_H */

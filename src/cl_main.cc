@@ -190,9 +190,6 @@ void CL_SignonReply(void)
 		MSG_WriteByte(&cls.message, clc_stringcmd);
 		MSG_WriteString(&cls.message, "prespawn");
 
-		// JPG 3.50
-		if (cls.netcon && !cls.netcon->encrypt)
-			cls.netcon->encrypt = 3;
 		break;
 
 	case 2:
@@ -212,9 +209,6 @@ void CL_SignonReply(void)
 		MSG_WriteByte(&cls.message, clc_stringcmd);
 		MSG_WriteString(&cls.message, "begin");
 
-		// JPG 3.50
-		if (cls.netcon)
-			cls.netcon->encrypt = 1;
 		break;
 
 	case 4:

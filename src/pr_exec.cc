@@ -122,17 +122,12 @@ const char *pr_opnames[] = {
 	"BITOR"
 };
 
-//=============================================================================
-
 void PR_PrintStatement(dstatement_t *s)
 {
-	int i;
-
-	if ((unsigned) s->op < sizeof(pr_opnames) / sizeof(pr_opnames[0]))
+	if ((unsigned) s->op < ARRAY_SIZE(pr_opnames))
 	{
 		Con_SafePrintf("%s ", pr_opnames[s->op]);
-		i = strlen(pr_opnames[s->op]);
-		for (; i < 10; i++)
+		for (int i = strlen(pr_opnames[s->op]); i < 10; i++)
 			Con_SafePrintf(" ");
 	}
 
@@ -219,13 +214,7 @@ void PR_Profile_f(void)
 	} while (best);
 }
 
-/*
- ============
- PR_RunError
-
- Aborts the currently executing function
- ============
- */
+/* Aborts the currently executing function */
 void PR_RunError(const char *error, ...)
 {
 	va_list argptr;
@@ -244,13 +233,7 @@ void PR_RunError(const char *error, ...)
 	Host_Error("Program error");
 }
 
-/*
- ====================
- PR_EnterFunction
-
- Returns the new program statement counter
- ====================
- */
+/* Returns the new program statement counter */
 int PR_EnterFunction(dfunction_t *f)
 {
 	int i, j, c, o;

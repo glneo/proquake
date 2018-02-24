@@ -295,28 +295,6 @@ void *Hunk_HighAllocName(int size, const char *name)
 	return (void *) (h + 1);
 }
 
-/* Return space from the top of the hunk */
-void *Hunk_TempAlloc(int size)
-{
-	void *buf;
-
-	size = (size + 15) & ~15;
-
-	if (hunk_tempactive)
-	{
-		Hunk_FreeToHighMark(hunk_tempmark);
-		hunk_tempactive = false;
-	}
-
-	hunk_tempmark = Hunk_HighMark();
-
-	buf = Hunk_HighAllocName(size, "temp");
-
-	hunk_tempactive = true;
-
-	return buf;
-}
-
 //============================================================================
 
 void Memory_Init(void *buf, int size)

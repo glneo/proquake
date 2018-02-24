@@ -105,9 +105,8 @@ void FindEdictFieldOffsets(void)
 static void PR_AllocStringSlots(void)
 {
 	pr_maxknownstrings += PR_STRING_ALLOCSLOTS;
-	//Con_DPrintf2("PR_AllocStringSlots: realloc'ing for %d slots\n", pr_maxknownstrings);
-	//pr_knownstrings = (const char **) realloc ((void *)pr_knownstrings, pr_maxknownstrings * sizeof(char *));
-	pr_knownstrings = (const char **)Q_malloc(pr_maxknownstrings * sizeof(char *));
+	Con_DPrintf("PR_AllocStringSlots: realloc'ing for %d slots\n", pr_maxknownstrings);
+	pr_knownstrings = (const char **) Q_realloc((void *)pr_knownstrings, pr_maxknownstrings * sizeof(char *));
 }
 
 static int PR_AllocString(int size, char **ptr)
@@ -121,15 +120,18 @@ static int PR_AllocString(int size, char **ptr)
 		if (!pr_knownstrings[i])
 			break;
 	}
-//	if (i >= pr_numknownstrings)
-//	{
-	if (i >= pr_maxknownstrings)
-		PR_AllocStringSlots();
-	pr_numknownstrings++;
-//	}
-	pr_knownstrings[i] = (char *) Hunk_AllocName(size, "string");
+	if (i >= pr_numknownstrings)
+	{
+		if (i >= pr_maxknownstrings)
+			PR_AllocStringSlots();
+
+		pr_knownstrings[i] = (char *) Hunk_AllocName(size, "string");
+		pr_numknownstrings++;
+	}
+
 	if (ptr)
 		*ptr = (char *) pr_knownstrings[i];
+
 	return -1 - i;
 }
 
@@ -176,38 +178,28 @@ const char *PR_GetString(int num)
 
 int PR_SetEngineString(const char *s)
 {
-	int i;
-
 	if (!s)
 		return 0;
-#if 0	/* can't: sv.model_precache & sv.sound_precache points to pr_strings */
-	if (s >= pr_strings && s <= pr_strings + pr_stringssize)
-		Host_Error("PR_SetEngineString: \"%s\" in pr_strings area\n", s);
-#else
+
 	if (s >= pr_strings && s <= pr_strings + pr_stringssize - 2)
 		return (int) (s - pr_strings);
-#endif
+
+	int i;
 	for (i = 0; i < pr_numknownstrings; i++)
 	{
 		if (pr_knownstrings[i] == s)
 			return -1 - i;
 	}
+
 	// new unknown engine string
-	Con_DPrintf ("PR_SetEngineString: new engine string %p\n", s);
-#if 0
-	for (i = 0; i < pr_numknownstrings; i++)
-	{
-		if (!pr_knownstrings[i])
-		break;
-	}
-#endif
-//	if (i >= pr_numknownstrings)
-//	{
+	Con_DPrintf("PR_SetEngineString: new engine string %s\n", s);
+
 	if (i >= pr_maxknownstrings)
 		PR_AllocStringSlots();
-	pr_numknownstrings++;
-//	}
+
 	pr_knownstrings[i] = s;
+	pr_numknownstrings++;
+
 	return -1 - i;
 }
 
@@ -245,7 +237,6 @@ edict_t *ED_Alloc(void)
 			return e;
 		}
 	}
-
 	if (i == MAX_EDICTS)
 		Sys_Error("no free edicts");
 
@@ -281,12 +272,9 @@ void ED_Free(edict_t *ed)
 
 ddef_t *ED_GlobalAtOfs(int ofs)
 {
-	ddef_t *def;
-	int i;
-
-	for (i = 0; i < progs->numglobaldefs; i++)
+	for (int i = 0; i < progs->numglobaldefs; i++)
 	{
-		def = &pr_globaldefs[i];
+		ddef_t *def = &pr_globaldefs[i];
 		if (def->ofs == ofs)
 			return def;
 	}
@@ -296,12 +284,9 @@ ddef_t *ED_GlobalAtOfs(int ofs)
 
 ddef_t *ED_FieldAtOfs(int ofs)
 {
-	ddef_t *def;
-	int i;
-
-	for (i = 0; i < progs->numfielddefs; i++)
+	for (int i = 0; i < progs->numfielddefs; i++)
 	{
-		def = &pr_fielddefs[i];
+		ddef_t *def = &pr_fielddefs[i];
 		if (def->ofs == ofs)
 			return def;
 	}
@@ -311,12 +296,9 @@ ddef_t *ED_FieldAtOfs(int ofs)
 
 ddef_t *ED_FindGlobal(char *name)
 {
-	ddef_t *def;
-	int i;
-
-	for (i = 0; i < progs->numglobaldefs; i++)
+	for (int i = 0; i < progs->numglobaldefs; i++)
 	{
-		def = &pr_globaldefs[i];
+		ddef_t *def = &pr_globaldefs[i];
 		if (!strcmp(PR_GetString(def->s_name), name))
 			return def;
 	}
@@ -326,12 +308,9 @@ ddef_t *ED_FindGlobal(char *name)
 
 ddef_t *ED_FindField(const char *name)
 {
-	ddef_t *def;
-	int i;
-
-	for (i = 0; i < progs->numfielddefs; i++)
+	for (int i = 0; i < progs->numfielddefs; i++)
 	{
-		def = &pr_fielddefs[i];
+		ddef_t *def = &pr_fielddefs[i];
 		if (!strcmp(PR_GetString(def->s_name), name))
 			return def;
 	}
@@ -341,12 +320,9 @@ ddef_t *ED_FindField(const char *name)
 
 dfunction_t *ED_FindFunction(const char *name)
 {
-	dfunction_t *func;
-	int i;
-
-	for (i = 0; i < progs->numfunctions; i++)
+	for (int i = 0; i < progs->numfunctions; i++)
 	{
-		func = &pr_functions[i];
+		dfunction_t *func = &pr_functions[i];
 		if (!strcmp(PR_GetString(func->s_name), name))
 			return func;
 	}
@@ -410,25 +386,21 @@ char *PR_ValueString(etype_t type, eval_t *val)
 /* Returns a string with a description and the contents of a global */
 char *PR_GlobalString(int ofs)
 {
-	char *s;
-	int i;
-	ddef_t *def;
-	void *val;
 	static char line[128];
 
-	val = (void *) &pr_globals[ofs];
-	if (!(def = ED_GlobalAtOfs(ofs)))
+	ddef_t *def = ED_GlobalAtOfs(ofs);
+	if (!def)
 	{
 		snprintf(line, sizeof(line), "%i(\?\?\?)", ofs);
 	}
 	else
 	{
-		s = PR_ValueString((etype_t)def->type, (eval_t *)val);
+		void *val = (void *) &pr_globals[ofs];
+		char *s = PR_ValueString((etype_t)def->type, (eval_t *)val);
 		snprintf(line, sizeof(line), "%i(%s)%s", ofs, PR_GetString(def->s_name), s);
 	}
 
-	i = strlen(line);
-	for (; i < 20; i++)
+	for (int i = strlen(line); i < 20; i++)
 		strlcat(line, " ", sizeof(line));
 	strlcat(line, " ", sizeof(line));
 

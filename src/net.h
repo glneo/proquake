@@ -12,28 +12,31 @@
  * General Public License for more details.
  */
 
+#ifndef __NET_H
+#define __NET_H
+
 struct qsockaddr
 {
 	short sa_family;
 	unsigned char sa_data[14];
 };
 
-#define	NET_NAMELEN			64
+#define	NET_NAMELEN             64
 
-#define NET_MAXMESSAGE		8192
-#define NET_HEADERSIZE		(2 * sizeof(unsigned int))
-#define NET_DATAGRAMSIZE	(MAX_DATAGRAM + NET_HEADERSIZE)
+#define NET_MAXMESSAGE          8192
+#define NET_HEADERSIZE          (2 * sizeof(unsigned int))
+#define NET_DATAGRAMSIZE        (MAX_DATAGRAM + NET_HEADERSIZE)
 
 // NetHeader flags
-#define NETFLAG_LENGTH_MASK	0x0000ffff
-#define NETFLAG_DATA		0x00010000
-#define NETFLAG_ACK			0x00020000
-#define NETFLAG_NAK			0x00040000
-#define NETFLAG_EOM			0x00080000
-#define NETFLAG_UNRELIABLE	0x00100000
-#define NETFLAG_CTL			0x80000000
+#define NETFLAG_LENGTH_MASK     0x0000ffff
+#define NETFLAG_DATA            0x00010000
+#define NETFLAG_ACK             0x00020000
+#define NETFLAG_NAK             0x00040000
+#define NETFLAG_EOM             0x00080000
+#define NETFLAG_UNRELIABLE      0x00100000
+#define NETFLAG_CTL             0x80000000
 
-#define NET_PROTOCOL_VERSION	3
+#define NET_PROTOCOL_VERSION    3
 
 // This is the network info/connection protocol.  It is used to find Quake
 // servers, get info about them, and connect to them.  Once connected, the
@@ -157,7 +160,6 @@ typedef struct qsocket_s
 	byte mod_flags;
 	int client_port;
 	bool net_wait;		// JPG 3.40 - wait for the client to send a packet to the private port
-	byte encrypt;		// JPG 3.50
 } qsocket_t;
 
 extern qsocket_t *net_activeSockets;
@@ -189,7 +191,6 @@ typedef struct
 	int (*SetSocketPort)(struct qsockaddr *addr, int port);
 } net_landriver_t;
 
-#define	MAX_NET_DRIVERS		8
 extern int net_numlandrivers;
 extern net_landriver_t net_landrivers[];
 
@@ -310,21 +311,14 @@ typedef struct _PollProcedure
 
 void SchedulePollProcedure(PollProcedure *pp, double timeOffset);
 
-//extern	bool	serialAvailable;
-extern bool ipxAvailable;
-extern bool tcpipAvailable;
 
-extern char my_ipx_address[NET_NAMELEN];
+extern bool tcpipAvailable;
 extern char my_tcpip_address[NET_NAMELEN];
-/*
- extern void (*GetComPortConfig) (int portNumber, int *port, int *irq, int *baud, bool *useModem);
- extern void (*SetComPortConfig) (int portNumber, int port, int irq, int baud, bool useModem);
- extern void (*GetModemConfig) (int portNumber, char *dialType, char *clear, char *init, char *hangup);
- extern void (*SetModemConfig) (int portNumber, char *dialType, char *clear, char *init, char *hangup);
- */
 
 extern bool slistInProgress;
 extern bool slistSilent;
 extern bool slistLocal;
 
 void NET_Slist_f(void);
+
+#endif	/* __NET_H */

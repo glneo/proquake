@@ -12,6 +12,11 @@
  * General Public License for more details.
  */
 
+#ifndef __NET_LOOP_H
+#define __NET_LOOP_H
+
+#include "net.h"
+
 int Loop_Init(void);
 void Loop_Listen(bool state);
 void Loop_SearchForHosts(bool xmit);
@@ -24,3 +29,5 @@ bool Loop_CanSendMessage(qsocket_t *sock);
 bool Loop_CanSendUnreliableMessage(qsocket_t *sock);
 void Loop_Close(qsocket_t *sock);
 void Loop_Shutdown(void);
+
+#endif	/* __NET_LOOP_H */

@@ -356,17 +356,9 @@ void Host_Status_f(void)
 	}
 }
 
-/*
- ==================
- Host_QC_Exec
-
- Execute QC commands from the console
- ==================
- */
+/* Execute QC commands from the console */
 void Host_QC_Exec(void)
 {
-	dfunction_t *f;
-
 	if (cmd_source == src_command)
 	{
 		Cmd_ForwardToServer_f();
@@ -377,24 +369,22 @@ void Host_QC_Exec(void)
 	{
 		Con_Printf("Not running local game\n");
 		return;
-	};
+	}
 
 	if (!developer.value)
 	{
 		Con_Printf("Only available in developer mode\n");
 		return;
-	};
+	}
 
-	f = 0;
-	if ((f = ED_FindFunction(Cmd_Argv(1))) != NULL)
+	dfunction_t *f = ED_FindFunction(Cmd_Argv(1));
+	if (f != NULL)
 	{
-
 		pr_global_struct->self = EDICT_TO_PROG(sv_player);
 		PR_ExecuteProgram((func_t) (f - pr_functions));
 	}
 	else
 		Con_Printf("bad function\n");
-
 }
 
 /*
@@ -1411,8 +1401,6 @@ void Host_PreSpawn_f(void)
 	MSG_WriteByte(&host_client->message, svc_signonnum);
 	MSG_WriteByte(&host_client->message, 2);
 	host_client->sendsignon = true;
-
-	host_client->netconnection->encrypt = 2; // JPG 3.50
 }
 
 void Host_Spawn_f(void)
@@ -1551,19 +1539,11 @@ void Host_Begin_f(void)
 	}
 
 	host_client->spawned = true;
-
-	host_client->netconnection->encrypt = 0;	// JPG 3.50
 }
 
 //===========================================================================
 
-/*
- ==================
- Host_Kick_f
-
- Kicks a user off of the server
- ==================
- */
+/* Kicks a user off of the server */
 void Host_Kick_f(void)
 {
 	const char *who;
@@ -1625,10 +1605,10 @@ void Host_Kick_f(void)
 			message = COM_Parse(Cmd_Args());
 			if (byNumber)
 			{
-				message++;							// skip the #
-				while (*message == ' ')				// skip white space
+				message++; // skip the #
+				while (*message == ' ') // skip white space
 					message++;
-				message += strlen(Cmd_Argv(2));	// skip the number
+				message += strlen(Cmd_Argv(2)); // skip the number
 			}
 			while (*message && *message == ' ')
 				message++;
@@ -1643,13 +1623,9 @@ void Host_Kick_f(void)
 	host_client = save;
 }
 
-/*
- ===============================================================================
-
- DEBUGGING TOOLS
-
- ===============================================================================
- */
+/* ===============================================================================
+ *  DEBUGGING TOOLS
+ * =============================================================================== */
 
 void Host_Give_f(void)
 {
@@ -1828,31 +1804,95 @@ void Host_Give_f(void)
 	}
 }
 
-edict_t *FindViewthing(void)
-{
-	int i;
-	edict_t *e;
+/* ===============================================================================
+ * Demo Loop Control
+ * =============================================================================== */
 
-	for (i = 0; i < sv.num_edicts; i++)
+void Host_Startdemos_f(void)
+{
+	if (cls.state == ca_dedicated)
 	{
-		e = EDICT_NUM(i);
+		if (!sv.active)
+			Cbuf_AddText("map start\n");
+		return;
+	}
+
+	int c = Cmd_Argc() - 1;
+	if (c > MAX_DEMOS)
+	{
+		Con_Printf("Max %i demos in demoloop\n", MAX_DEMOS);
+		c = MAX_DEMOS;
+	}
+
+	if (Cmd_Argc() != 1)
+		cls.demonum = 0;
+
+	Con_DPrintf("%i demo(s) in loop\n", c);
+
+	for (int i = 1; i < c + 1; i++)
+		strncpy(cls.demos[i - 1], Cmd_Argv(i), sizeof(cls.demos[0]) - 1);
+
+	if (!sv.active && cls.demonum != -1 && !cls.demoplayback)
+	{
+		cls.demonum = 0;
+		CL_NextDemo();
+	}
+	else
+		cls.demonum = -1;
+}
+
+/* Return to looping demos */
+void Host_Demos_f(void)
+{
+	if (cls.state == ca_dedicated)
+		return;
+
+	if (cls.demonum == -1)
+		cls.demonum = 1;
+
+	CL_Disconnect_f();
+	CL_NextDemo();
+}
+
+/* Return to looping demos */
+void Host_Stopdemo_f(void)
+{
+	if (cls.state == ca_dedicated)
+		return;
+	if (!cls.demoplayback)
+		return;
+
+	CL_StopPlayback();
+
+	CL_Clear_Demos_Queue();
+
+	CL_Disconnect();
+}
+
+/* ===============================================================================
+ *  View Thing Control
+ * =============================================================================== */
+
+static edict_t *FindViewthing(void)
+{
+	for (int i = 0; i < sv.num_edicts; i++)
+	{
+		edict_t *e = EDICT_NUM(i);
 		if (!strcmp(PR_GetString(e->v.classname), "viewthing"))
 			return e;
 	}
+
 	Con_Printf("No viewthing on map\n");
 	return NULL;
 }
 
 void Host_Viewmodel_f(void)
 {
-	edict_t *e;
-	model_t *m;
-
-	e = FindViewthing();
+	edict_t *e = FindViewthing();
 	if (!e)
 		return;
 
-	m = Mod_ForName(Cmd_Argv(1));
+	model_t *m = Mod_ForName(Cmd_Argv(1));
 	if (!m)
 	{
 		Con_Printf("Can't load %s\n", Cmd_Argv(1));
@@ -1865,16 +1905,13 @@ void Host_Viewmodel_f(void)
 
 void Host_Viewframe_f(void)
 {
-	edict_t *e;
-	int f;
-	model_t *m;
-
-	e = FindViewthing();
+	edict_t *e = FindViewthing();
 	if (!e)
 		return;
-	m = cl.model_precache[(int) e->v.modelindex];
 
-	f = atoi(Cmd_Argv(1));
+	model_t *m = cl.model_precache[(int) e->v.modelindex];
+
+	int f = atoi(Cmd_Argv(1));
 	if (f >= m->numframes)
 		f = m->numframes - 1;
 
@@ -1896,13 +1933,11 @@ void PrintFrameName(model_t *m, int frame)
 
 void Host_Viewnext_f(void)
 {
-	edict_t *e;
-	model_t *m;
-
-	e = FindViewthing();
+	edict_t *e = FindViewthing();
 	if (!e)
 		return;
-	m = cl.model_precache[(int) e->v.modelindex];
+
+	model_t *m = cl.model_precache[(int) e->v.modelindex];
 
 	e->v.frame = e->v.frame + 1;
 	if (e->v.frame >= m->numframes)
@@ -1913,167 +1948,17 @@ void Host_Viewnext_f(void)
 
 void Host_Viewprev_f(void)
 {
-	edict_t *e;
-	model_t *m;
-
-	e = FindViewthing();
+	edict_t *e = FindViewthing();
 	if (!e)
 		return;
 
-	m = cl.model_precache[(int) e->v.modelindex];
+	model_t *m = cl.model_precache[(int) e->v.modelindex];
 
 	e->v.frame = e->v.frame - 1;
 	if (e->v.frame < 0)
 		e->v.frame = 0;
 
 	PrintFrameName(m, e->v.frame);
-}
-
-/*
- ===============================================================================
-
- DEMO LOOP CONTROL
-
- ===============================================================================
- */
-
-void Host_Startdemos_f(void)
-{
-	int i, c;
-
-	if (cls.state == ca_dedicated)
-	{
-		if (!sv.active)
-			Cbuf_AddText("map start\n");
-		return;
-	}
-
-	c = Cmd_Argc() - 1;
-	if (c > MAX_DEMOS)
-	{
-		Con_Printf("Max %i demos in demoloop\n", MAX_DEMOS);
-		c = MAX_DEMOS;
-	}
-
-	if (Cmd_Argc() != 1)
-	{
-		cls.demonum = 0;
-
-	}
-	Con_DPrintf("%i demo(s) in loop\n", c);
-
-	for (i = 1; i < c + 1; i++)
-		strncpy(cls.demos[i - 1], Cmd_Argv(i), sizeof(cls.demos[0]) - 1);
-
-	if (!sv.active && cls.demonum != -1 && !cls.demoplayback)
-	{
-		cls.demonum = 0;
-		CL_NextDemo();
-	}
-	else
-		cls.demonum = -1;
-}
-
-/*
- ==================
- Host_Demos_f
-
- Return to looping demos
- ==================
- */
-void Host_Demos_f(void)
-{
-	if (cls.state == ca_dedicated)
-		return;
-
-	if (cls.demonum == -1)
-		cls.demonum = 1;
-
-	CL_Disconnect_f();
-	CL_NextDemo();
-}
-
-/*
- ==================
- Host_Stopdemo_f
-
- Return to looping demos
- ==================
- */
-void Host_Stopdemo_f(void)
-{
-	if (cls.state == ca_dedicated)
-		return;
-	if (!cls.demoplayback)
-		return;
-	CL_StopPlayback();
-
-// Baker :Since this is an intentional user action,
-// clear the demos queue.
-	CL_Clear_Demos_Queue();
-
-	CL_Disconnect();
-}
-
-#define DIGIT(x) ((x) >= '0' && (x) <= '9')
-void Load_Stats_Id_f(void)
-{
-	if (Cmd_Argc() != 2)
-		Con_Printf("%s command requires a parameter\n", Cmd_Argv(0));
-	else if (atoi(Cmd_Argv(1)) == 0)
-		Con_Printf("%s command uses a number", Cmd_Argv(0));
-	else
-	{
-		//FIXME: This was not a portable solution
-		//int hdsernum = Sys_GetHardDriveSerial (argv[0]) / 1000000;
-		int hdsernum = 0;
-		int statsnum = atoi(Cmd_Argv(1)) - hdsernum;
-		Cbuf_AddText(va("pq_password %i\n", statsnum));
-		Con_Printf("Stats tracking id loaded\n");
-	}
-}
-
-void Stats_Id_f(void)
-{
-	if (Cmd_Argc() != 2)
-		Con_Printf("%s <quakeone.com stats id> to log it\n", Cmd_Argv(0));
-	else if (atoi(Cmd_Argv(1)) == 0)
-		Con_Printf("Your QuakeOne.com stats id is a number\n");
-	else
-	{
-		char buffer[32] = { 0 };
-		const char* stats_id_text = Cmd_Argv(1);
-		const char* cursor = stats_id_text;
-		int stringlen = strlen(stats_id_text);
-		int i;
-		FILE *f;
-		for (i = 0; i < stringlen; i++)
-		{
-			// Advance past dashes and stuff  IS_NUM
-			while (*cursor && (!DIGIT(*cursor)))
-				cursor++;
-			if (!*cursor)
-				break;
-			buffer[i] = *cursor++;
-		}
-
-		f = fopen(va("%s/id1/stats_id.cfg", com_basedir), "wt");
-		if (!f)
-			Con_Printf("Could open stats id file for writing\n");
-		else
-		{
-			int stats_num = atoi(buffer);
-			//FIXME: This was not a portable solution
-			//int hdsernum = Sys_GetHardDriveSerial (argv[0]) / 1000000;
-			int hdsernum = 0;
-
-			fprintf(f, "load_stats_id \"%i\"\n", stats_num + hdsernum);
-			Con_Printf("Committed your stats id \"%i\" to file\n", stats_num);
-			fclose(f);
-		}
-
-	}
-
 }
 
 void Host_InitCommands(void)
@@ -2118,8 +2003,5 @@ void Host_InitCommands(void)
 
 	Cmd_AddCommand("qcexec", Host_QC_Exec);
 
-	Cmd_AddCommand("stats_id", Stats_Id_f);
-	Cmd_AddCommand("load_stats_id", Load_Stats_Id_f);
-
-	Cvar_RegisterVariable(&cl_confirmquit); // Baker 3.60
+	Cvar_RegisterVariable(&cl_confirmquit);
 }

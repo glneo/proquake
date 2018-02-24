@@ -156,7 +156,6 @@ int COM_OpenFile(const char *filename, int *hndl);
 int COM_FOpenFile(const char *filename, FILE **file);
 void COM_CloseFile(int h);
 
-byte *COM_LoadStackFile(const char *path, void *buffer, int bufsize);
 byte *COM_LoadTempFile(const char *path);
 byte *COM_LoadHunkFile(const char *path);
 void COM_LoadCacheFile(const char *path, struct cache_user_s *cu);
@@ -169,7 +168,6 @@ char *VersionString(void);
 void Host_Version_f(void);
 
 extern struct cvar_s registered;
-extern struct cvar_s cmdline;
 
 extern bool standard_quake, rogue, hipnotic;
 

@@ -44,7 +44,6 @@ int Hunk_LowMark(void);
 void Hunk_FreeToLowMark(int mark);
 int Hunk_HighMark(void);
 void Hunk_FreeToHighMark(int mark);
-void *Hunk_TempAlloc(int size);
 void Hunk_Check(void);
 
 void Memory_Init(void *buf, int size);

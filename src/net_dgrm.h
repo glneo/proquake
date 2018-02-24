@@ -12,6 +12,11 @@
  * General Public License for more details.
  */
 
+#ifndef __NET_DGRM_H
+#define __NET_DGRM_H
+
+#include "net.h"
+
 int Datagram_Init(void);
 void Datagram_Listen(bool state);
 void Datagram_SearchForHosts(bool xmit);
@@ -24,3 +29,5 @@ bool Datagram_CanSendMessage(qsocket_t *sock);
 bool Datagram_CanSendUnreliableMessage(qsocket_t *sock);
 void Datagram_Close(qsocket_t *sock);
 void Datagram_Shutdown(void);
+
+#endif	/* __NET_DGRM_H */

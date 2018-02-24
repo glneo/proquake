@@ -231,8 +231,7 @@ sfxcache_t *S_LoadSound(sfx_t *s)
 	char namebuffer[256];
 	strlcpy(namebuffer, "sound/", sizeof(namebuffer));
 	strlcat(namebuffer, s->name, sizeof(namebuffer));
-	byte stackbuf[1 * 1024]; // avoid dirtying the cache heap
-	byte *data = COM_LoadStackFile(namebuffer, stackbuf, sizeof(stackbuf));
+	byte *data = COM_LoadMallocFile(namebuffer);
 	if (!data)
 	{
 		Con_Printf("Couldn't load %s\n", namebuffer);
@@ -273,6 +272,8 @@ sfxcache_t *S_LoadSound(sfx_t *s)
 	s->sc->stereo = info.channels;
 
 	ResampleSfx(s, s->sc->speed, s->sc->width, data + info.dataofs);
+
+	free(data);
 
 	s->needload = false;
 

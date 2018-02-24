@@ -30,7 +30,7 @@ extern int close (int);
 
 extern cvar_t hostname;
 
-static int net_acceptsocket = -1;		// socket for fielding new connections
+static int net_acceptsocket = -1; // socket for fielding new connections
 static int net_controlsocket;
 static int net_broadcastsocket = 0;
 static struct qsockaddr broadcastaddr;

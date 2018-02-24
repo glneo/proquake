@@ -20,13 +20,10 @@
  */
 
 // This is enables a simple IP banning mechanism
-#define BAN_TEST
+//#define BAN_TEST
 
 #include "quakedef.h"
 #include "net_dgrm.h"
-
-#include <netinet/in.h>
-#include <arpa/inet.h>
 
 #define	INVALID_SOCKET	(-1)
 #define	SOCKET_ERROR	(-1)
@@ -69,6 +66,9 @@ static char *StrAddr(struct qsockaddr *addr)
 }
 
 #ifdef BAN_TEST
+
+#include <netinet/in.h>
+#include <arpa/inet.h>
 
 static struct in_addr banAddr;
 static struct in_addr banMask;
@@ -803,12 +803,8 @@ int Datagram_Init(void)
 
 void Datagram_Shutdown(void)
 {
-	int i;
-
-//
-// shutdown the lan drivers
-//
-	for (i = 0; i < net_numlandrivers; i++)
+	// shutdown the lan drivers
+	for (int i = 0; i < net_numlandrivers; i++)
 	{
 		if (net_landrivers[i].initialized)
 		{

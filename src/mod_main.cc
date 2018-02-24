@@ -113,7 +113,6 @@ void Mod_ClearAll(void)
 model_t *Mod_LoadModel(model_t *mod)
 {
 	void *buf;
-	byte stackbuf[1024]; // avoid dirtying the cache heap
 	unsigned int header_magic;
 
 	if (!mod->needload)
@@ -122,7 +121,7 @@ model_t *Mod_LoadModel(model_t *mod)
 	// allocate a new model
 
 	// load the file
-	buf = (void *) COM_LoadStackFile(mod->name, stackbuf, sizeof(stackbuf));
+	buf = (void *)COM_LoadMallocFile(mod->name);
 	if (!buf)
 		return NULL;
 
@@ -144,6 +143,8 @@ model_t *Mod_LoadModel(model_t *mod)
 		Mod_LoadBrushModel(mod, buf);
 		break;
 	}
+
+	free(buf);
 
 	return mod;
 }

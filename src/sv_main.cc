@@ -303,8 +303,8 @@ void SV_CheckForNewClients(void)
 	struct qsocket_s *ret;
 	int i;
 
-// check for new connections
-	while (1) {
+	// check for new connections
+	while (true) {
 		if (!(ret = NET_CheckNewConnections()))
 			break;
 

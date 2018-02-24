@@ -12,6 +12,11 @@
  * General Public License for more details.
  */
 
+#ifndef __NET_UDP_H
+#define __NET_UDP_H
+
+#include "net.h"
+
 int UDP_Init(void);
 void UDP_Shutdown(void);
 void UDP_Listen(bool state);
@@ -30,3 +35,5 @@ int UDP_GetAddrFromName(const char *name, struct qsockaddr *addr);
 int UDP_AddrCompare(struct qsockaddr *addr1, struct qsockaddr *addr2);
 int UDP_GetSocketPort(struct qsockaddr *addr);
 int UDP_SetSocketPort(struct qsockaddr *addr, int port);
+
+#endif	/* __NET_UDP_H */

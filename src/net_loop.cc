@@ -26,10 +26,6 @@ int Loop_Init(void)
 	return 0;
 }
 
-void Loop_Shutdown(void)
-{
-}
-
 void Loop_Listen(bool state)
 {
 }
@@ -227,4 +223,8 @@ void Loop_Close(qsocket_t *sock)
 		loop_client = NULL;
 	else
 		loop_server = NULL;
+}
+
+void Loop_Shutdown(void)
+{
 }

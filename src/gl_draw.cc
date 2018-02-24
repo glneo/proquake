@@ -189,7 +189,7 @@ qpic_t *Draw_CachePic(const char *path)
 	strcpy(pic->name, path);
 
 	// load the pic from disk
-	dat = (qpic_t *) COM_LoadTempFile(path);
+	dat = (qpic_t *) COM_LoadMallocFile(path);
 	if (!dat)
 		Sys_Error("failed to load %s", path);
 	SwapPic(dat);
@@ -209,6 +209,8 @@ qpic_t *Draw_CachePic(const char *path)
 	gl->sh = 1;
 	gl->tl = 0;
 	gl->th = 1;
+
+	free(dat);
 
 	return &pic->pic;
 }
