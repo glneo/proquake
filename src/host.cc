@@ -716,7 +716,7 @@ void Host_InitLocal(void)
 
 //============================================================================
 
-extern int vcrFile;
+extern FILE *vcrFile;
 #define	VCR_SIGNATURE 0x56435231 // "VCR1"
 
 void Host_InitVCR(quakeparms_t *parms)
@@ -729,8 +729,8 @@ void Host_InitVCR(quakeparms_t *parms)
 		if (com_argc != 2)
 			Sys_Error("No other parameters allowed with -playback\n");
 
-		Sys_FileOpenRead("quake.vcr", &vcrFile);
-		if (vcrFile == -1)
+		vcrFile = Sys_FileOpenRead("quake.vcr");
+		if (!vcrFile)
 			Sys_Error("playback file not found\n");
 
 		Sys_FileRead(vcrFile, &i, sizeof(int));

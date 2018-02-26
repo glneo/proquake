@@ -12,7 +12,6 @@
  * General Public License for more details.
  */
 
-#include <unistd.h>
 #include <stdlib.h>
 #include <fcntl.h>
 #include <stdio.h>
@@ -71,7 +70,6 @@ void Sys_Printf(const char *fmt, ...)
 void Sys_Quit(void)
 {
 	Host_Shutdown();
-	fcntl(0, F_SETFL, fcntl(0, F_GETFL, 0) & ~FNDELAY);
 	fflush(stdout);
 	exit(0);
 }
@@ -81,70 +79,62 @@ double Sys_DoubleTime (void)
 	return SDL_GetTicks() / 1000.0;
 }
 
-/* returns -1 if not present */
-int Sys_FileTime(const char *path)
-{
-	struct stat buf;
-
-	if (stat(path, &buf) == -1)
-		return -1;
-
-	return buf.st_mtime;
-}
-
 void Sys_mkdir(const char *path)
 {
 	mkdir(path, 0777);
 }
 
-int Sys_FileOpenRead(const char *path, int *handle)
+/* returns -1 if not present */
+bool Sys_FileExists(const char *path)
 {
-	int h;
-	struct stat fileinfo;
+	bool exists = false;
 
-	h = open(path, O_RDONLY, 0666);
-	*handle = h;
-	if (h == -1)
-		return -1;
+	FILE *handle = fopen(path, "rb");
+	if (handle)
+	{
+		exists = true;
+		fclose(handle);
+	}
 
-	if (fstat(h, &fileinfo) == -1)
-		Sys_Error("Error fstating %s", path);
-
-	return fileinfo.st_size;
+	return exists;
 }
 
-int Sys_FileOpenWrite(const char *path)
+FILE *Sys_FileOpenRead(const char *path)
 {
-	int handle;
-
-	umask(0);
-
-	handle = open(path, O_RDWR | O_CREAT | O_TRUNC, 0666);
-
-	if (handle == -1)
-		Sys_Error("Error opening %s: %s", path, strerror(errno));
+	FILE *handle = fopen(path, "rb");
+	if (!handle)
+		Sys_Printf("Error opening %s: %s", path, strerror(errno));
 
 	return handle;
 }
 
-int Sys_FileWrite(int handle, void *src, int count)
+FILE *Sys_FileOpenWrite(const char *path)
 {
-	return write(handle, src, count);
+	FILE *handle = fopen(path, "wb");
+	if (!handle)
+		Sys_Printf("Error opening %s: %s", path, strerror(errno));
+
+	return handle;
 }
 
-void Sys_FileClose(int handle)
+int Sys_FileWrite(FILE *handle, void *src, int count)
 {
-	close(handle);
+	return fwrite(src, 1, count, handle);
 }
 
-void Sys_FileSeek(int handle, int position)
+void Sys_FileSeek(FILE *handle, int position)
 {
-	lseek(handle, position, SEEK_SET);
+	fseek(handle, position, SEEK_SET);
 }
 
-int Sys_FileRead(int handle, void *dest, int count)
+int Sys_FileRead(FILE *handle, void *dest, int count)
 {
-	return read(handle, dest, count);
+	return fread(dest, 1, count, handle);
+}
+
+void Sys_FileClose(FILE *handle)
+{
+	fclose(handle);
 }
 
 char *Sys_GetClipboardData(void)
@@ -164,27 +154,27 @@ void Sys_Sleep(unsigned long msecs)
 
 char *Sys_ConsoleInput(void)
 {
-	static char text[256];
-	int len;
-	fd_set fdset;
-	struct timeval timeout;
-
-	if (cls.state == ca_dedicated)
-	{
-		FD_ZERO(&fdset);
-		FD_SET(0, &fdset); // stdin
-		timeout.tv_sec = 0;
-		timeout.tv_usec = 0;
-		if (select(1, &fdset, NULL, NULL, &timeout) == -1 || !FD_ISSET(0, &fdset))
-			return NULL;
-
-		len = read(0, text, sizeof(text));
-		if (len < 1)
-			return NULL;
-		text[len - 1] = 0;    // rip off the /n and terminate
-
-		return text;
-	}
+//	static char text[256];
+//	int len;
+//	fd_set fdset;
+//	struct timeval timeout;
+//
+//	if (cls.state == ca_dedicated)
+//	{
+////		FD_ZERO(&fdset);
+////		FD_SET(0, &fdset); // stdin
+//		timeout.tv_sec = 0;
+//		timeout.tv_usec = 0;
+//		if (select(1, &fdset, NULL, NULL, &timeout) == -1 || !FD_ISSET(0, &fdset))
+//			return NULL;
+//
+//		len = read(0, text, sizeof(text));
+//		if (len < 1)
+//			return NULL;
+//		text[len - 1] = 0;    // rip off the /n and terminate
+//
+//		return text;
+//	}
 
 	return NULL;
 }

@@ -471,7 +471,7 @@ void CL_PlayDemo_f(void)
 	strlcpy(name, Cmd_Argv(1), sizeof(name));
 	COM_DefaultExtension(name, ".dem");
 
-	COM_FOpenFile(name, &cls.demofile);
+	COM_OpenFile(name, &cls.demofile);
 	if (!cls.demofile)
 	{
 		Con_Printf("ERROR: couldn't open %s\n", name);

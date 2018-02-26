@@ -277,14 +277,11 @@ typedef struct targaheader_s {
 /* writes RGB or RGBA data to a TGA file */
 static bool Image_WriteTGA (const char *name, byte *data, int width, int height, int bpp, bool upsidedown)
 {
-	int handle, i, size, temp, bytes;
-	char pathname[MAX_OSPATH];
+	int size, temp, bytes;
 	byte header[TARGAHEADERSIZE];
 
-	Sys_mkdir (com_gamedir); //if we've switched to a nonexistant gamedir, create it now so we don't crash
-	snprintf (pathname, sizeof(pathname), "%s/%s", com_gamedir, name);
-	handle = Sys_FileOpenWrite (pathname);
-	if (handle == -1)
+	FILE *handle = COM_FileOpenWrite(name);
+	if (!handle)
 		return false;
 
 	memset (&header, 0, TARGAHEADERSIZE);
@@ -300,7 +297,7 @@ static bool Image_WriteTGA (const char *name, byte *data, int width, int height,
 	// swap red and blue bytes
 	bytes = bpp/8;
 	size = width*height*bytes;
-	for (i=0; i<size; i+=bytes)
+	for (int i=0; i<size; i+=bytes)
 	{
 		temp = data[i];
 		data[i] = data[i+2];
@@ -478,7 +475,7 @@ void TexMgr_LoadPalette(void)
 	int i;
 	FILE *f;
 
-	COM_FOpenFile("gfx/palette.lmp", &f);
+	COM_OpenFile("gfx/palette.lmp", &f);
 	if (!f)
 		Sys_Error("Couldn't load gfx/palette.lmp");
 

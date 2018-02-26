@@ -109,7 +109,7 @@ void R_ReadPointFile_f(void)
 
 	snprintf(name, sizeof(name), "maps/%s.pts", sv.name);
 
-	COM_FOpenFile(name, &f);
+	COM_OpenFile(name, &f);
 	if (!f)
 	{
 		Con_Printf("couldn't open %s\n", name);

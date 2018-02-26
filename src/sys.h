@@ -18,14 +18,14 @@
 #define __SYS_H
 
 // file IO
-int Sys_FileTime(const char *path);
 void Sys_mkdir(const char *path);
-int Sys_FileOpenRead(const char *path, int *handle);
-int Sys_FileOpenWrite(const char *path);
-int Sys_FileWrite(int handle, void *src, int count);
-void Sys_FileClose(int handle);
-void Sys_FileSeek(int handle, int position);
-int Sys_FileRead(int handle, void *dest, int count);
+bool Sys_FileExists(const char *path);
+FILE *Sys_FileOpenRead(const char *path);
+FILE *Sys_FileOpenWrite(const char *path);
+int Sys_FileWrite(FILE *handle, void *src, int count);
+int Sys_FileRead(FILE *handle, void *dest, int count);
+void Sys_FileSeek(FILE *handle, int position);
+void Sys_FileClose(FILE *handle);
 
 // system IO
 #define Sys_Error(...) do { \

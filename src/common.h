@@ -148,13 +148,12 @@ extern char com_gamedir[MAX_OSPATH];
 
 void COM_ForceExtension(char *path, const char *extension);	// by joe
 
-void COM_WriteFile(const char *filename, void *data, int len);
+FILE *COM_FileOpenWrite(const char *filename);
 
 void COM_CreatePath(const char *path);
 pack_t *COM_LoadPackFile(const char *packfile);
-int COM_OpenFile(const char *filename, int *hndl);
-int COM_FOpenFile(const char *filename, FILE **file);
-void COM_CloseFile(int h);
+int COM_OpenFile(const char *filename, FILE **file);
+void COM_CloseFile(FILE *h);
 
 byte *COM_LoadTempFile(const char *path);
 byte *COM_LoadHunkFile(const char *path);

@@ -513,16 +513,12 @@ static void Con_Dump_f(void)
 {
 	int l, x;
 	const char *line;
-	FILE *f;
 	char buffer[1024];
-	char name[MAX_OSPATH];
 
-	snprintf(name, sizeof(name), "%s/condump.txt", com_gamedir);
-	COM_CreatePath(name);
-	f = fopen(name, "w");
+	FILE *f = COM_FileOpenWrite("condump.txt");
 	if (!f)
 	{
-		Con_Printf("ERROR: couldn't open file %s.\n", name);
+		Con_Printf("ERROR: couldn't open file condump.txt\n");
 		return;
 	}
 
@@ -557,7 +553,7 @@ static void Con_Dump_f(void)
 	}
 
 	fclose(f);
-	Con_Printf("Dumped console text to %s.\n", name);
+	Con_Printf("Dumped console text to condump.txt\n");
 }
 
 void Con_ClearNotify(void)

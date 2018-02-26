@@ -15,7 +15,7 @@
 #include "quakedef.h"
 #include "net_vcr.h"
 
-extern int vcrFile;
+extern FILE *vcrFile;
 
 /*
  * This is the playback portion of the VCR.  It reads the file produced

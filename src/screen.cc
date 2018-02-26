@@ -652,7 +652,7 @@ static void SCR_ScreenShot_f(void)
 	{
 		snprintf(tganame, sizeof(tganame), "spasm%04i.tga", i);	// "fitz%04i.tga"
 		snprintf(checkname, sizeof(checkname), "%s/%s", com_gamedir, tganame);
-		if (Sys_FileTime(checkname) == -1)
+		if (!Sys_FileExists(checkname))
 			break;	// file doesn't exist
 	}
 	if (i == 10000)

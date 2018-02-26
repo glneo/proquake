@@ -72,7 +72,7 @@ typedef struct
 typedef struct pack_s
 {
 	char filename[MAX_OSPATH];
-	int handle;
+	FILE *handle;
 	int numfiles;
 	packfile_t *files;
 } pack_t;

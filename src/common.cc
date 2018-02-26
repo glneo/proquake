@@ -22,6 +22,8 @@
 
 #include <cassert> // strltrim strrtrim
 
+#include <errno.h>
+
 using namespace std;
 
 vector<string> largv;
@@ -672,16 +674,15 @@ int COM_CheckParm(const char *parm)
  */
 void COM_CheckRegistered(void)
 {
-	int h;
+	FILE *h;
 	unsigned short check[128];
 	int i;
 
 	COM_OpenFile((char *)"gfx/pop.lmp", &h);
 	static_registered = 0;
 
-	if (h == -1)
+	if (!h)
 	{
-		//Sys_Error ("This dedicated server requires a full registered copy of Quake");
 		Con_Printf("Playing shareware version.\n");
 		//if (com_modified)
 		//	Sys_Error ("You must have the registered version to use modified games");
@@ -757,7 +758,7 @@ typedef struct
 typedef struct pack_s
 {
 	char filename[MAX_OSPATH];
-	int handle;
+	FILE *handle;
 	int numfiles;
 	packfile_t *files;
 } pack_t;
@@ -806,43 +807,17 @@ void COM_Path_f(void)
 }
 
 /* The filename will be prefixed by the current game directory */
-void COM_WriteFile(const char *filename, void *data, int len)
+FILE *COM_FileOpenWrite(const char *filename)
 {
-	int handle;
 	char name[MAX_OSPATH];
 
-	Sys_mkdir(com_gamedir); //johnfitz -- if we've switched to a nonexistant gamedir, create it now so we don't crash
-
+	Sys_mkdir(com_gamedir); // if we've switched to a nonexistant gamedir, create it now so we don't crash
 	snprintf(name, sizeof(name), "%s/%s", com_gamedir, filename);
 
-	handle = Sys_FileOpenWrite(name);
-	if (handle == -1)
-	{
-		Sys_Printf((char *)"COM_WriteFile: failed on %s\n", name);
-		return;
-	}
-
-	Sys_Printf((char *)"COM_WriteFile: %s\n", name);
-	Sys_FileWrite(handle, data, len);
-	Sys_FileClose(handle);
+	return Sys_FileOpenWrite(name);
 }
 
-void COM_CreatePath(const char *path)
-{
-	char *ofs;
-	for(ofs = Q_strdup(path) + 1; *ofs; ofs++)
-	{
-		if (*ofs == '/')
-		{       // create the directory
-			*ofs = 0;
-			Sys_mkdir(path);
-			*ofs = '/';
-		}
-	}
-	free(ofs);
-}
-
-long COM_filelength (FILE *f)
+long COM_filelength(FILE *f)
 {
 	long pos = ftell(f);
 	fseek(f, 0, SEEK_END);
@@ -855,13 +830,13 @@ long COM_filelength (FILE *f)
 /*
  * Finds the file in the search path.
  * Sets com_filesize and one of handle or file
+ * If the requested file is inside a packfile, a new FILE * will be opened
+ * into the file
  */
-int COM_FindFile(const char *filename, int *handle, FILE **file)
+int COM_OpenFile(const char *filename, FILE **file)
 {
-	if (file && handle)
-		Sys_Error("both handle and file set");
-	if (!file && !handle)
-		Sys_Error("neither handle or file set");
+	if (!file)
+		Sys_Error("file pointer not set");
 
 	// search through the path, one element at a time
 	for (searchpath_t *search = com_searchpaths; search; search = search->next)
@@ -876,17 +851,10 @@ int COM_FindFile(const char *filename, int *handle, FILE **file)
 				{
 					// found it!
 					Con_DPrintf("PackFile: %s : %s\n", pak->filename, filename);
-					if (handle)
-					{
-						*handle = pak->handle;
-						Sys_FileSeek(pak->handle, pak->files[i].filepos);
-					}
-					else
-					{       // open a new file on the pakfile
-						*file = fopen(pak->filename, "rb");
-						if (*file)
-							fseek(*file, pak->files[i].filepos, SEEK_SET);
-					}
+					// open a new file on the pakfile
+					*file = fopen(pak->filename, "rb");
+					if (*file)
+						fseek(*file, pak->files[i].filepos, SEEK_SET);
 					com_filesize = pak->files[i].filelen;
 					return com_filesize;
 				}
@@ -901,58 +869,24 @@ int COM_FindFile(const char *filename, int *handle, FILE **file)
 
 			char netpath[MAX_OSPATH];
 			snprintf(netpath, sizeof(netpath), "%s/%s",search->filename, filename);
-			if (Sys_FileTime (netpath) == -1)
+			if (!Sys_FileExists(netpath))
 				continue;
 
-			if (handle)
-			{
-				int i;
-				com_filesize = Sys_FileOpenRead (netpath, &i);
-				*handle = i;
-				return com_filesize;
-			}
-			else if (file)
-			{
-				*file = fopen (netpath, "rb");
-				com_filesize = (*file == NULL) ? -1 : COM_filelength (*file);
-				return com_filesize;
-			}
-			else
-			{
-				return 0; /* dummy valid value for COM_FileExists() */
-			}
+			*file = fopen (netpath, "rb");
+			com_filesize = (*file == NULL) ? -1 : COM_filelength (*file);
+			return com_filesize;
 		}
 	}
 
 	Sys_Printf((char *)"FindFile: can't find %s\n", filename);
 
-	if (handle)
-		*handle = -1;
-	else
-		*file = NULL;
+	*file = NULL;
 	com_filesize = -1;
 	return -1;
 }
 
-/*
- * Filename never has a leading slash, but may contain directory walks
- * returns a handle and a length it may actually be inside a pak file
- */
-int COM_OpenFile(const char *filename, int *handle)
-{
-	return COM_FindFile(filename, handle, NULL);
-}
-
-/* If the requested file is inside a packfile, a new FILE * will be opened
- * into the file
- */
-int COM_FOpenFile(const char *filename, FILE **file)
-{
-	return COM_FindFile(filename, NULL, file);
-}
-
 /* If it is a pak file handle, don't really close it */
-void COM_CloseFile(int h)
+void COM_CloseFile(FILE *h)
 {
 	for (searchpath_t *s = com_searchpaths; s; s = s->next)
 		if (s->pack && s->pack->handle == h)
@@ -964,12 +898,12 @@ void COM_CloseFile(int h)
 /* Filename are relative to the quake directory */
 byte *COM_LoadFile(const char *path, int usehunk)
 {
-	int h;
+	FILE *h;
 	byte *buf;
 
 	// look for it in the filesystem or pack files
 	int len = COM_OpenFile(path, &h);
-	if (h == -1)
+	if (!h)
 		return NULL;
 
 	if (usehunk == 1)
@@ -1010,8 +944,8 @@ byte *COM_LoadMallocFile(const char *path)
  */
 pack_t *COM_LoadPackFile(const char *packfile)
 {
-	int packhandle;
-	if (Sys_FileOpenRead(packfile, &packhandle) == -1)
+	FILE *packhandle = Sys_FileOpenRead(packfile);
+	if (!packhandle)
 	{
 		Con_Printf ("Couldn't open %s\n", packfile);
 		return NULL;

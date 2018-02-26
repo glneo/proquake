@@ -62,7 +62,7 @@ bool rcon_active = false;
 
 //bool	configRestored = false;
 
-int vcrFile = -1;
+FILE *vcrFile = NULL;
 bool recording = false;
 
 // these two macros are to make the code more readable
@@ -863,7 +863,7 @@ void NET_Shutdown(void)
 		}
 	}
 
-	if (vcrFile != -1)
+	if (!vcrFile)
 	{
 		Con_Printf("Closing vcrfile.\n");
 		Sys_FileClose(vcrFile);
