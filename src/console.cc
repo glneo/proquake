@@ -14,6 +14,8 @@
  * General Public License for more details.
  */
 
+#include <cstdarg>
+
 #include "quakedef.h"
 #include "glquake.h"
 
@@ -710,8 +712,6 @@ static void Con_Print(const char *txt)
 		}
 	}
 }
-
-#define	MAXPRINTMSG 4096
 
 /* All console printing must go through this in order to be logged to disk */
 void Con_Printf(const char *fmt, ...)

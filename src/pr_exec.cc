@@ -12,6 +12,8 @@
  * General Public License for more details.
  */
 
+#include <cstdarg>
+
 #include "quakedef.h"
 
 typedef struct

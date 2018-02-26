@@ -17,12 +17,11 @@
 #include <string>
 #include <vector>
 #include <algorithm>
+#include <cstdarg>
+#include <cassert> // strltrim strrtrim
+#include <cerrno>
 
 #include "quakedef.h"
-
-#include <cassert> // strltrim strrtrim
-
-#include <errno.h>
 
 using namespace std;
 

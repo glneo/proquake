@@ -21,13 +21,9 @@
 #define	GAMENAME "id1" // directory to look in by default
 
 #include <math.h>
-#include <strings.h>
-#include <stdarg.h>
-#include <stdio.h>
-#include <stdint.h>
-#include <stdlib.h>
-#include <setjmp.h>
-#include <ctype.h>
+#include <cstdio>
+#include <cstdlib>
+#include <cstdint>
 
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
@@ -67,6 +63,8 @@
 #define	SAVEGAME_COMMENT_LENGTH 39
 
 #define	MAX_STYLESTRING		64
+
+#define	MAXPRINTMSG		4096
 
 // stats are integers communicated to the client by the server
 #define	MAX_CL_STATS		32

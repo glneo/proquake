@@ -346,7 +346,7 @@ char *PR_ValueString(etype_t type, eval_t *val)
 		break;
 
 	case ev_entity:
-		snprintf(line, sizeof(line), "entity %i", NUM_FOR_EDICT(PROG_TO_EDICT(val->edict)));
+		snprintf(line, sizeof(line), "entity %li", NUM_FOR_EDICT(PROG_TO_EDICT(val->edict)));
 		break;
 
 	case ev_function:
@@ -445,7 +445,7 @@ static char *PR_UglyValueString(etype_t type, eval_t *val)
 		break;
 
 	case ev_entity:
-		snprintf(line, sizeof(line), "%i", NUM_FOR_EDICT(PROG_TO_EDICT(val->edict)));
+		snprintf(line, sizeof(line), "%li", NUM_FOR_EDICT(PROG_TO_EDICT(val->edict)));
 		break;
 
 	case ev_function:

@@ -14,6 +14,9 @@
  * General Public License for more details.
  */
 
+#include <cstdarg>
+#include <csetjmp>
+
 #include "quakedef.h"
 #include "glquake.h"
 
@@ -563,7 +566,7 @@ void Host_GetConsoleCommands(void)
 {
 	char *cmd;
 
-	while (1)
+	while (true)
 	{
 		cmd = Sys_ConsoleInput();
 		if (!cmd)
@@ -712,8 +715,6 @@ void Host_InitLocal(void)
 	Host_InitDeQuake();	// JPG 1.05 - initialize dequake array
 }
 
-
-
 //============================================================================
 
 extern FILE *vcrFile;
@@ -847,12 +848,8 @@ void Host_Init(quakeparms_t *parms)
 }
 
 /*
- ===============
- Host_Shutdown
-
- FIXME: this is a callback from Sys_Quit and Sys_Error.  It would be better
- to run quit through here before the final handoff to the sys code.
- ===============
+ * FIXME: this is a callback from Sys_Quit and Sys_Error.  It would be better
+ * to run quit through here before the final handoff to the sys code.
  */
 void Host_Shutdown(void)
 {

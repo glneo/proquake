@@ -17,8 +17,8 @@
 #ifndef __COMMON_H
 #define __COMMON_H
 
-#include <stdbool.h>
-#include <string.h>
+#include <cstdbool>
+#include <cstring>
 
 typedef unsigned char byte;
 
