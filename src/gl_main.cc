@@ -117,9 +117,12 @@ void R_Clear(void)
 
 static void Q_glFrustumf(GLfloat left, GLfloat right, GLfloat bottom, GLfloat top, GLfloat zNear, GLfloat zFar)
 {
-	GLfloat matrix[] = { (2.0f * zNear) / (right - left), 0.0f, 0.0f, 0.0f, 0.0f, (2.0f * zNear) / (top - bottom), 0.0f, 0.0f, (right + left)
-			/ (right - left), (top + bottom) / (top - bottom), -(zFar + zNear) / (zFar - zNear), -1.0f, 0.0f, 0.0f, -(2 * zFar * zNear)
-			/ (zFar - zNear), 0.0f, };
+	GLfloat matrix[] = {
+		(2.0f * zNear) / (right - left), 0.0f, 0.0f, 0.0f,
+		0.0f, (2.0f * zNear) / (top - bottom), 0.0f, 0.0f,
+		(right + left) / (right - left), (top + bottom) / (top - bottom), -(zFar + zNear) / (zFar - zNear), -1.0f,
+		0.0f, 0.0f, -(2 * zFar * zNear) / (zFar - zNear), 0.0f,
+	};
 
 	glMultMatrixf(matrix);
 }
@@ -157,8 +160,8 @@ void GL_Setup(void)
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
 
-	glRotatef(-90, 1, 0, 0);	    // put Z going up
-	glRotatef(90, 0, 0, 1);	    // put Z going up
+	glRotatef(-90, 1, 0, 0); // put Z going up
+	glRotatef(90, 0, 0, 1); // put Z going up
 
 	glRotatef(-r_refdef.viewangles[2], 1, 0, 0);
 	glRotatef(-r_refdef.viewangles[0], 0, 1, 0);

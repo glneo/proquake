@@ -490,51 +490,51 @@ void Draw_SetCanvas(canvastype newcanvas)
 	switch (newcanvas)
 	{
 	case CANVAS_DEFAULT:
-		Q_glOrthof(0, vid.width, vid.height, 0, -99999, 99999);
+		Q_glOrthof(0, vid.width, vid.height, 0, -1.0f, 1.0f);
 		glViewport(vid.x, vid.y, vid.width, vid.height);
 		break;
 	case CANVAS_CONSOLE:
 		lines = vid.conheight - (scr_con_current * vid.conheight / vid.height);
-		Q_glOrthof(0, vid.conwidth, vid.conheight + lines, lines, -99999, 99999);
+		Q_glOrthof(0, vid.conwidth, vid.conheight + lines, lines, -1.0f, 1.0f);
 		glViewport(vid.x, vid.y, vid.width, vid.height);
 		break;
 	case CANVAS_MENU:
 		s = min((float )vid.width / 320.0, (float )vid.height / 200.0);
 		s = CLAMP(1.0, scr_menuscale.value, s);
 		// ericw -- doubled width to 640 to accommodate long keybindings
-		Q_glOrthof(0, 640, 200, 0, -99999, 99999);
+		Q_glOrthof(0, 640, 200, 0, -1.0f, 1.0f);
 		glViewport(vid.x + (vid.width - 320 * s) / 2, vid.y + (vid.height - 200 * s) / 2, 640 * s, 200 * s);
 		break;
 	case CANVAS_SBAR:
 		s = CLAMP(1.0, scr_sbarscale.value, (float )vid.width / 320.0);
 		if (cl.gametype == GAME_DEATHMATCH)
 		{
-			Q_glOrthof(0, vid.width / s, 48, 0, -99999, 99999);
+			Q_glOrthof(0, vid.width / s, 48, 0, -1.0f, 1.0f);
 			glViewport(vid.x, vid.y, vid.width, 48 * s);
 		}
 		else
 		{
-			Q_glOrthof(0, 320, 48, 0, -99999, 99999);
+			Q_glOrthof(0, 320, 48, 0, -1.0f, 1.0f);
 			glViewport(vid.x + (vid.width - 320 * s) / 2, vid.y, 320 * s, 48 * s);
 		}
 		break;
 //	case CANVAS_WARPIMAGE:
-//		glOrtho (0, 128, 0, 128, -99999, 99999);
+//		glOrtho (0, 128, 0, 128, -1.0f, 1.0f);
 //		glViewport (vid.x, vid.y+vid.height-gl_warpimagesize, gl_warpimagesize, gl_warpimagesize);
 //		break;
 	case CANVAS_CROSSHAIR: //0,0 is center of viewport
 		s = CLAMP(1.0, scr_crosshairscale.value, 10.0);
-		Q_glOrthof(scr_vrect.width / -2 / s, scr_vrect.width / 2 / s, scr_vrect.height / 2 / s, scr_vrect.height / -2 / s, -99999, 99999);
+		Q_glOrthof(scr_vrect.width / -2 / s, scr_vrect.width / 2 / s, scr_vrect.height / 2 / s, scr_vrect.height / -2 / s, -1.0f, 1.0f);
 		glViewport(scr_vrect.x, vid.height - scr_vrect.y - scr_vrect.height, scr_vrect.width & ~1, scr_vrect.height & ~1);
 		break;
 	case CANVAS_BOTTOMLEFT: //used by devstats
 		s = (float) vid.width / vid.conwidth; //use console scale
-		Q_glOrthof(0, 320, 200, 0, -99999, 99999);
+		Q_glOrthof(0, 320, 200, 0, -1.0f, 1.0f);
 		glViewport(vid.x, vid.y, 320 * s, 200 * s);
 		break;
 	case CANVAS_BOTTOMRIGHT: //used by fps/clock
 		s = (float) vid.width / vid.conwidth; //use console scale
-		Q_glOrthof(0, 320, 200, 0, -99999, 99999);
+		Q_glOrthof(0, 320, 200, 0, -1.0f, 1.0f);
 		glViewport(vid.x + vid.width - 320 * s, vid.y, 320 * s, 200 * s);
 		break;
 	default:

@@ -760,7 +760,7 @@ void Con_DWarning(const char *fmt, ...)
 	char msg[MAXPRINTMSG];
 
 	if (!developer.value)
-		return;			// don't confuse non-developers with techie stuff...
+		return; // don't confuse non-developers with techie stuff...
 
 	va_start(argptr, fmt);
 	vsnprintf(msg, sizeof(msg), fmt, argptr);

@@ -76,8 +76,6 @@ cvar_t temp1 = { "temp1", "0" };
 
 void Host_WriteConfig_f(void);
 
-cvar_t proquake = { "proquake", "L33T" }; // JPG - added this
-
 // JPG - spam protection.  If a client's msg's/second exceeds spam rate
 // for an extended period of time, the client is spamming.  Clients are
 // allowed a temporary grace of pq_spam_grace messages.  Once used up,
@@ -698,7 +696,6 @@ void Host_InitLocal(void)
 
 	Cmd_AddCommand("writeconfig", Host_WriteConfig_f);	// by joe
 
-	Cvar_RegisterVariable(&proquake);		// JPG - added this so QuakeC can find it
 	Cvar_RegisterVariable(&pq_spam_rate);	// JPG - spam protection
 	Cvar_RegisterVariable(&pq_spam_grace);	// JPG - spam protection
 	Cvar_RegisterVariable(&pq_connectmute);	// Baker 3.99g: from Rook, protection against repeatedly connecting + spamming
