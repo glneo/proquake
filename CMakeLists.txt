@@ -10,6 +10,7 @@ set(PROQUAKE_SOURCES
 	src/host_cmd.cc
 	src/keys.cc
 	src/mathlib.cc
+	src/matrix.cc
 	src/zone.cc
 	src/wad.cc
 	src/sys_sdl.cc

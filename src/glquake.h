@@ -69,7 +69,6 @@ extern cvar_t r_interpolate_weapon;
 
 // gl rendering cvars and stuff
 extern cvar_t gl_clear;
-extern cvar_t gl_cull;
 extern cvar_t gl_smoothmodels;
 extern cvar_t gl_affinemodels;
 extern cvar_t gl_polyblend;
@@ -129,7 +128,7 @@ int R_LightPoint(vec3_t p);
 void GL_BuildLightmaps(void);
 
 // gl_main.c
-void GL_RotateForEntity(entity_t *ent);
+void GL_RotateForEntity(entity_t *ent, Q_Matrix &matrix);
 void GL_PolyBlend(void);
 bool R_CullBox(vec3_t mins, vec3_t maxs);
 bool R_CullForEntity(const entity_t *ent);

@@ -252,11 +252,17 @@ void R_DrawBrushModel(entity_t *ent)
 		}
 	}
 
-	glPushMatrix();
+	GLfloat old_matrix[16];
+	glGetFloatv(GL_MODELVIEW_MATRIX, old_matrix);
 
-	ent->angles[0] = -ent->angles[0];	// stupid quake bug
-	GL_RotateForEntity(ent);
-	ent->angles[0] = -ent->angles[0];	// stupid quake bug
+	GLfloat matrix[16];
+	glGetFloatv(GL_MODELVIEW_MATRIX, matrix);
+	Q_Matrix modelViewMatrix;
+	modelViewMatrix.set(matrix);
+
+	GL_RotateForEntity(ent, modelViewMatrix);
+
+	glLoadMatrixf(modelViewMatrix.get());
 
 	// draw texture
 	msurface_t *psurf = &clmodel->brushmodel->surfaces[clmodel->brushmodel->firstmodelsurface];
@@ -276,5 +282,5 @@ void R_DrawBrushModel(entity_t *ent)
 
 	R_BlendLightmaps();
 
-	glPopMatrix();
+	glLoadMatrixf(old_matrix);
 }

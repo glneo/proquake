@@ -181,8 +181,19 @@ void R_DrawAliasModel(entity_t *ent)
 
 	// draw all the triangles
 
-	glPushMatrix();
-	GL_RotateForEntity(ent);
+	GLfloat old_matrix[16];
+	glGetFloatv(GL_MODELVIEW_MATRIX, old_matrix);
+
+	GLfloat matrix[16];
+	glGetFloatv(GL_MODELVIEW_MATRIX, matrix);
+	Q_Matrix modelViewMatrix;
+	modelViewMatrix.set(matrix);
+
+	ent->angles[0] = -ent->angles[0];	// stupid quake bug
+	GL_RotateForEntity(ent, modelViewMatrix);
+	ent->angles[0] = -ent->angles[0];	// stupid quake bug
+
+	glLoadMatrixf(modelViewMatrix.get());
 
 	int anim = (int) (cl.time * 10) & 3;
 	if ((ent->skinnum < 0) ||
@@ -231,7 +242,7 @@ void R_DrawAliasModel(entity_t *ent)
 	if (r_shadows.value && !(ent->model->flags & MOD_NOSHADOW))
 		GL_DrawAliasShadow(ent, aliasmodel, pose);
 
-	glPopMatrix();
+	glLoadMatrixf(old_matrix);
 
 	if (ent == &cl.viewent)
 	{

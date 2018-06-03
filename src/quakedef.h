@@ -161,6 +161,7 @@
 #include "sys.h"
 #include "zone.h"
 #include "mathlib.h"
+#include "matrix.h"
 #include "wad.h"
 #include "cvar.h"
 #include "host.h"
