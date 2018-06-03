@@ -167,12 +167,6 @@ void GL_Setup(void)
 	glRotatef(-r_refdef.viewangles[0], 0, 1, 0);
 	glRotatef(-r_refdef.viewangles[1], 0, 0, 1);
 	glTranslatef(-r_refdef.vieworg[0], -r_refdef.vieworg[1], -r_refdef.vieworg[2]);
-
-	// set drawing parms
-	if (gl_cull.value)
-		glEnable(GL_CULL_FACE);
-	else
-		glDisable(GL_CULL_FACE);
 }
 
 /* Translates a skin texture by the per-player color lookup */
@@ -314,8 +308,8 @@ void GL_EndRendering(void)
 /* the stuff from GL_Init that needs to be done every time a new GL render context is created */
 static void GL_SetupState(void)
 {
+	// set clear color to gray
 	glClearColor(0.15, 0.15, 0.15, 0);
-	glCullFace(GL_FRONT);
 
 	glEnable(GL_ALPHA_TEST);
 	glAlphaFunc(GL_GREATER, 0.1);
@@ -338,6 +332,14 @@ static void GL_SetupState(void)
 	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
 }
 
+static void gl_cull_callback(struct cvar_s *cvar)
+{
+	if (gl_cull.value)
+		glEnable(GL_CULL_FACE);
+	else
+		glDisable(GL_CULL_FACE);
+}
+
 void GL_Init(void)
 {
 	Cmd_AddCommand("gl_info", GL_Info_f);
@@ -352,6 +354,8 @@ void GL_Init(void)
 	Cvar_RegisterVariable(&gl_overbright);
 	Cvar_RegisterVariable(&gl_nearwater_fix);
 	Cvar_RegisterVariable(&gl_fadescreen_alpha);
+
+	Cvar_SetCallback(&gl_cull, gl_cull_callback);
 
 	gl_vendor = (const char *) glGetString(GL_VENDOR);
 	gl_renderer = (const char *) glGetString(GL_RENDERER);

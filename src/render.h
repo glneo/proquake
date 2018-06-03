@@ -133,7 +133,6 @@ void R_ViewChanged(vrect_t *pvrect, int lineadj, float aspect); // called whenev
 
 void R_InitSky(struct texture_s *mt);	// called at level load
 
-
 void R_NewMap(void);
 
 // particles
