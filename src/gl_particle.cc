@@ -12,6 +12,8 @@
  * General Public License for more details.
  */
 
+#include <GLES2/gl2.h>
+
 #include "quakedef.h"
 #include "glquake.h"
 
@@ -25,8 +27,19 @@ void GL_DrawParticles(void)
 	VectorScale(vup, 1.5, up);
 	VectorScale(vright, 1.5, right);
 
+// setup
+	glUseProgram(r_brush_program);
+
+	glEnableVertexAttribArray(brushTexCoordsAttrIndex);
+	glEnableVertexAttribArray(brushVertexAttrIndex);
+
+// set uniforms
+	glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, projectionMatrix.get());
+	glUniformMatrix4fv(modelViewLoc, 1, GL_FALSE, modelViewMatrix.get());
+	glUniform1i(texLoc, 0);
+
 	GL_Bind(particletexture);
-	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+//	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
 
 	GLfloat texts[] = {
 		0, 0,
@@ -36,8 +49,8 @@ void GL_DrawParticles(void)
 
 	GLfloat verts[3*3];
 
-	glTexCoordPointer(2, GL_FLOAT, 0, texts);
-	glVertexPointer(3, GL_FLOAT, 0, verts);
+	glVertexAttribPointer(brushTexCoordsAttrIndex, 2, GL_FLOAT, GL_FALSE, 0, texts);
+	glVertexAttribPointer(brushVertexAttrIndex, 3, GL_FLOAT, GL_FALSE, 0, verts);
 
 	for (particle_t *p = active_particles; p; p = p->next)
 	{
@@ -55,7 +68,7 @@ void GL_DrawParticles(void)
 		else
 			scale = 1 + scale * 0.004;
 
-		glColor4ub(p_red, p_green, p_blue, p_alpha);
+		glUniform4f(colorLoc, p_red / 255.0f, p_green / 255.0f, p_blue / 255.0f, p_alpha / 255.0f);
 		verts[0] = p->org[0];
 		verts[1] = p->org[1];
 		verts[2] = p->org[2];
@@ -68,8 +81,14 @@ void GL_DrawParticles(void)
 		glDrawArrays(GL_TRIANGLES, 0, 3);
 	}
 
-	glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
-	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+	glUniform4f(colorLoc, 1.0f, 1.0f, 1.0f, 1.0f);
+//	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+
+	// clean up
+	glDisableVertexAttribArray(brushTexCoordsAttrIndex);
+	glDisableVertexAttribArray(brushVertexAttrIndex);
+
+	glUseProgram(0);
 }
 
 static byte dottexture[8][8] =

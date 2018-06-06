@@ -14,9 +14,17 @@
  * General Public License for more details.
  */
 
+#include <GLES2/gl2.h>
+
 #include "quakedef.h"
 #include "glquake.h"
 #include "model.h"
+
+#include "brush.fs.h"
+#include "brush.vs.h"
+
+#define	BLOCK_WIDTH     128
+#define	BLOCK_HEIGHT    128
 
 #define	MAX_LIGHTMAPS   128
 extern gltexture_t *lightmap_textures[MAX_LIGHTMAPS];
@@ -26,17 +34,29 @@ typedef struct glRect_s
 	unsigned char l, t, w, h;
 } glRect_t;
 
+GLuint r_brush_program;
+
+GLuint texLoc;
+GLuint colorLoc;
+
+// uniforms used in vertex shader
+GLuint projectionLoc;
+GLuint modelViewLoc;
+
+GLuint brushVertexAttrIndex;
+GLuint brushTexCoordsAttrIndex;
+
 static void GL_DrawPoly(glpoly_t *p)
 {
-	glTexCoordPointer(2, GL_FLOAT, 0, &p->tex[0]);
-	glVertexPointer(3, GL_FLOAT, 0, &p->verts[0][0]);
+	glVertexAttribPointer(brushTexCoordsAttrIndex, 2, GL_FLOAT, GL_FALSE, 0, &p->tex[0]);
+	glVertexAttribPointer(brushVertexAttrIndex, 3, GL_FLOAT, GL_FALSE, 0, &p->verts[0][0]);
 	glDrawArrays(GL_TRIANGLE_FAN, 0, p->numverts);
 }
 
 static void GL_DrawPolyLight(glpoly_t *p)
 {
-	glTexCoordPointer(2, GL_FLOAT, 0, &p->light_tex[0]);
-	glVertexPointer(3, GL_FLOAT, 0, &p->verts[0][0]);
+	glVertexAttribPointer(brushTexCoordsAttrIndex, 2, GL_FLOAT, GL_FALSE, 0, &p->light_tex[0]);
+	glVertexAttribPointer(brushVertexAttrIndex, 3, GL_FLOAT, GL_FALSE, 0, &p->verts[0][0]);
 	glDrawArrays(GL_TRIANGLE_FAN, 0, p->numverts);
 }
 
@@ -78,8 +98,8 @@ static void GL_DrawWaterPoly(glpoly_t *p)
 		verts[i][2] = v[2];
 	}
 
-	glTexCoordPointer(2, GL_FLOAT, 0, &p->tex[0]);
-	glVertexPointer(3, GL_FLOAT, 0, &verts[0][0]);
+	glVertexAttribPointer(brushTexCoordsAttrIndex, 2, GL_FLOAT, GL_FALSE, 0, &p->tex[0]);
+	glVertexAttribPointer(brushVertexAttrIndex, 3, GL_FLOAT, GL_FALSE, 0, &verts[0][0]);
 	glDrawArrays(GL_TRIANGLE_FAN, 0, p->numverts);
 }
 
@@ -96,8 +116,8 @@ static void GL_DrawWaterPolyLight(glpoly_t *p)
 		verts[i][2] = v[2];
 	}
 
-	glTexCoordPointer(2, GL_FLOAT, 0, &p->light_tex[0]);
-	glVertexPointer(3, GL_FLOAT, 0, &verts[0][0]);
+	glVertexAttribPointer(brushTexCoordsAttrIndex, 2, GL_FLOAT, GL_FALSE, 0, &p->light_tex[0]);
+	glVertexAttribPointer(brushVertexAttrIndex, 3, GL_FLOAT, GL_FALSE, 0, &verts[0][0]);
 	glDrawArrays(GL_TRIANGLE_FAN, 0, p->numverts);
 }
 
@@ -151,8 +171,8 @@ static void R_DrawWaterSurfaces(brush_model_t *brushmodel)
 
 	if (r_wateralpha.value < 1.0)
 	{
-		glColor4f(1.0f, 1.0f, 1.0f, r_wateralpha.value);
-		glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+		glUniform4f(colorLoc, 1.0f, 1.0f, 1.0f, r_wateralpha.value);
+//		glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
 	}
 
 	for (i = 0; i < brushmodel->numtextures; i++)
@@ -176,8 +196,8 @@ static void R_DrawWaterSurfaces(brush_model_t *brushmodel)
 
 	if (r_wateralpha.value < 1.0)
 	{
-		glDepthMask(GL_TRUE);
-		glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+//		glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+		glUniform4f(colorLoc, 1.0f, 1.0f, 1.0f, 1.0f);
 	}
 }
 
@@ -186,6 +206,17 @@ void R_DrawSurfaces(brush_model_t *brushmodel)
 	int i;
 	msurface_t *s;
 	texture_t *t;
+
+// setup
+	glUseProgram(r_brush_program);
+
+	glEnableVertexAttribArray(brushTexCoordsAttrIndex);
+	glEnableVertexAttribArray(brushVertexAttrIndex);
+
+// set uniforms
+	glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, projectionMatrix.get());
+	glUniformMatrix4fv(modelViewLoc, 1, GL_FALSE, modelViewMatrix.get());
+	glUniform1i(texLoc, 0);
 
 	for (i = 0; i < brushmodel->numtextures; i++)
 	{
@@ -211,6 +242,12 @@ void R_DrawSurfaces(brush_model_t *brushmodel)
 	}
 
 	R_DrawWaterSurfaces(brushmodel);
+
+	// clean up
+	glDisableVertexAttribArray(brushTexCoordsAttrIndex);
+	glDisableVertexAttribArray(brushVertexAttrIndex);
+
+	glUseProgram(0);
 }
 
 void R_DrawBrushModel(entity_t *ent)
@@ -265,17 +302,24 @@ void R_DrawBrushModel(entity_t *ent)
 		}
 	}
 
-	GLfloat old_matrix[16];
-	glGetFloatv(GL_MODELVIEW_MATRIX, old_matrix);
-
-	GLfloat matrix[16];
-	glGetFloatv(GL_MODELVIEW_MATRIX, matrix);
-	Q_Matrix modelViewMatrix;
-	modelViewMatrix.set(matrix);
+	// Push
+	GLfloat mv_matrix[16];
+	GLfloat p_matrix[16];
+	memcpy(mv_matrix, modelViewMatrix.get(), sizeof(mv_matrix));
+	memcpy(p_matrix, projectionMatrix.get(), sizeof(p_matrix));
 
 	GL_RotateForEntity(ent, modelViewMatrix);
 
-	glLoadMatrixf(modelViewMatrix.get());
+// setup
+	glUseProgram(r_brush_program);
+
+	glEnableVertexAttribArray(brushTexCoordsAttrIndex);
+	glEnableVertexAttribArray(brushVertexAttrIndex);
+
+// set uniforms
+	glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, projectionMatrix.get());
+	glUniformMatrix4fv(modelViewLoc, 1, GL_FALSE, modelViewMatrix.get());
+	glUniform1i(texLoc, 0);
 
 	// draw texture
 	msurface_t *psurf = &clmodel->brushmodel->surfaces[clmodel->brushmodel->firstmodelsurface];
@@ -293,5 +337,32 @@ void R_DrawBrushModel(entity_t *ent)
 		}
 	}
 
-	glLoadMatrixf(old_matrix);
+//	R_BlendLightmaps();
+
+	// Pop
+	modelViewMatrix.set(mv_matrix);
+	projectionMatrix.set(p_matrix);
+
+	// clean up
+	glDisableVertexAttribArray(brushTexCoordsAttrIndex);
+	glDisableVertexAttribArray(brushVertexAttrIndex);
+
+	glUseProgram(0);
+}
+
+void GL_CreateBrushShaders(void)
+{
+	// generate program
+	r_brush_program = LoadShader((const char *)brush_vs, brush_vs_len,
+	                             (const char *)brush_fs, brush_fs_len);
+
+	// get attribute locations
+	brushTexCoordsAttrIndex = GL_GetAttribLocation(r_brush_program, "TexCoords");
+	brushVertexAttrIndex = GL_GetAttribLocation(r_brush_program, "Vert");
+
+	// get uniform locations
+	texLoc = GL_GetUniformLocation(r_brush_program, "Tex");
+	colorLoc = GL_GetUniformLocation(r_brush_program, "Color");
+	projectionLoc = GL_GetUniformLocation(r_brush_program, "projection");
+	modelViewLoc = GL_GetUniformLocation(r_brush_program, "modelView");
 }

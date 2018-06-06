@@ -12,6 +12,8 @@
  * General Public License for more details.
  */
 
+#include <GLES2/gl2.h>
+
 #include "quakedef.h"
 #include "glquake.h"
 
@@ -230,22 +232,42 @@ static void Character(int x, int y, int num, float alpha)
 			    (GLfloat)x,     (GLfloat)y + 8,
 	};
 
+// setup
+	glUseProgram(r_brush_program);
+
 	alpha = CLAMP(0, alpha, 1.0f);
 	if (alpha < 1.0f)
 	{
-		glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
-		glColor4f(1.0f, 1.0f, 1.0f, alpha);
+//		glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+		glUniform4f(colorLoc, 1.0f, 1.0f, 1.0f, alpha);
 	}
 
-	glTexCoordPointer(2, GL_FLOAT, 0, texts);
-	glVertexPointer(2, GL_FLOAT, 0, verts);
+	glEnableVertexAttribArray(brushTexCoordsAttrIndex);
+	glEnableVertexAttribArray(brushVertexAttrIndex);
+
+// set uniforms
+	glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, projectionMatrix.get());
+	glUniformMatrix4fv(modelViewLoc, 1, GL_FALSE, modelViewMatrix.get());
+	glUniform1i(texLoc, 0);
+
+// set attributes
+	glVertexAttribPointer(brushTexCoordsAttrIndex, 2, GL_FLOAT, GL_FALSE, 0, texts);
+	glVertexAttribPointer(brushVertexAttrIndex, 2, GL_FLOAT, GL_FALSE, 0, verts);
+
+// draw
 	glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 
 	if (alpha < 1.0f)
 	{
-		glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
-		glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+		glUniform4f(colorLoc, 1.0f, 1.0f, 1.0f, 1.0f);
+//		glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
 	}
+
+	// clean up
+	glDisableVertexAttribArray(brushTexCoordsAttrIndex);
+	glDisableVertexAttribArray(brushVertexAttrIndex);
+
+	glUseProgram(0);
 }
 
 /*
@@ -295,22 +317,42 @@ void Draw_Pic(int x, int y, qpic_t *pic, float alpha)
 		(GLfloat)x,              (GLfloat)y + pic->height,
 	};
 
+// setup
+	glUseProgram(r_brush_program);
+
 	alpha = CLAMP(0, alpha, 1.0f);
 	if (alpha < 1.0f)
 	{
-		glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
-		glColor4f(1.0f, 1.0f, 1.0f, alpha);
+//		glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+		glUniform4f(colorLoc, 1.0f, 1.0f, 1.0f, alpha);
 	}
 
-	glTexCoordPointer(2, GL_FLOAT, 0, texts);
-	glVertexPointer(2, GL_FLOAT, 0, verts);
+	glEnableVertexAttribArray(brushTexCoordsAttrIndex);
+	glEnableVertexAttribArray(brushVertexAttrIndex);
+
+// set uniforms
+	glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, projectionMatrix.get());
+	glUniformMatrix4fv(modelViewLoc, 1, GL_FALSE, modelViewMatrix.get());
+	glUniform1i(texLoc, 0);
+
+// set attributes
+	glVertexAttribPointer(brushTexCoordsAttrIndex, 2, GL_FLOAT, GL_FALSE, 0, texts);
+	glVertexAttribPointer(brushVertexAttrIndex, 2, GL_FLOAT, GL_FALSE, 0, verts);
+
+// draw
 	glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+
+// clean up
+	glDisableVertexAttribArray(brushTexCoordsAttrIndex);
+	glDisableVertexAttribArray(brushVertexAttrIndex);
 
 	if (alpha < 1.0f)
 	{
-		glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
-		glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+		glUniform4f(colorLoc, 1.0f, 1.0f, 1.0f, 1.0f);
+//		glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
 	}
+
+	glUseProgram(0);
 }
 
 void Draw_TransPic(int x, int y, qpic_t *pic, float alpha)
@@ -391,9 +433,29 @@ void Draw_PicTile(int x, int y, int w, int h, qpic_t *pic, float alpha)
 		(GLfloat)x,     (GLfloat)y + h,
 	};
 
-	glTexCoordPointer(2, GL_FLOAT, 0, texts);
-	glVertexPointer(2, GL_FLOAT, 0, verts);
+// setup
+	glUseProgram(r_brush_program);
+
+	glEnableVertexAttribArray(brushTexCoordsAttrIndex);
+	glEnableVertexAttribArray(brushVertexAttrIndex);
+
+// set uniforms
+	glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, projectionMatrix.get());
+	glUniformMatrix4fv(modelViewLoc, 1, GL_FALSE, modelViewMatrix.get());
+	glUniform1i(texLoc, 0);
+
+// set attributes
+	glVertexAttribPointer(brushTexCoordsAttrIndex, 2, GL_FLOAT, GL_FALSE, 0, texts);
+	glVertexAttribPointer(brushVertexAttrIndex, 2, GL_FLOAT, GL_FALSE, 0, verts);
+
+// draw
 	glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+
+// clean up
+	glDisableVertexAttribArray(brushTexCoordsAttrIndex);
+	glDisableVertexAttribArray(brushVertexAttrIndex);
+
+	glUseProgram(0);
 }
 
 /* Fills a box of pixels with a single color */
@@ -402,11 +464,15 @@ void Draw_Fill(int x, int y, int w, int h, int c, float alpha)
 	byte *pal = (byte *) d_8to24table;
 	alpha = CLAMP(0, alpha, 1.0f);
 
-	glDisable(GL_TEXTURE_2D);
-	glColor4f(pal[c * 4] / 255.0,
-		  pal[c * 4 + 1] / 255.0,
-		  pal[c * 4 + 2] / 255.0,
-		  alpha);
+//	glDisable(GL_TEXTURE_2D);
+
+// setup
+	glUseProgram(r_brush_program);
+
+	glUniform4f(colorLoc, pal[c * 4] / 255.0,
+	                      pal[c * 4 + 1] / 255.0,
+	                      pal[c * 4 + 2] / 255.0,
+	                      alpha);
 
 	GLfloat verts[] = {
 		(GLfloat)x,     (GLfloat)y,
@@ -415,15 +481,27 @@ void Draw_Fill(int x, int y, int w, int h, int c, float alpha)
 		(GLfloat)x,     (GLfloat)y + h,
 	};
 
-	glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+	glEnableVertexAttribArray(brushVertexAttrIndex);
 
-	glVertexPointer(2, GL_FLOAT, 0, verts);
+// set uniforms
+	glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, projectionMatrix.get());
+	glUniformMatrix4fv(modelViewLoc, 1, GL_FALSE, modelViewMatrix.get());
+	glUniform1i(texLoc, 0);
+
+// set attributes
+	glVertexAttribPointer(brushVertexAttrIndex, 2, GL_FLOAT, GL_FALSE, 0, verts);
+
+// draw
 	glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 
-	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+// clean up
+	glDisableVertexAttribArray(brushVertexAttrIndex);
 
-	glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
-	glEnable(GL_TEXTURE_2D);
+	glUniform4f(colorLoc, 1.0f, 1.0f, 1.0f, 1.0f);
+
+	glUseProgram(0);
+
+//	glEnable(GL_TEXTURE_2D);
 }
 
 //=============================================================================
@@ -436,7 +514,8 @@ void Draw_SetCanvas(canvastype newcanvas)
 	if (newcanvas == currentcanvas)
 		return;
 
-	Q_Matrix projectionMatrix;
+	projectionMatrix.identity();
+	modelViewMatrix.identity();
 
 	switch (newcanvas)
 	{
@@ -491,13 +570,6 @@ void Draw_SetCanvas(canvastype newcanvas)
 	default:
 		Sys_Error("bad canvas type");
 	}
-
-	glMatrixMode(GL_PROJECTION);
-	glLoadMatrixf(projectionMatrix.get());
-
-	Q_Matrix modelViewMatrix;
-	glMatrixMode(GL_MODELVIEW);
-	glLoadMatrixf(modelViewMatrix.get());
 
 	currentcanvas = newcanvas;
 }

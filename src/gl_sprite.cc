@@ -14,6 +14,8 @@
  * General Public License for more details.
  */
 
+#include <GLES2/gl2.h>
+
 #include "quakedef.h"
 #include "glquake.h"
 #include "model.h"
@@ -111,7 +113,27 @@ void R_DrawSpriteModel(entity_t *ent)
 	VectorMA(point, frame->right, right, point);
 	verts[9] = point[0]; verts[10] = point[1]; verts[11] = point[2];
 
-	glTexCoordPointer(2, GL_FLOAT, 0, texts);
-	glVertexPointer(3, GL_FLOAT, 0, verts);
+// setup
+	glUseProgram(r_brush_program);
+
+	glEnableVertexAttribArray(brushTexCoordsAttrIndex);
+	glEnableVertexAttribArray(brushVertexAttrIndex);
+
+// set uniforms
+	glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, projectionMatrix.get());
+	glUniformMatrix4fv(modelViewLoc, 1, GL_FALSE, modelViewMatrix.get());
+	glUniform1i(texLoc, 0);
+
+// set attributes
+	glVertexAttribPointer(brushTexCoordsAttrIndex, 2, GL_FLOAT, GL_FALSE, 0, texts);
+	glVertexAttribPointer(brushVertexAttrIndex, 3, GL_FLOAT, GL_FALSE, 0, verts);
+
+// draw
 	glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+
+// clean up
+	glDisableVertexAttribArray(brushTexCoordsAttrIndex);
+	glDisableVertexAttribArray(brushVertexAttrIndex);
+
+	glUseProgram(0);
 }

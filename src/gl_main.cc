@@ -24,7 +24,10 @@ static char *gl_extensions_nice;
 bool gl_swap_control = false;
 bool gl_anisotropy_able = false;
 bool gl_texture_NPOT = false;
-float gl_max_anisotropy;
+float gl_max_anisotropy = 1.0f;
+
+Q_Matrix modelViewMatrix;
+Q_Matrix projectionMatrix;
 
 cvar_t gl_farclip = { "gl_farclip", "16384", CVAR_ARCHIVE };
 cvar_t gl_nearwater_fix = { "gl_nearwater_fix", "1", CVAR_ARCHIVE };
@@ -50,39 +53,63 @@ void GL_PolyBlend(void)
 	if (!v_blend[3]) // No blends ... get outta here
 		return;
 
-	if (!gl_polyblend.value)
+// TODO: Re-enable when shader is added
+//	if (!gl_polyblend.value)
 		return;
 
-	glDisable(GL_DEPTH_TEST);
-	glDisable(GL_TEXTURE_2D);
-
-	GLfloat old_matrix[16];
-	glGetFloatv(GL_MODELVIEW_MATRIX, old_matrix);
-
-	Q_Matrix modelViewMatrix;
-	modelViewMatrix.rotateX(-90.0f); // put Z going up
-	modelViewMatrix.rotateZ(90.0f); // put Z going up
-	glMatrixMode(GL_MODELVIEW);
-	glLoadMatrixf(modelViewMatrix.get());
-
-	glColor4f(v_blend[0], v_blend[1], v_blend[2], v_blend[3]);
-
-	GLfloat verts[] = {
-		10,  100,  100,
-		10, -100,  100,
-		10, -100, -100,
-		10,  100, -100,
-	};
-
-	glVertexPointer(3, GL_FLOAT, 0, verts);
-	glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
-
-	glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
-
-	glLoadMatrixf(old_matrix);
-
-	glEnable(GL_TEXTURE_2D);
-	glEnable(GL_DEPTH_TEST);
+//	glDisable(GL_DEPTH_TEST);
+//
+//	// TODO: Add polyblend shader that doesn't sample texture
+//	glDisable(GL_TEXTURE_2D);
+//
+//	// Push
+//	GLfloat mv_matrix[16];
+//	GLfloat p_matrix[16];
+//	memcpy(mv_matrix, modelViewMatrix.get(), sizeof(mv_matrix));
+//	memcpy(p_matrix, projectionMatrix.get(), sizeof(p_matrix));
+//
+//	modelViewMatrix.identity();
+//	modelViewMatrix.rotateX(-90.0f); // put Z going up
+//	modelViewMatrix.rotateZ(90.0f); // put Z going up
+//
+//	glUniform4f(colorLoc, v_blend[0], v_blend[1], v_blend[2], v_blend[3]);
+//
+//	GLfloat verts[] = {
+//		10,  100,  100,
+//		10, -100,  100,
+//		10, -100, -100,
+//		10,  100, -100,
+//	};
+//
+//// setup
+//	glUseProgram(r_brush_program);
+//
+//	glEnableVertexAttribArray(brushVertexAttrIndex);
+//
+//// set uniforms
+//	glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, projectionMatrix.get());
+//	glUniformMatrix4fv(modelViewLoc, 1, GL_FALSE, modelViewMatrix.get());
+//	glUniform1i(texLoc, 0);
+//
+//// set attributes
+//	glVertexAttribPointer(brushVertexAttrIndex, 3, GL_FLOAT, GL_FALSE, 0, verts);
+//
+//// draw
+//	glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+//
+//// clean up
+//	glDisableVertexAttribArray(brushVertexAttrIndex);
+//
+//	glUseProgram(0);
+//
+//	glUniform4f(colorLoc, 1.0f, 1.0f, 1.0f, 1.0f);
+//
+//	glEnable(GL_TEXTURE_2D);
+//	glEnable(GL_DEPTH_TEST);
+//
+//	// Pop
+//	modelViewMatrix.set(mv_matrix);
+//	projectionMatrix.set(p_matrix);
 }
 
 void R_Clear(void)
@@ -109,21 +136,17 @@ void GL_Setup(void)
 	float screenaspect = (float) r_refdef.vrect.width / r_refdef.vrect.height;
 	float farclip = max(gl_farclip.value, 4096.0f);
 	float nearclip = 4.0f;
-	Q_Matrix projectionMatrix;
+	projectionMatrix.identity();
 	projectionMatrix.perspective(r_refdef.fov_y, screenaspect, nearclip, farclip);
-	glMatrixMode(GL_PROJECTION);
-	glLoadMatrixf(projectionMatrix.get());
 
 	// set up modelview matrix
-	Q_Matrix modelViewMatrix;
+	modelViewMatrix.identity();
 	modelViewMatrix.rotateX(-90.0f); // put Z going up
 	modelViewMatrix.rotateZ(90.0f); // put Z going up
 	modelViewMatrix.rotateX(-r_refdef.viewangles[2]);
 	modelViewMatrix.rotateY(-r_refdef.viewangles[0]);
 	modelViewMatrix.rotateZ(-r_refdef.viewangles[1]);
 	modelViewMatrix.translate(-r_refdef.vieworg[0], -r_refdef.vieworg[1], -r_refdef.vieworg[2]);
-	glMatrixMode(GL_MODELVIEW);
-	glLoadMatrixf(modelViewMatrix.get());
 }
 
 /* Translates a skin texture by the per-player color lookup */
@@ -195,46 +218,46 @@ static bool GL_ParseExtensionList(const char *list, const char *name)
 
 static void GL_CheckExtensions(void)
 {
-	// anisotropic filtering
-	if (!GL_ParseExtensionList(gl_extensions, "GL_EXT_texture_filter_anisotropic"))
-	{
-		gl_max_anisotropy = 1;
-		Con_Warning("texture_filter_anisotropic not supported\n");
-	}
-	else
-	{
-		float test1, test2;
-		GLuint tex;
-
-		// test to make sure we really have control over it
-		// 1.0 and 2.0 should always be legal values
-		glGenTextures(1, &tex);
-		glBindTexture(GL_TEXTURE_2D, tex);
-		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, 1.0f);
-		glGetTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, &test1);
-		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, 2.0f);
-		glGetTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, &test2);
-		glDeleteTextures(1, &tex);
-
-		if (test1 != 1 || test2 != 2)
-		{
-			Con_Warning("anisotropic filtering locked by driver. Current driver setting is %f\n", test1);
-		}
-		else
-		{
-			Con_Printf("FOUND: EXT_texture_filter_anisotropic\n");
-			gl_anisotropy_able = true;
-		}
-
-		//get max value either way, so the menu and stuff know it
-		glGetFloatv(GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, &gl_max_anisotropy);
-		if (gl_max_anisotropy < 2)
-		{
-			gl_anisotropy_able = false;
-			gl_max_anisotropy = 1;
-			Con_Warning("anisotropic filtering broken: disabled\n");
-		}
-	}
+//	// anisotropic filtering
+//	if (!GL_ParseExtensionList(gl_extensions, "GL_EXT_texture_filter_anisotropic"))
+//	{
+//		gl_max_anisotropy = 1;
+//		Con_Warning("texture_filter_anisotropic not supported\n");
+//	}
+//	else
+//	{
+//		float test1, test2;
+//		GLuint tex;
+//
+//		// test to make sure we really have control over it
+//		// 1.0 and 2.0 should always be legal values
+//		glGenTextures(1, &tex);
+//		glBindTexture(GL_TEXTURE_2D, tex);
+//		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, 1.0f);
+//		glGetTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, &test1);
+//		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, 2.0f);
+//		glGetTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, &test2);
+//		glDeleteTextures(1, &tex);
+//
+//		if (test1 != 1 || test2 != 2)
+//		{
+//			Con_Warning("anisotropic filtering locked by driver. Current driver setting is %f\n", test1);
+//		}
+//		else
+//		{
+//			Con_Printf("FOUND: EXT_texture_filter_anisotropic\n");
+//			gl_anisotropy_able = true;
+//		}
+//
+//		//get max value either way, so the menu and stuff know it
+//		glGetFloatv(GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, &gl_max_anisotropy);
+//		if (gl_max_anisotropy < 2)
+//		{
+//			gl_anisotropy_able = false;
+//			gl_max_anisotropy = 1;
+//			Con_Warning("anisotropic filtering broken: disabled\n");
+//		}
+//	}
 
 	// texture_non_power_of_two
 	if (COM_CheckParm("-notexturenpot"))
@@ -265,31 +288,41 @@ void GL_EndRendering(void)
 /* the stuff from GL_Init that needs to be done every time a new GL render context is created */
 static void GL_SetupState(void)
 {
+#if 0
+	GLuint abuffer;
+
+	glGenVertexArrays(1, &abuffer);
+	glBindVertexArray(abuffer);
+#endif
+
 	// set clear color to gray
 	glClearColor(0.15, 0.15, 0.15, 0);
 
 	glEnable(GL_CULL_FACE);
 	glCullFace(GL_FRONT);
 
-	glEnable(GL_ALPHA_TEST);
-	glAlphaFunc(GL_GREATER, 0.1);
+//	glEnable(GL_ALPHA_TEST);
+//	glAlphaFunc(GL_GREATER, 0.1);
 
 //	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-	glEnable(GL_TEXTURE_2D);
-	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+//	glEnable(GL_TEXTURE_2D);
+//	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
 
-	glShadeModel(GL_FLAT);
-	glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
+//	glShadeModel(GL_FLAT);
+//	glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
 
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LEQUAL);
 
-	glEnableClientState(GL_VERTEX_ARRAY);
-	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+//	glEnableClientState(GL_VERTEX_ARRAY);
+//	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+
+	GL_CreateAliasShaders();
+	GL_CreateBrushShaders();
 }
 
 void GL_Init(void)

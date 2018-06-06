@@ -14,9 +14,36 @@
  * General Public License for more details.
  */
 
+#include <string>
+
+#include <GLES2/gl2.h>
+
 #include "quakedef.h"
 #include "glquake.h"
 #include "model.h"
+
+#include "alias.fs.h"
+#include "alias.vs.h"
+
+vec3_t shadevector;
+
+static GLuint r_alias_program;
+
+// uniforms used in vert shader
+static GLuint shadevectorLoc;
+static GLuint lightColorLoc;
+
+// uniforms used in frag shader
+static GLuint alias_texLoc;
+static GLuint fullbrightTexLoc;
+static GLuint useFullbrightTexLoc;
+static GLuint useOverbrightLoc;
+static GLuint alias_projectionLoc;
+static GLuint alias_modelViewLoc;
+
+static GLuint vertexAttrIndex;
+static GLuint normalAttrIndex;
+static GLuint texCoordsAttrIndex;
 
 float shadelight, ambientlight;
 
@@ -28,53 +55,39 @@ const float r_avertexnormal_dots[SHADEDOT_QUANT][256] = {
 
 static void GL_DrawAliasFrame(alias_model_t *aliasmodel, int pose, float light, float alpha)
 {
-	if (alpha < 1.0f)
-		glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+// setup
+	glUseProgram(r_alias_program);
 
-	glVertexPointer(3, GL_FLOAT, sizeof(*(aliasmodel->poseverts[0])), &aliasmodel->poseverts[pose]->v);
-//	glNormalPointer(GL_FLOAT, sizeof(*(aliasmodel->poseverts[0])), &aliasmodel->poseverts[pose]->normal);
+	glEnableVertexAttribArray(texCoordsAttrIndex);
+	glEnableVertexAttribArray(vertexAttrIndex);
+	glEnableVertexAttribArray(normalAttrIndex);
 
-	glTexCoordPointer(2, GL_FLOAT, sizeof(*(aliasmodel->stverts[0])), &aliasmodel->stverts[0]->s);
+// set uniforms
+	glUniformMatrix4fv(alias_projectionLoc, 1, GL_FALSE, projectionMatrix.get());
+	glUniformMatrix4fv(alias_modelViewLoc, 1, GL_FALSE, modelViewMatrix.get());
+
+	glUniform3f(shadevectorLoc, shadevector[0], shadevector[1], shadevector[2]);
+	glUniform4f(lightColorLoc, light, light, light, alpha);
+	glUniform1i(alias_texLoc, 0);
+	glUniform1i(fullbrightTexLoc, 1);
+	glUniform1i(useFullbrightTexLoc, 0);
+	glUniform1f(useOverbrightLoc, 0);
+
+// draw
+	glVertexAttribPointer(vertexAttrIndex, 3, GL_FLOAT, GL_FALSE, sizeof(*(aliasmodel->poseverts[0])), &aliasmodel->poseverts[pose]->v);
+	glVertexAttribPointer(normalAttrIndex, 3, GL_FLOAT, GL_FALSE, sizeof(*(aliasmodel->poseverts[0])), &aliasmodel->poseverts[pose]->normal);
+
+	glVertexAttribPointer(texCoordsAttrIndex, 2, GL_FLOAT, GL_FALSE, sizeof(*(aliasmodel->stverts[0])), &aliasmodel->stverts[0]->s);
 	glDrawElements(GL_TRIANGLES, aliasmodel->backstart * 3, GL_UNSIGNED_SHORT, aliasmodel->triangles);
-	glTexCoordPointer(2, GL_FLOAT, sizeof(*(aliasmodel->stverts[1])), &aliasmodel->stverts[1]->s);
+	glVertexAttribPointer(texCoordsAttrIndex, 2, GL_FLOAT, GL_FALSE, sizeof(*(aliasmodel->stverts[1])), &aliasmodel->stverts[1]->s);
 	glDrawElements(GL_TRIANGLES, (aliasmodel->numtris - aliasmodel->backstart) * 3, GL_UNSIGNED_SHORT, (aliasmodel->triangles + aliasmodel->backstart));
 
-	glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
-
-	if (alpha < 1.0f)
-		glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
-}
-
-extern vec3_t lightspot;
-
-static void GL_DrawAliasShadow(entity_t *ent, alias_model_t *aliasmodel, int pose)
-{
-	glDisable(GL_TEXTURE_2D);
-	glColor4f(0.0f, 0.0f, 0.0f, r_shadows.value);
-
-	vec3_t shadevector;
-	float an = ent->angles[1] / 180 * M_PI;
-	shadevector[0] = cos(-an);
-	shadevector[1] = sin(-an);
-	shadevector[2] = 1;
-	VectorNormalize(shadevector);
-
-	float lheight = ent->origin[2] - lightspot[2];
-	float height = -lheight + 1.0;
-
-	vec3_t shadowverts[aliasmodel->numverts];
-	for (int i = 0; i < aliasmodel->numverts; i++)
-	{
-		shadowverts[i][0] = aliasmodel->poseverts[pose][i].v[0] - (shadevector[0] * lheight);
-		shadowverts[i][1] = aliasmodel->poseverts[pose][i].v[1] - (shadevector[1] * lheight);
-		shadowverts[i][2] = height;
-	}
-
-	glVertexPointer(3, GL_FLOAT, sizeof(*shadowverts), shadowverts);
-	glDrawElements(GL_TRIANGLES, aliasmodel->numtris * 3, GL_UNSIGNED_SHORT, aliasmodel->triangles);
-
-	glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
-	glEnable(GL_TEXTURE_2D);
+// clean up
+//	glDisableVertexAttribArray(texCoordsAttrIndex);
+//	glDisableVertexAttribArray(vertexAttrIndex);
+//	glDisableVertexAttribArray(normalAttrIndex);
+//
+//	glUseProgram(0);
 }
 
 static int R_GetAliasPose(entity_t *ent, alias_model_t *aliasmodel)
@@ -159,19 +172,15 @@ void R_DrawAliasModel(entity_t *ent)
 
 	// draw all the triangles
 
-	GLfloat old_matrix[16];
-	glGetFloatv(GL_MODELVIEW_MATRIX, old_matrix);
-
-	GLfloat matrix[16];
-	glGetFloatv(GL_MODELVIEW_MATRIX, matrix);
-	Q_Matrix modelViewMatrix;
-	modelViewMatrix.set(matrix);
+	// Push
+	GLfloat mv_matrix[16];
+	GLfloat p_matrix[16];
+	memcpy(mv_matrix, modelViewMatrix.get(), sizeof(mv_matrix));
+	memcpy(p_matrix, projectionMatrix.get(), sizeof(p_matrix));
 
 	ent->angles[0] = -ent->angles[0];	// stupid quake bug
 	GL_RotateForEntity(ent, modelViewMatrix);
 	ent->angles[0] = -ent->angles[0];	// stupid quake bug
-
-	glLoadMatrixf(modelViewMatrix.get());
 
 	int anim = (int) (cl.time * 10) & 3;
 	if ((ent->skinnum < 0) ||
@@ -201,10 +210,10 @@ void R_DrawAliasModel(entity_t *ent)
 
 	int pose = R_GetAliasPose(ent, aliasmodel);
 
-	if (gl_smoothmodels.value)
-		glShadeModel(GL_SMOOTH);
-	if (gl_affinemodels.value)
-		glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_FASTEST);
+//	if (gl_smoothmodels.value)
+//		glShadeModel(GL_SMOOTH);
+//	if (gl_affinemodels.value)
+//		glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_FASTEST);
 
 	float alpha = 1.0f;
 	if (isViewent && (cl.items & IT_INVISIBILITY))
@@ -213,7 +222,7 @@ void R_DrawAliasModel(entity_t *ent)
 	int quantizedangle = ((int)(ent->angles[1] * (SHADEDOT_QUANT / 360.0))) & (SHADEDOT_QUANT - 1);
 	const float *shadedots = r_avertexnormal_dots[quantizedangle];
 	float light = shadedots[aliasmodel->poseverts[pose]->normalindex] * shadelight;
-	glColor4f(light, light, light, alpha);
+//	glColor4f(light, light, light, alpha);
 
 	GL_DrawAliasFrame(aliasmodel, pose, light, alpha);
 
@@ -222,20 +231,20 @@ void R_DrawAliasModel(entity_t *ent)
 		GL_Bind(fb);
 		glBlendFunc (GL_ONE, GL_ONE);
 		glDepthMask(GL_FALSE);
+
 		GL_DrawAliasFrame(aliasmodel, pose, light, alpha);
+
 		glDepthMask(GL_TRUE);
 		glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	}
 
-	if (gl_affinemodels.value)
-		glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
-	if (gl_smoothmodels.value)
-		glShadeModel(GL_FLAT);
+//	if (gl_affinemodels.value)
+//		glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
+//	if (gl_smoothmodels.value)
+//		glShadeModel(GL_FLAT);
 
-	if (r_shadows.value && !(ent->model->flags & MOD_NOSHADOW))
-		GL_DrawAliasShadow(ent, aliasmodel, pose);
-
-	glLoadMatrixf(old_matrix);
+//	if (r_shadows.value && !(ent->model->flags & MOD_NOSHADOW))
+//		GL_DrawAliasShadow(ent, aliasmodel, pose);
 
 	if (isViewent)
 	{
@@ -245,4 +254,28 @@ void R_DrawAliasModel(entity_t *ent)
 		glDepthRange(0, 1.0);
 #endif
 	}
+
+	// Pop
+	modelViewMatrix.set(mv_matrix);
+	projectionMatrix.set(p_matrix);
+}
+
+void GL_CreateAliasShaders(void)
+{
+	// generate program
+	r_alias_program = LoadShader((const char *)alias_vs, alias_vs_len, (const char *)alias_fs, alias_fs_len);
+
+	texCoordsAttrIndex = GL_GetAttribLocation(r_alias_program, "TexCoords");
+	vertexAttrIndex = GL_GetAttribLocation(r_alias_program, "Vert");
+	normalAttrIndex = GL_GetAttribLocation(r_alias_program, "Normal");
+
+	// get uniform locations
+	shadevectorLoc = GL_GetUniformLocation(r_alias_program, "ShadeVector");
+	lightColorLoc = GL_GetUniformLocation(r_alias_program, "LightColor");
+	alias_texLoc = GL_GetUniformLocation(r_alias_program, "Tex");
+	fullbrightTexLoc = GL_GetUniformLocation(r_alias_program, "FullbrightTex");
+	useFullbrightTexLoc = GL_GetUniformLocation(r_alias_program, "UseFullbrightTex");
+	useOverbrightLoc = GL_GetUniformLocation(r_alias_program, "UseOverbright");
+	alias_projectionLoc = GL_GetUniformLocation(r_alias_program, "projection");
+	alias_modelViewLoc = GL_GetUniformLocation(r_alias_program, "modelView");
 }

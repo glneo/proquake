@@ -53,25 +53,25 @@ void GL_Bind(gltexture_t *texture)
 	}
 }
 
-static void GL_SelectTextureUnit(GLenum target)
-{
-	if (target == currenttarget)
-		return;
-
-	glActiveTexture(target);
-
-	currenttarget = target;
-}
+//static void GL_SelectTextureUnit(GLenum target)
+//{
+//	if (target == currenttarget)
+//		return;
+//
+//	glActiveTexture(target);
+//
+//	currenttarget = target;
+//}
 
 /* selects texture unit 1 */
 void GL_EnableMultitexture(void)
 {
 	if (!mtexenabled)
 	{
-		GL_SelectTextureUnit(GL_TEXTURE1);
-		glClientActiveTexture(GL_TEXTURE1);
-		glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-		glEnable(GL_TEXTURE_2D);
+//		GL_SelectTextureUnit(GL_TEXTURE1);
+//		glClientActiveTexture(GL_TEXTURE1);
+//		glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+//		glEnable(GL_TEXTURE_2D);
 		mtexenabled = true;
 	}
 }
@@ -81,10 +81,10 @@ void GL_DisableMultitexture(void)
 {
 	if (mtexenabled)
 	{
-		glDisable(GL_TEXTURE_2D);
-		glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-		glClientActiveTexture(GL_TEXTURE0);
-		GL_SelectTextureUnit(GL_TEXTURE0);
+//		glDisable(GL_TEXTURE_2D);
+//		glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+//		glClientActiveTexture(GL_TEXTURE0);
+//		GL_SelectTextureUnit(GL_TEXTURE0);
 		mtexenabled = false;
 	}
 }
@@ -159,7 +159,7 @@ static void TexMgr_SetFilterModes(gltexture_t *glt)
 	{
 		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, glmodes[glmode_idx].magfilter);
 		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, glmodes[glmode_idx].minfilter);
-		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, gl_texture_anisotropy.value);
+//		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, gl_texture_anisotropy.value);
 	}
 	else
 	{
@@ -231,7 +231,7 @@ static void TexMgr_Anisotropy_f(cvar_t *var)
 				GL_Bind(glt);
 				glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, glmodes[glmode_idx].magfilter);
 				glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, glmodes[glmode_idx].minfilter);
-				glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, gl_texture_anisotropy.value);
+//				glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, gl_texture_anisotropy.value);
 			}
 		}
 	}

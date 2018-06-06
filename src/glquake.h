@@ -16,9 +16,9 @@
 #define __GLQUAKE_H
 
 #ifdef OPENGLES
-#include <GLES/gl.h>
-#include <GLES/glext.h>
+#include <GLES2/gl2.h>
 #else
+#define GL_GLEXT_PROTOTYPES 1
 #include <GL/gl.h>
 #include <GL/glext.h>
 #endif
@@ -41,6 +41,18 @@ extern int r_framecount;
 extern int c_brush_polys, c_alias_polys;
 
 extern float gldepthmin, gldepthmax;
+
+extern Q_Matrix modelViewMatrix;
+extern Q_Matrix projectionMatrix;
+
+// TODO: make per type shaders
+extern GLuint r_brush_program;
+extern GLuint texLoc;
+extern GLuint colorLoc;
+extern GLuint projectionLoc;
+extern GLuint modelViewLoc;
+extern GLuint brushVertexAttrIndex;
+extern GLuint brushTexCoordsAttrIndex;
 
 // view origin
 extern vec3_t vup;
@@ -101,6 +113,7 @@ typedef enum {
 
 // gl_alias.c
 void R_DrawAliasModel(entity_t *ent);
+void GL_CreateAliasShaders(void);
 
 // gl_draw.c
 void Scrap_Upload(void);
@@ -148,12 +161,19 @@ void R_Clear(void);
 void GL_DrawParticles(void);
 void GL_InitParticleTexture(void);
 
+// gl_shader.c
+GLint GL_GetAttribLocation(GLuint program, const char *name);
+GLint GL_GetUniformLocation(GLuint program, const char *name);
+GLuint LoadShader(const char *vertex_shader, int vertex_shader_len,
+                  const char *fragment_shader, int fragment_shader_len);
+
 // gl_sprite.c
 void R_DrawSpriteModel(entity_t *ent);
 
 // gl_surface.c
 void R_DrawSurfaces(brush_model_t *brushmodel);
 void R_DrawBrushModel(entity_t *ent);
+void GL_CreateBrushShaders(void);
 
 // gl_vidsdl.c
 void VID_Swap(void);

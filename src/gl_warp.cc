@@ -17,6 +17,8 @@
 #include "quakedef.h"
 #include "glquake.h"
 
+#include <GLES2/gl2.h>
+
 int skytexturenum;
 
 gltexture_t *solidskytexture;
@@ -25,6 +27,9 @@ float speedscale;  // for top sky
 float speedscale2; // and bottom sky
 
 extern cvar_t gl_subdivide_size;
+
+extern GLuint brushVertexAttrIndex;
+extern GLuint brushTexCoordsAttrIndex;
 
 static void BoundPoly(int numverts, vec3_t *verts, vec3_t mins, vec3_t maxs)
 {
@@ -180,8 +185,8 @@ void EmitWaterPolys(msurface_t *fa)
 			texcord[i].t *= (1.0 / 64);
 		}
 
-		glTexCoordPointer(2, GL_FLOAT, 0, texcord);
-		glVertexPointer(3, GL_FLOAT, 0, &p->verts[0][0]);
+		glVertexAttribPointer(brushTexCoordsAttrIndex, 2, GL_FLOAT, GL_FALSE, 0, texcord);
+		glVertexAttribPointer(brushVertexAttrIndex, 3, GL_FLOAT, GL_FALSE, 0, &p->verts[0][0]);
 		glDrawArrays(GL_TRIANGLE_FAN, 0, p->numverts);
 	}
 }
@@ -216,13 +221,13 @@ void EmitSkyPolys(msurface_t *fa)
 			texcord[1][i].s = (speedscale2 + dir[0]) * (1.0 / 128);
 			texcord[1][i].t = (speedscale2 + dir[1]) * (1.0 / 128);
 		}
+// TODO: Multi-texture for sky
+//		glClientActiveTexture(GL_TEXTURE0);
+		glVertexAttribPointer(brushTexCoordsAttrIndex, 2, GL_FLOAT, GL_FALSE, 0, texcord[0]);
+//		glClientActiveTexture(GL_TEXTURE1);
+//		glVertexAttribPointer(brushTexCoordsAttrIndex, 2, GL_FLOAT, GL_FALSE, 0, texcord[1]);
 
-		glClientActiveTexture(GL_TEXTURE0);
-		glTexCoordPointer(2, GL_FLOAT, 0, texcord[0]);
-		glClientActiveTexture(GL_TEXTURE1);
-		glTexCoordPointer(2, GL_FLOAT, 0, texcord[1]);
-
-		glVertexPointer(3, GL_FLOAT, 0, &p->verts[0][0]);
+		glVertexAttribPointer(brushVertexAttrIndex, 3, GL_FLOAT, GL_FALSE, 0, &p->verts[0][0]);
 		glDrawArrays(GL_TRIANGLE_FAN, 0, p->numverts);
 	}
 }
@@ -233,7 +238,7 @@ void R_DrawSkyChain(msurface_t *fa)
 
 	GL_EnableMultitexture();
 
-	glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_DECAL);
+//	glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_DECAL);
 	GL_Bind(alphaskytexture);
 
 	for (; fa; fa = fa->texturechain)
