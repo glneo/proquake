@@ -58,7 +58,7 @@ void S_StopSound(int entnum, int entchannel)
 {
 }
 
-sfx_t *S_PrecacheSound(const char *sample)
+sfx_t *S_ForName(const char *name)
 {
 	return NULL;
 }
