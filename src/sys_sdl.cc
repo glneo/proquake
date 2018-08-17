@@ -102,7 +102,7 @@ FILE *Sys_FileOpenRead(const char *path)
 {
 	FILE *handle = fopen(path, "rb");
 	if (!handle)
-		Sys_Printf("Error opening %s: %s", path, strerror(errno));
+		Sys_Printf("Error opening %s: %s\n", path, strerror(errno));
 
 	return handle;
 }
@@ -111,7 +111,7 @@ FILE *Sys_FileOpenWrite(const char *path)
 {
 	FILE *handle = fopen(path, "wb");
 	if (!handle)
-		Sys_Printf("Error opening %s: %s", path, strerror(errno));
+		Sys_Printf("Error opening %s: %s\n", path, strerror(errno));
 
 	return handle;
 }
