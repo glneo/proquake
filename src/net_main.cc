@@ -863,7 +863,7 @@ void NET_Shutdown(void)
 		}
 	}
 
-	if (!vcrFile)
+	if (vcrFile)
 	{
 		Con_Printf("Closing vcrfile.\n");
 		Sys_FileClose(vcrFile);
