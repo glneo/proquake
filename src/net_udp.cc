@@ -56,22 +56,16 @@ int UDP_Init (void)
 	i = COM_CheckParm ("-ip");
 	if (i)
 	{
-		if (i < com_argc-1)
-		{
-			myAddr = inet_addr(com_argv[i+1]);
-			if (myAddr == INADDR_NONE)
-				Sys_Error ("%s is not a valid IP address", com_argv[i+1]);
-			strcpy(buff, com_argv[i+1]);
-		}
-		else
+		if (i >= com_argc-1)
 			Sys_Error ("you must specify an IP address after -ip");
+
+		myAddr = inet_addr(com_argv[i+1]);
+		if (myAddr == INADDR_NONE)
+			Sys_Error ("%s is not a valid IP address", com_argv[i+1]);
+		strcpy(buff, com_argv[i+1]);
 	}
 	else
 	{
-		// JPG 3.00 from CSR
-		gethostname(buff, MAXHOSTNAMELEN);
-		struct hostent *local = gethostbyname(buff);
-		myAddr = *(int *)local->h_addr_list[0];
 		myAddr = INADDR_ANY;
 	}
 
@@ -82,7 +76,8 @@ int UDP_Init (void)
 		Cvar_SetQuick(&hostname, buff);
 	}
 
-	if ((net_controlsocket = UDP_OpenSocket (0)) == -1)
+	net_controlsocket = UDP_OpenSocket(0);
+	if (net_controlsocket == -1)
 		Sys_Error("Unable to open control socket\n");
 
 	((struct sockaddr_in *)&broadcastaddr)->sin_family = AF_INET;
