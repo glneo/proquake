@@ -193,11 +193,6 @@ void R_DrawAliasModel(entity_t *ent)
 	}
 
 	GL_Bind(tx);
-	if (fb)
-	{
-		GL_SelectTextureUnit(GL_TEXTURE1);
-		GL_Bind (fb);
-	}
 
 	// hack the depth range to prevent view model from poking into walls
 	if (isViewent)
