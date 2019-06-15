@@ -18,6 +18,11 @@
 #include "glquake.h"
 #include "model.h"
 
+#define NUMVERTEXNORMALS 162
+const float r_avertexnormals[NUMVERTEXNORMALS][3] = {
+	#include "anorms.h"
+};
+
 static void Mod_CalcAliasBounds(model_t *mod, alias_model_t *aliasmodel)
 {
 	// clear out all data
@@ -71,7 +76,7 @@ static void *Mod_LoadAliasFrame(alias_model_t *aliasmodel, int *posenum, int i, 
 		for (int k = 0; k < 3; k++)
 		{
 			aliasmodel->poseverts[*posenum][j].v[k] = (aliasmodel->scale[k] * pinframe[j].v[k]) + aliasmodel->scale_origin[k];
-//			aliasmodel->poseverts[*posenum][j].normal[k] = r_avertexnormals[pinframe[j].lightnormalindex][k];
+			aliasmodel->poseverts[*posenum][j].normal[k] = r_avertexnormals[pinframe[j].lightnormalindex][k];
 		}
 		aliasmodel->poseverts[*posenum][j].normalindex = pinframe[j].lightnormalindex;
 	}
@@ -296,7 +301,7 @@ void Mod_LoadAliasModel(model_t *mod, void *buffer)
 
 	// validate the setup
 	if (aliasmodel->numskins <= 0) Sys_Error("model %s has no skins", mod_name);
-	if (aliasmodel->numskins > MAX_SKINS) Sys_Error ("model %s has invalid # of skins: %d\n", mod_name, aliasmodel->numskins);
+	if (aliasmodel->numskins > MAX_SKINS) Sys_Error ("model %s has invalid # of skins: %d", mod_name, aliasmodel->numskins);
 	if (aliasmodel->skinheight <= 0) Sys_Error("model %s has a skin with no height", mod_name);
 	if (aliasmodel->skinheight > MAX_SKIN_HEIGHT) Sys_Error("model %s has a skin taller than %d", mod_name, MAX_SKIN_HEIGHT);
 	if (aliasmodel->skinwidth <= 0) Sys_Error("model %s has a skin with no width", mod_name);

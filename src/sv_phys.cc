@@ -66,12 +66,12 @@ static void SV_CheckVelocity(edict_t *ent)
 	// bound velocity
 	for (int i = 0; i < 3; i++)
 	{
-		if (isnan(ent->v.velocity[i]))
+		if (std::isnan(ent->v.velocity[i]))
 		{
 			Con_Printf("Got a NaN velocity on %s\n", PR_GetString(ent->v.classname));
 			ent->v.velocity[i] = 0;
 		}
-		if (isnan(ent->v.origin[i]))
+		if (std::isnan(ent->v.origin[i]))
 		{
 			Con_Printf("Got a NaN origin on %s\n", PR_GetString(ent->v.classname));
 			ent->v.origin[i] = 0;

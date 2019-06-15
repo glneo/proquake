@@ -110,36 +110,15 @@ void R_DrawAliasModel(entity_t *ent)
 {
 	bool isPlayer = ent > cl_entities &&
 			ent <= (cl_entities + cl.maxclients);
+	bool isViewent = ent == &cl.viewent;
 	gltexture_t *tx;
 	gltexture_t *fb;
-
-//	vec3_t mins, maxs;
-//
-//	VectorAdd(ent->origin, ent->model->mins, mins);
-//	VectorAdd(ent->origin, ent->model->maxs, maxs);
-//
-//	if (R_CullBox (mins, maxs))
-//		return;
 
 	if (R_CullForEntity(ent))
 		return;
 
 	// get lighting information
 	ambientlight = shadelight = R_LightPoint(ent->origin);
-
-	if (ent == &cl.viewent)
-	{
-		// hack the depth range to prevent view model from poking into walls
-#ifdef OPENGLES
-		glDepthRangef(0, 0.3f);
-#else
-		glDepthRange(0, 0.3);
-#endif
-
-		// always give the gun some light
-		if (ambientlight < 24)
-			ambientlight = shadelight = 24;
-	}
 
 	for (int lnum = 0; lnum < MAX_DLIGHTS; lnum++)
 	{
@@ -166,6 +145,10 @@ void R_DrawAliasModel(entity_t *ent)
 	// never allow players to go totally black
 	if (isPlayer && ambientlight < 8)
 		ambientlight = shadelight = 8;
+
+	// always give the gun some light
+	if (isViewent && ambientlight < 24)
+		ambientlight = shadelight = 24;
 
 	// no fullbright colors, so make torches full light
 	if (ent->model->flags & MOD_FBRIGHT)
@@ -210,6 +193,21 @@ void R_DrawAliasModel(entity_t *ent)
 	}
 
 	GL_Bind(tx);
+	if (fb)
+	{
+		GL_SelectTextureUnit(GL_TEXTURE1);
+		GL_Bind (fb);
+	}
+
+	// hack the depth range to prevent view model from poking into walls
+	if (isViewent)
+	{
+	#ifdef OPENGLES
+			glDepthRangef(0, 0.3f);
+	#else
+			glDepthRange(0, 0.3);
+	#endif
+	}
 
 	int pose = R_GetAliasPose(ent, aliasmodel);
 

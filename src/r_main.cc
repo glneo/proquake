@@ -292,7 +292,13 @@ bool R_CullForEntity(const entity_t *ent/*, vec3_t returned_center*/)
 //	if (returned_center)
 //		LerpVector (mins, maxs, 0.5, returned_center);
 
-	return R_CullBoxA(mins, maxs);
+//	if (R_CullBox (mins, maxs))
+//		return true;
+
+	if (R_CullBoxA(mins, maxs))
+		return true;
+
+	return false;
 }
 
 static void R_DrawEntitiesOnList(void)

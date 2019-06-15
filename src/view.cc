@@ -414,11 +414,7 @@ void V_CalcBlend(void)
 	v_blend[0] = r / 255.0;
 	v_blend[1] = g / 255.0;
 	v_blend[2] = b / 255.0;
-	v_blend[3] = a;
-	if (v_blend[3] > 1)
-		v_blend[3] = 1;
-	if (v_blend[3] < 0)
-		v_blend[3] = 0;
+	v_blend[3] = CLAMP(0, a, 1);
 }
 
 void V_UpdatePalette_Static(bool forced)

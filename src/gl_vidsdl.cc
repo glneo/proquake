@@ -1,5 +1,5 @@
 /*
- * SDL GL vid component
+ * SDL OpenGL Video Component
  *
  * Copyright (C) 1996-2001 Id Software, Inc.
  * Copyright (C) 2002-2009 John Fitzgibbons and others
@@ -45,12 +45,9 @@ int texture_mode = GL_LINEAR;
 
 viddef_t vid; // global video state
 
-//static cvar_t vid_fullscreen = { "vid_fullscreen", "1", CVAR_ARCHIVE };
-//static cvar_t vid_width = { "vid_width", "1680", CVAR_ARCHIVE };
-//static cvar_t vid_height = { "vid_height", "1050", CVAR_ARCHIVE };
+static cvar_t vid_width = { "vid_width", "1440", CVAR_ARCHIVE };
+static cvar_t vid_height = { "vid_height", "900", CVAR_ARCHIVE };
 static cvar_t vid_fullscreen = { "vid_fullscreen", "0", CVAR_ARCHIVE };
-static cvar_t vid_width = { "vid_width", "800", CVAR_ARCHIVE };
-static cvar_t vid_height = { "vid_height", "600", CVAR_ARCHIVE };
 static cvar_t vid_bpp = { "vid_bpp", "16", CVAR_ARCHIVE };
 cvar_t vid_vsync = { "vid_vsync", "0", CVAR_ARCHIVE };
 static cvar_t vid_desktopfullscreen = { "vid_desktopfullscreen", "0", CVAR_ARCHIVE };
@@ -168,8 +165,6 @@ static void VID_SetMode(int width, int height, int bpp, bool fullscreen)
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 1);
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
 #endif
-
-//	SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_DEBUG_FLAG);
 
 	snprintf(caption, sizeof(caption), "QuickQuake %s", ENGINE_VERSION);
 

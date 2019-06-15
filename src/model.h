@@ -294,7 +294,7 @@ typedef struct {
 typedef struct {
 	vec3_t v;
 	byte normalindex;
-//	vec3_t normal;
+	vec3_t normal;
 } mtrivertx_t;
 
 typedef struct {

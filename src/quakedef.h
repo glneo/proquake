@@ -20,7 +20,7 @@
 
 #define	GAMENAME "id1" // directory to look in by default
 
-#include <math.h>
+#include <cmath>
 #include <cstdio>
 #include <cstdlib>
 #include <cstdint>
