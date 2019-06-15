@@ -17,6 +17,8 @@
 
 #include "matrix.h"
 
+#include "quakedef.h"
+
 static const float identityMatrix[] = {
 	1.0f, 0.0f, 0.0f, 0.0f,
 	0.0f, 1.0f, 0.0f, 0.0f,

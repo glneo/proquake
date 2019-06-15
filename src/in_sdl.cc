@@ -19,7 +19,7 @@
 
 #include "quakedef.h"
 
-#include <SDL2/SDL.h>
+#include <SDL.h>
 
 // SDL2 Game Controller cvars
 cvar_t joy_enable = { "joy_enable", "1", CVAR_ARCHIVE };

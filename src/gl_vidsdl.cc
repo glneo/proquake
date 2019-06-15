@@ -20,7 +20,7 @@
 #include "quakedef.h"
 #include "glquake.h"
 
-#include <SDL2/SDL.h>
+#include <SDL.h>
 
 #define MAX_MODE_LIST	600
 #define MAX_BPPS_LIST	5

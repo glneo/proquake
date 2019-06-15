@@ -269,7 +269,7 @@ typedef struct targaheader_s {
 #define TARGAHEADERSIZE 18 //size on disk
 
 /* writes RGB or RGBA data to a TGA file */
-static bool Image_WriteTGA (const char *name, byte *data, int width, int height, int bpp, bool upsidedown)
+static bool Image_WriteTGA (const char *name, byte *data, unsigned int width, unsigned int height, unsigned int bpp, bool upsidedown)
 {
 	int size, temp, bytes;
 	byte header[TARGAHEADERSIZE];

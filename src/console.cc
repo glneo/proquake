@@ -817,7 +817,9 @@ void Con_SafePrintf(const char *fmt, ...)
 	scr_disabled_for_loading = temp;
 }
 
+#ifndef _MSC_VER
 void Con_CenterPrintf(int linewidth, const char *fmt, ...) __attribute__((__format__(__printf__,2,3)));
+#endif // _MSC_VER
 void Con_CenterPrintf(int linewidth, const char *fmt, ...)
 {
 	va_list argptr;

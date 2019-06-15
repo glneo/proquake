@@ -22,6 +22,14 @@
 // Define Operating System Names
 #ifdef _WIN32
 	#define OS_NAME "Windows"
+
+	#ifdef _MSC_VER
+		#define strncasecmp _strnicmp
+		#define strcasecmp _stricmp
+	#endif
+
+	#include <Windows.h>
+	#include <SDL.h>
 #elif defined(__APPLE__) && defined(__MACH__)
 	#define OS_NAME "Mac OSX"
 #else 

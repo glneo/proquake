@@ -124,7 +124,7 @@ extern int pr_xstatement;
 
 extern unsigned short pr_crc;
 
-void PR_RunError(const char *error, ...) __attribute__((noreturn));
+[[noreturn]] void PR_RunError(const char *error, ...);
 void PF_changeyaw(void);
 
 void ED_PrintEdicts_f(void);
