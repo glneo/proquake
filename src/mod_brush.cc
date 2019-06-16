@@ -164,7 +164,7 @@ void Mod_LoadTextures(brush_model_t *brushmodel, lump_t *l, byte *mod_base, char
 					if (Mod_CheckFullbrights ((byte *)(tx+1), pixels))
 					{
 						tx->gltexture = TexMgr_LoadImage (texturename, tx->width, tx->height,
-							SRC_INDEXED, (byte *)(tx+1), TEX_MIPMAP | TEX_NOBRIGHT | extraflags);
+							SRC_INDEXED, (byte *)(tx+1), TEX_MIPMAP | extraflags);
 						snprintf (texturename, sizeof(texturename), "%s:%s_glow", mod_name, tx->name);
 						tx->fullbright = TexMgr_LoadImage (texturename, tx->width, tx->height,
 							SRC_INDEXED, (byte *)(tx+1), TEX_MIPMAP | TEX_FULLBRIGHT | extraflags);

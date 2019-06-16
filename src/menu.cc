@@ -1431,29 +1431,6 @@ void M_Pref_AdjustSliders(int dir)
 		else
 			newval = 1;
 
-		switch (newval)
-		{
-		case 1:
-			// Must be off, set to Quakedefaults
-			Cvar_SetQuick(&r_waterwarp, "1");
-			Cvar_SetQuick(&pq_ringblend, "1");
-			Cvar_SetQuick(&pq_quadblend, "1");
-			Cvar_SetQuick(&pq_pentblend, "1");
-			Cvar_SetQuick(&pq_suitblend, "1");
-			Cvar_SetQuick(&pq_waterblend, "1");
-			break;
-
-		case 2:
-			// FULL to LITE
-			Cvar_SetQuick(&r_waterwarp, "0");
-			Cvar_SetQuick(&pq_ringblend, "0");
-			Cvar_SetQuick(&pq_quadblend, "0.3");
-			Cvar_SetQuick(&pq_pentblend, "0.3");
-			Cvar_SetQuick(&pq_suitblend, "0.3");
-			Cvar_SetQuick(&pq_waterblend, "0.3");
-			break;
-		}
-
 		break;
 
 	case 6:

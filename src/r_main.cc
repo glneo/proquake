@@ -199,7 +199,7 @@ void R_DrawWorld(void)
 
 	DrawTextureChains(cl.worldmodel->brushmodel);
 
-	R_BlendLightmaps();
+//	R_BlendLightmaps();
 }
 
 /* Returns true if the box is completely outside the frustum */

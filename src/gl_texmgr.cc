@@ -1305,13 +1305,3 @@ void TexMgr_ReloadImages(void)
 
 	in_reload_images = false;
 }
-
-/* reloads all texture that were loaded with the nobright palette */
-void TexMgr_ReloadNobrightImages(void)
-{
-	gltexture_t *glt;
-
-	for (glt = active_gltextures; glt; glt = glt->next)
-		if (glt->flags & TEX_NOBRIGHT)
-			TexMgr_ReloadImage(glt, -1, -1);
-}

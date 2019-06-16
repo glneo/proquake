@@ -63,7 +63,7 @@ float v_dmg_time, v_dmg_roll, v_dmg_pitch;
 extern refdef_t r_refdef;
 
 // view origin and direction
-extern vec3_t r_origin, vright, vpn, vup;
+//extern vec3_t r_origin, vright, vpn, vup;
 
 /*
  ===============
@@ -359,28 +359,28 @@ static void V_CalcPowerupCshift(void)
 		cl.cshifts[CSHIFT_POWERUP].destcolor[0] = 0;
 		cl.cshifts[CSHIFT_POWERUP].destcolor[1] = 0;
 		cl.cshifts[CSHIFT_POWERUP].destcolor[2] = 255;
-		cl.cshifts[CSHIFT_POWERUP].percent = 30 * pq_quadblend.value;	// JPG 1.05 - added pq_quadblend
+		cl.cshifts[CSHIFT_POWERUP].percent = 30;
 	}
 	else if (cl.items & IT_SUIT)
 	{
 		cl.cshifts[CSHIFT_POWERUP].destcolor[0] = 0;
 		cl.cshifts[CSHIFT_POWERUP].destcolor[1] = 255;
 		cl.cshifts[CSHIFT_POWERUP].destcolor[2] = 0;
-		cl.cshifts[CSHIFT_POWERUP].percent = 20 * pq_suitblend.value; // JPG 1.05 - added pq_suidblend
+		cl.cshifts[CSHIFT_POWERUP].percent = 20;
 	}
 	else if (cl.items & IT_INVISIBILITY)
 	{
 		cl.cshifts[CSHIFT_POWERUP].destcolor[0] = 100;
 		cl.cshifts[CSHIFT_POWERUP].destcolor[1] = 100;
 		cl.cshifts[CSHIFT_POWERUP].destcolor[2] = 100;
-		cl.cshifts[CSHIFT_POWERUP].percent = 100 * pq_ringblend.value; // JPG 1.05 - added pq_ringblend
+		cl.cshifts[CSHIFT_POWERUP].percent = 100;
 	}
 	else if (cl.items & IT_INVULNERABILITY)
 	{
 		cl.cshifts[CSHIFT_POWERUP].destcolor[0] = 255;
 		cl.cshifts[CSHIFT_POWERUP].destcolor[1] = 255;
 		cl.cshifts[CSHIFT_POWERUP].destcolor[2] = 0;
-		cl.cshifts[CSHIFT_POWERUP].percent = 30 * pq_pentblend.value; //  JPG 1.05 - added pq_pentblend
+		cl.cshifts[CSHIFT_POWERUP].percent = 30;
 	}
 	else
 		cl.cshifts[CSHIFT_POWERUP].percent = 0;
@@ -821,11 +821,4 @@ void V_Init(void)
 	Cvar_RegisterVariable(&v_kickroll);
 	Cvar_RegisterVariable(&v_kickpitch);
 	Cvar_RegisterVariable(&v_gunkick);
-
-	// JPG 1.05 - colour shifts
-	Cvar_RegisterVariable(&pq_waterblend);
-	Cvar_RegisterVariable(&pq_quadblend);
-	Cvar_RegisterVariable(&pq_pentblend);
-	Cvar_RegisterVariable(&pq_ringblend);
-	Cvar_RegisterVariable(&pq_suitblend);
 }

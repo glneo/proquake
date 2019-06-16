@@ -829,7 +829,7 @@ void Q_Version(char *s)
 		t += 1;
 	}
 }
-extern cvar_t pq_scoreboard_pings; // JPG - need this for CL_ParseProQuakeString
+//extern cvar_t pq_scoreboard_pings; // JPG - need this for CL_ParseProQuakeString
 
 /* JPG - on a svc_print, check to see if the string contains useful information
  ======================

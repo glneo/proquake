@@ -207,7 +207,7 @@ Interactive line editing and console scrollback
 ====================
 */
 extern	char *con_text, key_tabpartial[MAXCMDLINE];
-extern	int con_current, con_linewidth, con_vislines;
+extern	int con_current, con_linewidth; //, con_vislines;
 
 void Key_Console (int key)
 {

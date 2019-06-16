@@ -223,9 +223,9 @@ static void *Mod_LoadAllSkins(alias_model_t *aliasmodel, daliasskintype_t *pskin
 				aliasmodel->gl_texturenum[i][0] =
 				aliasmodel->gl_texturenum[i][1] =
 				aliasmodel->gl_texturenum[i][2] =
-				aliasmodel->gl_texturenum[i][3] = TexMgr_LoadImage(name, aliasmodel->skinwidth, aliasmodel->skinheight, SRC_INDEXED, skin, TEX_MIPMAP | TEX_NOBRIGHT);
+				aliasmodel->gl_texturenum[i][3] = TexMgr_LoadImage(name, aliasmodel->skinwidth, aliasmodel->skinheight, SRC_INDEXED, skin, TEX_MIPMAP);
 
-				snprintf(name, sizeof(name), "%s_%i_glow", mod_name, i);
+				snprintf(name, sizeof(name), "%s_%i_glowwww", mod_name, i);
 				aliasmodel->gl_fbtexturenum[i][0] =
 				aliasmodel->gl_fbtexturenum[i][1] =
 				aliasmodel->gl_fbtexturenum[i][2] =

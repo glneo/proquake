@@ -396,7 +396,7 @@ float CL_LerpPoint(void)
 	return frac;
 }
 
-extern cvar_t pq_timer; // JPG - need this for CL_RelinkEntities
+//extern cvar_t pq_timer; // JPG - need this for CL_RelinkEntities
 
 /*
  ===============

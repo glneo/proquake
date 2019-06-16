@@ -572,9 +572,9 @@ void Char_Event(int key)
 //		M_Charinput (key);
 		break;
 	case key_game:
-		if (!con_forcedup)
-			break;
-		/* fallthrough */
+		if (con_forcedup)
+			Char_Console(key);
+		break;
 	case key_console:
 		Char_Console(key);
 		break;
@@ -598,7 +598,7 @@ bool Key_TextEntry(void)
 	case key_game:
 		if (!con_forcedup)
 			return false;
-		/* fallthrough */
+		return true;
 	case key_console:
 		return true;
 	default:
@@ -629,9 +629,11 @@ void Key_UpdateForDest(void)
 			forced = true;
 			IN_Deactivate();
 			key_dest = key_console;
-			break;
+
 		}
-		/* fallthrough */
+		else
+			forced = false;
+		break;
 	default:
 		forced = false;
 		break;

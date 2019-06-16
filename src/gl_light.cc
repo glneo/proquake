@@ -54,7 +54,7 @@ void R_ClearLightmapPolys()
  * uploads the modified lightmap to opengl if necessary
  * assumes lightmap texture is already bound
  */
-static void R_UploadLightmap(int lmap)
+void R_UploadLightmap(int lmap)
 {
 	if (!lightmap_modified[lmap])
 		return;
@@ -82,7 +82,7 @@ void R_BlendLightmaps(void)
 	{
 		if (gl_overbright.value)
 			glBlendFunc(GL_DST_COLOR, GL_SRC_COLOR);
-		else if (!r_lightmap.value)
+		else
 			glBlendFunc(GL_ZERO, GL_SRC_COLOR);
 	}
 

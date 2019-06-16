@@ -22,13 +22,12 @@
 #define	BLOCK_HEIGHT    128
 
 #define	MAX_LIGHTMAPS   64
+extern gltexture_t *lightmap_textures[MAX_LIGHTMAPS];
 
 typedef struct glRect_s
 {
 	unsigned char l, t, w, h;
 } glRect_t;
-
-extern glpoly_t *lightmap_polys[MAX_LIGHTMAPS];
 
 void DrawGLPoly(glpoly_t *p)
 {
@@ -147,7 +146,7 @@ void DrawGLWaterPoly(glpoly_t *p)
 	for (int i = 0; i < p->numverts; i++)
 	{
 		float *v = p->verts[i];
-		verts[i][0] = p->verts[0][0] + 8 * sin(v[1] * 0.05 + realtime) * sin(v[2] * 0.05 + realtime);
+		verts[i][0] = v[0] + 8 * sin(v[1] * 0.05 + realtime) * sin(v[2] * 0.05 + realtime);
 		verts[i][1] = v[1] + 8 * sin(v[0] * 0.05 + realtime) * sin(v[2] * 0.05 + realtime);
 		verts[i][2] = v[2];
 	}
@@ -175,6 +174,9 @@ void DrawGLWaterPolyLight(glpoly_t *p)
 	glDrawArrays(GL_TRIANGLE_FAN, 0, p->numverts);
 }
 
+extern cvar_t gl_overbright;
+void R_UploadLightmap(int lmap);
+
 void R_RenderBrushPoly(msurface_t *fa, int frame)
 {
 	c_brush_polys++;
@@ -189,15 +191,32 @@ void R_RenderBrushPoly(msurface_t *fa, int frame)
 
 	R_RenderDynamicLightmaps(fa);
 
+	GL_Bind(lightmap_textures[fa->lightmaptexturenum]);
+	R_UploadLightmap(fa->lightmaptexturenum);
+
+	glDepthMask(GL_FALSE); // don't bother writing Z
+	if (!r_lightmap.value)
+	{
+		if (gl_overbright.value)
+			glBlendFunc(GL_DST_COLOR, GL_SRC_COLOR);
+		else
+			glBlendFunc(GL_ZERO, GL_SRC_COLOR);
+	}
+
+	if ((fa->polys->flags & SURF_UNDERWATER) && r_waterwarp.value)
+		DrawGLWaterPolyLight(fa->polys);
+	else
+		DrawGLPolyLight(fa->polys);
+
 	if (t->fullbright != NULL && gl_fullbright.value)
 	{
 		glBlendFunc(GL_ONE, GL_ONE);
-		glDepthMask(GL_FALSE);
 		GL_Bind(t->fullbright);
 		DrawGLPoly(fa->polys);
-		glDepthMask(GL_TRUE);
-		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	}
+
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	glDepthMask(GL_TRUE); // back to normal Z buffering
 }
 
 void R_DrawBrushModel(entity_t *ent)
@@ -280,7 +299,7 @@ void R_DrawBrushModel(entity_t *ent)
 		}
 	}
 
-	R_BlendLightmaps();
+//	R_BlendLightmaps();
 
 	glLoadMatrixf(old_matrix);
 }
