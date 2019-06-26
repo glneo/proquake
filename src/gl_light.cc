@@ -38,6 +38,8 @@ glpoly_t *lightmap_polys[MAX_LIGHTMAPS];
 bool lightmap_modified[MAX_LIGHTMAPS];
 glRect_t lightmap_rectchange[MAX_LIGHTMAPS];
 
+int d_lightstylevalue[256]; // 8.8 fraction of base light value
+
 int r_dlightframecount;
 
 extern cvar_t gl_overbright;

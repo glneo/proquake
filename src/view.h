@@ -15,17 +15,11 @@
 #ifndef __VIEW_H
 #define __VIEW_H
 
-extern cvar_t vid_gamma;
-extern cvar_t vid_contrast;
-
 extern float v_blend[4];
 
 void V_Init(void);
 void V_RenderView(void);
 void V_CalcBlend(void);
-
-void SCR_DrawVolume(void);
-void SCR_DrawCoords(void);
 
 float V_CalcRoll(vec3_t angles, vec3_t velocity);
 

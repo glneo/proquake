@@ -31,10 +31,20 @@
 #define	TYP_SOUND       67
 #define	TYP_MIPTEX      68
 
+// On disk representation
 typedef struct
 {
 	int32_t width, height;
-	byte data[4]; // variably sized
+	byte data[]; // variably sized
+} dqpic_t;
+
+
+typedef struct gltexture_s gltexture_t;
+typedef struct
+{
+	gltexture_t *gltexture;
+	float sl, tl, sh, th;
+	unsigned int width, height;
 } qpic_t;
 
 typedef struct
@@ -55,7 +65,7 @@ typedef struct
 	byte name[16]; // must be null terminated
 } lumpinfo_t;
 
-void SwapPic(qpic_t *pic);
+void SwapPic(dqpic_t *pic);
 void W_LoadWadFile(const char *filename);
 void *W_GetLumpName(const char *name);
 

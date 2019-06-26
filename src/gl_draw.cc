@@ -24,13 +24,7 @@ gltexture_t *char_texture;
 
 qpic_t crosshairpic;
 
-typedef struct
-{
-	gltexture_t *gltexture;
-	float sl, tl, sh, th;
-} glpic_t;
-
-byte conback_buffer[sizeof(qpic_t) + sizeof(glpic_t)];
+byte conback_buffer[sizeof(qpic_t)];
 qpic_t *conback = (qpic_t *) &conback_buffer;
 
 canvastype currentcanvas = CANVAS_NONE; //johnfitz -- for GL_SetCanvas
@@ -55,7 +49,6 @@ canvastype currentcanvas = CANVAS_NONE; //johnfitz -- for GL_SetCanvas
 #define	BLOCK_HEIGHT    256
 
 byte scrap_texels[MAX_SCRAPS][BLOCK_WIDTH * BLOCK_HEIGHT * 4];
-bool scrap_dirty;
 gltexture_t *scrap_textures[MAX_SCRAPS]; //johnfitz
 int scrap_allocated[MAX_SCRAPS][BLOCK_WIDTH];
 int scrap_texnum;
@@ -93,11 +86,11 @@ static int Scrap_AllocBlock(int w, int h, int *x, int *y)
 		return texnum;
 	}
 
-	Sys_Error("LightMaps full");
+	Sys_Error("Scrap full");
 	return 0;
 }
 
-static void Scrap_Upload(void)
+void Scrap_Upload(void)
 {
 	int i;
 
@@ -105,11 +98,8 @@ static void Scrap_Upload(void)
 	{
 		char name[8];
 		sprintf(name, "scrap%i", i);
-		scrap_textures[i] = TexMgr_LoadImage(name, BLOCK_WIDTH, BLOCK_HEIGHT, SRC_INDEXED, scrap_texels[i],
-		TEX_ALPHA | TEX_OVERWRITE | TEX_NOPICMIP);
+		scrap_textures[i] = TexMgr_LoadImage(name, BLOCK_WIDTH, BLOCK_HEIGHT, SRC_INDEXED, scrap_texels[i], TEX_ALPHA | TEX_OVERWRITE | TEX_NOPICMIP);
 	}
-
-	scrap_dirty = false;
 }
 
 //=============================================================================
@@ -119,100 +109,82 @@ typedef struct cachepic_s
 {
 	char name[MAX_QPATH];
 	qpic_t pic;
-	byte padding[32];	// for appended glpic
 } cachepic_t;
 
 #define	MAX_CACHED_PICS		128
-
-byte menuplyr_pixels[4096];
+static cachepic_t menu_cachepics[MAX_CACHED_PICS];
+static int menu_numcachepics;
 
 qpic_t *Draw_PicFromWad(const char *name)
 {
-	glpic_t gl;
-
-	qpic_t *p = (qpic_t *) W_GetLumpName(name);
+	dqpic_t *p = (dqpic_t *) W_GetLumpName(name);
+	qpic_t *gl = (qpic_t *) Q_malloc(sizeof(*gl));
 
 	// load little ones into the scrap
 	if (p->width < 64 && p->height < 64)
 	{
 		int x, y;
-		int i, j, k;
-		int texnum;
-
-		texnum = Scrap_AllocBlock(p->width, p->height, &x, &y);
-		scrap_dirty = true;
-		k = 0;
-		for (i = 0; i < p->height; i++)
-		{
-			for (j = 0; j < p->width; j++, k++)
-				scrap_texels[texnum][(y + i) * BLOCK_WIDTH + x + j] = p->data[k];
-		}
-		gl.gltexture = scrap_textures[texnum];
-		gl.sl = x / (float) BLOCK_WIDTH;
-		gl.sh = (x + p->width) / (float) BLOCK_WIDTH;
-		gl.tl = y / (float) BLOCK_WIDTH;
-		gl.th = (y + p->height) / (float) BLOCK_WIDTH;
+		int texnum = Scrap_AllocBlock(p->width, p->height, &x, &y);
+		int k = 0;
+		for (int i = 0; i < p->height; i++)
+			for (int j = 0; j < p->width; j++)
+				scrap_texels[texnum][(y + i) * BLOCK_WIDTH + x + j] = p->data[k++];
+		gl->gltexture = scrap_textures[texnum];
+		gl->sl =  x              / (float) BLOCK_WIDTH;
+		gl->sh = (x + p->width)  / (float) BLOCK_WIDTH;
+		gl->tl =  y              / (float) BLOCK_WIDTH;
+		gl->th = (y + p->height) / (float) BLOCK_WIDTH;
 	}
 	else
 	{
 		char texturename[64];
 		snprintf(texturename, sizeof(texturename), "%s", name);
 
-		gl.gltexture = TexMgr_LoadImage(texturename, p->width, p->height, SRC_INDEXED, p->data, TEX_ALPHA | TEX_PAD | TEX_NOPICMIP);
-		gl.sl = 0;
-		gl.sh = (float) p->width / (float) TexMgr_PadConditional(p->width);
-		gl.tl = 0;
-		gl.th = (float) p->height / (float) TexMgr_PadConditional(p->height);
+		gl->gltexture = TexMgr_LoadImage(texturename, p->width, p->height, SRC_INDEXED, p->data, TEX_ALPHA | TEX_PAD | TEX_NOPICMIP);
+		gl->sl = 0;
+		gl->sh = (float) p->width / (float) TexMgr_PadConditional(p->width);
+		gl->tl = 0;
+		gl->th = (float) p->height / (float) TexMgr_PadConditional(p->height);
 	}
+	gl->width = p->width;
+	gl->height = p->height;
 
-	memcpy(p->data, &gl, sizeof(glpic_t));
-
-	return p;
+	return gl;
 }
 
 qpic_t *Draw_CachePic(const char *path)
 {
-	cachepic_t *pic;
-	int i;
-	qpic_t *dat;
-	glpic_t *gl;
-	static cachepic_t menu_cachepics[MAX_CACHED_PICS];
-	static int menu_numcachepics;
-
-	for (pic = menu_cachepics, i = 0; i < menu_numcachepics; pic++, i++)
-		if (!strcmp(path, pic->name))
-			return &pic->pic;
+	for (int i = 0; i < menu_numcachepics; i++)
+		if (!strcmp(path, menu_cachepics[i].name))
+			return &menu_cachepics[i].pic;
 
 	if (menu_numcachepics == MAX_CACHED_PICS)
 		Sys_Error("menu_numcachepics == MAX_CACHED_PICS");
+
+	cachepic_t *cpic = &menu_cachepics[menu_numcachepics];
 	menu_numcachepics++;
-	strcpy(pic->name, path);
+
+	strcpy(cpic->name, path);
+	qpic_t *pic = &cpic->pic;
 
 	// load the pic from disk
-	dat = (qpic_t *) COM_LoadMallocFile(path);
+	dqpic_t *dat = (dqpic_t *) COM_LoadMallocFile(path);
 	if (!dat)
 		Sys_Error("failed to load %s", path);
 	SwapPic(dat);
 
-	// HACK HACK HACK --- we need to keep the bytes for
-	// the translatable player picture just for the menu
-	// configuration dialog
-	if (!strcmp(path, "gfx/menuplyr.lmp"))
-		memcpy(menuplyr_pixels, dat->data, dat->width * dat->height);
-
-	pic->pic.width = dat->width;
-	pic->pic.height = dat->height;
-
-	gl = (glpic_t *) pic->pic.data;
-	gl->gltexture = TexMgr_LoadImage("", dat->width, dat->height, SRC_INDEXED, dat->data, TEX_ALPHA);
-	gl->sl = 0;
-	gl->sh = 1;
-	gl->tl = 0;
-	gl->th = 1;
+	// FIXME: do we need to pad this image like above?
+	pic->gltexture = TexMgr_LoadImage("", dat->width, dat->height, SRC_INDEXED, dat->data, TEX_ALPHA);
+	pic->sl = 0;
+	pic->sh = 1;
+	pic->tl = 0;
+	pic->th = 1;
+	pic->width = dat->width;
+	pic->height = dat->height;
 
 	free(dat);
 
-	return &pic->pic;
+	return pic;
 }
 
 static void OnChange_gl_smoothfont(struct cvar_s *cvar)
@@ -307,17 +279,13 @@ void Draw_String(int x, int y, const char *str, float alpha)
 
 void Draw_Pic(int x, int y, qpic_t *pic, float alpha)
 {
-	if (scrap_dirty)
-		Scrap_Upload();
-
-	glpic_t *gl = (glpic_t *) pic->data;
-	GL_Bind(gl->gltexture);
+	GL_Bind(pic->gltexture);
 
 	GLfloat texts[] = {
-		gl->sl, gl->tl,
-		gl->sh, gl->tl,
-		gl->sh, gl->th,
-		gl->sl, gl->th,
+		pic->sl, pic->tl,
+		pic->sh, pic->tl,
+		pic->sh, pic->th,
+		pic->sl, pic->th,
 	};
 
 	GLfloat verts[] = {
@@ -407,8 +375,7 @@ void Draw_TransPic(int x, int y, qpic_t *pic, float alpha)
 /* Tile graphic to fill the screen */
 void Draw_PicTile(int x, int y, int w, int h, qpic_t *pic, float alpha)
 {
-	glpic_t *gl = (glpic_t *)pic->data;
-	GL_Bind(gl->gltexture);
+	GL_Bind(pic->gltexture);
 
 	GLfloat texts[] = {
 		(GLfloat)x / 64.0f,       (GLfloat)y / 64.0f,
@@ -554,18 +521,16 @@ void GL_End2D(void)
 qpic_t *Draw_MakePic(const char *name, int width, int height, byte *data)
 {
 	int flags = TEX_NEAREST | TEX_ALPHA | TEX_PERSIST | TEX_NOPICMIP | TEX_PAD;
-	glpic_t gl;
 
-	qpic_t *pic = (qpic_t *) Hunk_Alloc(sizeof(qpic_t) - 4 + sizeof(glpic_t));
-	pic->width = width;
-	pic->height = height;
+	qpic_t *pic = (qpic_t *) Hunk_Alloc(sizeof(qpic_t));
 
-	gl.gltexture = TexMgr_LoadImage(name, width, height, SRC_INDEXED, data, flags);
-	gl.sl = 0;
-	gl.sh = (float) width / (float) TexMgr_PadConditional(width);
-	gl.tl = 0;
-	gl.th = (float) height / (float) TexMgr_PadConditional(height);
-	memcpy(pic->data, &gl, sizeof(glpic_t));
+	pic->gltexture = TexMgr_LoadImage(name, width, height, SRC_INDEXED, data, flags);
+	pic->width = (float) TexMgr_PadConditional(width);
+	pic->height = (float) TexMgr_PadConditional(height);
+	pic->sl = 0;
+	pic->sh = (float) width / pic->width;
+	pic->tl = 0;
+	pic->th = (float) height / pic->height;
 
 	return pic;
 }

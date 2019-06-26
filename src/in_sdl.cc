@@ -696,8 +696,8 @@ void IN_Activate(void)
 	total_dx = 0;
 	total_dy = 0;
 
-//	if (SDL_SetRelativeMouseMode(SDL_TRUE))
-//		Con_Printf("WARNING: SDL_SetRelativeMouseMode(SDL_TRUE) failed.\n");
+	if (SDL_SetRelativeMouseMode(SDL_TRUE))
+		Con_Printf("WARNING: SDL_SetRelativeMouseMode(SDL_TRUE) failed.\n");
 
 	IN_EndIgnoringMouseEvents();
 }

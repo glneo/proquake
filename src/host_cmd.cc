@@ -1341,7 +1341,7 @@ void Host_Kill_f(void)
 
 	if (sv_player->v.health <= 0)
 	{
-		SV_ClientPrintf("Can't suicide -- already dead!\n");	// JPG 3.02 allready->already
+		SV_ClientPrintf("Can't suicide -- already dead!\n");
 		return;
 	}
 

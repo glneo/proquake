@@ -1426,10 +1426,7 @@ void M_Pref_AdjustSliders(int dir)
 	case 5:
 
 		// FULL | LITE | ONLY DAMAGE | ALL OFF
-		if (pq_suitblend.value >= 1)
-			newval = 2;
-		else
-			newval = 1;
+		newval = 1;
 
 		break;
 
@@ -1581,7 +1578,7 @@ void M_Pref_Options_Draw(void)
 	M_Print(220, i, r_truegunangle.value ? "darkplaces" : "classic");
 	i += 8; 	  // 4
 	M_Print(16, i, "     view blends    ");
-	M_Print(220, i, pq_suitblend.value >= 1 ? "classic" : "deathmatch");
+	M_Print(220, i, gl_polyblend.value >= 1 ? "classic" : "deathmatch");
 	i += 8; 	  // 5
 	M_Print(16, i, "     disable bobbing");
 	M_Print(220, i, cl_rollangle.value ? "off" : "on");

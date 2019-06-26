@@ -1021,6 +1021,8 @@ void SCR_Init(void)
 	scr_net = Draw_PicFromWad("net");
 	scr_turtle = Draw_PicFromWad("turtle");
 	scr_backtile = Draw_PicFromWad("backtile");
+	// Draw_PicFromWad can dirty the scrap texture
+	Scrap_Upload();
 
 	// Load the crosshair pics
 	for (int i = 0; i < NUMCROSSHAIRS; i++)

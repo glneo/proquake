@@ -26,36 +26,15 @@ bool gl_anisotropy_able = false;
 bool gl_texture_NPOT = false;
 float gl_max_anisotropy;
 
-int r_framecount; // used for dlight push checking
-
-int d_lightstylevalue[256]; // 8.8 fraction of base light value
-
-cvar_t r_wateralpha = { "r_wateralpha", "1", true };
-cvar_t r_dynamic = { "r_dynamic", "1" };
-cvar_t r_novis = { "r_novis", "0" };
-cvar_t r_interpolate_animation = { "r_interpolate_animation", "0", true };
-cvar_t r_interpolate_transform = { "r_interpolate_transform", "0", true };
-cvar_t r_interpolate_weapon = { "r_interpolate_weapon", "0", true };
 cvar_t gl_farclip = { "gl_farclip", "16384", true };
 cvar_t gl_nearwater_fix = { "gl_nearwater_fix", "1", true };
 cvar_t gl_fadescreen_alpha = { "gl_fadescreen_alpha", "0.7", true };
-
 cvar_t gl_clear = { "gl_clear", "0", true};
 cvar_t gl_smoothmodels = { "gl_smoothmodels", "1" };
 cvar_t gl_affinemodels = { "gl_affinemodels", "0" };
 cvar_t gl_polyblend = { "gl_polyblend", "1", true };
 cvar_t gl_playermip = { "gl_playermip", "0", true };
-
-cvar_t r_truegunangle = { "r_truegunangle", "0", true };  // Baker 3.80x - Optional "true" gun positioning on viewmodel
-cvar_t r_drawviewmodel = { "r_drawviewmodel", "1", true };  // Baker 3.80x - Save to config
-cvar_t r_ringalpha = { "r_ringalpha", "0.4", true }; // Baker 3.80x - gl_ringalpha
-cvar_t r_fullbright = { "r_fullbright", "0" };
-cvar_t r_lightmap = { "r_lightmap", "0" };
-
-cvar_t gl_fullbright = { "gl_fullbright", "1", true };
 cvar_t gl_overbright = { "gl_overbright", "1", true };
-
-cvar_t r_waterwarp = { "r_waterwarp", "0", true }; // Baker 3.60 - Save this to config now
 
 void GL_RotateForEntity(entity_t *ent, Q_Matrix &matrix)
 {
@@ -322,10 +301,10 @@ void GL_Init(void)
 	Cvar_RegisterVariable(&gl_affinemodels);
 	Cvar_RegisterVariable(&gl_polyblend);
 	Cvar_RegisterVariable(&gl_playermip);
-	Cvar_RegisterVariable(&gl_fullbright);
 	Cvar_RegisterVariable(&gl_overbright);
 	Cvar_RegisterVariable(&gl_nearwater_fix);
 	Cvar_RegisterVariable(&gl_fadescreen_alpha);
+	Cvar_RegisterVariable(&gl_clear);
 
 	gl_vendor = (const char *) glGetString(GL_VENDOR);
 	gl_renderer = (const char *) glGetString(GL_RENDERER);

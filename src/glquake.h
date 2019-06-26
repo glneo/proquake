@@ -73,13 +73,15 @@ extern cvar_t gl_smoothmodels;
 extern cvar_t gl_affinemodels;
 extern cvar_t gl_polyblend;
 
-extern cvar_t gl_flashblend;
+//extern cvar_t gl_flashblend;
 //extern cvar_t	gl_doubleeyes;
 extern cvar_t gl_playermip;
 extern cvar_t gl_fullbright;
 extern cvar_t r_ringalpha;
 
 extern cvar_t vid_vsync;
+extern cvar_t vid_gamma;
+extern cvar_t vid_contrast;
 
 extern qpic_t *draw_disc;
 
@@ -100,6 +102,7 @@ typedef enum {
 void R_DrawAliasModel(entity_t *ent);
 
 // gl_draw.c
+void Scrap_Upload(void);
 qpic_t *Draw_PicFromWad(const char *name);
 qpic_t *Draw_CachePic(const char *path);
 void Draw_Character(int x, int y, int num, float alpha);
@@ -153,7 +156,7 @@ void R_DrawSpriteModel(entity_t *ent);
 void DrawGLPoly(glpoly_t *p);
 void DrawGLPolyLight(glpoly_t *p);
 texture_t *R_TextureAnimation(int frame, texture_t *base);
-void R_DrawWaterSurfaces(void);
+void R_DrawWaterSurfaces(brush_model_t *brushmodel);
 void DrawTextureChains(brush_model_t *brushmodel);
 void DrawGLWaterPoly(glpoly_t *p);
 void DrawGLWaterPolyLight(glpoly_t *p);

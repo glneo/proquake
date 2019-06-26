@@ -57,17 +57,17 @@ typedef struct {
 
 #define	SIGNONS         4 // signon messages to receive before connected
 
-#define	MAX_DLIGHTS		32
+#define	MAX_DLIGHTS     32
 typedef struct {
 	vec3_t origin;
 	float radius;
-	float die;				// stop lighting after this time
-	float decay;				// drop this each second
-	float minlight;			// don't add when contributing less
+	float die; // stop lighting after this time
+	float decay; // drop this each second
+	float minlight; // don't add when contributing less
 	int key;
 } dlight_t;
 
-#define	MAX_BEAMS	24
+#define	MAX_BEAMS       24
 typedef struct {
 	int entity;
 	struct model_s *model;
@@ -75,7 +75,7 @@ typedef struct {
 	vec3_t start, end;
 } beam_t;
 
-#define	MAX_EFRAGS		2048
+#define	MAX_EFRAGS      2048
 
 #define	MAX_MAPSTRING	2048
 #define	MAX_DEMOS	32
@@ -287,8 +287,6 @@ extern cvar_t cl_movespeedkey;
 extern cvar_t cl_yawspeed;
 extern cvar_t cl_pitchspeed;
 
-extern cvar_t pq_lag;
-
 extern cvar_t cl_anglespeedkey;
 
 extern cvar_t cl_shownet;
@@ -315,18 +313,8 @@ extern cvar_t pq_maxfps;
 
 extern cvar_t r_truegunangle;
 
-extern cvar_t pq_waterblend;
-extern cvar_t pq_quadblend;
-extern cvar_t pq_ringblend;
-extern cvar_t pq_pentblend;
-extern cvar_t pq_suitblend;
-
 extern cvar_t cl_keypad;
 extern cvar_t cl_rollangle;
-extern cvar_t pq_moveup;
-extern cvar_t ambientvolume;
-extern cvar_t m_directinput;
-extern cvar_t vid_consize;
 
 extern cvar_t cl_rollspeed;
 extern cvar_t cl_rollangle;
@@ -342,8 +330,7 @@ extern cvar_t v_kickpitch;
 extern cvar_t cl_maxpitch;
 extern cvar_t cl_minpitch;
 
-// JPG 1.05 - translate +jump to +moveup under water
-extern cvar_t pq_moveup;
+extern cvar_t pq_moveup; // translate +jump to +moveup when under water
 
 #define	MAX_TEMP_ENTITIES	64			// lightning bolts, etc
 #define	MAX_STATIC_ENTITIES	128			// torches, etc

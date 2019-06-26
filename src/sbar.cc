@@ -920,6 +920,9 @@ static void Sbar_LoadPics(void)
 		rsb_ammo[1] = Draw_PicFromWad("r_ammomulti");
 		rsb_ammo[2] = Draw_PicFromWad("r_ammoplasma");
 	}
+
+	// Draw_PicFromWad can dirty the scrap texture
+	Scrap_Upload();
 }
 
 void Sbar_Init(void)

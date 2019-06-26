@@ -50,6 +50,7 @@ client_t *host_client; // current client
 
 jmp_buf host_abortserver;
 
+// FIXME: remove
 byte *host_colormap;
 
 cvar_t host_timescale = { "host_timescale", "0" }; // scale server time (for slow motion or fast-forward)
@@ -822,7 +823,6 @@ void Host_Init(quakeparms_t *parms)
 
 		VID_Init();
 		GL_Init();
-		TexMgr_LoadPalette();
 		IN_Init();
 		TexMgr_Init();
 		R_Init();

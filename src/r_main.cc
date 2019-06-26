@@ -17,6 +17,18 @@
 
 #define BACKFACE_EPSILON 0.01
 
+cvar_t r_wateralpha = { "r_wateralpha", "1", true };
+cvar_t r_dynamic = { "r_dynamic", "1" };
+cvar_t r_novis = { "r_novis", "0" };
+cvar_t r_interpolate_animation = { "r_interpolate_animation", "0", true };
+cvar_t r_interpolate_transform = { "r_interpolate_transform", "0", true };
+cvar_t r_interpolate_weapon = { "r_interpolate_weapon", "0", true };
+cvar_t r_truegunangle = { "r_truegunangle", "0", true };  // Baker 3.80x - Optional "true" gun positioning on viewmodel
+cvar_t r_drawviewmodel = { "r_drawviewmodel", "1", true };  // Baker 3.80x - Save to config
+cvar_t r_ringalpha = { "r_ringalpha", "0.4", true }; // Baker 3.80x - gl_ringalpha
+cvar_t r_fullbright = { "r_fullbright", "0" };
+cvar_t r_lightmap = { "r_lightmap", "0" };
+cvar_t r_waterwarp = { "r_waterwarp", "0", true }; // Baker 3.60 - Save this to config now
 cvar_t r_norefresh = { "r_norefresh", "0" };
 cvar_t r_drawentities = { "r_drawentities", "1" };
 cvar_t r_speeds = { "r_speeds", "0" };
@@ -36,11 +48,13 @@ mleaf_t *r_viewleaf, *r_oldviewleaf;
 static mplane_t frustum[4];
 static int r_visframecount; // bumped when going to a new PVS
 
+int r_framecount;
+
 static void R_RecursiveWorldNode(mnode_t *node)
 {
 	int c, side;
 	mplane_t *plane;
-	msurface_t *surf, **mark;
+	msurface_t **mark;
 	mleaf_t *pleaf;
 	double dot;
 
@@ -104,7 +118,6 @@ static void R_RecursiveWorldNode(mnode_t *node)
 
 	// draw stuff
 	c = node->numsurfaces;
-
 	if (c)
 	{
 		if (dot < 0 - BACKFACE_EPSILON)
@@ -112,7 +125,8 @@ static void R_RecursiveWorldNode(mnode_t *node)
 		else if (dot > BACKFACE_EPSILON)
 			side = 0;
 
-		for (surf = cl.worldmodel->brushmodel->surfaces + node->firstsurface; c; c--, surf++)
+		msurface_t *surf = cl.worldmodel->brushmodel->surfaces + node->firstsurface;
+		for (; c; c--, surf++)
 		{
 			if (surf->visframe != r_framecount)
 				continue;
@@ -519,7 +533,6 @@ void R_Init(void)
 	Cvar_RegisterVariable(&r_drawviewmodel);
 	Cvar_RegisterVariable(&r_ringalpha);
 	Cvar_RegisterVariable(&r_truegunangle);
-
 	Cvar_RegisterVariable(&r_shadows);
 	Cvar_RegisterVariable(&r_wateralpha);
 	Cvar_RegisterVariable(&r_dynamic);
@@ -527,12 +540,9 @@ void R_Init(void)
 	Cvar_RegisterVariable(&r_speeds);
 	Cvar_RegisterVariable(&r_waterwarp);
 
-
 	Cvar_RegisterVariable(&r_interpolate_animation);
 	Cvar_RegisterVariable(&r_interpolate_transform);
 	Cvar_RegisterVariable(&r_interpolate_weapon);
-
-	Cvar_RegisterVariable(&gl_clear);
 
 	R_InitParticles();
 	R_InitParticleTexture();

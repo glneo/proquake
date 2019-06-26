@@ -18,10 +18,7 @@
 #include "glquake.h"
 #include "model.h"
 
-#define	BLOCK_WIDTH     128
-#define	BLOCK_HEIGHT    128
-
-#define	MAX_LIGHTMAPS   64
+#define	MAX_LIGHTMAPS   128
 extern gltexture_t *lightmap_textures[MAX_LIGHTMAPS];
 
 typedef struct glRect_s
@@ -68,7 +65,7 @@ texture_t *R_TextureAnimation(int frame, texture_t *base)
 	return base;
 }
 
-void R_DrawWaterSurfaces(void)
+void R_DrawWaterSurfaces(brush_model_t *brushmodel)
 {
 	int i;
 	msurface_t *s;
@@ -80,9 +77,9 @@ void R_DrawWaterSurfaces(void)
 		glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
 	}
 
-	for (i = 0; i < cl.worldmodel->brushmodel->numtextures; i++)
+	for (i = 0; i < brushmodel->numtextures; i++)
 	{
-		t = cl.worldmodel->brushmodel->textures[i];
+		t = brushmodel->textures[i];
 		if (!t)
 			continue;
 		s = t->texturechain;
@@ -101,8 +98,8 @@ void R_DrawWaterSurfaces(void)
 
 	if (r_wateralpha.value < 1.0)
 	{
+		glDepthMask(GL_TRUE);
 		glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
-		glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
 	}
 }
 
@@ -135,7 +132,7 @@ void DrawTextureChains(brush_model_t *brushmodel)
 		t->texturechain = NULL;
 	}
 
-	R_DrawWaterSurfaces();
+	R_DrawWaterSurfaces(brushmodel);
 }
 
 /* Warp the vertex coordinates */
@@ -208,7 +205,7 @@ void R_RenderBrushPoly(msurface_t *fa, int frame)
 	else
 		DrawGLPolyLight(fa->polys);
 
-	if (t->fullbright != NULL && gl_fullbright.value)
+	if (t->fullbright != NULL && r_fullbright.value)
 	{
 		glBlendFunc(GL_ONE, GL_ONE);
 		GL_Bind(t->fullbright);

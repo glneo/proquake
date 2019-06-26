@@ -22,41 +22,34 @@
  * entities sent from the server may not include everything in the pvs, especially
  * when crossing a water boundary.
  */
-cvar_t scr_ofsx = { "scr_ofsx", "0", false };
-cvar_t scr_ofsy = { "scr_ofsy", "0", false };
-cvar_t scr_ofsz = { "scr_ofsz", "0", false };
+cvar_t scr_ofsx = { "scr_ofsx", "0" };
+cvar_t scr_ofsy = { "scr_ofsy", "0" };
+cvar_t scr_ofsz = { "scr_ofsz", "0" };
 
-cvar_t cl_rollspeed = { "cl_rollspeed", "200", true };
-cvar_t cl_rollangle = { "cl_rollangle", "0", true }; // Quake classic default = 2.0
+cvar_t cl_rollspeed = { "cl_rollspeed", "200", CVAR_ARCHIVE };
+cvar_t cl_rollangle = { "cl_rollangle", "0", CVAR_ARCHIVE }; // Quake classic default = 2.0
 
-cvar_t cl_bob = { "cl_bob", "0", true }; // Quake classic default = 0.02
-cvar_t cl_bobcycle = { "cl_bobcycle", "0.6", false }; // Leave it
-cvar_t cl_bobup = { "cl_bobup", "0", false }; // Quake classic default is 0.5
+cvar_t cl_bob = { "cl_bob", "0", CVAR_ARCHIVE }; // Quake classic default = 0.02
+cvar_t cl_bobcycle = { "cl_bobcycle", "0.6" }; // Leave it
+cvar_t cl_bobup = { "cl_bobup", "0" }; // Quake classic default is 0.5
 
-cvar_t v_kicktime = { "v_kicktime", "0", true };  //"0.5", true};  // Baker 3.80x - Save to config
-cvar_t v_kickroll = { "v_kickroll", "0", true };  //"0.6", true};  // Baker 3.80x - Save to config
-cvar_t v_kickpitch = { "v_kickpitch", "0", true };  //"0.6", true};  // Baker 3.80x - Save to config
-cvar_t v_gunkick = { "v_gunkick", "0", true };
+cvar_t v_kicktime = { "v_kicktime", "0", CVAR_ARCHIVE };  //"0.5", true};  // Baker 3.80x - Save to config
+cvar_t v_kickroll = { "v_kickroll", "0", CVAR_ARCHIVE };  //"0.6", true};  // Baker 3.80x - Save to config
+cvar_t v_kickpitch = { "v_kickpitch", "0", CVAR_ARCHIVE };  //"0.6", true};  // Baker 3.80x - Save to config
+cvar_t v_gunkick = { "v_gunkick", "0", CVAR_ARCHIVE };
 
-cvar_t v_iyaw_cycle = { "v_iyaw_cycle", "2", false };
-cvar_t v_iroll_cycle = { "v_iroll_cycle", "0.5", false };
-cvar_t v_ipitch_cycle = { "v_ipitch_cycle", "1", false };
-cvar_t v_iyaw_level = { "v_iyaw_level", "0.3", false };
-cvar_t v_iroll_level = { "v_iroll_level", "0.1", false };
-cvar_t v_ipitch_level = { "v_ipitch_level", "0.3", false };
+cvar_t v_iyaw_cycle = { "v_iyaw_cycle", "2" };
+cvar_t v_iroll_cycle = { "v_iroll_cycle", "0.5" };
+cvar_t v_ipitch_cycle = { "v_ipitch_cycle", "1" };
+cvar_t v_iyaw_level = { "v_iyaw_level", "0.3" };
+cvar_t v_iroll_level = { "v_iroll_level", "0.1" };
+cvar_t v_ipitch_level = { "v_ipitch_level", "0.3" };
 
-cvar_t v_idlescale = { "v_idlescale", "0", false };
+cvar_t v_idlescale = { "v_idlescale", "0" };
 
-cvar_t r_viewmodeloffset = { "r_viewmodeloffset", "0", true };
+cvar_t r_viewmodeloffset = { "r_viewmodeloffset", "0", CVAR_ARCHIVE };
 
-cvar_t gl_cshiftpercent = { "gl_cshiftpercent", "100", false };
-
-// JPG 1.05 - palette changes
-cvar_t pq_waterblend = { "pq_waterblend", "0", true };
-cvar_t pq_quadblend = { "pq_quadblend", "0.3", true };
-cvar_t pq_ringblend = { "pq_ringblend", "0", true };
-cvar_t pq_pentblend = { "pq_pentblend", "0.3", true };
-cvar_t pq_suitblend = { "pq_suitblend", "0.3", true };
+cvar_t gl_cshiftpercent = { "gl_cshiftpercent", "100" };
 
 float v_dmg_time, v_dmg_roll, v_dmg_pitch;
 
@@ -399,12 +392,11 @@ void V_CalcBlend(void)
 			continue;
 
 		a2 = ((cl.cshifts[j].percent * gl_cshiftpercent.value) / 100.0) / 255.0;
-
-		//		a2 = cl.cshifts[j].percent/255.0;
+		// a2 = cl.cshifts[j].percent/255.0;
 		if (!a2)
 			continue;
 		a = a + a2 * (1 - a);
-		//Con_Printf ("j:%i a:%f\n", j, a);
+		// Con_Printf ("j:%i a:%f\n", j, a);
 		a2 = a2 / a;
 		r = r * (1 - a2) + cl.cshifts[j].destcolor[0] * a2;
 		g = g * (1 - a2) + cl.cshifts[j].destcolor[1] * a2;

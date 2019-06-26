@@ -1118,6 +1118,12 @@ gltexture_t *TexMgr_LoadImage(const char *name, int width, int height, enum srcf
 	glt->source_height = height;
 	glt->source_crc = crc;
 
+	// SRC_RGBA is 4 bytes per pixel, all others are 1
+	size_t bpp = (format == SRC_RGBA ? 4 : 1);
+	size_t data_size = width * height * bpp;
+	glt->source_data = (byte *)Q_malloc(data_size);
+	memcpy(glt->source_data, data, data_size);
+
 	//upload it
 	mark = Hunk_LowMark();
 
@@ -1151,13 +1157,12 @@ gltexture_t *TexMgr_LoadImage(const char *name, int width, int height, enum srcf
 void TexMgr_ReloadImage(gltexture_t *glt, int shirt, int pants)
 {
 	byte translation[256];
-	byte *src, *dst, *data = NULL, *translated;
+	byte *src, *dst, *data, *translated;
 	int size, i;
 //
 // get source data
 //
-//	data = (byte *) glt->source_data; //image in memory
-
+	data = (byte *) glt->source_data; // image in memory
 	if (!data)
 	{
 		Con_Printf("TexMgr_ReloadImage: invalid source for %s\n", glt->name);
