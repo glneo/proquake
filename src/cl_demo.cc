@@ -55,7 +55,7 @@ void CL_StopPlayback(void)
 	if (!cls.demoplayback)
 		return;
 
-	fclose(cls.demofile);
+	COM_CloseFile(cls.demofile);
 	cls.demoplayback = false;
 	cls.demofile = NULL;
 	cls.state = ca_disconnected;
@@ -70,13 +70,13 @@ void CL_StopPlayback(void)
 static void CL_WriteDemoMessage(void)
 {
 	int len = LittleLong(net_message.cursize);
-	fwrite(&len, 4, 1, cls.demofile);
+	Sys_FileWrite(cls.demofile, &len, 4);
 	for (int i = 0; i < 3; i++)
 	{
 		float f = LittleFloat(cl.viewangles[i]);
-		fwrite(&f, 4, 1, cls.demofile);
+		Sys_FileWrite(cls.demofile, &f, 4);
 	}
-	fwrite(net_message.data, net_message.cursize, 1, cls.demofile);
+	Sys_FileWrite(cls.demofile, net_message.data, net_message.cursize);
 	fflush(cls.demofile);
 }
 
@@ -137,8 +137,8 @@ static int CL_GetDemoMessage()
 
 	// get the next message
 	cls.demo_offset_current = ftell(cls.demofile);
-	ret = fread(&net_message.cursize, 4, 1, cls.demofile);
-	if (ret != 1)
+	ret = Sys_FileRead(cls.demofile, &net_message.cursize, 4);
+	if (ret != 4)
 	{
 		CL_StopPlayback();
 		return 0;
@@ -150,8 +150,8 @@ static int CL_GetDemoMessage()
 	VectorCopy(cl.mviewangles[0], cl.mviewangles[1]);
 	for (int i = 0; i < 3; i++)
 	{
-		ret = fread(&f, 4, 1, cls.demofile);
-		if (ret != 1)
+		ret = Sys_FileRead(cls.demofile, &f, 4);
+		if (ret != 4)
 		{
 			CL_StopPlayback();
 			return 0;
@@ -159,8 +159,8 @@ static int CL_GetDemoMessage()
 		cl.mviewangles[0][i] = LittleFloat(f);
 	}
 
-	ret = fread(net_message.data, net_message.cursize, 1, cls.demofile);
-	if (ret != 1)
+	ret = Sys_FileRead(cls.demofile, net_message.data, net_message.cursize);
+	if (ret != net_message.cursize)
 	{
 		CL_StopPlayback();
 		return 0;
@@ -172,7 +172,7 @@ static int CL_GetDemoMessage()
 		// in theory, if this occurs we ARE at the start of the demo with demo rewind on
 		if (demo_framepos && demo_framepos->baz)
 		{
-			fseek(cls.demofile, demo_framepos->baz, SEEK_SET);
+			Sys_FileSeek(cls.demofile, demo_framepos->baz);
 			EraseTopEntry(); // we might be able to improve this better but not right now.
 		}
 
@@ -240,7 +240,7 @@ void CL_Stop_f(void)
 	CL_WriteDemoMessage();
 
 	// finish up
-	fclose(cls.demofile);
+	COM_CloseFile(cls.demofile);
 	// Close demo instance #2 (record end)
 	strlcpy(cls.recent_file, cls.demoname, sizeof(cls.recent_file));
 
@@ -324,7 +324,7 @@ void CL_Record_f(void)
 	COM_ForceExtension(name, ".dem");
 
 	Con_Printf("recording to %s.\n", name);
-	cls.demofile = fopen(name, "wb");
+	cls.demofile = Sys_FileOpenWrite(name);
 	if (!cls.demofile)
 	{
 		Con_Printf("ERROR: couldn't open demo for writing.\n");

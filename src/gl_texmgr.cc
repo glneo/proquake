@@ -471,22 +471,16 @@ void TexMgr_DeleteTextureObjects(void)
 
 void TexMgr_LoadPalette(void)
 {
-	byte *pal, *src, *dst;
-	int i;
-	FILE *f;
+	byte *src, *dst;
 
-	COM_OpenFile("gfx/palette.lmp", &f);
-	if (!f)
+	byte *pal = COM_LoadMallocFile("gfx/palette.lmp");
+	if (!pal)
 		Sys_Error("Couldn't load gfx/palette.lmp");
-
-	pal = (byte *)Q_malloc(768);
-	fread(pal, 1, 768, f);
-	fclose(f);
 
 	//standard palette, 255 is transparent
 	dst = (byte *) d_8to24table;
 	src = pal;
-	for (i = 0; i < 256; i++)
+	for (int i = 0; i < 256; i++)
 	{
 		*dst++ = *src++;
 		*dst++ = *src++;
@@ -498,14 +492,14 @@ void TexMgr_LoadPalette(void)
 	//fullbright palette, 0-223 are black (for additive blending)
 	src = pal + 224 * 3;
 	dst = (byte *) &d_8to24table_fbright[224];
-	for (i = 224; i < 256; i++)
+	for (int i = 224; i < 256; i++)
 	{
 		*dst++ = *src++;
 		*dst++ = *src++;
 		*dst++ = *src++;
 		*dst++ = 255;
 	}
-	for (i = 0; i < 224; i++)
+	for (int i = 0; i < 224; i++)
 	{
 		dst = (byte *) &d_8to24table_fbright[i];
 		dst[3] = 255;
@@ -515,14 +509,14 @@ void TexMgr_LoadPalette(void)
 	//nobright palette, 224-255 are black (for additive blending)
 	dst = (byte *) d_8to24table_nobright;
 	src = pal;
-	for (i = 0; i < 256; i++)
+	for (int i = 0; i < 256; i++)
 	{
 		*dst++ = *src++;
 		*dst++ = *src++;
 		*dst++ = *src++;
 		*dst++ = 255;
 	}
-	for (i = 224; i < 256; i++)
+	for (int i = 224; i < 256; i++)
 	{
 		dst = (byte *) &d_8to24table_nobright[i];
 		dst[3] = 255;
@@ -994,8 +988,10 @@ static void TexMgr_LoadImage8(gltexture_t *glt, byte *data)
 		for (i = 0; i < (int) (glt->width * glt->height); i++)
 			if (data[i] == 255) //transparent index
 				break;
-		if (i == (int) (glt->width * glt->height))
+		if (i == (int) (glt->width * glt->height)) {
+			Con_Printf("%s has FALSE ALPHA !!!!!!!!!!!!!!!!!!!!\n", glt->name);
 			glt->flags &= ~TEX_ALPHA;
+		}
 	}
 
 	// choose palette and padbyte

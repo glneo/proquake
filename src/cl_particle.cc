@@ -135,7 +135,7 @@ void R_ReadPointFile_f(void)
 		VectorCopy(org, p->org);
 	}
 
-	fclose(f);
+	COM_CloseFile(f);
 	Con_Printf("%i points read\n", c);
 }
 
