@@ -73,39 +73,6 @@ void R_UploadLightmap(int lmap)
 	lightmap_modified[lmap] = false;
 }
 
-void R_BlendLightmaps(void)
-{
-	if (r_fullbright.value)
-		return;
-
-	glDepthMask(GL_FALSE); // don't bother writing Z
-
-	if (!r_lightmap.value)
-	{
-		if (gl_overbright.value)
-			glBlendFunc(GL_DST_COLOR, GL_SRC_COLOR);
-		else
-			glBlendFunc(GL_ZERO, GL_SRC_COLOR);
-	}
-
-	for (int i = 0; i < MAX_LIGHTMAPS; i++)
-	{
-		GL_Bind(lightmap_textures[i]);
-		R_UploadLightmap(i);
-		for (glpoly_t *p = lightmap_polys[i]; p; p = p->chain)
-		{
-			// JPG - added r_waterwarp
-			if ((p->flags & SURF_UNDERWATER) && r_waterwarp.value)
-				DrawGLWaterPolyLight(p);
-			else
-				DrawGLPolyLight(p);
-		}
-	}
-
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	glDepthMask(GL_TRUE); // back to normal Z buffering
-}
-
 static void R_AddDynamicLights(msurface_t *surf)
 {
 	int smax = (surf->extents[0] >> 4) + 1;

@@ -21,9 +21,8 @@
 #include "glquake.h"
 
 static cvar_t gl_texturemode = { "gl_texturemode", "", CVAR_ARCHIVE };
-static cvar_t gl_texture_anisotropy = { "gl_texture_anisotropy", "1", CVAR_ARCHIVE };
+static cvar_t gl_texture_anisotropy = { "gl_texture_anisotropy", "0", CVAR_ARCHIVE };
 static cvar_t gl_max_size = { "gl_max_size", "0", CVAR_NONE };
-static cvar_t gl_picmip = { "gl_picmip", "0", CVAR_NONE };
 
 static GLint gl_hardware_maxsize;
 
@@ -35,11 +34,6 @@ gltexture_t *notexture, *nulltexture;
 unsigned int d_8to24table[256];
 unsigned int d_8to24table_fbright[256];
 unsigned int d_8to24table_fbright_fence[256];
-unsigned int d_8to24table_nobright[256];
-unsigned int d_8to24table_nobright_fence[256];
-unsigned int d_8to24table_conchars[256];
-unsigned int d_8to24table_shirt[256];
-unsigned int d_8to24table_pants[256];
 
 // current texture in each texture unit cache
 static GLuint currenttexture[2] = { GL_UNUSED_TEXTURE, GL_UNUSED_TEXTURE };
@@ -477,7 +471,7 @@ void TexMgr_LoadPalette(void)
 	if (!pal)
 		Sys_Error("Couldn't load gfx/palette.lmp");
 
-	//standard palette, 255 is transparent
+	//standard palette
 	dst = (byte *) d_8to24table;
 	src = pal;
 	for (int i = 0; i < 256; i++)
@@ -487,53 +481,17 @@ void TexMgr_LoadPalette(void)
 		*dst++ = *src++;
 		*dst++ = 255;
 	}
-	((byte *) &d_8to24table[255])[3] = 0;
 
-	//fullbright palette, 0-223 are black (for additive blending)
-	src = pal + 224 * 3;
-	dst = (byte *) &d_8to24table_fbright[224];
-	for (int i = 224; i < 256; i++)
-	{
-		*dst++ = *src++;
-		*dst++ = *src++;
-		*dst++ = *src++;
-		*dst++ = 255;
-	}
+	// fullbright palette, 0-223 are transparent (for blending)
+	memcpy(d_8to24table_fbright, d_8to24table, 256 * 4);
 	for (int i = 0; i < 224; i++)
-	{
-		dst = (byte *) &d_8to24table_fbright[i];
-		dst[3] = 255;
-		dst[2] = dst[1] = dst[0] = 0;
-	}
+		d_8to24table_fbright[i] = 0;
 
-	//nobright palette, 224-255 are black (for additive blending)
-	dst = (byte *) d_8to24table_nobright;
-	src = pal;
-	for (int i = 0; i < 256; i++)
-	{
-		*dst++ = *src++;
-		*dst++ = *src++;
-		*dst++ = *src++;
-		*dst++ = 255;
-	}
-	for (int i = 224; i < 256; i++)
-	{
-		dst = (byte *) &d_8to24table_nobright[i];
-		dst[3] = 255;
-		dst[2] = dst[1] = dst[0] = 0;
-	}
+	d_8to24table[255] = 0; // 255 is transparent
 
-	//fullbright palette, for fence textures
+	// fullbright palette, for fence textures
 	memcpy(d_8to24table_fbright_fence, d_8to24table_fbright, 256 * 4);
-	d_8to24table_fbright_fence[255] = 0; // Alpha of zero.
-
-	//nobright palette, for fence textures
-	memcpy(d_8to24table_nobright_fence, d_8to24table_nobright, 256 * 4);
-	d_8to24table_nobright_fence[255] = 0; // Alpha of zero.
-
-	//conchars palette, 0 and 255 are transparent
-	memcpy(d_8to24table_conchars, d_8to24table, 256 * 4);
-	((byte *) &d_8to24table_conchars[0])[3] = 0;
+	d_8to24table_fbright_fence[255] = 0; // 255 is transparent
 
 	free(pal);
 }
@@ -906,7 +864,7 @@ static byte *TexMgr_PadImageH(byte *in, int width, int height, byte padbyte)
 /* handles 32bit source data */
 static void TexMgr_LoadImage32(gltexture_t *glt, unsigned *data)
 {
-	int miplevel, mipwidth, mipheight, picmip;
+	int miplevel, mipwidth, mipheight;
 
 	if (!gl_texture_NPOT)
 	{
@@ -914,25 +872,6 @@ static void TexMgr_LoadImage32(gltexture_t *glt, unsigned *data)
 		data = TexMgr_ResampleTexture(data, glt->width, glt->height, glt->flags & TEX_ALPHA);
 		glt->width = TexMgr_Pad(glt->width);
 		glt->height = TexMgr_Pad(glt->height);
-	}
-
-	// mipmap down
-	picmip = (glt->flags & TEX_NOPICMIP) ? 0 : max((int ) gl_picmip.value, 0);
-	mipwidth = TexMgr_SafeTextureSize(glt->width >> picmip);
-	mipheight = TexMgr_SafeTextureSize(glt->height >> picmip);
-	while ((int) glt->width > mipwidth)
-	{
-		TexMgr_MipMapW(data, glt->width, glt->height);
-		glt->width >>= 1;
-		if (glt->flags & TEX_ALPHA)
-			TexMgr_AlphaEdgeFix((byte *) data, glt->width, glt->height);
-	}
-	while ((int) glt->height > mipheight)
-	{
-		TexMgr_MipMapH(data, glt->width, glt->height);
-		glt->height >>= 1;
-		if (glt->flags & TEX_ALPHA)
-			TexMgr_AlphaEdgeFix((byte *) data, glt->width, glt->height);
 	}
 
 	// upload
@@ -983,15 +922,13 @@ static void TexMgr_LoadImage8(gltexture_t *glt, byte *data)
 	}
 
 	// detect false alpha cases
-	if ((glt->flags & TEX_ALPHA) && !(glt->flags & TEX_CONCHARS))
+	if (glt->flags & TEX_ALPHA)
 	{
 		for (i = 0; i < (int) (glt->width * glt->height); i++)
 			if (data[i] == 255) //transparent index
 				break;
-		if (i == (int) (glt->width * glt->height)) {
-			Con_Printf("%s has FALSE ALPHA !!!!!!!!!!!!!!!!!!!!\n", glt->name);
+		if (i == (int) (glt->width * glt->height))
 			glt->flags &= ~TEX_ALPHA;
-		}
 	}
 
 	// choose palette and padbyte
@@ -1001,19 +938,6 @@ static void TexMgr_LoadImage8(gltexture_t *glt, byte *data)
 			usepal = d_8to24table_fbright_fence;
 		else
 			usepal = d_8to24table_fbright;
-		padbyte = 0;
-	}
-	else if (glt->flags & TEX_NOBRIGHT)
-	{
-		if (glt->flags & TEX_ALPHA)
-			usepal = d_8to24table_nobright_fence;
-		else
-			usepal = d_8to24table_nobright;
-		padbyte = 0;
-	}
-	else if (glt->flags & TEX_CONCHARS)
-	{
-		usepal = d_8to24table_conchars;
 		padbyte = 0;
 	}
 	else
@@ -1260,7 +1184,6 @@ void TexMgr_Init(void)
 	TexMgr_LoadPalette();
 
 	Cvar_RegisterVariable(&gl_max_size);
-	Cvar_RegisterVariable(&gl_picmip);
 	Cvar_RegisterVariable(&gl_texture_anisotropy);
 	Cvar_SetCallback(&gl_texture_anisotropy, &TexMgr_Anisotropy_f);
 	gl_texturemode.string = (char *) glmodes[glmode_idx].name;

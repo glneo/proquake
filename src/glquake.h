@@ -48,8 +48,6 @@ extern vec3_t vpn;
 extern vec3_t vright;
 extern vec3_t r_origin;
 
-// screen size info
-extern refdef_t r_refdef;
 extern mleaf_t *r_viewleaf, *r_oldviewleaf;
 
 // rendering cvar stuffs
@@ -61,6 +59,8 @@ extern cvar_t r_shadows;
 extern cvar_t r_wateralpha;
 extern cvar_t r_dynamic;
 extern cvar_t r_novis;
+extern cvar_t r_particles;
+extern cvar_t r_particles_alpha;
 
 // fenix@io.com: model interpolation
 extern cvar_t r_interpolate_animation;
@@ -72,6 +72,7 @@ extern cvar_t gl_clear;
 extern cvar_t gl_smoothmodels;
 extern cvar_t gl_affinemodels;
 extern cvar_t gl_polyblend;
+extern cvar_t gl_overbright;
 
 //extern cvar_t gl_flashblend;
 //extern cvar_t	gl_doubleeyes;
@@ -120,6 +121,7 @@ void Draw_Init(void);
 
 // gl_light.c
 void R_ClearLightmapPolys();
+void R_UploadLightmap(int lmap);
 void R_BlendLightmaps(void);
 void R_BuildLightMap(msurface_t *surf, byte *dest, int stride);
 void R_RenderDynamicLightmaps(msurface_t *fa);
@@ -137,32 +139,21 @@ bool R_CullBox(vec3_t mins, vec3_t maxs);
 bool R_CullForEntity(const entity_t *ent);
 void GL_Setup(void);
 void R_TranslatePlayerSkin(int playernum);
-void R_NewMap(void);
-void R_RenderView(void);
 void GL_Init(void);
 void GL_BeginRendering();
 void GL_EndRendering(void);
 void R_Clear(void);
-void R_Init(void);
 
 // gl_particle.c
-void R_DrawParticles(void);
-void R_InitParticleTexture(void);
+void GL_DrawParticles(void);
+void GL_InitParticleTexture(void);
 
 // gl_sprite.c
 void R_DrawSpriteModel(entity_t *ent);
 
 // gl_surface.c
-void DrawGLPoly(glpoly_t *p);
-void DrawGLPolyLight(glpoly_t *p);
-texture_t *R_TextureAnimation(int frame, texture_t *base);
-void R_DrawWaterSurfaces(brush_model_t *brushmodel);
-void DrawTextureChains(brush_model_t *brushmodel);
-void DrawGLWaterPoly(glpoly_t *p);
-void DrawGLWaterPolyLight(glpoly_t *p);
-void R_RenderBrushPoly(msurface_t *fa, int frame);
+void R_DrawSurfaces(brush_model_t *brushmodel);
 void R_DrawBrushModel(entity_t *ent);
-void R_DrawWorld(void);
 
 // gl_vidsdl.c
 void VID_Swap(void);

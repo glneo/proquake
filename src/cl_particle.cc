@@ -23,30 +23,24 @@ static const int ramp1[8] = { 0x6f, 0x6d, 0x6b, 0x69, 0x67, 0x65, 0x63, 0x61 };
 static const int ramp2[8] = { 0x6f, 0x6e, 0x6d, 0x6c, 0x6b, 0x6a, 0x68, 0x66 };
 static const int ramp3[8] = { 0x6d, 0x6b, 0x06, 0x05, 0x04, 0x03, 0x00, 0x00 };
 
-cvar_t r_particles = { "r_particles", "1", CVAR_ARCHIVE };
-cvar_t r_particles_alpha = { "r_particles_alpha", "1", CVAR_ARCHIVE };
-
-particle_t *active_particles, *free_particles;
-
-particle_t *particles;
-int r_numparticles;
+particle_t *active_particles;
+static particle_t *free_particles;
+static particle_t *particles;
+static int numparticles;
 
 #define NUMVERTEXNORMALS 162
-
 const float r_avertexnormals[NUMVERTEXNORMALS][3] = {
 	#include "anorms.h"
 };
 
-vec3_t avelocities[NUMVERTEXNORMALS];
+static vec3_t avelocities[NUMVERTEXNORMALS];
 
-static particle_t *R_GetParticle()
+static particle_t *CL_GetParticle()
 {
-	particle_t *p;
-
 	if (!free_particles)
 		return NULL;
 
-	p = free_particles;
+	particle_t *p = free_particles;
 	free_particles = p->next;
 	p->next = active_particles;
 	active_particles = p;
@@ -54,7 +48,45 @@ static particle_t *R_GetParticle()
 	return p;
 }
 
-void R_EntityParticles(entity_t *ent)
+static void CL_ReadPointFile_f(void)
+{
+	FILE *f;
+	vec3_t org;
+	char name[MAX_OSPATH];
+
+	snprintf(name, sizeof(name), "maps/%s.pts", sv.name);
+
+	COM_OpenFile(name, &f);
+	if (!f)
+	{
+		Con_Printf("couldn't open %s\n", name);
+		return;
+	}
+
+	Con_Printf("Reading %s...\n", name);
+
+	int c = 0;
+	while (fscanf(f, "%f %f %f\n", &org[0], &org[1], &org[2]) == 3)
+	{
+		particle_t *p;
+		if (!(p = CL_GetParticle()))
+		{
+			Con_Printf("Not enough free particles\n");
+			break;
+		}
+
+		p->die = 99999;
+		p->color = (~(c++)) & 15;
+		p->type = pt_static;
+		VectorCopy(vec3_origin, p->vel);
+		VectorCopy(org, p->org);
+	}
+
+	COM_CloseFile(f);
+	Con_Printf("%i points read\n", c);
+}
+
+void CL_EntityParticles(entity_t *ent)
 {
 	static const float dist = 64;
 	static const float beamlength = 16;
@@ -78,7 +110,7 @@ void R_EntityParticles(entity_t *ent)
 		forward[2] = -sp;
 
 		particle_t *p;
-		if (!(p = R_GetParticle()))
+		if (!(p = CL_GetParticle()))
 			return;
 
 		p->die = cl.time + 0.01;
@@ -91,56 +123,18 @@ void R_EntityParticles(entity_t *ent)
 	}
 }
 
-void R_ClearParticles(void)
+void CL_ClearParticles(void)
 {
 	free_particles = &particles[0];
 	active_particles = NULL;
 
-	for (int i = 0; i < r_numparticles; i++)
+	for (int i = 0; i < numparticles; i++)
 		particles[i].next = &particles[i + 1];
-	particles[r_numparticles - 1].next = NULL;
-}
-
-void R_ReadPointFile_f(void)
-{
-	FILE *f;
-	vec3_t org;
-	char name[MAX_OSPATH];
-
-	snprintf(name, sizeof(name), "maps/%s.pts", sv.name);
-
-	COM_OpenFile(name, &f);
-	if (!f)
-	{
-		Con_Printf("couldn't open %s\n", name);
-		return;
-	}
-
-	Con_Printf("Reading %s...\n", name);
-
-	int c = 0;
-	while (fscanf(f, "%f %f %f\n", &org[0], &org[1], &org[2]) == 3)
-	{
-		particle_t *p;
-		if (!(p = R_GetParticle()))
-		{
-			Con_Printf("Not enough free particles\n");
-			break;
-		}
-
-		p->die = 99999;
-		p->color = (~(c++)) & 15;
-		p->type = pt_static;
-		VectorCopy(vec3_origin, p->vel);
-		VectorCopy(org, p->org);
-	}
-
-	COM_CloseFile(f);
-	Con_Printf("%i points read\n", c);
+	particles[numparticles - 1].next = NULL;
 }
 
 /* Parse an effect out of the server message */
-void R_ParseParticleEffect(void)
+void CL_ParseParticleEffect(void)
 {
 	vec3_t org, dir;
 
@@ -155,15 +149,15 @@ void R_ParseParticleEffect(void)
 
 	int color = MSG_ReadByte();
 
-	R_RunParticleEffect(org, dir, color, count);
+	CL_RunParticleEffect(org, dir, color, count);
 }
 
-void R_ParticleExplosion(vec3_t org)
+void CL_ParticleExplosion(vec3_t org)
 {
 	for (int i = 0; i < 1024; i++)
 	{
 		particle_t *p;
-		if (!(p = R_GetParticle()))
+		if (!(p = CL_GetParticle()))
 			return;
 
 		p->die = cl.time + 5;
@@ -190,14 +184,14 @@ void R_ParticleExplosion(vec3_t org)
 	}
 }
 
-void R_ParticleExplosion2(vec3_t org, int colorStart, int colorLength)
+void CL_ParticleExplosion2(vec3_t org, int colorStart, int colorLength)
 {
 	int colorMod = 0;
 
 	for (int i = 0; i < 512; i++)
 	{
 		particle_t *p;
-		if (!(p = R_GetParticle()))
+		if (!(p = CL_GetParticle()))
 			return;
 
 		p->die = cl.time + 0.3;
@@ -213,12 +207,12 @@ void R_ParticleExplosion2(vec3_t org, int colorStart, int colorLength)
 	}
 }
 
-void R_BlobExplosion(vec3_t org)
+void CL_BlobExplosion(vec3_t org)
 {
 	for (int i = 0; i < 1024; i++)
 	{
 		particle_t *p;
-		if (!(p = R_GetParticle()))
+		if (!(p = CL_GetParticle()))
 			return;
 
 		p->die = cl.time + 1 + (rand() & 8) * 0.05;
@@ -246,12 +240,12 @@ void R_BlobExplosion(vec3_t org)
 	}
 }
 
-void R_RunParticleEffect(vec3_t org, vec3_t dir, int color, int count)
+void CL_RunParticleEffect(vec3_t org, vec3_t dir, int color, int count)
 {
 	for (int i = 0; i < count; i++)
 	{
 		particle_t *p;
-		if (!(p = R_GetParticle()))
+		if (!(p = CL_GetParticle()))
 			return;
 
 		if (count == 1024) // rocket explosion
@@ -293,7 +287,7 @@ void R_RunParticleEffect(vec3_t org, vec3_t dir, int color, int count)
 	}
 }
 
-void R_LavaSplash(vec3_t org)
+void CL_LavaSplash(vec3_t org)
 {
 	for (int i = -16; i < 16; i++)
 	{
@@ -302,7 +296,7 @@ void R_LavaSplash(vec3_t org)
 			for (int k = 0; k < 1; k++)
 			{
 				particle_t *p;
-				if (!(p = R_GetParticle()))
+				if (!(p = CL_GetParticle()))
 					return;
 
 				p->die = cl.time + 2 + (rand() & 31) * 0.02;
@@ -326,7 +320,7 @@ void R_LavaSplash(vec3_t org)
 	}
 }
 
-void R_TeleportSplash(vec3_t org)
+void CL_TeleportSplash(vec3_t org)
 {
 	for (int i = -16; i < 16; i += 4)
 	{
@@ -335,7 +329,7 @@ void R_TeleportSplash(vec3_t org)
 			for (int k = -24; k < 32; k += 4)
 			{
 				particle_t *p;
-				if (!(p = R_GetParticle()))
+				if (!(p = CL_GetParticle()))
 					return;
 
 				p->die = cl.time + 0.2 + (rand() & 7) * 0.02;
@@ -359,7 +353,7 @@ void R_TeleportSplash(vec3_t org)
 	}
 }
 
-void R_RocketTrail(vec3_t start, vec3_t end, int type)
+void CL_RocketTrail(vec3_t start, vec3_t end, int type)
 {
 	vec3_t vec;
 	static int tracercount;
@@ -372,7 +366,7 @@ void R_RocketTrail(vec3_t start, vec3_t end, int type)
 		len -= 3;
 
 		particle_t *p;
-		if (!(p = R_GetParticle()))
+		if (!(p = CL_GetParticle()))
 			return;
 
 		VectorCopy(vec3_origin, p->vel);
@@ -534,7 +528,7 @@ void CL_RunParticles(void)
 	}
 }
 
-void R_InitParticles(void)
+void CL_InitParticles(void)
 {
 	int i;
 
@@ -545,18 +539,15 @@ void R_InitParticles(void)
 
 	if ((i = COM_CheckParm("-particles")) && i + 1 < com_argc)
 	{
-		r_numparticles = atoi(com_argv[i + 1]);
-		r_numparticles = CLAMP(ABSOLUTE_MIN_PARTICLES, r_numparticles, ABSOLUTE_MAX_PARTICLES);
+		numparticles = atoi(com_argv[i + 1]);
+		numparticles = CLAMP(ABSOLUTE_MIN_PARTICLES, numparticles, ABSOLUTE_MAX_PARTICLES);
 	}
 	else
 	{
-		r_numparticles = DEFAULT_NUM_PARTICLES;
+		numparticles = DEFAULT_NUM_PARTICLES;
 	}
 
-	particles = (particle_t *) Hunk_AllocName(r_numparticles * sizeof(particle_t), "particles");
+	particles = (particle_t *) Hunk_AllocName(numparticles * sizeof(particle_t), "particles");
 
-	Cmd_AddCommand("pointfile", R_ReadPointFile_f);
-
-	Cvar_RegisterVariable(&r_particles);
-	Cvar_RegisterVariable(&r_particles_alpha);
+	Cmd_AddCommand("pointfile", CL_ReadPointFile_f);
 }

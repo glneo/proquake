@@ -523,7 +523,7 @@ void CL_RelinkEntities(void)
 				ent->origin[2] += sin(bobjrotate / 90 * M_PI) * 5 + 5;
 		}
 		if (ent->effects & EF_BRIGHTFIELD)
-			R_EntityParticles(ent);
+			CL_EntityParticles(ent);
 
 		if (ent->effects & EF_MUZZLEFLASH)
 		{
@@ -556,25 +556,25 @@ void CL_RelinkEntities(void)
 		}
 
 		if (ent->model->flags & EF_GIB)
-			R_RocketTrail(oldorg, ent->origin, BLOOD_TRAIL);
+			CL_RocketTrail(oldorg, ent->origin, BLOOD_TRAIL);
 		else if (ent->model->flags & EF_ZOMGIB)
-			R_RocketTrail(oldorg, ent->origin, SLIGHT_BLOOD_TRAIL);
+			CL_RocketTrail(oldorg, ent->origin, SLIGHT_BLOOD_TRAIL);
 		else if (ent->model->flags & EF_TRACER)
-			R_RocketTrail(oldorg, ent->origin, TRACER1_TRAIL);
+			CL_RocketTrail(oldorg, ent->origin, TRACER1_TRAIL);
 		else if (ent->model->flags & EF_TRACER2)
-			R_RocketTrail(oldorg, ent->origin, TRACER2_TRAIL);
+			CL_RocketTrail(oldorg, ent->origin, TRACER2_TRAIL);
 		else if (ent->model->flags & EF_ROCKET)
 		{
-			R_RocketTrail(oldorg, ent->origin, ROCKET_TRAIL);
+			CL_RocketTrail(oldorg, ent->origin, ROCKET_TRAIL);
 			dl = CL_AllocDlight(i);
 			VectorCopy(ent->origin, dl->origin);
 			dl->radius = 200;
 			dl->die = cl.time + 0.01;
 		}
 		else if (ent->model->flags & EF_GRENADE)
-			R_RocketTrail(oldorg, ent->origin, GRENADE_TRAIL);
+			CL_RocketTrail(oldorg, ent->origin, GRENADE_TRAIL);
 		else if (ent->model->flags & EF_TRACER3)
-			R_RocketTrail(oldorg, ent->origin, VOOR_TRAIL);
+			CL_RocketTrail(oldorg, ent->origin, VOOR_TRAIL);
 
 		ent->forcelink = false;
 
@@ -755,4 +755,6 @@ void CL_Init(void)
 
 	Cmd_AddCommand("viewpos", CL_Viewpos_f);
 	Cmd_AddCommand("campos", CL_Campos_f);
+
+	CL_InitParticles();
 }

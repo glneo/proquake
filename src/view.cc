@@ -53,8 +53,8 @@ cvar_t gl_cshiftpercent = { "gl_cshiftpercent", "100" };
 
 float v_dmg_time, v_dmg_roll, v_dmg_pitch;
 
-extern refdef_t r_refdef;
 
+//extern refdef_t r_refdef;
 // view origin and direction
 //extern vec3_t r_origin, vright, vpn, vup;
 

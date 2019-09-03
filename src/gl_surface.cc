@@ -26,14 +26,14 @@ typedef struct glRect_s
 	unsigned char l, t, w, h;
 } glRect_t;
 
-void DrawGLPoly(glpoly_t *p)
+static void GL_DrawPoly(glpoly_t *p)
 {
 	glTexCoordPointer(2, GL_FLOAT, 0, &p->tex[0]);
 	glVertexPointer(3, GL_FLOAT, 0, &p->verts[0][0]);
 	glDrawArrays(GL_TRIANGLE_FAN, 0, p->numverts);
 }
 
-void DrawGLPolyLight(glpoly_t *p)
+static void GL_DrawPolyLight(glpoly_t *p)
 {
 	glTexCoordPointer(2, GL_FLOAT, 0, &p->light_tex[0]);
 	glVertexPointer(3, GL_FLOAT, 0, &p->verts[0][0]);
@@ -41,7 +41,7 @@ void DrawGLPolyLight(glpoly_t *p)
 }
 
 /* Returns the proper texture for a given time and base texture */
-texture_t *R_TextureAnimation(int frame, texture_t *base)
+static texture_t *R_TextureAnimation(int frame, texture_t *base)
 {
 	if (frame)
 		if (base->alternate_anims)
@@ -65,7 +65,85 @@ texture_t *R_TextureAnimation(int frame, texture_t *base)
 	return base;
 }
 
-void R_DrawWaterSurfaces(brush_model_t *brushmodel)
+/* Warp the vertex coordinates */
+static void GL_DrawWaterPoly(glpoly_t *p)
+{
+	vec3_t verts[p->numverts];
+
+	for (int i = 0; i < p->numverts; i++)
+	{
+		float *v = p->verts[i];
+		verts[i][0] = v[0] + 8 * sin(v[1] * 0.05 + realtime) * sin(v[2] * 0.05 + realtime);
+		verts[i][1] = v[1] + 8 * sin(v[0] * 0.05 + realtime) * sin(v[2] * 0.05 + realtime);
+		verts[i][2] = v[2];
+	}
+
+	glTexCoordPointer(2, GL_FLOAT, 0, &p->tex[0]);
+	glVertexPointer(3, GL_FLOAT, 0, &verts[0][0]);
+	glDrawArrays(GL_TRIANGLE_FAN, 0, p->numverts);
+}
+
+/* Warp the vertex coordinates */
+static void GL_DrawWaterPolyLight(glpoly_t *p)
+{
+	vec3_t verts[p->numverts];
+
+	for (int i = 0; i < p->numverts; i++)
+	{
+		float *v = p->verts[i];
+		verts[i][0] = v[0] + 8 * sin(v[1] * 0.05 + realtime) * sin(v[2] * 0.05 + realtime);
+		verts[i][1] = v[1] + 8 * sin(v[0] * 0.05 + realtime) * sin(v[2] * 0.05 + realtime);
+		verts[i][2] = v[2];
+	}
+
+	glTexCoordPointer(2, GL_FLOAT, 0, &p->light_tex[0]);
+	glVertexPointer(3, GL_FLOAT, 0, &verts[0][0]);
+	glDrawArrays(GL_TRIANGLE_FAN, 0, p->numverts);
+}
+
+static void GL_RenderBrushPoly(msurface_t *fa, int frame)
+{
+	c_brush_polys++;
+
+	texture_t *t = R_TextureAnimation(frame, fa->texinfo->texture);
+	GL_Bind(t->gltexture);
+
+	if ((fa->flags & SURF_UNDERWATER) && r_waterwarp.value)
+		GL_DrawWaterPoly(fa->polys);
+	else
+		GL_DrawPoly(fa->polys);
+
+	R_RenderDynamicLightmaps(fa);
+
+	GL_Bind(lightmap_textures[fa->lightmaptexturenum]);
+	R_UploadLightmap(fa->lightmaptexturenum);
+
+	glDepthMask(GL_FALSE); // don't bother writing Z
+	if (!r_lightmap.value)
+	{
+		if (gl_overbright.value)
+			glBlendFunc(GL_DST_COLOR, GL_SRC_COLOR);
+		else
+			glBlendFunc(GL_ZERO, GL_SRC_COLOR);
+	}
+
+	if ((fa->polys->flags & SURF_UNDERWATER) && r_waterwarp.value)
+		GL_DrawWaterPolyLight(fa->polys);
+	else
+		GL_DrawPolyLight(fa->polys);
+
+	if (t->fullbright != NULL && r_fullbright.value)
+	{
+		glBlendFunc(GL_ONE, GL_ONE);
+		GL_Bind(t->fullbright);
+		GL_DrawPoly(fa->polys);
+	}
+
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	glDepthMask(GL_TRUE); // back to normal Z buffering
+}
+
+static void R_DrawWaterSurfaces(brush_model_t *brushmodel)
 {
 	int i;
 	msurface_t *s;
@@ -103,7 +181,7 @@ void R_DrawWaterSurfaces(brush_model_t *brushmodel)
 	}
 }
 
-void DrawTextureChains(brush_model_t *brushmodel)
+void R_DrawSurfaces(brush_model_t *brushmodel)
 {
 	int i;
 	msurface_t *s;
@@ -126,94 +204,13 @@ void DrawTextureChains(brush_model_t *brushmodel)
 			if (s->flags & SURF_DRAWTURB)
 				continue; // draw water later
 			for (; s; s = s->texturechain)
-				R_RenderBrushPoly(s, 0);
+				GL_RenderBrushPoly(s, 0);
 		}
 
 		t->texturechain = NULL;
 	}
 
 	R_DrawWaterSurfaces(brushmodel);
-}
-
-/* Warp the vertex coordinates */
-void DrawGLWaterPoly(glpoly_t *p)
-{
-	vec3_t verts[p->numverts];
-
-	for (int i = 0; i < p->numverts; i++)
-	{
-		float *v = p->verts[i];
-		verts[i][0] = v[0] + 8 * sin(v[1] * 0.05 + realtime) * sin(v[2] * 0.05 + realtime);
-		verts[i][1] = v[1] + 8 * sin(v[0] * 0.05 + realtime) * sin(v[2] * 0.05 + realtime);
-		verts[i][2] = v[2];
-	}
-
-	glTexCoordPointer(2, GL_FLOAT, 0, &p->tex[0]);
-	glVertexPointer(3, GL_FLOAT, 0, &verts[0][0]);
-	glDrawArrays(GL_TRIANGLE_FAN, 0, p->numverts);
-}
-
-/* Warp the vertex coordinates */
-void DrawGLWaterPolyLight(glpoly_t *p)
-{
-	vec3_t verts[p->numverts];
-
-	for (int i = 0; i < p->numverts; i++)
-	{
-		float *v = p->verts[i];
-		verts[i][0] = v[0] + 8 * sin(v[1] * 0.05 + realtime) * sin(v[2] * 0.05 + realtime);
-		verts[i][1] = v[1] + 8 * sin(v[0] * 0.05 + realtime) * sin(v[2] * 0.05 + realtime);
-		verts[i][2] = v[2];
-	}
-
-	glTexCoordPointer(2, GL_FLOAT, 0, &p->light_tex[0]);
-	glVertexPointer(3, GL_FLOAT, 0, &verts[0][0]);
-	glDrawArrays(GL_TRIANGLE_FAN, 0, p->numverts);
-}
-
-extern cvar_t gl_overbright;
-void R_UploadLightmap(int lmap);
-
-void R_RenderBrushPoly(msurface_t *fa, int frame)
-{
-	c_brush_polys++;
-
-	texture_t *t = R_TextureAnimation(frame, fa->texinfo->texture);
-	GL_Bind(t->gltexture);
-
-	if ((fa->flags & SURF_UNDERWATER) && r_waterwarp.value)
-		DrawGLWaterPoly(fa->polys);
-	else
-		DrawGLPoly(fa->polys);
-
-	R_RenderDynamicLightmaps(fa);
-
-	GL_Bind(lightmap_textures[fa->lightmaptexturenum]);
-	R_UploadLightmap(fa->lightmaptexturenum);
-
-	glDepthMask(GL_FALSE); // don't bother writing Z
-	if (!r_lightmap.value)
-	{
-		if (gl_overbright.value)
-			glBlendFunc(GL_DST_COLOR, GL_SRC_COLOR);
-		else
-			glBlendFunc(GL_ZERO, GL_SRC_COLOR);
-	}
-
-	if ((fa->polys->flags & SURF_UNDERWATER) && r_waterwarp.value)
-		DrawGLWaterPolyLight(fa->polys);
-	else
-		DrawGLPolyLight(fa->polys);
-
-	if (t->fullbright != NULL && r_fullbright.value)
-	{
-		glBlendFunc(GL_ONE, GL_ONE);
-		GL_Bind(t->fullbright);
-		DrawGLPoly(fa->polys);
-	}
-
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	glDepthMask(GL_TRUE); // back to normal Z buffering
 }
 
 void R_DrawBrushModel(entity_t *ent)
@@ -292,11 +289,9 @@ void R_DrawBrushModel(entity_t *ent)
 		if (((psurf->flags & SURF_PLANEBACK) && (dot < -BACKFACE_EPSILON)) ||
 		    (!(psurf->flags & SURF_PLANEBACK) && (dot > BACKFACE_EPSILON)))
 		{
-			R_RenderBrushPoly(psurf, ent->frame);
+			GL_RenderBrushPoly(psurf, ent->frame);
 		}
 	}
-
-//	R_BlendLightmaps();
 
 	glLoadMatrixf(old_matrix);
 }

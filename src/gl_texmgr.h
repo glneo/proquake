@@ -20,16 +20,16 @@
 #ifndef __GL_TEXMGR_H
 #define __GL_TEXMGR_H
 
-#define TEX_NOFLAGS     0
-#define TEX_MIPMAP      BIT(0) // generate mipmaps
+#define TEX_NOFLAGS     0 // 20 total
+#define TEX_MIPMAP      BIT(0) // generate mipmaps	7
 // TEX_NEAREST and TEX_LINEAR aren't supposed to be ORed with TEX_MIPMAP
-#define TEX_LINEAR      BIT(1) // force linear
-#define TEX_NEAREST     BIT(2) // force nearest
-#define TEX_ALPHA       BIT(3) // allow alpha
-#define TEX_PAD         BIT(4) // allow padding
-#define TEX_PERSIST     BIT(5) // never free
-#define TEX_OVERWRITE   BIT(6) // overwrite existing same-name texture
-#define TEX_NOPICMIP    BIT(7) // always load full-sized
+#define TEX_LINEAR      BIT(1) // force linear		2
+#define TEX_NEAREST     BIT(2) // force nearest		3
+#define TEX_ALPHA       BIT(3) // allow alpha		9
+#define TEX_PAD         BIT(4) // allow padding		3
+#define TEX_PERSIST     BIT(5) // never free		2
+#define TEX_OVERWRITE   BIT(6) // overwrite existing same-name texture	1
+#define TEX_NOPICMIP    BIT(7) // always load full-sized		8
 #define TEX_FULLBRIGHT  BIT(8) // use fullbright mask palette
 #define TEX_NOBRIGHT    BIT(9) // use nobright mask palette
 #define TEX_CONCHARS    BIT(10) // use conchars palette
@@ -73,10 +73,7 @@ extern gltexture_t *nulltexture;
 
 extern unsigned int d_8to24table[256];
 extern unsigned int d_8to24table_fbright[256];
-extern unsigned int d_8to24table_nobright[256];
 extern unsigned int d_8to24table_conchars[256];
-extern unsigned int d_8to24table_shirt[256];
-extern unsigned int d_8to24table_pants[256];
 
 // TEXTURE BINDING & TEXTURE UNIT SWITCHING
 void GL_SelectTexture(GLenum target);

@@ -92,30 +92,12 @@ typedef struct entity_s
 
 typedef struct
 {
-	vrect_t vrect;				// subwindow in video for refresh
-						// FIXME: not need vrect next field here?
-	vrect_t aliasvrect;			// scaled Alias version
-	int vrectright, vrectbottom;	// right & bottom screen coords
-	int aliasvrectright, aliasvrectbottom;	// scaled Alias versions
-	float vrectrightedge;			// rightmost right edge we care about, for use in edge list
-	float fvrectx, fvrecty;		// for floating-point compares
-	float fvrectx_adj, fvrecty_adj; // left and top edges, for clamping
-	int vrect_x_adj_shift20;	// (vrect.x + 0.5 - epsilon) << 20
-	int vrectright_adj_shift20;	// (vrectright + 0.5 - epsilon) << 20
-	float fvrectright_adj, fvrectbottom_adj; // right and bottom edges, for clamping
-	float fvrectright;			// rightmost edge, for Alias clamping
-	float fvrectbottom;			// bottommost edge, for Alias clamping
-	float horizontalFieldOfView;	// at Z = 1.0, this many X is visible
-					// 2.0 = 90 degrees
-	float xOrigin;			// should probably always be 0.5
-	float yOrigin;			// between be around 0.3 to 0.5
+	vrect_t vrect; // subwindow in video for refresh
 
 	vec3_t vieworg;
 	vec3_t viewangles;
 
 	float fov_x, fov_y;
-
-	int ambientlight;
 } refdef_t;
 
 // refresh
@@ -126,45 +108,8 @@ extern vec3_t r_origin, vpn, vright, vup;
 extern struct texture_s *r_notexture_mip;
 extern struct texture_s *r_notexture_mip2;
 
-void R_Init(void);
-void R_InitEfrags(void);
-void R_RenderView(void);		// must set r_refdef first
-void R_ViewChanged(vrect_t *pvrect, int lineadj, float aspect); // called whenever r_refdef or vid change
-
-void R_InitSky(struct texture_s *mt);	// called at level load
-
+void R_RenderView(void); // must set r_refdef first
 void R_NewMap(void);
-
-// particles
-
-typedef enum trail_type_s
-{
-	ROCKET_TRAIL,
-	GRENADE_TRAIL,
-	BLOOD_TRAIL,
-	TRACER1_TRAIL,
-	SLIGHT_BLOOD_TRAIL,
-	TRACER2_TRAIL,
-	VOOR_TRAIL,
-	LAVA_TRAIL,
-	BUBBLE_TRAIL,
-	NEHAHRA_SMOKE,
-} trail_type_t;
-
-void R_ParseParticleEffect(void);
-void R_RunParticleEffect(vec3_t org, vec3_t dir, int color, int count);
-void R_RocketTrail(vec3_t start, vec3_t end, int type);
-
-void R_InitParticles(void);
-void R_ClearParticles(void);
-
-void R_EntityParticles(entity_t *ent);
-void R_BlobExplosion(vec3_t org);
-void R_ParticleExplosion(vec3_t org);
-void R_ParticleExplosion2(vec3_t org, int colorStart, int colorLength);
-void R_LavaSplash(vec3_t org);
-void R_TeleportSplash(vec3_t org);
-
-void R_PushDlights(void);
+void R_Init(void);
 
 #endif /* __RENDER_H */

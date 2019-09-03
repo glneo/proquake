@@ -26,15 +26,10 @@ const float r_avertexnormal_dots[SHADEDOT_QUANT][256] = {
 	#include "anorm_dots.h"
 };
 
-static void GL_DrawAliasFrame(entity_t *ent, alias_model_t *aliasmodel, int pose, float alpha)
+static void GL_DrawAliasFrame(alias_model_t *aliasmodel, int pose, float light, float alpha)
 {
 	if (alpha < 1.0f)
 		glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
-
-	int quantizedangle = ((int)(ent->angles[1] * (SHADEDOT_QUANT / 360.0))) & (SHADEDOT_QUANT - 1);
-	const float *shadedots = r_avertexnormal_dots[quantizedangle];
-	float l = shadedots[aliasmodel->poseverts[pose]->normalindex] * shadelight;
-	glColor4f(l, l, l, alpha);
 
 	glVertexPointer(3, GL_FLOAT, sizeof(*(aliasmodel->poseverts[0])), &aliasmodel->poseverts[pose]->v);
 //	glNormalPointer(GL_FLOAT, sizeof(*(aliasmodel->poseverts[0])), &aliasmodel->poseverts[pose]->normal);
@@ -212,17 +207,22 @@ void R_DrawAliasModel(entity_t *ent)
 		glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_FASTEST);
 
 	float alpha = 1.0f;
-	if (ent == &cl.viewent && (cl.items & IT_INVISIBILITY))
+	if (isViewent && (cl.items & IT_INVISIBILITY))
 		alpha = r_ringalpha.value;
 
-	GL_DrawAliasFrame(ent, aliasmodel, pose, alpha);
+	int quantizedangle = ((int)(ent->angles[1] * (SHADEDOT_QUANT / 360.0))) & (SHADEDOT_QUANT - 1);
+	const float *shadedots = r_avertexnormal_dots[quantizedangle];
+	float light = shadedots[aliasmodel->poseverts[pose]->normalindex] * shadelight;
+	glColor4f(light, light, light, alpha);
+
+	GL_DrawAliasFrame(aliasmodel, pose, light, alpha);
 
 	if (fb)
 	{
 		GL_Bind(fb);
 		glBlendFunc (GL_ONE, GL_ONE);
 		glDepthMask(GL_FALSE);
-		GL_DrawAliasFrame(ent, aliasmodel, pose, alpha);
+		GL_DrawAliasFrame(aliasmodel, pose, light, alpha);
 		glDepthMask(GL_TRUE);
 		glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	}
@@ -237,7 +237,7 @@ void R_DrawAliasModel(entity_t *ent)
 
 	glLoadMatrixf(old_matrix);
 
-	if (ent == &cl.viewent)
+	if (isViewent)
 	{
 #ifdef OPENGLES
 		glDepthRangef(0, 1.0f);

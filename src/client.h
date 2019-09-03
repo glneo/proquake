@@ -429,7 +429,32 @@ void CL_ParseTEnt(void);
 void CL_UpdateTEnts(void);
 void CL_SignonReply(void);
 
-// r_part.c
+// cl_particle.c
+typedef enum trail_type_s
+{
+	ROCKET_TRAIL,
+	GRENADE_TRAIL,
+	BLOOD_TRAIL,
+	TRACER1_TRAIL,
+	SLIGHT_BLOOD_TRAIL,
+	TRACER2_TRAIL,
+	VOOR_TRAIL,
+	LAVA_TRAIL,
+	BUBBLE_TRAIL,
+	NEHAHRA_SMOKE,
+} trail_type_t;
+
+void CL_EntityParticles(entity_t *ent);
+void CL_ClearParticles(void);
+void CL_ParseParticleEffect(void);
+void CL_ParticleExplosion(vec3_t org);
+void CL_ParticleExplosion2(vec3_t org, int colorStart, int colorLength);
+void CL_BlobExplosion(vec3_t org);
+void CL_RunParticleEffect(vec3_t org, vec3_t dir, int color, int count);
+void CL_LavaSplash(vec3_t org);
+void CL_TeleportSplash(vec3_t org);
+void CL_RocketTrail(vec3_t start, vec3_t end, int type);
 void CL_RunParticles(void);
+void CL_InitParticles(void);
 
 #endif	/* __CLIENT_H */

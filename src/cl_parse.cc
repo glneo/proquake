@@ -269,6 +269,8 @@ static void CL_ParseServerInfo(void)
 
 	COM_StripExtension(COM_SkipPath(model_precache[1]), tempname);
 
+	CL_ClearParticles();
+
 	R_NewMap();
 
 //	Hunk_Check();		// make sure nothing is hurt
@@ -389,11 +391,6 @@ void CL_EntityInterpolateAngles(entity_t *ent)
 
 void CL_ClearInterpolation(entity_t *ent)
 {
-
-#ifdef SUPPORTS_HARDWARE_ANIM_INTERPOLATION
-	ent->frame_interval = -1;
-#endif
-
 	ent->frame_start_time = 0;
 	ent->lastpose = ent->currpose;
 
@@ -1096,7 +1093,7 @@ void CL_ParseServerMessage(void)
 			break;
 
 		case svc_particle:
-			R_ParseParticleEffect();
+			CL_ParseParticleEffect();
 			break;
 
 		case svc_spawnbaseline:

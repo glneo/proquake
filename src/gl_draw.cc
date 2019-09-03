@@ -190,7 +190,7 @@ qpic_t *Draw_CachePic(const char *path)
 static void OnChange_gl_smoothfont(struct cvar_s *cvar)
 {
 	GL_Bind(char_texture);
-	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, cvar->value ? GL_LINEAR : GL_NEAREST);
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, cvar->value ? GL_NEAREST : GL_NEAREST);
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, cvar->value ? GL_LINEAR : GL_NEAREST);
 }
 
@@ -211,17 +211,17 @@ static void Character(int x, int y, int num, float alpha)
 	int row = num >> 4;
 	int col = num & 15;
 
-	float frow = row * 0.0625;
-	float fcol = col * 0.0625;
-	float size = 0.0625;
-//	float offset = 0.002; // slight offset to avoid in-between lines distortion
-	float offset = 0.03125; // offset to match expanded charset texture
+	float size = 1/16.0f;
+	float frow = row * size;
+	float fcol = col * size;
+//	float offset = size + 1/32.0f; // offset to match expanded charset texture
+	float offset = size;
 
 	GLfloat texts[] = {
-		fcol,        frow,
-		fcol + size, frow,
-		fcol + size, frow + size - offset,
-		fcol,        frow + size - offset,
+		fcol,          frow,
+		fcol + offset, frow,
+		fcol + offset, frow + offset,
+		fcol,          frow + offset,
 	};
 
 	GLfloat verts[] = { (GLfloat)x,     (GLfloat)y,
@@ -538,22 +538,12 @@ qpic_t *Draw_MakePic(const char *name, int width, int height, byte *data)
 static void Load_CharSet(void)
 {
 	draw_chars = (byte *) W_GetLumpName("conchars");
-	for (int i = 0; i < 256 * 64; i++)
+	for (int i = 0; i < 128 * 128; i++)
 		if (draw_chars[i] == 0)
 			draw_chars[i] = 255; // proper transparent color
 
-	// Expand charset texture with blank lines in between to avoid in-line distortion
-	byte *dest = (byte *) Q_malloc(128 * 256);
-	memset(dest, 0, 128 * 256);
-	byte *src = draw_chars;
-
-	for (int i = 0; i < 16; ++i)
-		memcpy(&dest[8 * 128 * 2 * i], &src[8 * 128 * i], 8 * 128); // Copy each line
-
 	// now turn them into textures
-	char_texture = TexMgr_LoadImage("charset", 128, 256, SRC_INDEXED, dest, TEX_ALPHA | TEX_NOPICMIP);
-
-	free(dest);
+	char_texture = TexMgr_LoadImage("charset", 128, 128, SRC_INDEXED, draw_chars, TEX_ALPHA | TEX_NOPICMIP);
 }
 
 void Draw_Init(void)

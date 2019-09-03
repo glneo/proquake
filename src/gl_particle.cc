@@ -15,13 +15,10 @@
 #include "quakedef.h"
 #include "glquake.h"
 
-extern cvar_t r_particles_alpha;
-
 extern particle_t *active_particles;
-
 gltexture_t *particletexture; // little dot for particles
 
-void R_DrawParticles(void)
+void GL_DrawParticles(void)
 {
 	vec3_t up, right;
 
@@ -87,7 +84,7 @@ static byte dottexture[8][8] =
 	{0,0,0,0,0,0,0,0},
 };
 
-void R_InitParticleTexture(void)
+void GL_InitParticleTexture(void)
 {
 	int x, y;
 	byte data[8][8][4];

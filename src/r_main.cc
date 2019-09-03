@@ -17,22 +17,24 @@
 
 #define BACKFACE_EPSILON 0.01
 
-cvar_t r_wateralpha = { "r_wateralpha", "1", true };
+cvar_t r_wateralpha = { "r_wateralpha", "1", CVAR_ARCHIVE };
 cvar_t r_dynamic = { "r_dynamic", "1" };
 cvar_t r_novis = { "r_novis", "0" };
-cvar_t r_interpolate_animation = { "r_interpolate_animation", "0", true };
-cvar_t r_interpolate_transform = { "r_interpolate_transform", "0", true };
-cvar_t r_interpolate_weapon = { "r_interpolate_weapon", "0", true };
-cvar_t r_truegunangle = { "r_truegunangle", "0", true };  // Baker 3.80x - Optional "true" gun positioning on viewmodel
-cvar_t r_drawviewmodel = { "r_drawviewmodel", "1", true };  // Baker 3.80x - Save to config
-cvar_t r_ringalpha = { "r_ringalpha", "0.4", true }; // Baker 3.80x - gl_ringalpha
-cvar_t r_fullbright = { "r_fullbright", "0" };
+cvar_t r_interpolate_animation = { "r_interpolate_animation", "0", CVAR_ARCHIVE };
+cvar_t r_interpolate_transform = { "r_interpolate_transform", "0", CVAR_ARCHIVE };
+cvar_t r_interpolate_weapon = { "r_interpolate_weapon", "0", CVAR_ARCHIVE };
+cvar_t r_truegunangle = { "r_truegunangle", "0", CVAR_ARCHIVE };  // Baker 3.80x - Optional "true" gun positioning on viewmodel
+cvar_t r_drawviewmodel = { "r_drawviewmodel", "1", CVAR_ARCHIVE };  // Baker 3.80x - Save to config
+cvar_t r_ringalpha = { "r_ringalpha", "0.4", CVAR_ARCHIVE }; // Baker 3.80x - gl_ringalpha
+cvar_t r_fullbright = { "r_fullbright", "1", CVAR_ARCHIVE };
 cvar_t r_lightmap = { "r_lightmap", "0" };
-cvar_t r_waterwarp = { "r_waterwarp", "0", true }; // Baker 3.60 - Save this to config now
+cvar_t r_waterwarp = { "r_waterwarp", "0", CVAR_ARCHIVE }; // Baker 3.60 - Save this to config now
 cvar_t r_norefresh = { "r_norefresh", "0" };
 cvar_t r_drawentities = { "r_drawentities", "1" };
 cvar_t r_speeds = { "r_speeds", "0" };
 cvar_t r_shadows = { "r_shadows", "0.3", CVAR_ARCHIVE };
+cvar_t r_particles = { "r_particles", "1", CVAR_ARCHIVE };
+cvar_t r_particles_alpha = { "r_particles_alpha", "1", CVAR_ARCHIVE };
 
 // For draw stats
 int c_brush_polys, c_alias_polys;
@@ -203,7 +205,7 @@ static void R_MarkLeaves(void)
 	}
 }
 
-void R_DrawWorld(void)
+static void R_DrawWorld(void)
 {
 	R_ClearLightmapPolys();
 
@@ -211,7 +213,7 @@ void R_DrawWorld(void)
 
 	R_RecursiveWorldNode(cl.worldmodel->brushmodel->nodes);
 
-	DrawTextureChains(cl.worldmodel->brushmodel);
+	R_DrawSurfaces(cl.worldmodel->brushmodel);
 
 //	R_BlendLightmaps();
 }
@@ -438,7 +440,6 @@ void R_NewMap(void)
 		cl.worldmodel->brushmodel->leafs[i].efrags = NULL;
 
 	r_viewleaf = NULL;
-	R_ClearParticles();
 
 	GL_BuildLightmaps();
 
@@ -484,7 +485,7 @@ void R_RenderView(void)
 	GL_Setup();
 	R_DrawWorld();
 	R_DrawEntitiesOnList();
-	R_DrawParticles();
+	GL_DrawParticles();
 	R_DrawViewModel();
 	GL_PolyBlend();
 
@@ -539,11 +540,12 @@ void R_Init(void)
 	Cvar_RegisterVariable(&r_novis);
 	Cvar_RegisterVariable(&r_speeds);
 	Cvar_RegisterVariable(&r_waterwarp);
+	Cvar_RegisterVariable(&r_particles);
+	Cvar_RegisterVariable(&r_particles_alpha);
 
 	Cvar_RegisterVariable(&r_interpolate_animation);
 	Cvar_RegisterVariable(&r_interpolate_transform);
 	Cvar_RegisterVariable(&r_interpolate_weapon);
 
-	R_InitParticles();
-	R_InitParticleTexture();
+	GL_InitParticleTexture();
 }

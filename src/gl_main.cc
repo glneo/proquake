@@ -26,15 +26,15 @@ bool gl_anisotropy_able = false;
 bool gl_texture_NPOT = false;
 float gl_max_anisotropy;
 
-cvar_t gl_farclip = { "gl_farclip", "16384", true };
-cvar_t gl_nearwater_fix = { "gl_nearwater_fix", "1", true };
-cvar_t gl_fadescreen_alpha = { "gl_fadescreen_alpha", "0.7", true };
-cvar_t gl_clear = { "gl_clear", "0", true};
+cvar_t gl_farclip = { "gl_farclip", "16384", CVAR_ARCHIVE };
+cvar_t gl_nearwater_fix = { "gl_nearwater_fix", "1", CVAR_ARCHIVE };
+cvar_t gl_fadescreen_alpha = { "gl_fadescreen_alpha", "0.7", CVAR_ARCHIVE };
+cvar_t gl_clear = { "gl_clear", "0", CVAR_ARCHIVE};
 cvar_t gl_smoothmodels = { "gl_smoothmodels", "1" };
 cvar_t gl_affinemodels = { "gl_affinemodels", "0" };
-cvar_t gl_polyblend = { "gl_polyblend", "1", true };
-cvar_t gl_playermip = { "gl_playermip", "0", true };
-cvar_t gl_overbright = { "gl_overbright", "1", true };
+cvar_t gl_polyblend = { "gl_polyblend", "1", CVAR_ARCHIVE };
+cvar_t gl_playermip = { "gl_playermip", "0", CVAR_ARCHIVE };
+cvar_t gl_overbright = { "gl_overbright", "1", CVAR_ARCHIVE };
 
 void GL_RotateForEntity(entity_t *ent, Q_Matrix &matrix)
 {
