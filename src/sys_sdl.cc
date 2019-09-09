@@ -80,7 +80,7 @@ double Sys_DoubleTime (void)
 
 void Sys_mkdir(const char *path)
 {
-	mkdir(path, 0777);
+//	mkdir(path, 0777);
 }
 
 /* returns -1 if not present */

@@ -23,7 +23,7 @@ void *Q_malloc(size_t size)
 {
 	void *p;
 
-	if (!(p = malloc(size)))
+	if (!(p = malloc(size*4)))
 		Sys_Error("Not enough free memory");
 
 	return p;
@@ -33,7 +33,7 @@ void *Q_calloc(size_t n, size_t size)
 {
 	void *p;
 
-	if (!(p = calloc(n, size)))
+	if (!(p = calloc(n, size*4)))
 		Sys_Error("Not enough free memory");
 
 	return p;
@@ -43,7 +43,7 @@ void *Q_realloc(void *ptr, size_t size)
 {
 	void *p;
 
-	if (!(p = realloc(ptr, size)))
+	if (!(p = realloc(ptr, size*4)))
 		Sys_Error("Not enough free memory");
 
 	return p;

@@ -68,7 +68,8 @@ static texture_t *R_TextureAnimation(int frame, texture_t *base)
 /* Warp the vertex coordinates */
 static void GL_DrawWaterPoly(glpoly_t *p)
 {
-	vec3_t verts[p->numverts];
+//	vec3_t verts[p->numverts];
+	vec3_t verts[100];
 
 	for (int i = 0; i < p->numverts; i++)
 	{
@@ -86,7 +87,8 @@ static void GL_DrawWaterPoly(glpoly_t *p)
 /* Warp the vertex coordinates */
 static void GL_DrawWaterPolyLight(glpoly_t *p)
 {
-	vec3_t verts[p->numverts];
+//	vec3_t verts[p->numverts];
+	vec3_t verts[100];
 
 	for (int i = 0; i < p->numverts; i++)
 	{

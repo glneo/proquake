@@ -250,6 +250,9 @@ sfxcache_t *S_LoadSound(sfx_t *s)
 		return NULL;
 	}
 
+	if (!shm)
+		return NULL;
+
 	float stepscale = (float) info.rate / shm->speed;
 	int len = info.samples / stepscale;
 	len *= info.width;

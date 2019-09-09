@@ -19,8 +19,8 @@
 #include <GLES/gl.h>
 #include <GLES/glext.h>
 #else
+#include <GL/glew.h>
 #include <GL/gl.h>
-#include <GL/glext.h>
 #endif
 #include <math.h>
 

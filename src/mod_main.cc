@@ -195,9 +195,9 @@ void Mod_TouchModel(const char *name)
 static void Mod_Print(void)
 {
 	static const char *model_types[] = {
-		[mod_brush] = "Brush",
-		[mod_sprite] = "Sprite",
-		[mod_alias] = "Alias",
+		"Brush",
+		"Sprite",
+		"Alias",
 	};
 
 	Con_Printf("Cached models:\n");

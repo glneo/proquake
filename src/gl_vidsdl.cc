@@ -223,6 +223,14 @@ static void VID_SetMode(int width, int height, int bpp, bool fullscreen)
 			Sys_Error("Couldn't create GL context");
 	}
 
+	GLenum err = glewInit();
+	if (GLEW_OK != err)
+	{
+		/* Problem: glewInit failed, something is seriously wrong. */
+		fprintf(stderr, "Error: %s\n", glewGetErrorString(err));
+	}
+	fprintf(stdout, "Status: Using GLEW %s\n", glewGetString(GLEW_VERSION));
+
 	if (SDL_GL_SetSwapInterval((vid_vsync.value) ? 1 : 0) == -1)
 	{
 		gl_swap_control = false;

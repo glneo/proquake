@@ -996,7 +996,7 @@ typedef struct filelist_item_s
 } filelist_item_t;
 
 //extern filelist_item_t *extralevels;
-extern filelist_item_t *modlist;
+filelist_item_t *modlist;
 //extern filelist_item_t *demolist;
 
 typedef struct arg_completion_type_s

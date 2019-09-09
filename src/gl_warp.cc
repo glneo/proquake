@@ -167,7 +167,8 @@ void EmitWaterPolys(msurface_t *fa)
 {
 	for (glpoly_t *p = fa->polys; p; p = p->next)
 	{
-		tex_cord texcord[p->numverts];
+//		tex_cord texcord[p->numverts];
+		tex_cord texcord[100];
 		for (int i = 0; i < p->numverts; i++)
 		{
 			float os = p->tex[i].s;
@@ -196,7 +197,8 @@ void EmitSkyPolys(msurface_t *fa)
 
 	for (glpoly_t *p = fa->polys; p; p = p->next)
 	{
-		tex_cord texcord[2][p->numverts];
+//		tex_cord texcord[2][p->numverts];
+		tex_cord texcord[2][100];
 
 		for (int i = 0; i < p->numverts; i++)
 		{

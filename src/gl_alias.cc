@@ -62,7 +62,8 @@ static void GL_DrawAliasShadow(entity_t *ent, alias_model_t *aliasmodel, int pos
 	float lheight = ent->origin[2] - lightspot[2];
 	float height = -lheight + 1.0;
 
-	vec3_t shadowverts[aliasmodel->numverts];
+//	vec3_t shadowverts[aliasmodel->numverts];
+	vec3_t shadowverts[1000];
 	for (int i = 0; i < aliasmodel->numverts; i++)
 	{
 		shadowverts[i][0] = aliasmodel->poseverts[pose][i].v[0] - (shadevector[0] * lheight);
