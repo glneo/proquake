@@ -22,12 +22,8 @@
 
 #include <cmath>
 #include <cstdio>
-#include <cstdlib>
 #include <cstdint>
-
-#ifndef M_PI
-#define M_PI 3.14159265358979323846
-#endif
+#include <vector>
 
 #define BIT(x) (1 << (x))
 #define ARRAY_SIZE(x) (sizeof(x) / sizeof((x)[0]))
@@ -156,7 +152,6 @@
 #define	SOUND_CHANNELS		8
 
 #include "common.h"
-#include "bspfile.h"
 #include "vid.h"
 #include "sys.h"
 #include "zone.h"

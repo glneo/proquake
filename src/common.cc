@@ -20,12 +20,11 @@
 #include <cstdarg>
 #include <cassert> // strltrim strrtrim
 #include <cerrno>
+#include <climits>
 
 #include "quakedef.h"
 
-using namespace std;
-
-vector<string> largv;
+std::vector<std::string> largv;
 
 cvar_t registered = { "registered", "0" };
 
@@ -128,43 +127,43 @@ void InsertLinkAfter(link_t *l, link_t *after)
 
 bool bigendien;
 
-short (*BigShort)(short l);
-short (*LittleShort)(short l);
-int (*BigLong)(int l);
-int (*LittleLong)(int l);
+short (*BigShort)(uint16_t s);
+short (*LittleShort)(uint16_t s);
+int (*BigLong)(uint32_t l);
+int (*LittleLong)(uint32_t l);
 float (*BigFloat)(float l);
 float (*LittleFloat)(float l);
 
-short ShortSwap(short l)
+short ShortSwap(uint16_t s)
 {
-	byte b1, b2;
+	uint16_t b1 = (s >> 0) & 0xff;
+	uint16_t b2 = (s >> 8) & 0xff;
 
-	b1 = l & 255;
-	b2 = (l >> 8) & 255;
-
-	return (b1 << 8) + b2;
+	return (short)((b1 << 8) |
+	               (b2 << 0));
 }
 
-short ShortNoSwap(short l)
+short ShortNoSwap(uint16_t s)
 {
-	return l;
+	return (short)s;
 }
 
-int LongSwap(int l)
+int LongSwap(uint32_t l)
 {
-	byte b1, b2, b3, b4;
+	uint32_t b1 = (l >>  0) & 0xff;
+	uint32_t b2 = (l >>  8) & 0xff;
+	uint32_t b3 = (l >> 16) & 0xff;
+	uint32_t b4 = (l >> 24) & 0xff;
 
-	b1 = l & 255;
-	b2 = (l >> 8) & 255;
-	b3 = (l >> 16) & 255;
-	b4 = (l >> 24) & 255;
-
-	return ((int) b1 << 24) + ((int) b2 << 16) + ((int) b3 << 8) + b4;
+	return (int)((b1 << 24) |
+	             (b2 << 16) |
+		     (b3 <<  8) |
+		     (b4 <<  0));
 }
 
-int LongNoSwap(int l)
+int LongNoSwap(uint32_t l)
 {
-	return l;
+	return (int)l;
 }
 
 float FloatSwap(float f)
@@ -202,15 +201,15 @@ float FloatNoSwap(float f)
 //
 void MSG_WriteChar(sizebuf_t *sb, int c)
 {
-	byte *buf;
+	char *buf;
 
 #ifdef PARANOID
 	if (c < -128 || c > 127)
 		Sys_Error ("range error");
 #endif
 
-	buf = (byte *)SZ_GetSpace(sb, 1);
-	buf[0] = c;
+	buf = (char *)SZ_GetSpace(sb, 1);
+	buf[0] = (char)c;
 }
 
 void MSG_WriteByte(sizebuf_t *sb, int c)
@@ -223,7 +222,7 @@ void MSG_WriteByte(sizebuf_t *sb, int c)
 #endif
 
 	buf = (byte *)SZ_GetSpace(sb, 1);
-	buf[0] = c;
+	buf[0] = (byte)c;
 }
 
 void MSG_WriteShort(sizebuf_t *sb, int c)
@@ -231,13 +230,13 @@ void MSG_WriteShort(sizebuf_t *sb, int c)
 	byte *buf;
 
 #ifdef PARANOID
-	if (c < ((short)0x8000) || c > (short)0x7fff)
+	if (c < SHRT_MIN || c > SHRT_MAX)
 		Sys_Error ("range error");
 #endif
 
 	buf = (byte *)SZ_GetSpace(sb, 2);
-	buf[0] = c & 0xff;
-	buf[1] = c >> 8;
+	buf[0] = (byte)((c >> 0) & 0xff);
+	buf[1] = (byte)((c >> 8) & 0xff);
 }
 
 void MSG_WriteLong(sizebuf_t *sb, int c)
@@ -245,10 +244,10 @@ void MSG_WriteLong(sizebuf_t *sb, int c)
 	byte *buf;
 
 	buf = (byte *)SZ_GetSpace(sb, 4);
-	buf[0] = c & 0xff;
-	buf[1] = (c >> 8) & 0xff;
-	buf[2] = (c >> 16) & 0xff;
-	buf[3] = c >> 24;
+	buf[0] = (byte)((c >>  0) & 0xff);
+	buf[1] = (byte)((c >>  8) & 0xff);
+	buf[2] = (byte)((c >> 16) & 0xff);
+	buf[3] = (byte)((c >> 24) & 0xff);
 }
 
 void MSG_WriteFloat(sizebuf_t *sb, float f)
@@ -283,19 +282,15 @@ void MSG_WriteAngle(sizebuf_t *sb, float f)
 	MSG_WriteByte(sb, ((int) f * 256 / 360) & 255);
 }
 
-// JPG - precise aim for ProQuake!
 void MSG_WritePreciseAngle(sizebuf_t *sb, float f)
 {
-
-	int val = (int) f * 65536 / 360;
-	MSG_WriteShort(sb, val & 65535);
-
+	MSG_WriteFloat(sb, f);
 }
 
 //
 // reading functions
 //
-int msg_readcount;
+size_t msg_readcount;
 bool msg_badread;
 
 void MSG_BeginReading(void)
@@ -331,7 +326,7 @@ int MSG_ReadByte(void)
 		return -1;
 	}
 
-	c = (unsigned char) net_message.data[msg_readcount];
+	c = (unsigned char)net_message.data[msg_readcount];
 	msg_readcount++;
 
 	return c;
@@ -346,7 +341,7 @@ int MSG_PeekByte(void)
 		return -1;
 	}
 
-	return (unsigned char) net_message.data[msg_readcount];
+	return (unsigned char)net_message.data[msg_readcount];
 }
 
 int MSG_ReadShort(void)
@@ -359,7 +354,8 @@ int MSG_ReadShort(void)
 		return -1;
 	}
 
-	c = (short) (net_message.data[msg_readcount] + (net_message.data[msg_readcount + 1] << 8));
+	c = (short)((uint16_t)(net_message.data[msg_readcount + 0] << 0) |
+	            (uint16_t)(net_message.data[msg_readcount + 1] << 8));
 
 	msg_readcount += 2;
 
@@ -376,8 +372,10 @@ int MSG_ReadLong(void)
 		return -1;
 	}
 
-	c = net_message.data[msg_readcount] + (net_message.data[msg_readcount + 1] << 8) + (net_message.data[msg_readcount + 2] << 16)
-			+ (net_message.data[msg_readcount + 3] << 24);
+	c = (int)((uint16_t)(net_message.data[msg_readcount + 0] << 0) |
+	          (uint16_t)(net_message.data[msg_readcount + 1] << 8) |
+		  (uint16_t)(net_message.data[msg_readcount + 2] << 16) |
+		  (uint16_t)(net_message.data[msg_readcount + 3] << 24));
 
 	msg_readcount += 4;
 
@@ -416,7 +414,7 @@ char *MSG_ReadString(void)
 		c = MSG_ReadChar();
 		if (c == -1 || c == 0)
 			break;
-		string[l] = c;
+		string[l] = (char)c;
 		l++;
 	} while (l < sizeof(string) - 1);
 
@@ -427,18 +425,17 @@ char *MSG_ReadString(void)
 
 float MSG_ReadCoord(void)
 {
-	return MSG_ReadShort() * (1.0 / 8);
+	return (float)MSG_ReadShort() / 8.0f;
 }
 
 float MSG_ReadAngle(void)
 {
-	return MSG_ReadChar() * (360.0 / 256);
+	return (float)MSG_ReadChar() * (360.0f / 256);
 }
 
-// JPG - exact aim for proquake!
 float MSG_ReadPreciseAngle(void)
 {
-	return MSG_ReadShort() * (360.0 / 65536);
+	return MSG_ReadFloat();
 }
 
 //===========================================================================
@@ -465,7 +462,7 @@ void SZ_Clear(sizebuf_t *buf)
 	buf->cursize = 0;
 }
 
-void *SZ_GetSpace(sizebuf_t *buf, int length)
+void *SZ_GetSpace(sizebuf_t *buf, size_t length)
 {
 	if (buf->cursize + length > buf->maxsize)
 	{
@@ -473,7 +470,7 @@ void *SZ_GetSpace(sizebuf_t *buf, int length)
 			Sys_Error("overflow without allowoverflow set");
 
 		if (length > buf->maxsize)
-			Sys_Error("%i is > full buffer size", length);
+			Sys_Error("%zu is > full buffer size", length);
 
 		buf->overflowed = true;
 		Con_Printf("SZ_GetSpace: overflow");
@@ -486,14 +483,14 @@ void *SZ_GetSpace(sizebuf_t *buf, int length)
 	return data;
 }
 
-void SZ_Write(sizebuf_t *buf, const void *data, int length)
+void SZ_Write(sizebuf_t *buf, const void *data, size_t length)
 {
 	memcpy(SZ_GetSpace(buf, length), data, length);
 }
 
 void SZ_Print(sizebuf_t *buf, const char *data)
 {
-	int len = strlen(data) + 1;
+	size_t len = strlen(data) + 1;
 
 	if (buf->data[buf->cursize - 1])
 		memcpy((byte *) SZ_GetSpace(buf, len), data, len); // no trailing 0
@@ -586,7 +583,7 @@ void COM_DefaultExtension(char *path, const char *extension)
 /* Parse a token out of a string */
 const char *COM_Parse(const char *data)
 {
-	int c;
+	char c;
 	int len = 0;
 
 	com_token[0] = 0;
@@ -658,7 +655,7 @@ skipwhite:
  */
 int COM_CheckParm(const char *parm)
 {
-	unsigned int pos = find(largv.begin(), largv.end(), string(parm))  - largv.begin();
+	size_t pos = std::find(largv.begin(), largv.end(), std::string(parm)) - largv.begin();
 	if (pos == largv.size())
 		return 0;
 
@@ -758,7 +755,7 @@ typedef struct pack_s
 {
 	char filename[MAX_OSPATH];
 	FILE *handle;
-	int numfiles;
+	size_t numfiles;
 	packfile_t *files;
 } pack_t;
 
@@ -832,7 +829,7 @@ long COM_filelength(FILE *f)
  * If the requested file is inside a packfile, a new FILE * will be opened
  * into the file
  */
-int COM_OpenFile(const char *filename, FILE **file)
+long int COM_OpenFile(const char *filename, FILE **file)
 {
 	if (!file)
 		Sys_Error("file pointer not set");
@@ -845,7 +842,7 @@ int COM_OpenFile(const char *filename, FILE **file)
 		{
 			// look through all the pak file elements
 			pack_t *pak = search->pack;
-			for (int i = 0; i < pak->numfiles; i++)
+			for (size_t i = 0; i < pak->numfiles; i++)
 				if (!strcmp(pak->files[i].name, filename))
 				{
 					// found it!
@@ -961,10 +958,10 @@ pack_t *COM_LoadPackFile(const char *packfile)
 	header.dirofs = LittleLong(header.dirofs);
 	header.dirlen = LittleLong(header.dirlen);
 
-	int numpackfiles = header.dirlen / sizeof(dpackfile_t);
+	size_t numpackfiles = header.dirlen / sizeof(dpackfile_t);
 
 	if (numpackfiles > MAX_FILES_IN_PACK)
-		Sys_Error("%s has %i files", packfile, numpackfiles);
+		Sys_Error("%s has %zu files", packfile, numpackfiles);
 
 	if (numpackfiles != PAK0_COUNT)
 		com_modified = true; // not the original file
@@ -984,7 +981,7 @@ pack_t *COM_LoadPackFile(const char *packfile)
 		com_modified = true;
 
 	// parse the directory
-	for (int i = 0; i < numpackfiles; i++)
+	for (size_t i = 0; i < numpackfiles; i++)
 	{
 		strcpy(newfiles[i].name, info[i].name);
 		newfiles[i].filepos = LittleLong(info[i].filepos);
@@ -1160,7 +1157,7 @@ static void COM_InitFilesystem()
 	else
 		strcpy(basedir, host_parms.basedir);
 
-	int j = strlen(basedir);
+	size_t j = strlen(basedir);
 	if (j > 0)
 	{
 		if ((basedir[j - 1] == '\\') || (basedir[j - 1] == '/'))
@@ -1183,7 +1180,11 @@ static void COM_InitFilesystem()
 	if (i && i < com_argc - 1)
 	{
 		com_modified = true;
-		COM_AddGameDirectory(va("%s/%s", basedir, com_argv[i + 1]));
+		char *file = com_argv[i + 1];
+		if (file[0] == '/') /* Absolute path */
+			COM_AddGameDirectory(file);
+		else
+			COM_AddGameDirectory(va("%s/%s", basedir, com_argv[i + 1]));
 	}
 
 	// -path <dir or packfile> [<dir or packfile>] ...
@@ -1200,7 +1201,7 @@ static void COM_InitFilesystem()
 			     com_argv[i][0] == '-')
 				break;
 
-			searchpath_t *search = (searchpath_t *)Hunk_Alloc(sizeof(searchpath_t));
+			searchpath_t *search = (searchpath_t *)Q_malloc(sizeof(searchpath_t));
 			if (!strcmp(COM_FileExtension(com_argv[i]), "pak"))
 			{
 				search->pack = COM_LoadPackFile(com_argv[i]);

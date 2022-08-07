@@ -24,10 +24,6 @@
 
 #define MAX_MODE_LIST	600
 #define MAX_BPPS_LIST	5
-#define WARP_WIDTH	320
-#define WARP_HEIGHT	200
-#define MAXWIDTH	10000
-#define MAXHEIGHT	10000
 
 static vmode_t modelist[MAX_MODE_LIST];
 static int nummodes;
@@ -48,7 +44,7 @@ viddef_t vid; // global video state
 static cvar_t vid_width = { "vid_width", "1440", CVAR_ARCHIVE };
 static cvar_t vid_height = { "vid_height", "900", CVAR_ARCHIVE };
 static cvar_t vid_fullscreen = { "vid_fullscreen", "0", CVAR_ARCHIVE };
-static cvar_t vid_bpp = { "vid_bpp", "16", CVAR_ARCHIVE };
+static cvar_t vid_bpp = { "vid_bpp", "24", CVAR_ARCHIVE };
 cvar_t vid_vsync = { "vid_vsync", "0", CVAR_ARCHIVE };
 static cvar_t vid_desktopfullscreen = { "vid_desktopfullscreen", "0", CVAR_ARCHIVE };
 
@@ -161,11 +157,11 @@ static void VID_SetMode(int width, int height, int bpp, bool fullscreen)
 
 #ifdef OPENGLES
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
-	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 1);
-	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 1);
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
 #else
-	SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_COMPATIBILITY);
-	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 1);
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
 #endif
 
@@ -239,8 +235,10 @@ static void VID_SetMode(int width, int height, int bpp, bool fullscreen)
 		Con_Printf("FOUND: SDL_GL_SetSwapInterval\n");
 	}
 
-	vid.width = mode.width;
-	vid.height = mode.height;
+	vid.x = 0;
+	vid.y = 0;
+	vid.width = mode.width - vid.x;
+	vid.height = mode.height - vid.y;
 	vid.conwidth = vid.width & 0xFFFFFFF8;
 	vid.conheight = vid.conwidth * vid.height / vid.width;
 
@@ -445,11 +443,6 @@ void VID_Init(void)
 		bpp = display_bpp;
 		fullscreen = false;
 	}
-
-	vid.maxwarpwidth = WARP_WIDTH;
-	vid.maxwarpheight = WARP_HEIGHT;
-	vid.colormap = host_colormap;
-	vid.fullbright = 256 - LittleLong(*((int *) vid.colormap + 2048));
 
 	vid_initialized = true;
 

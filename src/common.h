@@ -36,15 +36,15 @@ typedef struct sizebuf_s
 	bool allowoverflow;	// if false, do a Sys_Error
 	bool overflowed;		// set to true if the buffer size failed
 	byte *data;
-	int maxsize;
-	int cursize;
+	size_t maxsize;
+	size_t cursize;
 } sizebuf_t;
 
 void SZ_Alloc(sizebuf_t *buf, int startsize);
 void SZ_Free(sizebuf_t *buf);
 void SZ_Clear(sizebuf_t *buf);
-void *SZ_GetSpace(sizebuf_t *buf, int length);
-void SZ_Write(sizebuf_t *buf, const void *data, int length);
+void *SZ_GetSpace(sizebuf_t *buf, size_t length);
+void SZ_Write(sizebuf_t *buf, const void *data, size_t length);
 void SZ_Print(sizebuf_t *buf, const char *data);	// strcats onto the sizebuf
 
 //============================================================================
@@ -71,10 +71,10 @@ void InsertLinkAfter(link_t *l, link_t *after);
 
 extern bool bigendien;
 
-extern short (*BigShort)(short l);
-extern short (*LittleShort)(short l);
-extern int (*BigLong)(int l);
-extern int (*LittleLong)(int l);
+extern short (*BigShort)(uint16_t s);
+extern short (*LittleShort)(uint16_t s);
+extern int (*BigLong)(uint32_t l);
+extern int (*LittleLong)(uint32_t l);
 extern float (*BigFloat)(float l);
 extern float (*LittleFloat)(float l);
 
@@ -90,7 +90,7 @@ void MSG_WriteCoord(sizebuf_t *sb, float f);
 void MSG_WriteAngle(sizebuf_t *sb, float f);
 void MSG_WritePreciseAngle(sizebuf_t *sb, float f); // JPG - precise aim!!
 
-extern int msg_readcount;
+extern size_t msg_readcount;
 extern bool msg_badread;		// set if a read goes beyond end of message
 
 void MSG_BeginReading(void);
@@ -152,7 +152,7 @@ FILE *COM_FileOpenWrite(const char *filename);
 
 void COM_CreatePath(const char *path);
 pack_t *COM_LoadPackFile(const char *packfile);
-int COM_OpenFile(const char *filename, FILE **file);
+long int COM_OpenFile(const char *filename, FILE **file);
 void COM_CloseFile(FILE *h);
 
 byte *COM_LoadTempFile(const char *path);

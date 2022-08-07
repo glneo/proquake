@@ -23,13 +23,7 @@
  * stack fashion.  The only way memory is released is by resetting one of the
  * pointers.
  *
- * Hunk allocations should be given a name, so the Hunk_Print () function
- * can display usage.
- *
  * Hunk allocations are guaranteed to be 16 byte aligned.
- *
- * The video buffers are allocated high to avoid leaving a hole underneath
- * server allocations when changing to a higher video mode.
  */
 
 void *Q_malloc(size_t size);
@@ -46,6 +40,6 @@ int Hunk_HighMark(void);
 void Hunk_FreeToHighMark(int mark);
 void Hunk_Check(void);
 
-void Memory_Init(void *buf, int size);
+void Memory_Init(size_t size);
 
 #endif /* __ZONE_H */

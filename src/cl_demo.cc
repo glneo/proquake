@@ -101,11 +101,8 @@ static void EraseTopEntry(void)
 
 static int CL_GetDemoMessage()
 {
-	int ret;
+	size_t ret;
 	float f;
-
-	if (start_of_demo && cls.demorewind)
-		return 0;
 
 	if (cls.signon < SIGNONS) // clear stuffs if new demo
 		while (demo_framepos)
@@ -124,14 +121,13 @@ static int CL_GetDemoMessage()
 			if (host_framecount == cls.td_startframe + 1)
 				cls.td_starttime = realtime;
 		}
-		else if ((!cls.demorewind && cl.ctime <= cl.mtime[0]) ||
-			  (cls.demorewind && cl.ctime >= cl.mtime[0]))
+		else if (cl.ctime <= cl.mtime[0])
 			return 0; // don't need another message yet
 
 		// fill in the stack of frames' positions
 		// enable on intermission or not...?
 		// NOTE: it can't handle fixed intermission views!
-		if (!cls.demorewind && !cl.intermission)
+		if (!cl.intermission)
 			PushFrameposEntry(ftell(cls.demofile));
 	}
 
@@ -164,20 +160,6 @@ static int CL_GetDemoMessage()
 	{
 		CL_StopPlayback();
 		return 0;
-	}
-
-	// get out framestack's top entry
-	if (cls.demorewind && !cl.intermission)
-	{
-		// in theory, if this occurs we ARE at the start of the demo with demo rewind on
-		if (demo_framepos && demo_framepos->baz)
-		{
-			Sys_FileSeek(cls.demofile, demo_framepos->baz);
-			EraseTopEntry(); // we might be able to improve this better but not right now.
-		}
-
-		if (!demo_framepos)
-			bumper_on = start_of_demo = true;
 	}
 
 	return 1;
@@ -463,7 +445,6 @@ void CL_PlayDemo_f(void)
 	CL_Disconnect();
 
 	// Revert
-	cls.demorewind = false;
 	cls.demospeed = 0; // 0 = Don't use
 	bumper_on = false;
 

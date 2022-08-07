@@ -1,4 +1,6 @@
 /*
+ * Character and picture rendering
+ *
  * Copyright (C) 1996-1997 Id Software, Inc.
  *
  * This program is free software; you can redistribute it and/or
@@ -15,31 +17,42 @@
 #include "quakedef.h"
 #include "glquake.h"
 
-cvar_t gl_smoothfont = { "gl_smoothfont", "1", CVAR_ARCHIVE };
+#include "draw.fs.h"
+#include "draw.vs.h"
 
-byte *draw_chars; // 8*8 graphic characters
+static gltexture_t *char_texture;
+static gltexture_t *solidtexture;
 
-gltexture_t *translate_texture;
-gltexture_t *char_texture;
+// shader program
+static GLuint draw_program;
+
+// uniforms used in vertex shader
+static GLuint draw_projectionLoc;
+
+// uniforms used in fragment shader
+static GLuint draw_texLoc;
+static GLuint draw_colorLoc;
+
+// attribs
+static GLuint draw_vertexAttrIndex;
+static GLuint draw_texCoordsAttrIndex;
+
+// VBOs
+GLuint draw_vertex_VBO;
+GLuint draw_texCoords_VBO;
 
 qpic_t crosshairpic;
 
-byte conback_buffer[sizeof(qpic_t)];
-qpic_t *conback = (qpic_t *) &conback_buffer;
-
 canvastype currentcanvas = CANVAS_NONE; //johnfitz -- for GL_SetCanvas
 
-/*
- =============================================================================
+typedef struct draw_vertex_s {
+       vec2_t position;
+       vec2_t textureCord;
+} draw_vertex_t;
 
- scrap allocation
+std::vector<draw_vertex_t> draw_buffer;
 
- Allocate all the little status bar objects into a single texture
-
- to crutch up stupid hardware / drivers
-
- =============================================================================
- */
+/* Allocate all the little status bar objects into a single texture */
 
 // some cards have low quality of alpha pics, so load the pics
 // without transparent pixels into a different scrap block.
@@ -187,13 +200,6 @@ qpic_t *Draw_CachePic(const char *path)
 	return pic;
 }
 
-static void OnChange_gl_smoothfont(struct cvar_s *cvar)
-{
-	GL_Bind(char_texture);
-	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, cvar->value ? GL_NEAREST : GL_NEAREST);
-	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, cvar->value ? GL_LINEAR : GL_NEAREST);
-}
-
 static bool IsValid(int y, int num)
 {
 	if ((num & 127) == 32)
@@ -214,38 +220,17 @@ static void Character(int x, int y, int num, float alpha)
 	float size = 1/16.0f;
 	float frow = row * size;
 	float fcol = col * size;
-//	float offset = size + 1/32.0f; // offset to match expanded charset texture
 	float offset = size;
 
-	GLfloat texts[] = {
-		fcol,          frow,
-		fcol + offset, frow,
-		fcol + offset, frow + offset,
-		fcol,          frow + offset,
-	};
+	alpha = CLAMP(0.0f, alpha, 1.0f);
 
-	GLfloat verts[] = { (GLfloat)x,     (GLfloat)y,
-			    (GLfloat)x + 8, (GLfloat)y,
-			    (GLfloat)x + 8, (GLfloat)y + 8,
-			    (GLfloat)x,     (GLfloat)y + 8,
-	};
-
-	alpha = CLAMP(0, alpha, 1.0f);
-	if (alpha < 1.0f)
-	{
-		glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
-		glColor4f(1.0f, 1.0f, 1.0f, alpha);
-	}
-
-	glTexCoordPointer(2, GL_FLOAT, 0, texts);
-	glVertexPointer(2, GL_FLOAT, 0, verts);
-	glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
-
-	if (alpha < 1.0f)
-	{
-		glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
-		glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
-	}
+	//                      position                          texture
+	draw_buffer.push_back( {{(GLfloat)x,     (GLfloat)y,},    {fcol,          frow,}         });
+	draw_buffer.push_back( {{(GLfloat)x + 8, (GLfloat)y,},    {fcol + offset, frow,}         });
+	draw_buffer.push_back( {{(GLfloat)x + 8, (GLfloat)y + 8}, {fcol + offset, frow + offset,}});
+	draw_buffer.push_back( {{(GLfloat)x,     (GLfloat)y,},    {fcol,          frow,}         });
+	draw_buffer.push_back( {{(GLfloat)x + 8, (GLfloat)y + 8}, {fcol + offset, frow + offset,}});
+	draw_buffer.push_back( {{(GLfloat)x,     (GLfloat)y + 8}, {fcol,          frow + offset,}});
 }
 
 /*
@@ -258,14 +243,14 @@ void Draw_Character(int x, int y, int num, float alpha)
 	if (!IsValid(y, num))
 		return;
 
-	GL_Bind(char_texture);
+	GL_BindToUnit(GL_TEXTURE0, char_texture);
 
 	Character(x, y, num, alpha);
 }
 
 void Draw_String(int x, int y, const char *str, float alpha)
 {
-	GL_Bind(char_texture);
+	GL_BindToUnit(GL_TEXTURE0, char_texture);
 
 	while (*str)
 	{
@@ -293,27 +278,26 @@ void Draw_Pic(int x, int y, qpic_t *pic, float alpha)
 		(GLfloat)x,              (GLfloat)y + pic->height,
 	};
 
-	alpha = CLAMP(0, alpha, 1.0f);
-	if (alpha < 1.0f)
-	{
-		glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
-		glColor4f(1.0f, 1.0f, 1.0f, alpha);
-	}
+	// setup
+	GL_BindToUnit(GL_TEXTURE0, pic->gltexture);
 
-	GL_Bind(pic->gltexture);
+	// set uniforms
+	alpha = CLAMP(0.0f, alpha, 1.0f);
+	glUniform4f(draw_colorLoc, 1.0f, 1.0f, 1.0f, alpha);
 
-	glTexCoordPointer(2, GL_FLOAT, 0, texts);
-	glVertexPointer(2, GL_FLOAT, 0, verts);
+	// set attributes
+	glBindBuffer(GL_ARRAY_BUFFER, draw_vertex_VBO);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * 2 * 4, &verts[0], GL_STREAM_DRAW);
+	glVertexAttribPointer(draw_vertexAttrIndex, 2, GL_FLOAT, GL_FALSE, 0, 0);
+	glBindBuffer(GL_ARRAY_BUFFER, draw_texCoords_VBO);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * 2 * 4, &texts[0], GL_STREAM_DRAW);
+	glVertexAttribPointer(draw_texCoordsAttrIndex, 2, GL_FLOAT, GL_FALSE, 0, 0);
 
-// draw
+	// draw
 	glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 
-// clean up
-	if (alpha < 1.0f)
-	{
-		glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
-		glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
-	}
+	// cleanup
+	glUniform4f(draw_colorLoc, 1.0f, 1.0f, 1.0f, 1.0f);
 }
 
 void Draw_TransPic(int x, int y, qpic_t *pic, float alpha)
@@ -327,59 +311,24 @@ void Draw_TransPic(int x, int y, qpic_t *pic, float alpha)
 	Draw_Pic(x, y, pic, alpha);
 }
 
-/* Only used for the player color selection menu */
-//void Draw_TransPicTranslate(int x, int y, qpic_t *pic, byte *translation)
-//{
-//	int v, u;
-//	unsigned trans[64 * 64], *dest;
-//	byte *src;
-//	int p;
-//
-//	GL_Bind(translate_texture);
-//
-//	dest = trans;
-//	for (v = 0; v < 64; v++, dest += 64)
-//	{
-//		src = &menuplyr_pixels[((v * pic->height) >> 6) * pic->width];
-//		for (u = 0; u < 64; u++)
-//		{
-//			p = src[(u * pic->width) >> 6];
-//			if (p == 255)
-//				dest[u] = p;
-//			else
-//				dest[u] = d_8to24table[translation[p]];
-//		}
-//	}
-//
-//	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 64, 64, 0, GL_RGBA, GL_UNSIGNED_BYTE, trans);
-//
-//	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-//	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-//
-//	GLfloat texts[] = {
-//		0.0f, 0.0f,
-//		1.0f, 0.0f,
-//		1.0f, 1.0f,
-//		0.0f, 1.0f,
-//	};
-//
-//	GLfloat verts[] = {
-//		(GLfloat)x,              (GLfloat)y,
-//		(GLfloat)x + pic->width, (GLfloat)y,
-//		(GLfloat)x + pic->width, (GLfloat)y + pic->height,
-//		(GLfloat)x,              (GLfloat)y + pic->height,
-//	};
-//
-//	glTexCoordPointer(2, GL_FLOAT, 0, texts);
-//	glVertexPointer(2, GL_FLOAT, 0, verts);
-//	glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
-//}
+void Draw_TransPicTranslate(int x, int y, qpic_t *pic, float alpha, int top, int bottom)
+{
+	static int oldtop = -2;
+	static int oldbottom = -2;
+
+	if (top != oldtop || bottom != oldbottom)
+	{
+		gltexture_t *glt = pic->gltexture;
+		oldtop = top;
+		oldbottom = bottom;
+		TexMgr_ReloadImage (glt, top, bottom);
+	}
+	Draw_Pic(x, y, pic, alpha);
+}
 
 /* Tile graphic to fill the screen */
 void Draw_PicTile(int x, int y, int w, int h, qpic_t *pic, float alpha)
 {
-	GL_Bind(pic->gltexture);
-
 	GLfloat texts[] = {
 		(GLfloat)x / 64.0f,       (GLfloat)y / 64.0f,
 		(GLfloat)(x + w) / 64.0f, (GLfloat)y / 64.0f,
@@ -394,25 +343,32 @@ void Draw_PicTile(int x, int y, int w, int h, qpic_t *pic, float alpha)
 		(GLfloat)x,     (GLfloat)y + h,
 	};
 
-	glTexCoordPointer(2, GL_FLOAT, 0, texts);
-	glVertexPointer(2, GL_FLOAT, 0, verts);
+	alpha = CLAMP(0.0f, alpha, 1.0f);
 
-// draw
+	// setup
+	GL_BindToUnit(GL_TEXTURE0, pic->gltexture);
+
+	// set uniforms
+	glUniform4f(draw_colorLoc, 1.0f, 1.0f, 1.0f, alpha);
+
+	// set attributes
+	glBindBuffer(GL_ARRAY_BUFFER, draw_vertex_VBO);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * 2 * 4, &verts[0], GL_STREAM_DRAW);
+	glVertexAttribPointer(draw_vertexAttrIndex, 2, GL_FLOAT, GL_FALSE, 0, 0);
+	glBindBuffer(GL_ARRAY_BUFFER, draw_texCoords_VBO);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * 2 * 4, &texts[0], GL_STREAM_DRAW);
+	glVertexAttribPointer(draw_texCoordsAttrIndex, 2, GL_FLOAT, GL_FALSE, 0, 0);
+
+	// draw
 	glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+
+	// cleanup
+	glUniform4f(draw_colorLoc, 1.0f, 1.0f, 1.0f, 1.0f);
 }
 
 /* Fills a box of pixels with a single color */
-void Draw_Fill(int x, int y, int w, int h, int c, float alpha)
+static void Draw_Solid(int x, int y, int w, int h, float r, float g, float b, float alpha)
 {
-	byte *pal = (byte *) d_8to24table;
-	alpha = CLAMP(0, alpha, 1.0f);
-
-	glDisable(GL_TEXTURE_2D);
-	glColor4f(pal[c * 4] / 255.0,
-		  pal[c * 4 + 1] / 255.0,
-		  pal[c * 4 + 2] / 255.0,
-		  alpha);
-
 	GLfloat verts[] = {
 		(GLfloat)x,     (GLfloat)y,
 		(GLfloat)x + w, (GLfloat)y,
@@ -420,21 +376,73 @@ void Draw_Fill(int x, int y, int w, int h, int c, float alpha)
 		(GLfloat)x,     (GLfloat)y + h,
 	};
 
-	glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+	GLfloat texts[] = {
+		(GLfloat)0.0f, (GLfloat)0.0f,
+		(GLfloat)1.0f, (GLfloat)0.0f,
+		(GLfloat)1.0f, (GLfloat)1.0f,
+		(GLfloat)0.0f, (GLfloat)1.0f,
+	};
 
-	glVertexPointer(2, GL_FLOAT, 0, verts);
+	// set uniforms
+	GL_BindToUnit(GL_TEXTURE0, solidtexture);
+	glUniform4f(draw_colorLoc, r, g, b, alpha);
 
-// draw
+	// set attributes
+	glBindBuffer(GL_ARRAY_BUFFER, draw_vertex_VBO);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * 2 * 4, &verts[0], GL_STREAM_DRAW);
+	glVertexAttribPointer(draw_vertexAttrIndex, 2, GL_FLOAT, GL_FALSE, 0, 0);
+	glBindBuffer(GL_ARRAY_BUFFER, draw_texCoords_VBO);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * 2 * 4, &texts[0], GL_STREAM_DRAW);
+	glVertexAttribPointer(draw_texCoordsAttrIndex, 2, GL_FLOAT, GL_FALSE, 0, 0);
+
+	// draw
 	glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 
-	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-
-// clean up
-	glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
-	glEnable(GL_TEXTURE_2D);
+	// cleanup
+	glUniform4f(draw_colorLoc, 1.0f, 1.0f, 1.0f, 1.0f);
 }
 
-//=============================================================================
+/* Fills a box of pixels with a single color */
+void Draw_Fill(int x, int y, int w, int h, int c, float alpha)
+{
+	float red   = (((byte *)&d_8to24table[c])[0]) / 255.0f;
+	float green = (((byte *)&d_8to24table[c])[1]) / 255.0f;
+	float blue  = (((byte *)&d_8to24table[c])[2]) / 255.0f;
+
+	Draw_Solid(x, y, w, h, red, green, blue, alpha);
+}
+
+void Draw_PolyBlend(void)
+{
+	if (!v_blend[3]) // No blends ... get outta here
+		return;
+
+	if (!gl_polyblend.value)
+		return;
+
+	Draw_SetCanvas(CANVAS_DEFAULT);
+
+	Draw_Solid(0, 0, vid.width, vid.height, v_blend[0], v_blend[1], v_blend[2], v_blend[3]);
+}
+
+static void Draw_FlushState(void)
+{
+	if (draw_buffer.empty())
+		return;
+
+	// setup
+        GL_Bind(char_texture);
+
+        // set attributes
+        glBindBuffer(GL_ARRAY_BUFFER, draw_vertex_VBO);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(draw_vertex_t) * draw_buffer.size(), draw_buffer.data(), GL_STREAM_DRAW);
+        glVertexAttribPointer(draw_vertexAttrIndex, 2, GL_FLOAT, GL_FALSE, sizeof(draw_vertex_t), BUFFER_OFFSET(offsetof(draw_vertex_t, position)));
+        glVertexAttribPointer(draw_texCoordsAttrIndex, 2, GL_FLOAT, GL_FALSE, sizeof(draw_vertex_t), BUFFER_OFFSET(offsetof(draw_vertex_t, textureCord)));
+
+        // draw
+        glDrawArrays(GL_TRIANGLES, 0, draw_buffer.size());
+        draw_buffer.clear();
+}
 
 void Draw_SetCanvas(canvastype newcanvas)
 {
@@ -444,7 +452,10 @@ void Draw_SetCanvas(canvastype newcanvas)
 	if (newcanvas == currentcanvas)
 		return;
 
-	Q_Matrix projectionMatrix;
+	Draw_FlushState();
+
+	projectionMatrix.identity();
+	modelViewMatrix.identity();
 
 	switch (newcanvas)
 	{
@@ -458,14 +469,14 @@ void Draw_SetCanvas(canvastype newcanvas)
 		glViewport(vid.x, vid.y, vid.width, vid.height);
 		break;
 	case CANVAS_MENU:
-		s = min((float )vid.width / 320.0, (float )vid.height / 200.0);
-		s = CLAMP(1.0, scr_menuscale.value, s);
+		s = min((float )vid.width / 320.0f, (float )vid.height / 200.0f);
+		s = CLAMP(1.0f, scr_menuscale.value, s);
 		// ericw -- doubled width to 640 to accommodate long keybindings
 		projectionMatrix.ortho(0, 640, 200, 0, -1.0f, 1.0f);
 		glViewport(vid.x + (vid.width - 320 * s) / 2, vid.y + (vid.height - 200 * s) / 2, 640 * s, 200 * s);
 		break;
 	case CANVAS_SBAR:
-		s = CLAMP(1.0, scr_sbarscale.value, (float )vid.width / 320.0);
+		s = CLAMP(1.0f, scr_sbarscale.value, (float )vid.width / 320.0f);
 		if (cl.gametype == GAME_DEATHMATCH)
 		{
 			projectionMatrix.ortho(0, vid.width / s, 48, 0, -1.0f, 1.0f);
@@ -477,14 +488,10 @@ void Draw_SetCanvas(canvastype newcanvas)
 			glViewport(vid.x + (vid.width - 320 * s) / 2, vid.y, 320 * s, 48 * s);
 		}
 		break;
-//	case CANVAS_WARPIMAGE:
-//		projectionMatrix.ortho(0, 128, 0, 128, -1.0f, 1.0f);
-//		glViewport (vid.x, vid.y+vid.height-gl_warpimagesize, gl_warpimagesize, gl_warpimagesize);
-//		break;
 	case CANVAS_CROSSHAIR: //0,0 is center of viewport
-		s = CLAMP(1.0, scr_crosshairscale.value, 10.0);
-		projectionMatrix.ortho(scr_vrect.width / -2 / s, scr_vrect.width / 2 / s, scr_vrect.height / 2 / s, scr_vrect.height / -2 / s, -1.0f, 1.0f);
-		glViewport(scr_vrect.x, vid.height - scr_vrect.y - scr_vrect.height, scr_vrect.width & ~1, scr_vrect.height & ~1);
+		s = CLAMP(1.0f, scr_crosshairscale.value, 10.0f);
+		projectionMatrix.ortho(r_refdef.vrect.width / -2 / s, r_refdef.vrect.width / 2 / s, r_refdef.vrect.height / 2 / s, r_refdef.vrect.height / -2 / s, -1.0f, 1.0f);
+		glViewport(r_refdef.vrect.x, vid.height - r_refdef.vrect.y - r_refdef.vrect.height, r_refdef.vrect.width & ~1, r_refdef.vrect.height & ~1);
 		break;
 	case CANVAS_BOTTOMLEFT: //used by devstats
 		s = (float) vid.width / vid.conwidth; //use console scale
@@ -500,64 +507,91 @@ void Draw_SetCanvas(canvastype newcanvas)
 		Sys_Error("bad canvas type");
 	}
 
-	glMatrixMode(GL_PROJECTION);
-	glLoadMatrixf(projectionMatrix.get());
-
-	Q_Matrix modelViewMatrix;
-	glMatrixMode(GL_MODELVIEW);
-	glLoadMatrixf(modelViewMatrix.get());
+	glUniformMatrix4fv(draw_projectionLoc, 1, GL_FALSE, projectionMatrix.get());
 
 	currentcanvas = newcanvas;
 }
 
 void GL_Begin2D(void)
 {
+	glUseProgram(draw_program);
+
+	// set uniforms
+        glUniform1i(draw_texLoc, 0);
+        glUniform4f(draw_colorLoc, 1.0f, 1.0f, 1.0f, 1.0f);
 	currentcanvas = CANVAS_INVALID;
 	Draw_SetCanvas(CANVAS_DEFAULT);
 
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	glDisable(GL_DEPTH_TEST);
-	glDisable(GL_CULL_FACE);
 }
 
 void GL_End2D(void)
 {
+	Draw_FlushState();
 	glEnable(GL_DEPTH_TEST);
-	glEnable(GL_CULL_FACE);
+	glDisable(GL_BLEND);
 }
 
 /* generate pics from internal data */
 qpic_t *Draw_MakePic(const char *name, int width, int height, byte *data)
 {
-	int flags = TEX_NEAREST | TEX_ALPHA | TEX_PERSIST | TEX_NOPICMIP | TEX_PAD;
+	int flags = TEX_NEAREST | TEX_ALPHA | TEX_NOPICMIP | TEX_PAD;
 
-	qpic_t *pic = (qpic_t *) Hunk_Alloc(sizeof(qpic_t));
+	qpic_t *pic = (qpic_t *)Q_malloc(sizeof(qpic_t));
 
 	pic->gltexture = TexMgr_LoadImage(name, width, height, SRC_INDEXED, data, flags);
-	pic->width = (float) TexMgr_PadConditional(width);
-	pic->height = (float) TexMgr_PadConditional(height);
+	pic->width = width;
+	pic->height = height;
 	pic->sl = 0;
-	pic->sh = (float) width / pic->width;
+	pic->sh = (float) width / (float) TexMgr_PadConditional(width);
 	pic->tl = 0;
-	pic->th = (float) height / pic->height;
+	pic->th = (float) height / (float) TexMgr_PadConditional(height);
 
 	return pic;
 }
 
-static void Load_CharSet(void)
+static void GL_LoadCharSet(void)
 {
-	draw_chars = (byte *) W_GetLumpName("conchars");
+	byte *draw_chars = (byte *) W_GetLumpName("conchars");
 	for (int i = 0; i < 128 * 128; i++)
 		if (draw_chars[i] == 0)
 			draw_chars[i] = 255; // proper transparent color
 
 	// now turn them into textures
-	char_texture = TexMgr_LoadImage("charset", 128, 128, SRC_INDEXED, draw_chars, TEX_ALPHA | TEX_NOPICMIP);
+	char_texture = TexMgr_LoadImage("charset", 128, 128, SRC_INDEXED, draw_chars, TEX_NEAREST | TEX_ALPHA | TEX_NOPICMIP);
+}
+
+static void GL_CreateDrawShaders(void)
+{
+	// generate program
+	draw_program = LoadShader((const char *)draw_vs, draw_vs_len,
+	                          (const char *)draw_fs, draw_fs_len);
+
+	// get attribute locations
+	draw_vertexAttrIndex = GL_GetAttribLocation(draw_program, "Vertex");
+	draw_texCoordsAttrIndex = GL_GetAttribLocation(draw_program, "TexCoords");
+
+	glEnableVertexAttribArray(draw_vertexAttrIndex);
+	glEnableVertexAttribArray(draw_texCoordsAttrIndex);
+
+	// get uniform locations
+	draw_texLoc = GL_GetUniformLocation(draw_program, "Tex");
+	draw_projectionLoc = GL_GetUniformLocation(draw_program, "Projection");
+	draw_colorLoc = GL_GetUniformLocation(draw_program, "Color");
 }
 
 void Draw_Init(void)
 {
-	Cvar_RegisterVariable(&gl_smoothfont);
-	Cvar_SetCallback(&gl_smoothfont, OnChange_gl_smoothfont);
+	GL_LoadCharSet();
 
-	Load_CharSet();
+	// Hack to get around switching to shader that does not sample textures
+	static byte data[4] = {255, 255, 255, 255};
+	solidtexture = TexMgr_LoadImage("solidtexture", 1, 1, SRC_RGBA, (byte *)data, TEX_ALPHA | TEX_NEAREST);
+
+	GL_CreateDrawShaders();
+
+	glGenBuffers(1, &draw_vertex_VBO);
+	glGenBuffers(1, &draw_texCoords_VBO);
 }

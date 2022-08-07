@@ -18,8 +18,7 @@
 #define __VID_H
 
 typedef struct vrect_s {
-	int x, y, width, height;
-	struct vrect_s *pnext;
+	unsigned int x, y, width, height;
 } vrect_t;
 
 typedef enum {
@@ -42,9 +41,6 @@ typedef struct {
 typedef byte pixel_t;
 
 typedef struct {
-	pixel_t *colormap;              // 256 * VID_GRADES size
-	unsigned short *colormap16;     // 256 * VID_GRADES size
-	int fullbright;                 // index of first fullbright color
 	unsigned x;
 	unsigned y;
 	unsigned width;
@@ -56,14 +52,6 @@ typedef struct {
 	modestate_t dispmode;
 	int bpp;
 	int dispfreq;
-	int maxwarpwidth;
-	int maxwarpheight;
-	int desktop_width;
-	int desktop_height;
-	int desktop_bpp;
-	int desktop_dispfreq;
-	int desktop_areawidth;
-	int desktop_areaheight;
 } viddef_t;
 
 extern viddef_t vid; // global video state

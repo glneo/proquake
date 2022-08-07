@@ -116,7 +116,7 @@ FILE *Sys_FileOpenWrite(const char *path)
 	return handle;
 }
 
-int Sys_FileWrite(FILE *handle, void *src, int count)
+size_t Sys_FileWrite(FILE *handle, void *src, size_t count)
 {
 	return fwrite(src, 1, count, handle);
 }
@@ -126,7 +126,7 @@ void Sys_FileSeek(FILE *handle, int position)
 	fseek(handle, position, SEEK_SET);
 }
 
-int Sys_FileRead(FILE *handle, void *dest, int count)
+size_t Sys_FileRead(FILE *handle, void *dest, size_t count)
 {
 	return fread(dest, 1, count, handle);
 }
@@ -188,10 +188,7 @@ int main(int argc, char **argv)
 	parms.argv = com_argv;
 
 	parms.memsize = 32 * 1024 * 1024; // 32MB default
-	int j = COM_CheckParm("-mem");
-	if (j)
-		parms.memsize = (int) (atof(com_argv[j + 1]) * 1024 * 1024);
-	parms.membase = malloc(parms.memsize);
+
 	parms.basedir = basedir;
 
 	isDedicated = COM_CheckParm("-dedicated");

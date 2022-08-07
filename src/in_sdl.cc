@@ -133,7 +133,7 @@ static joyaxis_t IN_ApplyDeadzone(joyaxis_t axis, float deadzone)
 
 	if (magnitude > deadzone)
 	{
-		const vec_t new_magnitude = min(1.0, (magnitude - deadzone) / (1.0 - deadzone));
+		const vec_t new_magnitude = min(1.0f, (magnitude - deadzone) / (1.0f - deadzone));
 		const vec_t scale = new_magnitude / magnitude;
 		result.x = axis.x * scale;
 		result.y = axis.y * scale;
@@ -294,7 +294,7 @@ static void IN_JoyMove (usercmd_t *cmd)
 	if (lookEased.x != 0 || lookEased.y != 0)
 		V_StopPitchDrift();
 
-	cl.viewangles[PITCH] = CLAMP(cl_minpitch.value, cl.viewangles[PITCH], cl_maxpitch.value);
+	cl.viewangles[PITCH] = CLAMP((float)cl_minpitch.value, cl.viewangles[PITCH], (float)cl_maxpitch.value);
 }
 
 static void IN_MouseMove(usercmd_t *cmd)
@@ -321,7 +321,7 @@ static void IN_MouseMove(usercmd_t *cmd)
 	if ((freelook.value || (in_mlook.state & 1)) && !(in_strafe.state & 1))
 	{
 		cl.viewangles[PITCH] += m_pitch.value * dmy;
-		cl.viewangles[PITCH] = CLAMP(cl_minpitch.value, cl.viewangles[PITCH], cl_maxpitch.value);
+		cl.viewangles[PITCH] = CLAMP((float)cl_minpitch.value, cl.viewangles[PITCH], (float)cl_maxpitch.value);
 	}
 	else if (in_strafe.state & 1)
 		cmd->upmove -= m_forward.value * dmy;
@@ -696,8 +696,8 @@ void IN_Activate(void)
 	total_dx = 0;
 	total_dy = 0;
 
-	if (SDL_SetRelativeMouseMode(SDL_TRUE))
-		Con_Printf("WARNING: SDL_SetRelativeMouseMode(SDL_TRUE) failed.\n");
+//	if (SDL_SetRelativeMouseMode(SDL_TRUE))
+//		Con_Printf("WARNING: SDL_SetRelativeMouseMode(SDL_TRUE) failed.\n");
 
 	IN_EndIgnoringMouseEvents();
 }

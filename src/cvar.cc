@@ -120,7 +120,7 @@ void Cvar_SetQuick(cvar_t *var, const char *value)
 		var->callback(var);
 
 	// JPG 3.00 - rcon (64 doesn't mean anything special, but we need some extra space because NET_MAXMESSAGE == RCON_BUFF_SIZE)
-	int size_left = rcon_message.maxsize - strlen(var->name) - strlen(var->string) - 64;
+	size_t size_left = rcon_message.maxsize - strlen(var->name) - strlen(var->string) - 64;
 	if (rcon_active && (rcon_message.cursize < size_left))
 	{
 		rcon_message.cursize--;

@@ -58,7 +58,7 @@ void Chase_Update(void)
 		// calculate pitch to look at the same spot from camera
 		VectorSubtract(stop, r_refdef.vieworg, stop);
 
-		float dist = max(1, DotProduct(stop, forward));
+		float dist = max(1.0f, DotProduct(stop, forward));
 		r_refdef.viewangles[PITCH] = -180 / M_PI * atan2f(stop[2], dist);
 		r_refdef.viewangles[YAW] -= chase_yaw.value;
 

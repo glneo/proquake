@@ -40,241 +40,173 @@ cvar_t r_particles_alpha = { "r_particles_alpha", "1", CVAR_ARCHIVE };
 int c_brush_polys, c_alias_polys;
 
 // view origin and direction
-vec3_t r_origin, vright, vpn, vup;
+vec3_t vright, vpn, vup;
 
 // screen size info
 refdef_t r_refdef;
 
-mleaf_t *r_viewleaf, *r_oldviewleaf;
+mleaf_t *r_viewleaf;
 
 static mplane_t frustum[4];
 static int r_visframecount; // bumped when going to a new PVS
 
 int r_framecount;
 
-static void R_RecursiveWorldNode(mnode_t *node)
+/*
+================
+R_ClearTextureChains -- ericw
+
+clears texture chains for all textures used by the given model, and also
+clears the lightmap chains
+================
+*/
+void R_ClearTextureChains (brush_model_t *mod, texchain_t chain)
 {
-	int c, side;
-	mplane_t *plane;
-	msurface_t **mark;
-	mleaf_t *pleaf;
+	size_t i;
+
+	// set all chains to null
+	for (i=0 ; i<mod->numtextures ; i++)
+		if (mod->textures[i])
+		{
+			mod->textures[i]->texturechains[chain] = NULL;
+			mod->textures[i]->fullbrightchains[chain] = NULL;
+		}
+}
+
+/* Returns the proper texture for a given time and base texture */
+static texture_t *R_TextureAnimation(int frame, texture_t *base)
+{
+	if (frame)
+		if (base->alternate_anims)
+			base = base->alternate_anims;
+
+	if (!base->anim_total)
+		return base;
+
+	int relative = (int)(cl.time * 10) % base->anim_total;
+
+	int count = 0;
+	while (base->anim_min > relative || base->anim_max <= relative)
+	{
+		base = base->anim_next;
+		if (!base)
+			Sys_Error("broken cycle");
+		if (++count > 100)
+			Sys_Error("infinite cycle");
+	}
+
+	return base;
+}
+
+/* adds the given surface to its texture chain */
+void R_ChainSurface(msurface_t *surf, texchain_t chain)
+{
+	texture_t *texture = R_TextureAnimation(0, surf->texinfo->texture);
+
+	surf->texturechain = texture->texturechains[chain];
+	texture->texturechains[chain] = surf;
+
+	if (texture->fullbright)
+	{
+		surf->fullbrightchain = texture->fullbrightchains[chain];
+		texture->fullbrightchains[chain] = surf;
+	}
+}
+
+/*
+================
+R_BackFaceCull -- johnfitz -- returns true if the surface is facing away from vieworg
+================
+*/
+bool R_BackFaceCull (msurface_t *surf)
+{
 	double dot;
 
-	if (node->contents == CONTENTS_SOLID)
-		return; // solid
-
-	if (node->visframe != r_visframecount)
-		return;
-
-	if (R_CullBox(node->minmaxs, node->minmaxs + 3))
-		return;
-
-	// if a leaf node, draw stuff
-	if (node->contents < 0)
-	{
-		pleaf = (mleaf_t *) node;
-		mark = pleaf->firstmarksurface;
-		c = pleaf->nummarksurfaces;
-
-		if (c)
-		{
-			do
-			{
-				(*mark)->visframe = r_framecount;
-				mark++;
-			} while (--c);
-		}
-
-		// deal with model fragments in this leaf
-		if (pleaf->efrags)
-			R_StoreEfrags(&pleaf->efrags);
-
-		return;
-	}
-
-	// node is just a decision point, so go down the appropriate sides
-
-	// find which side of the node we are on
-	plane = node->plane;
-
-	switch (plane->type)
-	{
-	case PLANE_X:
-		dot = r_refdef.vieworg[0] - plane->dist;
-		break;
-	case PLANE_Y:
-		dot = r_refdef.vieworg[1] - plane->dist;
-		break;
-	case PLANE_Z:
-		dot = r_refdef.vieworg[2] - plane->dist;
-		break;
-	default:
-		dot = DotProduct (r_refdef.vieworg, plane->normal) - plane->dist;
-		break;
-	}
-
-	side = (dot >= 0) ? 0 : 1;
-
-	// recurse down the children, front side first
-	R_RecursiveWorldNode(node->children[side]);
-
-	// draw stuff
-	c = node->numsurfaces;
-	if (c)
-	{
-		if (dot < 0 - BACKFACE_EPSILON)
-			side = SURF_PLANEBACK;
-		else if (dot > BACKFACE_EPSILON)
-			side = 0;
-
-		msurface_t *surf = cl.worldmodel->brushmodel->surfaces + node->firstsurface;
-		for (; c; c--, surf++)
-		{
-			if (surf->visframe != r_framecount)
-				continue;
-
-			// don't backface underwater surfaces, because they warp // JPG - added r_waterwarp
-			if ((!(surf->flags & SURF_UNDERWATER) || !r_waterwarp.value) && ((dot < 0) ^ !!(surf->flags & SURF_PLANEBACK)))
-				continue;		// wrong side
-
-			surf->texturechain = surf->texinfo->texture->texturechain;
-			surf->texinfo->texture->texturechain = surf;
-		}
-	}
-
-	// recurse down the back side
-	R_RecursiveWorldNode(node->children[!side]);
-}
-
-static void R_MarkLeaves(void)
-{
-	byte *vis, solid[4096];
-	mnode_t *node;
-	extern cvar_t gl_nearwater_fix;
-	bool nearwaterportal = false;
-
-	// Check if near water to avoid HOMs when crossing the surface
-	if (gl_nearwater_fix.value)
-	{
-		msurface_t **mark = r_viewleaf->firstmarksurface;
-
-		for (int i = 0; i < r_viewleaf->nummarksurfaces; i++)
-		{
-			if (mark[i]->flags & SURF_DRAWTURB)
-			{
-				nearwaterportal = true;
-				// Con_SafePrintf("R_MarkLeaves: nearwaterportal, surfs=%d\n", r_viewleaf->nummarksurfaces);
-				break;
-			}
-		}
-	}
-
-	if ((r_oldviewleaf == r_viewleaf) && !r_novis.value && !nearwaterportal)
-		return;
-
-	r_visframecount++;
-	r_oldviewleaf = r_viewleaf;
-
-	if (r_novis.value)
-	{
-		vis = solid;
-		memset(solid, 0xff, (cl.worldmodel->brushmodel->numleafs + 7) >> 3);
-	}
-	else if (nearwaterportal)
-	{
-		vis = SV_FatPVS(r_origin, cl.worldmodel);
-	}
+	if (surf->plane->type < 3)
+		dot = r_refdef.vieworg[surf->plane->type] - surf->plane->dist;
 	else
-	{
-		vis = Mod_LeafPVS(r_viewleaf, cl.worldmodel->brushmodel);
-	}
+		dot = DotProduct (r_refdef.vieworg, surf->plane->normal) - surf->plane->dist;
 
-	for (int i = 0; i < cl.worldmodel->brushmodel->numleafs; i++)
-	{
-		if (vis[i >> 3] & (1 << (i & 7)))
-		{
-			node = (mnode_t *) &cl.worldmodel->brushmodel->leafs[i + 1];
-			do
-			{
-				if (node->visframe == r_visframecount)
-					break;
-				node->visframe = r_visframecount;
-				node = node->parent;
-			} while (node);
-		}
-	}
-}
-
-static void R_DrawWorld(void)
-{
-	R_ClearLightmapPolys();
-
-	R_MarkLeaves();
-
-	R_RecursiveWorldNode(cl.worldmodel->brushmodel->nodes);
-
-	R_DrawSurfaces(cl.worldmodel->brushmodel);
-
-//	R_BlendLightmaps();
-}
-
-/* Returns true if the box is completely outside the frustum */
-bool R_CullBox(vec3_t mins, vec3_t maxs)
-{
-	int i;
-
-	for (i = 0; i < 4; i++)
-		if (BoxOnPlaneSide(mins, maxs, &frustum[i]) == 2)
-			return true;
+	if ((dot < 0) ^ !!(surf->flags & SURF_PLANEBACK))
+		return true;
 
 	return false;
 }
 
-/* Returns true if the box is completely outside the frustum */
-static bool R_CullBoxA(const vec3_t emins, const vec3_t emaxs)
+/* mark surfaces based on PVS and rebuild texture chains */
+void R_MarkSurfaces(void)
 {
-	int i;
-	mplane_t *p;
-	for (i = 0; i < 4; i++)
+	brush_model_t *worldmodel = cl.worldmodel->brushmodel;
+
+	// check this leaf for water portals
+	// TODO: loop through all water surfs and use distance to leaf cullbox
+	bool nearwaterportal = false;
+	for (size_t i = 0; i < r_viewleaf->nummarksurfaces; i++)
+		if (r_viewleaf->firstmarksurface[i]->flags & SURF_DRAWTURB)
+			nearwaterportal = true;
+
+	// choose vis data
+	byte *vis;
+	if (r_novis.value || r_viewleaf->contents == CONTENTS_SOLID || r_viewleaf->contents == CONTENTS_SKY)
+		vis = Mod_NoVisPVS(worldmodel);
+	else if (nearwaterportal)
+		vis = Mod_FatPVS(r_refdef.vieworg, worldmodel);
+	else
+		vis = Mod_LeafPVS(r_viewleaf, worldmodel);
+
+	r_visframecount++;
+
+	// set all chains to null
+	R_ClearTextureChains(worldmodel, chain_world);
+
+	// iterate through leaves, marking surfaces
+	for (size_t i = 0; i < worldmodel->numleafs; i++)
 	{
-		p = frustum + i;
-		switch (p->signbits)
+		mleaf_t *leaf = &worldmodel->leafs[i + 1];
+
+		// Not potentially visible
+		if (!(vis[i >> 3] & (1 << (i & 7))))
+			continue;
+
+		// Whole leaf out of view
+		if (R_CullBox(leaf->bboxmin, leaf->bboxmax))
+			continue;
+
+		// add static models
+		if (leaf->efrags)
+			R_StoreEfrags(&leaf->efrags);
+
+		if (leaf->contents == CONTENTS_SKY)
+			continue;
+
+		for (size_t j = 0; j < leaf->nummarksurfaces; j++)
 		{
-		default:
-		case 0:
-			if (p->normal[0] * emaxs[0] + p->normal[1] * emaxs[1] + p->normal[2] * emaxs[2] < p->dist)
-				return true;
-			break;
-		case 1:
-			if (p->normal[0] * emins[0] + p->normal[1] * emaxs[1] + p->normal[2] * emaxs[2] < p->dist)
-				return true;
-			break;
-		case 2:
-			if (p->normal[0] * emaxs[0] + p->normal[1] * emins[1] + p->normal[2] * emaxs[2] < p->dist)
-				return true;
-			break;
-		case 3:
-			if (p->normal[0] * emins[0] + p->normal[1] * emins[1] + p->normal[2] * emaxs[2] < p->dist)
-				return true;
-			break;
-		case 4:
-			if (p->normal[0] * emaxs[0] + p->normal[1] * emaxs[1] + p->normal[2] * emins[2] < p->dist)
-				return true;
-			break;
-		case 5:
-			if (p->normal[0] * emins[0] + p->normal[1] * emaxs[1] + p->normal[2] * emins[2] < p->dist)
-				return true;
-			break;
-		case 6:
-			if (p->normal[0] * emaxs[0] + p->normal[1] * emins[1] + p->normal[2] * emins[2] < p->dist)
-				return true;
-			break;
-		case 7:
-			if (p->normal[0] * emins[0] + p->normal[1] * emins[1] + p->normal[2] * emins[2] < p->dist)
-				return true;
-			break;
+			msurface_t *surf = leaf->firstmarksurface[j];
+
+			// Already marked
+			if (surf->visframe == r_visframecount)
+				continue;
+			surf->visframe = r_visframecount;
+
+			// Surface out of view
+			if (R_CullBox(surf->mins, surf->maxs) || R_BackFaceCull(surf))
+				continue;
+
+			R_ChainSurface(surf, chain_world);
+			R_RenderDynamicLightmaps(surf);
 		}
 	}
+
+	R_UploadLightmaps();
+}
+
+/* Returns true if the box is completely outside the frustum */
+bool R_CullBox(const vec3_t mins, const vec3_t maxs)
+{
+	for (int i = 0; i < 4; i++)
+		if (BoxOnPlaneSide(mins, maxs, &frustum[i]) == 2)
+			return true;
+
 	return false;
 }
 
@@ -282,14 +214,9 @@ static bool R_CullBoxA(const vec3_t emins, const vec3_t emaxs)
 #define PlaneDiff(point, plane) (((plane)->type < 3 ? (point)[(plane)->type] : DotProduct((point), (plane)->normal)) - (plane)->dist)
 static bool R_CullSphere(const vec3_t centre, const float radius)
 {
-	int i;
-	mplane_t *p;
-
-	for (i = 0, p = frustum; i < 4; i++, p++)
-	{
-		if (PlaneDiff(centre, p) <= -radius)
+	for (int i = 0; i < 4; i++)
+		if (PlaneDiff(centre, &frustum[i]) <= -radius)
 			return true;
-	}
 
 	return false;
 }
@@ -308,10 +235,7 @@ bool R_CullForEntity(const entity_t *ent/*, vec3_t returned_center*/)
 //	if (returned_center)
 //		LerpVector (mins, maxs, 0.5, returned_center);
 
-//	if (R_CullBox (mins, maxs))
-//		return true;
-
-	if (R_CullBoxA(mins, maxs))
+	if (R_CullBox(mins, maxs))
 		return true;
 
 	return false;
@@ -326,16 +250,19 @@ static void R_DrawEntitiesOnList(void)
 	{
 		entity_t *entity = cl_visedicts[i];
 
+		if (R_CullForEntity(entity))
+			continue;
+
 		switch (entity->model->type)
 		{
 			case mod_alias:
-				R_DrawAliasModel(entity);
+				GL_DrawAliasModel(entity);
 				break;
 			case mod_brush:
-				R_DrawBrushModel(entity);
+				GL_DrawBrushModel(entity);
 				break;
 			case mod_sprite:
-				R_DrawSpriteModel(entity);
+				GL_DrawSpriteModel(entity);
 				break;
 		}
 	}
@@ -354,7 +281,7 @@ static void R_DrawViewModel(void)
 	if (!entity->model)
 		return;
 
-	R_DrawAliasModel(entity);
+	GL_DrawAliasModel(entity);
 }
 
 static int SignbitsForPlane(mplane_t *out)
@@ -402,7 +329,7 @@ static void R_SetFrustum(void)
 	for (i = 0; i < 4; i++)
 	{
 		frustum[i].type = PLANE_ANYZ;
-		frustum[i].dist = DotProduct(r_origin, frustum[i].normal);
+		frustum[i].dist = DotProduct(r_refdef.vieworg, frustum[i].normal);
 		frustum[i].signbits = SignbitsForPlane(&frustum[i]);
 	}
 }
@@ -412,16 +339,27 @@ static void R_SetupFrame(void)
 	r_framecount++;
 
 	// build the transformation matrix for the given view angles
-	VectorCopy(r_refdef.vieworg, r_origin);
 	AngleVectors(r_refdef.viewangles, vpn, vright, vup);
 
 	// current viewleaf
-	r_oldviewleaf = r_viewleaf;
-	r_viewleaf = Mod_PointInLeaf(r_origin, cl.worldmodel->brushmodel);
+	r_viewleaf = Mod_PointInLeaf(r_refdef.vieworg, cl.worldmodel->brushmodel);
 
 	V_SetContentsColor(r_viewleaf->contents);
 
 	V_CalcBlend();
+
+	r_refdef.fov_x = r_refdef.original_fov_x;
+	r_refdef.fov_y = r_refdef.original_fov_y;
+	if (r_waterwarp.value)
+	{
+		int contents = Mod_PointInLeaf(r_refdef.vieworg, cl.worldmodel->brushmodel)->contents;
+		if (contents == CONTENTS_WATER || contents == CONTENTS_SLIME || contents == CONTENTS_LAVA)
+		{
+			//variance is a percentage of width, where width = 2 * tan(fov / 2) otherwise the effect is too dramatic at high FOV and too subtle at low FOV.  what a mess!
+			r_refdef.fov_x = atan(tan(DEG2RAD(r_refdef.fov_x) / 2) * (0.97 + sin(cl.time * 1.5) * 0.03)) * 2 / M_PI_DIV_180;
+			r_refdef.fov_y = atan(tan(DEG2RAD(r_refdef.fov_y) / 2) * (1.03 - sin(cl.time * 1.5) * 0.03)) * 2 / M_PI_DIV_180;
+		}
+	}
 
 	c_brush_polys = 0;
 	c_alias_polys = 0;
@@ -429,31 +367,16 @@ static void R_SetupFrame(void)
 
 void R_NewMap(void)
 {
-	int i;
-
-	for (i = 0; i < 256; i++)
-		d_lightstylevalue[i] = 264;		// normal light value
+	R_ClearLightStyle();
 
 	// clear out efrags in case the level hasn't been reloaded
 	// FIXME: is this one short?
-	for (i = 0; i < cl.worldmodel->brushmodel->numleafs; i++)
+	for (size_t i = 0; i < cl.worldmodel->brushmodel->numleafs; i++)
 		cl.worldmodel->brushmodel->leafs[i].efrags = NULL;
-
-	r_viewleaf = NULL;
 
 	GL_BuildLightmaps();
 
-	// identify sky texture
-	skytexturenum = -1;
-
-	for (i = 0; i < cl.worldmodel->brushmodel->numtextures; i++)
-	{
-		if (!cl.worldmodel->brushmodel->textures[i])
-			continue;
-		if (!strncmp(cl.worldmodel->brushmodel->textures[i]->name, "sky", 3))
-			skytexturenum = i;
-		cl.worldmodel->brushmodel->textures[i]->texturechain = NULL;
-	}
+	R_ClearTextureChains(cl.worldmodel->brushmodel, chain_world);
 }
 
 /* r_refdef must be set before the first call */
@@ -478,55 +401,29 @@ void R_RenderView(void)
 	R_Clear();
 
 	// render normal view
-	R_PushDlights();
+	R_PushDlights(cl.worldmodel->brushmodel->nodes, cl.worldmodel->brushmodel->surfaces);
 	R_AnimateLight();
 	R_SetupFrame();
 	R_SetFrustum();
+	R_ClearLightmapPolys();
+	R_MarkSurfaces();
 	GL_Setup();
-	R_DrawWorld();
+	GL_DrawSurfaces(cl.worldmodel->brushmodel, chain_world);
 	R_DrawEntitiesOnList();
 	GL_DrawParticles();
 	R_DrawViewModel();
-	GL_PolyBlend();
 
 	if (r_speeds.value)
 	{
 		glFinish();
 		time2 = Sys_DoubleTime();
-		Con_Printf("%3i ms  %4i wpoly %4i epoly\n", (int) ((time2 - time1) * 1000), c_brush_polys, c_alias_polys);
+		double time = time2 - time1;
+		Con_Printf("%3i ms (%d fps) %4i wpoly %4i epoly\n", (int)(time * 1000), (int)(1 / time), c_brush_polys, c_alias_polys);
 	}
-}
-
-/* For program optimization */
-static void R_TimeRefresh_f(void)
-{
-	int i;
-	float start, stop, time;
-
-	if (cls.state != ca_connected)
-		return;
-
-	glFinish();
-
-	start = Sys_DoubleTime();
-	for (i = 0; i < 128; i++)
-	{
-		r_refdef.viewangles[1] = i * (360.0 / 128.0);
-		R_RenderView();
-	}
-
-	glFinish();
-	stop = Sys_DoubleTime();
-	time = stop - start;
-	Con_Printf("%f seconds (%f fps)\n", time, 128.0 / time);
-
-	GL_EndRendering();
 }
 
 void R_Init(void)
 {
-	Cmd_AddCommand("timerefresh", R_TimeRefresh_f);
-
 	Cvar_RegisterVariable(&r_norefresh);
 	Cvar_RegisterVariable(&r_lightmap);
 	Cvar_RegisterVariable(&r_fullbright);
@@ -546,6 +443,4 @@ void R_Init(void)
 	Cvar_RegisterVariable(&r_interpolate_animation);
 	Cvar_RegisterVariable(&r_interpolate_transform);
 	Cvar_RegisterVariable(&r_interpolate_weapon);
-
-	GL_InitParticleTexture();
 }

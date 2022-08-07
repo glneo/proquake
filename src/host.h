@@ -28,7 +28,6 @@ typedef struct
 				// memory locations, otherwise to the same.
 	int argc;
 	char **argv;
-	void *membase;
 	int memsize;
 } quakeparms_t;
 
@@ -52,15 +51,11 @@ extern bool isDedicated;
 
 extern bool host_initialized;		// true if into command execution
 extern double host_frametime;
-extern byte *host_basepal;
-extern byte *host_colormap;
 extern int host_framecount;		// incremented every frame, never reset
 extern double realtime;			// not bounded in any way, changed at
 // start of every frame, never reset
 
 extern char host_worldname[MAX_QPATH];
-
-extern byte *host_colormap;
 
 extern char dequake[256];	// JPG 1.05 - dedicated console translation
 extern cvar_t pq_dequake;	// JPG 1.05 - dedicated console translation

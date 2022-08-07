@@ -24,12 +24,15 @@ static char *gl_extensions_nice;
 bool gl_swap_control = false;
 bool gl_anisotropy_able = false;
 bool gl_texture_NPOT = false;
-float gl_max_anisotropy;
+float gl_max_anisotropy = 1.0f;
+
+Q_Matrix modelViewMatrix;
+Q_Matrix projectionMatrix;
 
 cvar_t gl_farclip = { "gl_farclip", "16384", CVAR_ARCHIVE };
 cvar_t gl_nearwater_fix = { "gl_nearwater_fix", "1", CVAR_ARCHIVE };
 cvar_t gl_fadescreen_alpha = { "gl_fadescreen_alpha", "0.7", CVAR_ARCHIVE };
-cvar_t gl_clear = { "gl_clear", "0", CVAR_ARCHIVE};
+cvar_t gl_clear = { "gl_clear", "0", CVAR_ARCHIVE };
 cvar_t gl_smoothmodels = { "gl_smoothmodels", "1" };
 cvar_t gl_affinemodels = { "gl_affinemodels", "0" };
 cvar_t gl_polyblend = { "gl_polyblend", "1", CVAR_ARCHIVE };
@@ -43,46 +46,6 @@ void GL_RotateForEntity(entity_t *ent, Q_Matrix &matrix)
 	matrix.rotateZ(ent->angles[1]);
 	matrix.rotateY(ent->angles[0]);
 	matrix.rotateX(ent->angles[2]);
-}
-
-void GL_PolyBlend(void)
-{
-	if (!v_blend[3]) // No blends ... get outta here
-		return;
-
-	if (!gl_polyblend.value)
-		return;
-
-	glDisable(GL_DEPTH_TEST);
-	glDisable(GL_TEXTURE_2D);
-
-	GLfloat old_matrix[16];
-	glGetFloatv(GL_MODELVIEW_MATRIX, old_matrix);
-
-	Q_Matrix modelViewMatrix;
-	modelViewMatrix.rotateX(-90.0f); // put Z going up
-	modelViewMatrix.rotateZ(90.0f); // put Z going up
-	glMatrixMode(GL_MODELVIEW);
-	glLoadMatrixf(modelViewMatrix.get());
-
-	glColor4f(v_blend[0], v_blend[1], v_blend[2], v_blend[3]);
-
-	GLfloat verts[] = {
-		10,  100,  100,
-		10, -100,  100,
-		10, -100, -100,
-		10,  100, -100,
-	};
-
-	glVertexPointer(3, GL_FLOAT, 0, verts);
-	glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
-
-	glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
-
-	glLoadMatrixf(old_matrix);
-
-	glEnable(GL_TEXTURE_2D);
-	glEnable(GL_DEPTH_TEST);
 }
 
 void R_Clear(void)
@@ -100,30 +63,34 @@ void GL_Setup(void)
 {
 	// set up viewpoint
 	int x = vid.x + r_refdef.vrect.x;
-	int y = vid.y + (vid.height - (r_refdef.vrect.y + r_refdef.vrect.height));
+	int y = vid.y + r_refdef.vrect.y + sb_lines;
 	int w = r_refdef.vrect.width;
 	int h = r_refdef.vrect.height;
 	glViewport(x, y, w, h);
 
 	// set up projection matrix
-	float screenaspect = (float) r_refdef.vrect.width / r_refdef.vrect.height;
-	float farclip = max(gl_farclip.value, 4096.0f);
-	float nearclip = 4.0f;
-	Q_Matrix projectionMatrix;
-	projectionMatrix.perspective(r_refdef.fov_y, screenaspect, nearclip, farclip);
-	glMatrixMode(GL_PROJECTION);
-	glLoadMatrixf(projectionMatrix.get());
+	float zmax = max(gl_farclip.value, 4096.0f);
+	float zmin = 4.0f;
+	float ymax = zmin * tanf(r_refdef.fov_y * M_PI / 360.0);
+	float ymin = -ymax;
+	float xmax = zmin * tanf(r_refdef.fov_x * M_PI / 360.0);
+	float xmin = -xmax;
+	projectionMatrix.identity();
+	projectionMatrix.frustum(xmin, xmax, ymin, ymax, zmin, zmax);
+
+// REMOVE
+//	projectionMatrix.translate(0.0f, -200.0f, -1000.0f);
+//	projectionMatrix.rotateX(45.0f);
+
 
 	// set up modelview matrix
-	Q_Matrix modelViewMatrix;
+	modelViewMatrix.identity();
 	modelViewMatrix.rotateX(-90.0f); // put Z going up
 	modelViewMatrix.rotateZ(90.0f); // put Z going up
 	modelViewMatrix.rotateX(-r_refdef.viewangles[2]);
 	modelViewMatrix.rotateY(-r_refdef.viewangles[0]);
 	modelViewMatrix.rotateZ(-r_refdef.viewangles[1]);
 	modelViewMatrix.translate(-r_refdef.vieworg[0], -r_refdef.vieworg[1], -r_refdef.vieworg[2]);
-	glMatrixMode(GL_MODELVIEW);
-	glLoadMatrixf(modelViewMatrix.get());
 }
 
 /* Translates a skin texture by the per-player color lookup */
@@ -131,6 +98,7 @@ void R_TranslatePlayerSkin(int playernum)
 {
 }
 
+// TODO: Use list
 static char *GL_MakeNiceExtensionsList(const char *in)
 {
 	char *copy, *token, *out;
@@ -254,7 +222,7 @@ static void GL_CheckExtensions(void)
 	else
 	{
 		Con_Warning("texture_non_power_of_two not supported\n");
-		gl_texture_NPOT = true;
+		gl_texture_NPOT = false;
 	}
 }
 
@@ -270,6 +238,13 @@ void GL_EndRendering(void)
 /* the stuff from GL_Init that needs to be done every time a new GL render context is created */
 static void GL_SetupState(void)
 {
+#ifndef OPENGLES
+	static GLuint abuffer;
+
+	glGenVertexArrays(1, &abuffer);
+	glBindVertexArray(abuffer);
+#endif
+
 	// set clear color to gray
 	glClearColor(0.15, 0.15, 0.15, 0);
 
@@ -282,19 +257,15 @@ static void GL_SetupState(void)
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LEQUAL);
 
-	glEnable(GL_TEXTURE_2D);
-	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+//	glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
 
-	glEnable(GL_ALPHA_TEST);
-	glAlphaFunc(GL_GREATER, 0.1);
+#ifndef OPENGLES
+	glEnable(GL_PROGRAM_POINT_SIZE);
+#endif
 
-	glShadeModel(GL_FLAT);
-	glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
-
-//	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-
-	glEnableClientState(GL_VERTEX_ARRAY);
-	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+	GL_CreateAliasShaders();
+	GL_CreateBrushShaders();
+	GL_ParticleInit();
 }
 
 void GL_Init(void)

@@ -116,14 +116,9 @@ qpic_t *scr_backtile;
 int clearconsole;
 int clearnotify;
 
-vrect_t scr_vrect;
-
 bool scr_disabled_for_loading;
 bool scr_drawloading;
 float scr_disabled_time;
-
-int scr_tileclear_updates = 0; //johnfitz
-
 
 /*
  ===============================================================================
@@ -288,25 +283,20 @@ static void SCR_CalcRefdef(void)
 {
 	float size, scale; //johnfitz -- scale
 
-	scr_tileclear_updates = 0; //johnfitz
-
-// bound viewsize
+	// bound viewsize
 	if (scr_viewsize.value < 30)
 		Cvar_SetQuick(&scr_viewsize, "30");
 	if (scr_viewsize.value > 120)
 		Cvar_SetQuick(&scr_viewsize, "120");
 
-// bound fov
+	// bound fov
 	if (scr_fov.value < 10)
 		Cvar_SetQuick(&scr_fov, "10");
 	if (scr_fov.value > 170)
 		Cvar_SetQuick(&scr_fov, "170");
 
-	vid.recalc_refdef = 0;
-
-	//johnfitz -- rewrote this section
 	size = scr_viewsize.value;
-	scale = CLAMP(1.0, scr_sbarscale.value, (float )vid.width / 320.0);
+	scale = CLAMP(1.0f, (float)scr_sbarscale.value, (float)vid.width / 320.0f);
 
 	if (size >= 120 || cl.intermission || scr_sbaralpha.value < 1.0f)
 		sb_lines = 0;
@@ -315,22 +305,18 @@ static void SCR_CalcRefdef(void)
 	else
 		sb_lines = 48 * scale;
 
-	size = min(scr_viewsize.value, 100) / 100;
-	//johnfitz
+	size = min(scr_viewsize.value, 100.0f) / 100.0f;
 
-	//johnfitz -- rewrote this section
-	r_refdef.vrect.width = max(vid.width * size, 96); //no smaller than 96, for icons
-	r_refdef.vrect.height = min(vid.height * size, vid.height - sb_lines); //make room for sbar
+	r_refdef.vrect.width = max((unsigned int)(vid.width * size), 96u); //no smaller than 96, for icons
+	r_refdef.vrect.height = min((unsigned int)(vid.height * size), (vid.height - sb_lines)); //make room for sbar
 	r_refdef.vrect.x = (vid.width - r_refdef.vrect.width) / 2;
-	r_refdef.vrect.y = (vid.height - sb_lines - r_refdef.vrect.height) / 2;
-	//johnfitz
+	r_refdef.vrect.y = ((vid.height - sb_lines) / 2) - (r_refdef.vrect.height / 2);
 
-	r_refdef.fov_x = AdaptFovx(scr_fov.value, vid.width, vid.height);
-	r_refdef.fov_y = CalcFovy(r_refdef.fov_x, r_refdef.vrect.width, r_refdef.vrect.height);
+//	Con_Printf("x: %d, y: %d, width: %d, height: %d\n", r_refdef.vrect.x, r_refdef.vrect.y, r_refdef.vrect.width, r_refdef.vrect.height);
 
-	scr_vrect = r_refdef.vrect;
+	r_refdef.original_fov_x = AdaptFovx(scr_fov.value, r_refdef.vrect.width, r_refdef.vrect.height);
+	r_refdef.original_fov_y = CalcFovy(r_refdef.original_fov_x, r_refdef.vrect.width, r_refdef.vrect.height);
 }
-
 
 static void SCR_SizeUp_f(void)
 {
@@ -356,7 +342,7 @@ void SCR_Conwidth_f(cvar_t *var)
 {
 	vid.recalc_refdef = 1;
 	vid.conwidth = (scr_conwidth.value > 0) ? (int) scr_conwidth.value : (scr_conscale.value > 0) ? (int) (vid.width / scr_conscale.value) : vid.width;
-	vid.conwidth = CLAMP(320, vid.conwidth, vid.width);
+	vid.conwidth = CLAMP(320u, vid.conwidth, vid.width);
 	vid.conwidth &= 0xFFFFFFF8;
 	vid.conheight = vid.conwidth * vid.height / vid.width;
 }
@@ -399,7 +385,6 @@ void SCR_DrawFPS(void)
 			y -= 8; //make room for clock
 		Draw_SetCanvas (CANVAS_BOTTOMRIGHT);
 		Draw_String(x, y, st, 1.0f);
-		scr_tileclear_updates = 0;
 	}
 }
 
@@ -419,8 +404,6 @@ void SCR_DrawClock(void)
 	//draw it
 	Draw_SetCanvas (CANVAS_BOTTOMRIGHT);
 	Draw_String(320 - (strlen(str) << 3), 200 - 8, str, 1.0f);
-
-	scr_tileclear_updates = 0;
 }
 
 void SCR_DrawDevStats(void)
@@ -489,9 +472,9 @@ void SCR_DrawTurtle(void)
 	if (count < 3)
 		return;
 
-	Draw_SetCanvas (CANVAS_DEFAULT); //johnfitz
+	Draw_SetCanvas(CANVAS_DEFAULT);
 
-	Draw_Pic(scr_vrect.x, scr_vrect.y, scr_turtle, 1.0f);
+	Draw_Pic(0, 0, scr_turtle, 1.0f);
 }
 
 /*
@@ -506,9 +489,9 @@ void SCR_DrawNet(void)
 	if (cls.demoplayback)
 		return;
 
-	Draw_SetCanvas (CANVAS_DEFAULT); //johnfitz
+	Draw_SetCanvas(CANVAS_DEFAULT);
 
-	Draw_Pic(scr_vrect.x + 64, scr_vrect.y, scr_net, 1.0f);
+	Draw_Pic(64, 0, scr_net, 1.0f);
 }
 
 /*
@@ -531,8 +514,6 @@ void SCR_DrawPause(void)
 
 	pic = Draw_CachePic("gfx/pause.lmp");
 	Draw_Pic((320 - pic->width) / 2, (240 - 48 - pic->height) / 2, pic, 1.0f); //johnfitz -- stretched menus
-
-	scr_tileclear_updates = 0; //johnfitz
 }
 
 /*
@@ -551,8 +532,6 @@ void SCR_DrawLoading(void)
 
 	pic = Draw_CachePic("gfx/loading.lmp");
 	Draw_Pic((320 - pic->width) / 2, (240 - 48 - pic->height) / 2, pic, 1.0f); //johnfitz -- stretched menus
-
-	scr_tileclear_updates = 0; //johnfitz
 }
 
 
@@ -588,7 +567,7 @@ void SCR_SetUpToDrawConsole(void)
 	else
 		scr_conlines = 0; //none visible
 
-	timescale = (host_timescale.value > 0) ? host_timescale.value : 1; //johnfitz -- timescale
+	timescale = (host_timescale.value > 0) ? (float)host_timescale.value : 1.0f; //johnfitz -- timescale
 
 	if (scr_conlines < scr_con_current)
 	{
@@ -604,9 +583,6 @@ void SCR_SetUpToDrawConsole(void)
 		if (scr_conlines < scr_con_current)
 			scr_con_current = scr_conlines;
 	}
-
-	if (!con_forcedup && scr_con_current)
-		scr_tileclear_updates = 0; //johnfitz
 }
 
 static void SCR_DrawConsole(void)
@@ -820,27 +796,22 @@ void SRC_DrawTileClear(int x, int y, int w, int h)
 
 void SCR_TileClear(void)
 {
-	//ericw -- added check for glsl gamma. TODO: remove this uvid.y optimization?
-	if (scr_tileclear_updates && !gl_clear.value)
-		return;
-	scr_tileclear_updates++;
-
+	// left
 	if (r_refdef.vrect.x > 0)
-	{
-		// left
 		SRC_DrawTileClear(0, 0, r_refdef.vrect.x, vid.height - sb_lines);
-		// right
-		SRC_DrawTileClear(r_refdef.vrect.x + r_refdef.vrect.width, 0, vid.width - r_refdef.vrect.x - r_refdef.vrect.width, vid.height - sb_lines);
-	}
 
+	// right
+	if ((r_refdef.vrect.x + r_refdef.vrect.width) < vid.width)
+		SRC_DrawTileClear(r_refdef.vrect.x + r_refdef.vrect.width, 0, vid.width - (r_refdef.vrect.x + r_refdef.vrect.width), vid.height - sb_lines);
+
+	// top
 	if (r_refdef.vrect.y > 0)
-	{
-		// top
 		SRC_DrawTileClear(r_refdef.vrect.x, 0, r_refdef.vrect.width, r_refdef.vrect.y);
-		// bottom
+
+	// bottom
+	if ((r_refdef.vrect.y + r_refdef.vrect.height) < (vid.height - sb_lines))
 		SRC_DrawTileClear(r_refdef.vrect.x, r_refdef.vrect.y + r_refdef.vrect.height, r_refdef.vrect.width,
-				vid.height - r_refdef.vrect.y - r_refdef.vrect.height - sb_lines);
-	}
+				(vid.height - sb_lines) - (r_refdef.vrect.y + r_refdef.vrect.height));
 }
 
 void SCR_ConsoleBackground()
@@ -849,7 +820,7 @@ void SCR_ConsoleBackground()
 	pic->width = vid.conwidth;
 	pic->height = vid.conheight;
 
-	float alpha = (con_forcedup) ? 1.0 : scr_conalpha.value;
+	float alpha = (con_forcedup) ? 1.0f : (float)scr_conalpha.value;
 
 	Draw_SetCanvas(CANVAS_CONSOLE); //in case this is called from weird places
 
@@ -883,9 +854,6 @@ static void SCR_DrawMenu(void)
 
  This is called every frame, and can also be called explicitly to flush
  text to the screen.
-
- WARNING: be very careful calling this from elsewhere, because the refresh
- needs almost the entire 256k of stack space!
  ==================
  */
 void SCR_UpdateScreen(void)
@@ -910,7 +878,10 @@ void SCR_UpdateScreen(void)
 	// determine size of refresh window
 	//
 	if (vid.recalc_refdef)
+	{
 		SCR_CalcRefdef();
+		vid.recalc_refdef = 0;
+	}
 
 //
 // do 3D refresh drawing, and then update the screen
@@ -921,7 +892,6 @@ void SCR_UpdateScreen(void)
 
 	GL_Begin2D();
 
-	//FIXME: only call this when needed
 	SCR_TileClear();
 
 	if (scr_drawdialog) //new game confirm
@@ -962,10 +932,7 @@ void SCR_UpdateScreen(void)
 		SCR_DrawMenu();
 	}
 
-//	Sbar_IntermissionOverlay();
-
-//	Draw_SetCanvas(CANVAS_SBAR);
-//	Draw_Fill(0, 0, vid.width, vid.height, 0, scr_fadealpha.value);
+	Draw_PolyBlend();
 
 	V_UpdatePalette_Static(false);
 
@@ -1017,6 +984,11 @@ void SCR_Init(void)
 	Cmd_AddCommand("sizeup", SCR_SizeUp_f);
 	Cmd_AddCommand("sizedown", SCR_SizeDown_f);
 
+	GL_Init();
+	TexMgr_Init();
+	R_Init();
+	Draw_Init();
+
 	// load game pics
 	scr_net = Draw_PicFromWad("net");
 	scr_turtle = Draw_PicFromWad("turtle");
@@ -1033,4 +1005,6 @@ void SCR_Init(void)
 	}
 
 	scr_initialized = true;
+
+	Sbar_Init();
 }

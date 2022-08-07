@@ -130,7 +130,7 @@ static void SV_UserFriction(void)
 		friction = sv_friction.value;
 
 	// apply friction
-	control = speed < sv_stopspeed.value ? sv_stopspeed.value : speed;
+	control = (speed < sv_stopspeed.value) ? (float)sv_stopspeed.value : speed;
 	newspeed = speed - host_frametime * control * friction;
 
 	if (newspeed < 0)

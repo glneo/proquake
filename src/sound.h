@@ -117,7 +117,7 @@ void S_StopAllSounds(bool clear);
 void S_ClearBuffer(void);
 void S_StaticSound(sfx_t *sfx, vec3_t origin, float vol, float attenuation);
 void S_LocalSound(const char *name);
-void S_Update(vec3_t origin, vec3_t forward, vec3_t right, vec3_t up);
+void S_Update();
 void S_ExtraUpdate(void);
 void S_Init(void);
 void S_Shutdown(void);

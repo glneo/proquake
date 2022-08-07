@@ -15,7 +15,7 @@
 #ifndef __SBAR_H
 #define __SBAR_H
 
-extern int sb_lines; // scan lines to draw
+extern unsigned int sb_lines; // scan lines to draw
 
 void Sbar_Draw (void); // called every frame by screen
 

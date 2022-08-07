@@ -44,7 +44,7 @@ qpic_t *sb_face_invis_invuln;
 
 bool sb_showscores;
 
-int sb_lines; // scan lines to draw
+unsigned int sb_lines; // scan lines to draw
 
 qpic_t *rsb_invbar[2];
 qpic_t *rsb_weapons[5];
@@ -476,7 +476,7 @@ static void Sbar_MiniDeathmatchOverlay(void)
 	char num[12];
 	scoreboard_t *s;
 
-	float scale = CLAMP(1.0, scr_sbarscale.value, (float)vid.width / 320.0);
+	float scale = CLAMP(1.0f, (float)scr_sbarscale.value, (float)vid.width / 320.0f);
 	// MAX_SCOREBOARDNAME = 32, so total width for this overlay plus sbar is 632, but we can cut off some i guess
 	if (vid.width / scale < 512 || scr_viewsize.value >= 120)
 		return;

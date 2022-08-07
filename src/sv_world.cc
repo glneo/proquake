@@ -41,7 +41,7 @@ typedef struct
  */
 
 static hull_t box_hull;
-static dclipnode_t box_clipnodes[6];
+static mclipnode_t box_clipnodes[6];
 static mplane_t box_planes[6];
 
 /*
@@ -400,7 +400,7 @@ void SV_LinkEdict(edict_t *ent, bool touch_triggers)
 static int SV_HullPointContents(hull_t *hull, int num, vec3_t p)
 {
 	float d;
-	dclipnode_t *node;
+	mclipnode_t *node;
 	mplane_t *plane;
 
 	while (num >= 0)
@@ -492,7 +492,7 @@ bool SV_RecursiveHullCheck(hull_t *hull, int num, float p1f, float p2f, vec3_t p
 	// find the point distances
 	float t1, t2;
 
-	dclipnode_t *node = &hull->clipnodes[num];
+	mclipnode_t *node = &hull->clipnodes[num];
 	mplane_t *plane = &hull->planes[node->planenum];
 
 	if (plane->type < 3)
@@ -535,7 +535,7 @@ bool SV_RecursiveHullCheck(hull_t *hull, int num, float p1f, float p2f, vec3_t p
 		return false;
 
 #ifdef PARANOID
-	if (SV_HullPointContents(sv_hullmodel, mid, node->children[side]) == CONTENTS_SOLID)
+	if (SV_HullPointContents(hull, node->children[side], mid) == CONTENTS_SOLID)
 	{
 		Con_Printf("mid PointInHullSolid\n");
 		return false;

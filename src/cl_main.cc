@@ -324,15 +324,11 @@ dlight_t *CL_AllocDlight(int key)
  */
 void CL_DecayLights(void)
 {
-	int i;
-	dlight_t *dl;
-	float time;
+	float time = cl.time - cl.oldtime;
 
-	time = fabs(cl.time - cl.oldtime); // Baker: To make sure it stays forward oriented time
-
-	dl = cl_dlights;
-	for (i = 0; i < MAX_DLIGHTS; i++, dl++)
+	for (int i = 0; i < MAX_DLIGHTS; i++)
 	{
+		dlight_t *dl = &cl_dlights[i];
 		if (dl->die < cl.time || !dl->radius)
 			continue;
 
@@ -604,11 +600,7 @@ int CL_ReadFromServer(void)
 	// Baker 3.75 - demo rewind
 	cl.oldtime = cl.ctime;
 	cl.time += host_frametime;
-	if (!cls.demorewind || !cls.demoplayback)	// by joe
-		cl.ctime += host_frametime;
-	else
-		cl.ctime -= host_frametime;
-	// Baker 3.75 - end demo fast rewind
+	cl.ctime += host_frametime;
 
 	do
 	{

@@ -12,92 +12,109 @@
  * General Public License for more details.
  */
 
+#include <cstddef>
+
 #include "quakedef.h"
 #include "glquake.h"
 
+#include "particle.fs.h"
+#include "particle.vs.h"
+
 extern particle_t *active_particles;
-gltexture_t *particletexture; // little dot for particles
+
+// shader program
+static GLuint particle_program;
+
+// uniforms used in vertex shader
+static GLuint particleProjectionLoc;
+static GLuint particleModelViewLoc;
+
+// uniforms used in fragment shader
+static GLuint particleAlphaLoc;
+
+// attribs
+static GLuint particleVertexAttrIndex;
+static GLuint particleColorAttrIndex;
+
+static GLuint particlesVBO;
+
+#define ABSOLUTE_MAX_PARTICLES  8192
+typedef struct {
+	vec3_t vert;
+	GLubyte color[3];
+} particleData_t;
+static particleData_t particleData[ABSOLUTE_MAX_PARTICLES];
 
 void GL_DrawParticles(void)
 {
-	vec3_t up, right;
+	if (!active_particles)
+		return;
 
-	VectorScale(vup, 1.5, up);
-	VectorScale(vright, 1.5, right);
+	float particlesAlpha = CLAMP(0.0f, r_particles_alpha.value, 1.0f);
 
-	GL_Bind(particletexture);
-	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
-
-	GLfloat texts[] = {
-		0, 0,
-		1, 0,
-		0, 1,
-	};
-
-	GLfloat verts[3*3];
-
-	glTexCoordPointer(2, GL_FLOAT, 0, texts);
-	glVertexPointer(3, GL_FLOAT, 0, verts);
-
+	int particleCount = 0;
 	for (particle_t *p = active_particles; p; p = p->next)
 	{
-		byte p_red = ((byte *)&d_8to24table[(int) p->color])[0];
-		byte p_green = ((byte *)&d_8to24table[(int) p->color])[1];
-		byte p_blue = ((byte *)&d_8to24table[(int) p->color])[2];
-		byte p_alpha = CLAMP(0, r_particles_alpha.value, 1) * 255;
+		byte p_red = ((byte *)&d_8to24table[p->color])[0];
+		byte p_green = ((byte *)&d_8to24table[p->color])[1];
+		byte p_blue = ((byte *)&d_8to24table[p->color])[2];
 
-		// hack a scale up to keep particles from disappearing
-		float scale = (p->org[0] - r_origin[0]) * vpn[0] +
-		        (p->org[1] - r_origin[1]) * vpn[1] +
-		        (p->org[2] - r_origin[2]) * vpn[2];
-		if (scale < 20)
-			scale = 1;
-		else
-			scale = 1 + scale * 0.004;
+		particleData_t *particle = &particleData[particleCount];
+		particle->color[0] = p_red;
+		particle->color[1] = p_green;
+		particle->color[2] = p_blue;
+		particle->vert[0] = p->org[0];
+		particle->vert[1] = p->org[1];
+		particle->vert[2] = p->org[2];
 
-		glColor4ub(p_red, p_green, p_blue, p_alpha);
-		verts[0] = p->org[0];
-		verts[1] = p->org[1];
-		verts[2] = p->org[2];
-		verts[3] = p->org[0] + up[0] * scale;
-		verts[4] = p->org[1] + up[1] * scale;
-		verts[5] = p->org[2] + up[2] * scale;
-		verts[6] = p->org[0] + right[0] * scale;
-		verts[7] = p->org[1] + right[1] * scale;
-		verts[8] = p->org[2] + right[2] * scale;
-		glDrawArrays(GL_TRIANGLES, 0, 3);
+		particleCount++;
 	}
 
-	glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
-	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+	// setup
+	glDisable(GL_BLEND);
+	glUseProgram(particle_program);
+
+	// set uniforms
+	glUniformMatrix4fv(particleProjectionLoc, 1, GL_FALSE, projectionMatrix.get());
+	glUniformMatrix4fv(particleModelViewLoc, 1, GL_FALSE, modelViewMatrix.get());
+	glUniform1f(particleAlphaLoc, particlesAlpha);
+
+	// set attributes
+	glBindBuffer(GL_ARRAY_BUFFER, particlesVBO);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(particleData_t) * particleCount, &particleData[0], GL_STREAM_DRAW);
+	glVertexAttribPointer(particleVertexAttrIndex, 3, GL_FLOAT, GL_FALSE, sizeof(particleData_t), BUFFER_OFFSET(offsetof(particleData_t, vert)));
+	glVertexAttribPointer(particleColorAttrIndex, 3, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(particleData_t), BUFFER_OFFSET(offsetof(particleData_t, color)));
+
+//	Con_Printf("Drawing %d particles\n", particleCount);
+	// draw
+	glDrawArrays(GL_POINTS, 0, particleCount);
+
+	// cleanup
+	glDisable(GL_BLEND);
 }
 
-static byte dottexture[8][8] =
+static void GL_CreateParticleShaders(void)
 {
-	{0,1,1,0,0,0,0,0},
-	{1,1,1,1,0,0,0,0},
-	{1,1,1,1,0,0,0,0},
-	{0,1,1,0,0,0,0,0},
-	{0,0,0,0,0,0,0,0},
-	{0,0,0,0,0,0,0,0},
-	{0,0,0,0,0,0,0,0},
-	{0,0,0,0,0,0,0,0},
-};
+	// generate program
+	particle_program = LoadShader((const char *)particle_vs, particle_vs_len,
+	                              (const char *)particle_fs, particle_fs_len);
 
-void GL_InitParticleTexture(void)
+	// get attribute locations
+	particleVertexAttrIndex = GL_GetAttribLocation(particle_program, "Vert");
+	particleColorAttrIndex = GL_GetAttribLocation(particle_program, "Color");
+
+	glEnableVertexAttribArray(particleVertexAttrIndex);
+	glEnableVertexAttribArray(particleColorAttrIndex);
+
+	// get uniform locations
+	particleProjectionLoc = GL_GetUniformLocation(particle_program, "Projection");
+	particleModelViewLoc = GL_GetUniformLocation(particle_program, "ModelView");
+	particleAlphaLoc = GL_GetUniformLocation(particle_program, "Alpha");
+}
+
+void GL_ParticleInit(void)
 {
-	int x, y;
-	byte data[8][8][4];
+	GL_CreateParticleShaders();
 
-	for (x = 0; x < 8; x++)
-	{
-		for (y = 0; y < 8; y++)
-		{
-			data[y][x][0] = 255;
-			data[y][x][1] = 255;
-			data[y][x][2] = 255;
-			data[y][x][3] = dottexture[x][y] * 255;
-		}
-	}
-	particletexture = TexMgr_LoadImage("particle", 8, 8, SRC_RGBA, (byte *)data, TEX_PERSIST | TEX_ALPHA | TEX_LINEAR);
+	glGenBuffers(1, &particlesVBO);
 }

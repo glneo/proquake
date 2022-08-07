@@ -18,6 +18,8 @@
 #include "glquake.h"
 #include "model.h"
 
+#include "spritegen.h"
+
 static void *Mod_LoadSpriteFrame(mspriteframe_t *pspriteframe, dspriteframe_t *pinframe, int framenum, char *mod_name)
 {
 	int origin[2];

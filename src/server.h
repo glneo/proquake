@@ -214,8 +214,6 @@ extern double host_time;
 
 extern edict_t *sv_player;
 
-typedef struct model_s model_t;
-
 //===========================================================
 
 /* sv_main.c */
@@ -224,7 +222,6 @@ void SV_StartParticle(vec3_t org, vec3_t dir, int color, int count);
 void SV_StartSound(edict_t *entity, int channel, const char *sample, int volume, float attenuation);
 void SV_CheckForNewClients(void);
 void SV_ClearDatagram(void);
-byte *SV_FatPVS(vec3_t org, model_t *worldmodel);
 void SV_WriteClientdataToMessage(edict_t *ent, sizebuf_t *msg);
 void SV_SendClientMessages(void);
 int SV_ModelIndex(const char *name);

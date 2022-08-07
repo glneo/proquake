@@ -40,7 +40,7 @@ portable_samplepair_t s_rawsamples[MAX_RAW_SAMPLES];
 
 static sfx_t *ambient_sfx[NUM_AMBIENTS];
 
-static bool sound_started = false;
+bool sound_started = false;
 static bool snd_blocked = false;
 
 cvar_t bgmvolume = { "bgmvolume", "1", CVAR_ARCHIVE };
@@ -63,10 +63,10 @@ static void SND_Callback_sfxvolume(cvar_t *var)
 
 static void SND_Callback_snd_filterquality(cvar_t *var)
 {
-	if (snd_filterquality.value < 1 || snd_filterquality.value > 5)
+	if (snd_filterquality.value < 1.0f || snd_filterquality.value > 5.0f)
 	{
 		Con_Printf("snd_filterquality must be between 1 and 5\n");
-		Cvar_SetValueQuick(&snd_filterquality, CLAMP(1, snd_filterquality.value, 5));
+		Cvar_SetValueQuick(&snd_filterquality, CLAMP(1.0f, snd_filterquality.value, 5.0f));
 	}
 }
 
@@ -379,9 +379,9 @@ static void S_Update_(void)
 	}
 
 	// mix ahead of current position
-	unsigned int endtime = soundtime + (unsigned int) (_snd_mixahead.value * shm->speed);
+	int endtime = soundtime + (_snd_mixahead.value * shm->speed);
 	int samps = shm->samples >> (shm->channels - 1);
-	endtime = min(endtime, (unsigned int )(soundtime + samps));
+	endtime = min(endtime, (soundtime + samps));
 
 	S_PaintChannels(endtime);
 
@@ -431,15 +431,25 @@ static void S_UpdateAmbientSounds(void)
 }
 
 /* Called once each time through the main loop */
-void S_Update(vec3_t origin, vec3_t forward, vec3_t right, vec3_t up)
+void S_Update()
 {
 	if (!sound_started || snd_blocked)
 		return;
 
-	VectorCopy(origin, listener_origin);
-	VectorCopy(forward, listener_forward);
-	VectorCopy(right, listener_right);
-	VectorCopy(up, listener_up);
+	if (cls.signon == SIGNONS)
+	{
+		VectorCopy(r_refdef.vieworg, listener_origin);
+		VectorCopy(vpn, listener_forward);
+		VectorCopy(vright, listener_right);
+		VectorCopy(vup, listener_up);
+	}
+	else
+	{
+		VectorCopy(vec3_origin, listener_origin);
+		VectorCopy(vec3_origin, listener_forward);
+		VectorCopy(vec3_origin, listener_right);
+		VectorCopy(vec3_origin, listener_up);
+	}
 
 	// update general area ambient sound sources
 	S_UpdateAmbientSounds();
@@ -541,7 +551,6 @@ static void S_Play_f(void)
 		}
 		sfx_t *sfx = S_ForName(name);
 		S_StartSound(hash++, 0, sfx, listener_origin, 1.0, 1.0);
-		i++;
 	}
 }
 

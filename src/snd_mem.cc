@@ -221,6 +221,8 @@ static void ResampleSfx(sfx_t *sfx, int inrate, int inwidth, byte *data)
 	}
 }
 
+extern bool sound_started;
+
 sfxcache_t *S_LoadSound(sfx_t *s)
 {
 	// see if still in memory
@@ -249,6 +251,9 @@ sfxcache_t *S_LoadSound(sfx_t *s)
 		Con_Printf("%s is not 8 or 16 bit\n", s->name);
 		return NULL;
 	}
+
+	if (!sound_started)
+		return NULL;
 
 	float stepscale = (float) info.rate / shm->speed;
 	int len = info.samples / stepscale;

@@ -88,7 +88,7 @@ void Cbuf_InsertText(const char *text)
 
 void Cbuf_Execute(void)
 {
-	int i;
+	size_t i;
 	char *text;
 	char line[1024];
 	int quotes;

@@ -14,9 +14,13 @@
  * General Public License for more details.
  */
 
+#include <cfloat>
+
 #include "quakedef.h"
 #include "glquake.h"
 #include "model.h"
+
+#include "modelgen.h"
 
 #define NUMVERTEXNORMALS 162
 const float r_avertexnormals[NUMVERTEXNORMALS][3] = {
@@ -28,8 +32,8 @@ static void Mod_CalcAliasBounds(model_t *mod, alias_model_t *aliasmodel)
 	// clear out all data
 	for (size_t i = 0; i < 3; i++)
 	{
-		mod->mins[i] = INT32_MAX;
-		mod->maxs[i] = INT32_MIN;
+		mod->mins[i] = FLT_MAX;
+		mod->maxs[i] = -FLT_MAX;
 	}
 
 	// find min/max of all frames
@@ -91,16 +95,18 @@ static void *Mod_LoadAllFrames(alias_model_t *aliasmodel, daliasframetype_t *pfr
 		{
 			dtrivertx_t *pinframe = (dtrivertx_t *)(pdaliasframe + 1);
 			mpose_t *pose = &frame->poses[j];
-			pose->posevirts = (mtrivertx_t *)Q_malloc(sizeof(mtrivertx_t) * aliasmodel->numverts);
+			pose->poseverts = (mtrivertx_t *)Q_malloc(sizeof(mtrivertx_t) * aliasmodel->numverts * 2);
 			for (size_t k = 0; k < aliasmodel->numverts; k++)
 			{
-				mtrivertx_t *posevirts = &pose->posevirts[k];
+				mtrivertx_t *poseverts = &pose->poseverts[k];
+				mtrivertx_t *poseverts_offset = &pose->poseverts[k + aliasmodel->numverts];
 				for (size_t l = 0; l < 3; l++)
 				{
-					posevirts->v[l] = (aliasmodel->scale[l] * pinframe[k].v[l]) + aliasmodel->scale_origin[l];
-					posevirts->normal[l] = r_avertexnormals[pinframe[k].lightnormalindex][l];
+					poseverts->v[l] = (aliasmodel->scale[l] * pinframe[k].v[l]) + aliasmodel->scale_origin[l];
+					poseverts_offset->v[l] = poseverts->v[l];
+					poseverts->normal[l] = r_avertexnormals[pinframe[k].lightnormalindex][l];
+					poseverts_offset->normal[l] = poseverts->normal[l];
 				}
-				posevirts->normalindex = pinframe[k].lightnormalindex;
 			}
 
 			pdaliasframe = (daliasframe_t *)(pinframe + aliasmodel->numverts);
@@ -289,40 +295,35 @@ void Mod_LoadAliasModel(model_t *mod, void *buffer)
 
 	// load texture cords s and t
 	dstvert_t *pinstverts = (dstvert_t *)pskintype;
-	aliasmodel->frontstverts = (mstvert_t *)Q_malloc(sizeof(*aliasmodel->frontstverts) * aliasmodel->numverts);
-	aliasmodel->backstverts = (mstvert_t *)Q_malloc(sizeof(*aliasmodel->backstverts) * aliasmodel->numverts);
+	aliasmodel->texverts = (mstvert_t *)Q_malloc(sizeof(*aliasmodel->texverts) * aliasmodel->numverts * 2);
 	for (size_t i = 0; i < aliasmodel->numverts; i++)
 	{
 		int s = LittleLong(pinstverts[i].s);
 		int t = LittleLong(pinstverts[i].t);
 
-		aliasmodel->frontstverts[i].s = (s + 0.5f) / aliasmodel->skinwidth;
-		aliasmodel->frontstverts[i].t = (t + 0.5f) / aliasmodel->skinheight;
+		aliasmodel->texverts[i].s = (s + 0.5f) / aliasmodel->skinwidth;
+		aliasmodel->texverts[i].t = (t + 0.5f) / aliasmodel->skinheight;
 
 		if (pinstverts[i].onseam)
 			s += (aliasmodel->skinwidth * 0.5f);
 
-		aliasmodel->backstverts[i].s = (s + 0.5f) / aliasmodel->skinwidth;
-		aliasmodel->backstverts[i].t = (t + 0.5f) / aliasmodel->skinheight;
+		aliasmodel->texverts[i + aliasmodel->numverts].s = (s + 0.5f) / aliasmodel->skinwidth;
+		aliasmodel->texverts[i + aliasmodel->numverts].t = (t + 0.5f) / aliasmodel->skinheight;
 	}
 
-	// load triangle lists while sorting the front facing to the start of the array
-	aliasmodel->backstart = aliasmodel->numtris - 1;
-	size_t front_index = 0;
+	// load triangle lists
 	dtriangle_t *pintriangles = (dtriangle_t *)&pinstverts[aliasmodel->numverts];
 	aliasmodel->triangles = (mtriangle_t *)Q_malloc(sizeof(*aliasmodel->triangles) * aliasmodel->numtris);
 	for (size_t i = 0; i < aliasmodel->numtris; i++)
 	{
-		short *pvert;
-		if (pintriangles[i].facesfront)
-			pvert = aliasmodel->triangles[front_index++].vertindex;
-		else
-			pvert = aliasmodel->triangles[aliasmodel->backstart--].vertindex;
+		size_t offset = 0;
+		// when back facing we index into the offset vertexes
+		if (!pintriangles[i].facesfront)
+			offset = aliasmodel->numverts;
 
 		for (int j = 0; j < 3; j++)
-			pvert[j] = LittleLong(pintriangles[i].vertindex[j]);
+			aliasmodel->triangles[i].vertindex[j] = LittleLong(pintriangles[i].vertindex[j]) + offset;
 	}
-	aliasmodel->backstart++;
 
 	// load the frames
 	daliasframetype_t *pframetype = (daliasframetype_t *)&pintriangles[aliasmodel->numtris];
@@ -342,4 +343,9 @@ void Mod_LoadAliasModel(model_t *mod, void *buffer)
 	mod->radius = RadiusFromBounds(mod->mins, mod->maxs);
 
 	mod->aliasmodel = aliasmodel;
+
+	// We double the number of verts when loading to handle texture seam without VBO changing
+	aliasmodel->numverts *= 2;
+
+	GL_UploadAliasVBOs(aliasmodel);
 }

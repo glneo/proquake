@@ -802,6 +802,7 @@ const char *ED_ParseEdict(const char *data, edict_t *ent)
 void ED_LoadFromFile(const char *data)
 {
 	int inhibit = 0;
+	edict_t *ent = NULL;
 	pr_global_struct->time = sv.time;
 
 	// parse ents
@@ -814,7 +815,7 @@ void ED_LoadFromFile(const char *data)
 		if (com_token[0] != '{')
 			Sys_Error("found %s when expecting {", com_token);
 
-		edict_t *ent = (!ent) ? EDICT_NUM(0) : ED_Alloc();
+		ent = (!ent) ? EDICT_NUM(0) : ED_Alloc();
 		data = ED_ParseEdict(data, ent);
 
 		// remove things from different skill levels or deathmatch

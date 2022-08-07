@@ -22,8 +22,8 @@ void Sys_mkdir(const char *path);
 bool Sys_FileExists(const char *path);
 FILE *Sys_FileOpenRead(const char *path);
 FILE *Sys_FileOpenWrite(const char *path);
-int Sys_FileWrite(FILE *handle, void *src, int count);
-int Sys_FileRead(FILE *handle, void *dest, int count);
+size_t Sys_FileWrite(FILE *handle, void *src, size_t count);
+size_t Sys_FileRead(FILE *handle, void *dest, size_t count);
 void Sys_FileSeek(FILE *handle, int position);
 void Sys_FileClose(FILE *handle);
 

@@ -71,14 +71,15 @@ else()
 		src/gl_light.cc
 		src/gl_main.cc
 		src/gl_particle.cc
-		src/gl_surface.cc
+		src/gl_shader.cc
+		src/gl_brush.cc
 		src/gl_sprite.cc
 		src/gl_texmgr.cc
 		src/gl_vidsdl.cc
 		src/gl_warp.cc
 	)
-	set(GRAPHICS_LIBRARY "OpenGL ES" CACHE STRING "Select graphics library")
-	set_property(CACHE GRAPHICS_LIBRARY PROPERTY STRINGS "OpenGL ES" "OpenGL")
+	set(GRAPHICS_LIBRARY "OpenGL ES2" CACHE STRING "Select graphics library")
+	set_property(CACHE GRAPHICS_LIBRARY PROPERTY STRINGS "OpenGL ES2" "OpenGL")
 endif()
 
 # Sound
@@ -100,16 +101,44 @@ endif()
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake")
 
-add_executable(proquake ${PROQUAKE_SOURCES} ${PROQUAKE_HEADERS})
+find_program(XXD xxd)
+set(PROQUAKE_SHADER_SOURCES
+	src/alias.fs
+	src/alias.vs
+	src/brush.fs
+	src/brush.vs
+	src/draw.fs
+	src/draw.vs
+	src/particle.fs
+	src/particle.vs
+)
+foreach(INPUT_FILE ${PROQUAKE_SHADER_SOURCES})
+	get_filename_component(INPUT_FILENAME ${INPUT_FILE} NAME)
+	set(OUTPUT_FILENAME ${INPUT_FILENAME}.h)
+	set(OUTPUT_FILE ${CMAKE_CURRENT_BINARY_DIR}/${OUTPUT_FILENAME})
+	add_custom_command(
+		OUTPUT ${OUTPUT_FILE}
+		DEPENDS ${INPUT_FILE}
+		COMMAND ${XXD} -i
+			${INPUT_FILENAME}
+			> ${OUTPUT_FILE}
+		WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/src
+		COMMENT "Converting ${INPUT_FILE} to header file")
+	list(APPEND PROQUAKE_SHADERS ${OUTPUT_FILE})
+endforeach()
+
+add_executable(proquake ${PROQUAKE_SOURCES} ${PROQUAKE_HEADERS} ${PROQUAKE_SHADERS})
+
+target_include_directories(proquake PUBLIC ${CMAKE_CURRENT_BINARY_DIR})
 
 if(GRAPHICS_LIBRARY STREQUAL "OpenGL")
 	find_package(OpenGL REQUIRED)
 	target_include_directories(proquake PUBLIC ${OPENGL_INCLUDE_DIRS})
 	target_link_libraries(proquake ${OPENGL_LIBRARIES})
-elseif(GRAPHICS_LIBRARY STREQUAL "OpenGL ES")
-	find_package(OpenGLES REQUIRED)
-	target_include_directories(proquake PUBLIC ${OPENGLES_INCLUDE_DIR})
-	target_link_libraries(proquake ${OPENGLES_LIBRARIES})
+elseif(GRAPHICS_LIBRARY STREQUAL "OpenGL ES2")
+	find_package(OpenGLES2 REQUIRED)
+	target_include_directories(proquake PUBLIC ${OPENGLES2_INCLUDE_DIR})
+	target_link_libraries(proquake ${OPENGLES2_LIBRARIES})
 	target_compile_definitions(proquake PRIVATE OPENGLES=1)
 elseif(NOT DISABLE_VIDEO)
 	message(FATAL_ERROR "Please select a graphics library" ${GRAPHICS_LIBRARY})
@@ -118,5 +147,6 @@ endif()
 find_package(SDL2 REQUIRED)
 target_include_directories(proquake PUBLIC ${SDL2_INCLUDE_DIR})
 target_link_libraries(proquake m ${SDL2_LIBRARY})
-target_compile_options(proquake PRIVATE -g;-std=c++11;-ffast-math;-Wall)
+target_compile_options(proquake PRIVATE -g;-std=c++11;-ffast-math;-Wall;-fno-omit-frame-pointer)
+# -Wconversion;-Werror;
 install(TARGETS proquake RUNTIME DESTINATION bin)

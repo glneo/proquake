@@ -75,11 +75,11 @@ enum lump_types {
 
 typedef struct {
 	int32_t fileofs, filelen;
-} lump_t;
+} dlump_t;
 
 typedef struct {
 	int32_t version;
-	lump_t lumps[LUMP_MAX];
+	dlump_t lumps[LUMP_MAX];
 } dheader_t;
 
 typedef struct {
@@ -145,11 +145,11 @@ typedef struct {
 	int16_t children[2];	// negative numbers are contents
 } dclipnode_t;
 
-typedef struct texinfo_s {
+typedef struct {
 	float vecs[2][4];		// [s/t][xyz offset]
 	int32_t miptex;
 	int32_t flags;
-} texinfo_t;
+} dtexinfo_t;
 #define	TEX_SPECIAL		1		// sky or slime, no lightmap or 256 subdivision
 
 // note that edge 0 is never used, because negative edge nums are used for

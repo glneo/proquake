@@ -16,6 +16,7 @@
 #define __MATHLIB_H
 
 typedef float vec_t;
+typedef vec_t vec2_t[2];
 typedef vec_t vec3_t[3];
 typedef vec_t vec4_t[4];
 typedef vec_t vec5_t[5];
@@ -24,7 +25,12 @@ typedef	int fixed4_t;
 typedef	int fixed8_t;
 typedef	int fixed16_t;
 
-#define DEG2RAD(a) ((a * M_PI) / 180.0f)
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
+
+#define M_PI_DIV_180 (M_PI / 180.0)
+#define DEG2RAD(a) ((a) * M_PI_DIV_180)
 
 typedef struct mplane_s mplane_t;
 extern vec3_t vec3_origin;
@@ -46,7 +52,7 @@ void AngleVectors(vec3_t angles, vec3_t forward, vec3_t right, vec3_t up);
 int VectorCompare(vec3_t v1, vec3_t v2);
 void VectorMA(vec3_t veca, float scale, vec3_t vecb, vec3_t vecc);
 
-int BoxOnPlaneSide(vec3_t emins, vec3_t emaxs, mplane_t *p);
+int BoxOnPlaneSide(const vec3_t emins, const vec3_t emaxs, mplane_t *p);
 
 #define BOX_ON_PLANE_SIDE(emins, emaxs, p) \
 	(((p)->type < 3)? \

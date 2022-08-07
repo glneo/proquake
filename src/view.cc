@@ -53,11 +53,6 @@ cvar_t gl_cshiftpercent = { "gl_cshiftpercent", "100" };
 
 float v_dmg_time, v_dmg_roll, v_dmg_pitch;
 
-
-//extern refdef_t r_refdef;
-// view origin and direction
-//extern vec3_t r_origin, vright, vpn, vup;
-
 /*
  ===============
  V_CalcRoll
@@ -76,7 +71,7 @@ float V_CalcRoll(vec3_t angles, vec3_t velocity)
 	sign = side < 0 ? -1 : 1;
 	side = fabsf(side);
 
-	side = (side < cl_rollspeed.value) ? side * cl_rollangle.value / cl_rollspeed.value : cl_rollangle.value;
+	side = (side < cl_rollspeed.value) ? side * cl_rollangle.value / cl_rollspeed.value : (float)cl_rollangle.value;
 
 	return side * sign;
 }
@@ -406,7 +401,7 @@ void V_CalcBlend(void)
 	v_blend[0] = r / 255.0;
 	v_blend[1] = g / 255.0;
 	v_blend[2] = b / 255.0;
-	v_blend[3] = CLAMP(0, a, 1);
+	v_blend[3] = CLAMP(0.0f, a, 1.0f);
 }
 
 void V_UpdatePalette_Static(bool forced)

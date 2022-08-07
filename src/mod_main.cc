@@ -18,17 +18,19 @@
 // on the same machine.
 #include "quakedef.h"
 
+#include "modelgen.h"
+#include "spritegen.h"
+
 void Mod_LoadAliasModel(model_t *mod, void *buffer);
 void Mod_LoadSpriteModel(model_t *mod, void *buffer);
 void Mod_LoadBrushModel(model_t *mod, void *buffer);
 
-byte mod_novis[MAX_MAP_LEAFS / 8];
+static byte *mod_novis;
+static int mod_novis_capacity;
 
-#define	MAX_MOD_KNOWN	512
-model_t mod_known[MAX_MOD_KNOWN];
-int mod_numknown;
-
-cvar_t gl_subdivide_size = { "gl_subdivide_size", "128", true };
+#define	MAX_MOD_KNOWN 2048
+static model_t mod_known[MAX_MOD_KNOWN];
+static int mod_numknown;
 
 texture_t *r_notexture_mip;
 texture_t *r_notexture_mip2;
@@ -97,9 +99,80 @@ static byte *Mod_DecompressVis(byte *in, brush_model_t *model)
 byte *Mod_LeafPVS(mleaf_t *leaf, brush_model_t *model)
 {
 	if (leaf == model->leafs)
-		return mod_novis;
+		return Mod_NoVisPVS(model);
 
 	return Mod_DecompressVis(leaf->compressed_vis, model);
+}
+
+byte *Mod_NoVisPVS(brush_model_t *model)
+{
+	int pvsbytes;
+
+	pvsbytes = (model->numleafs + 7) >> 3;
+	if (mod_novis == NULL || pvsbytes > mod_novis_capacity)
+	{
+		mod_novis_capacity = pvsbytes;
+		mod_novis = (byte *) Q_realloc(mod_novis, mod_novis_capacity);
+		memset(mod_novis, 0xff, mod_novis_capacity);
+	}
+
+	return mod_novis;
+}
+
+/*
+ =============================================================================
+
+ The PVS must include a small area around the client to allow head bobbing
+ or other small motion on the client side.  Otherwise, a bob might cause an
+ entity that should be visible to not show up, especially when the bob
+ crosses a waterline.
+
+ =============================================================================
+ */
+
+int fatbytes;
+byte fatpvs[MAX_MAP_LEAFS / 8];
+static void Mod_AddToFatPVS(vec3_t org, mnode_t *node, brush_model_t *brushmodel)
+{
+	int i;
+	byte *pvs;
+	mplane_t *plane;
+	float d;
+
+	while (1) {
+		// if this is a leaf, accumulate the pvs bits
+		if (node->contents < 0) {
+			if (node->contents != CONTENTS_SOLID) {
+				pvs = Mod_LeafPVS((mleaf_t *) node, brushmodel);
+				for (i = 0; i < fatbytes; i++)
+					fatpvs[i] |= pvs[i];
+			}
+			return;
+		}
+
+		plane = node->plane;
+		d = DotProduct (org, plane->normal) - plane->dist;
+		if (d > 8)
+			node = node->children[0];
+		else if (d < -8)
+			node = node->children[1];
+		else {	// go down both
+			Mod_AddToFatPVS(org, node->children[0], brushmodel);
+			node = node->children[1];
+		}
+	}
+}
+
+/*
+ * Calculates a PVS that is the inclusive or of all leafs within 8 pixels of the
+ * given point.
+ */
+byte *Mod_FatPVS(vec3_t org, brush_model_t *brushmodel)
+{
+	fatbytes = (brushmodel->numleafs + 31) >> 3;
+	memset(fatpvs, 0, fatbytes);
+	Mod_AddToFatPVS(org, brushmodel->nodes, brushmodel);
+	return fatpvs;
 }
 
 void Mod_ClearAll(void)
@@ -110,7 +183,7 @@ void Mod_ClearAll(void)
 }
 
 /* Loads a model */
-model_t *Mod_LoadModel(model_t *mod)
+static model_t *Mod_LoadModel(model_t *mod)
 {
 	void *buf;
 	unsigned int header_magic;
@@ -207,10 +280,7 @@ static void Mod_Print(void)
 
 void Mod_Init(void)
 {
-	Cvar_RegisterVariable (&gl_subdivide_size);
 	Cmd_AddCommand("mcache", Mod_Print);
-
-	memset (mod_novis, 0xff, sizeof(mod_novis));
 
 	r_notexture_mip = (texture_t *) Hunk_AllocName (sizeof(texture_t), "r_notexture_mip");
 	strcpy (r_notexture_mip->name, "notexture");

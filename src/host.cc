@@ -50,9 +50,6 @@ client_t *host_client; // current client
 
 jmp_buf host_abortserver;
 
-// FIXME: remove
-byte *host_colormap;
-
 cvar_t host_timescale = { "host_timescale", "0" }; // scale server time (for slow motion or fast-forward)
 
 cvar_t host_sleep = { "host_sleep", "0" };
@@ -269,7 +266,7 @@ void Host_WriteConfig(const char *cfgname)
 	if (!host_initialized || isDedicated)
 		return;
 
-	FILE *f = fopen(va("%s/%s", com_gamedir, cfgname), "w");
+	FILE *f = COM_FileOpenWrite(cfgname);
 	if (!f)
 	{
 		Con_Printf("Couldn't write %s\n", cfgname);
@@ -533,7 +530,7 @@ static bool Host_FilterTime(double time)
 {
 	static double oldrealtime;
 	double time_delta = realtime - oldrealtime;
-	double fps = max(10, pq_maxfps.value);
+	double fps = max(10.0f, pq_maxfps.value);
 	double time_per_frame = 1.0 / fps;
 
 	if (!cls.capturedemo &&
@@ -548,7 +545,7 @@ static bool Host_FilterTime(double time)
 
 	host_frametime = time_delta;
 	if (cls.demoplayback && cls.demospeed)
-		host_frametime *= CLAMP(0, cls.demospeed, 20);
+		host_frametime *= CLAMP(0.0, (double)cls.demospeed, 20.0);
 	oldrealtime = realtime;
 
 	if (host_timescale.value > 0)
@@ -663,10 +660,7 @@ void Host_Frame(double time)
 	SCR_UpdateScreen();
 
 	// update audio
-	if (cls.signon == SIGNONS)
-		S_Update(r_origin, vpn, vright, vup);
-	else
-		S_Update(vec3_origin, vec3_origin, vec3_origin, vec3_origin);
+	S_Update();
 
 	host_framecount++;
 }
@@ -778,31 +772,20 @@ void Host_InitVCR(quakeparms_t *parms)
 
 void Host_Init(quakeparms_t *parms)
 {
-	if (standard_quake)
-		minimum_memory = MINIMUM_MEMORY;
-	else
-		minimum_memory = MINIMUM_MEMORY_LEVELPAK;
-
-	if (COM_CheckParm("-minmemory"))
-		parms->memsize = minimum_memory;
-
 	host_parms = *parms;
-
-	if (parms->memsize < minimum_memory)
-		Sys_Error("Only %4.1f megs of memory available, can't execute game", parms->memsize / (float) 0x100000);
 
 	com_argc = parms->argc;
 	com_argv = parms->argv;
 
-	Memory_Init(parms->membase, parms->memsize);
+	Memory_Init(parms->memsize);
 	Cbuf_Init();
 	Cmd_Init();
 	Cvar_Init();
 	V_Init();
 	Chase_Init();
 	Host_InitVCR(parms);
-	COM_Init(parms->basedir);
 	Host_InitLocal();
+	COM_Init(parms->basedir);
 	W_LoadWadFile("gfx.wad");
 	Key_Init();
 	Con_Init();
@@ -817,19 +800,10 @@ void Host_Init(quakeparms_t *parms)
 
 	if (cls.state != ca_dedicated)
 	{
-		host_colormap = (byte *) COM_LoadHunkFile("gfx/colormap.lmp");
-		if (!host_colormap)
-			Sys_Error("Couldn't load gfx/colormap.lmp");
-
 		VID_Init();
-		GL_Init();
-		IN_Init();
-		TexMgr_Init();
-		R_Init();
-		Draw_Init();
 		SCR_Init();
+		IN_Init();
 		S_Init();
-		Sbar_Init();
 		CL_Init();
 	}
 

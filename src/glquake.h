@@ -16,19 +16,21 @@
 #define __GLQUAKE_H
 
 #ifdef OPENGLES
-#include <GLES/gl.h>
-#include <GLES/glext.h>
+#include <GLES2/gl2.h>
+#include <GLES2/gl2ext.h>
 #else
+#define GL_GLEXT_PROTOTYPES 1
 #include <GL/gl.h>
 #include <GL/glext.h>
 #endif
-#include <math.h>
 
 #include "render.h"
 
 #include "gl_texmgr.h"
 
 #define BACKFACE_EPSILON 0.01
+
+#define BUFFER_OFFSET(i) ((void*)(i))
 
 extern int d_lightstylevalue[256]; // 8.8 fraction of base light value
 
@@ -40,13 +42,13 @@ extern bool gl_texture_NPOT;
 extern int r_framecount;
 extern int c_brush_polys, c_alias_polys;
 
-extern float gldepthmin, gldepthmax;
+extern Q_Matrix modelViewMatrix;
+extern Q_Matrix projectionMatrix;
 
 // view origin
 extern vec3_t vup;
 extern vec3_t vpn;
 extern vec3_t vright;
-extern vec3_t r_origin;
 
 extern mleaf_t *r_viewleaf, *r_oldviewleaf;
 
@@ -100,7 +102,9 @@ typedef enum {
 } canvastype;
 
 // gl_alias.c
-void R_DrawAliasModel(entity_t *ent);
+void GL_UploadAliasVBOs(alias_model_t *aliasmodel);
+void GL_DrawAliasModel(entity_t *ent);
+void GL_CreateAliasShaders(void);
 
 // gl_draw.c
 void Scrap_Upload(void);
@@ -110,9 +114,10 @@ void Draw_Character(int x, int y, int num, float alpha);
 void Draw_String(int x, int y, const char *str, float alpha);
 void Draw_Pic(int x, int y, qpic_t *pic, float alpha);
 void Draw_TransPic(int x, int y, qpic_t *pic, float alpha);
-void Draw_TransPicTranslate(int x, int y, qpic_t *pic, byte *translation);
+void Draw_TransPicTranslate(int x, int y, qpic_t *pic, float alpha, int top, int bottom);
 void Draw_PicTile(int x, int y, int w, int h, qpic_t *pic, float alpha);
 void Draw_Fill(int x, int y, int w, int h, int c, float alpha);
+void Draw_PolyBlend(void);
 void Draw_SetCanvas(canvastype newcanvas);
 void GL_Begin2D(void);
 void GL_End2D(void);
@@ -120,22 +125,20 @@ qpic_t *Draw_MakePic(const char *name, int width, int height, byte *data);
 void Draw_Init(void);
 
 // gl_light.c
-void R_ClearLightmapPolys();
-void R_UploadLightmap(int lmap);
-void R_BlendLightmaps(void);
-void R_BuildLightMap(msurface_t *surf, byte *dest, int stride);
+void R_ClearLightmapPolys(void);
+void R_UploadLightmaps(void);
+void R_ClearLightStyle(void);
 void R_RenderDynamicLightmaps(msurface_t *fa);
 void R_AnimateLight(void);
 void R_RenderDlights(void);
 void R_MarkLights(dlight_t *light, int bit, mnode_t *node);
-void R_PushDlights(void);
-int R_LightPoint(vec3_t p);
+void R_PushDlights(mnode_t *nodes, msurface_t *surfaces);
+int R_LightPoint (vec3_t p);
 void GL_BuildLightmaps(void);
 
 // gl_main.c
 void GL_RotateForEntity(entity_t *ent, Q_Matrix &matrix);
-void GL_PolyBlend(void);
-bool R_CullBox(vec3_t mins, vec3_t maxs);
+bool R_CullBox(const vec3_t mins, const vec3_t maxs);
 bool R_CullForEntity(const entity_t *ent);
 void GL_Setup(void);
 void R_TranslatePlayerSkin(int playernum);
@@ -146,14 +149,21 @@ void R_Clear(void);
 
 // gl_particle.c
 void GL_DrawParticles(void);
-void GL_InitParticleTexture(void);
+void GL_ParticleInit(void);
+
+// gl_shader.c
+GLint GL_GetAttribLocation(GLuint program, const char *name);
+GLint GL_GetUniformLocation(GLuint program, const char *name);
+GLuint LoadShader(const char *vertex_shader, int vertex_shader_len,
+                  const char *fragment_shader, int fragment_shader_len);
 
 // gl_sprite.c
-void R_DrawSpriteModel(entity_t *ent);
+void GL_DrawSpriteModel(entity_t *ent);
 
 // gl_surface.c
-void R_DrawSurfaces(brush_model_t *brushmodel);
-void R_DrawBrushModel(entity_t *ent);
+void GL_DrawSurfaces(brush_model_t *brushmodel, texchain_t chain);
+void GL_DrawBrushModel(entity_t *ent);
+void GL_CreateBrushShaders(void);
 
 // gl_vidsdl.c
 void VID_Swap(void);
@@ -162,10 +172,5 @@ void VID_Shutdown(void);
 
 // gl_warp.c
 void GL_SubdivideSurface(brush_model_t *brushmodel, msurface_t *fa);
-void EmitWaterPolys(msurface_t *fa);
-void EmitSkyPolys(msurface_t *fa);
-void EmitBothSkyLayers(msurface_t *fa);
-void R_DrawSkyChain(msurface_t *fa);
-void R_InitSky(texture_t *mt);
 
 #endif /* __GLQUAKE_H */

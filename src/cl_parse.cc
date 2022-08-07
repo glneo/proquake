@@ -1123,18 +1123,11 @@ void CL_ParseServerMessage(void)
 			break;
 
 		case svc_killedmonster:
-			if (cls.demoplayback && cls.demorewind)
-				cl.stats[STAT_MONSTERS]--;
-			else
-				cl.stats[STAT_MONSTERS]++;
-
+			cl.stats[STAT_MONSTERS]++;
 			break;
 
 		case svc_foundsecret:
-			if (cls.demoplayback && cls.demorewind)
-				cl.stats[STAT_SECRETS]--;
-			else
-				cl.stats[STAT_SECRETS]++;
+			cl.stats[STAT_SECRETS]++;
 			break;
 
 		case svc_updatestat:
@@ -1159,10 +1152,7 @@ void CL_ParseServerMessage(void)
 			break;
 
 		case svc_intermission:
-			if (cls.demoplayback && cls.demorewind)
-				cl.intermission = 0;
-			else
-				cl.intermission = 1;
+			cl.intermission = 1;
 			// intermission bugfix -- by joe 
 //			cl.completed_time = cl.time;
 			cl.completed_time = cl.mtime[0];
@@ -1170,10 +1160,7 @@ void CL_ParseServerMessage(void)
 			break;
 
 		case svc_finale:
-			if (cls.demoplayback && cls.demorewind)
-				cl.intermission = 0;
-			else
-				cl.intermission = 2;
+			cl.intermission = 2;
 			cl.completed_time = cl.time;
 			vid.recalc_refdef = true;	// go to full screen
 			//johnfitz -- log centerprints to console
@@ -1184,10 +1171,7 @@ void CL_ParseServerMessage(void)
 			break;
 
 		case svc_cutscene:
-			if (cls.demoplayback && cls.demorewind)
-				cl.intermission = 0;
-			else
-				cl.intermission = 3;
+			cl.intermission = 3;
 			cl.completed_time = cl.time;
 			vid.recalc_refdef = true;	// go to full screen
 			//johnfitz -- log centerprints to console

@@ -129,9 +129,9 @@ void M_BuildTranslationTable(int top, int bottom)
 			dest[BOTTOM_RANGE + j] = source[bottom + 15 - j];
 }
 
-void M_DrawTransPicTranslate(int x, int y, qpic_t *pic)
+void M_DrawTransPicTranslate(int x, int y, qpic_t *pic, int top, int bottom)
 {
-//	Draw_TransPicTranslate(x + ((vid.width - 320) >> 1), y, pic, translationTable);
+	Draw_TransPicTranslate(x, y, pic, scr_menualpha.value, top, bottom);
 }
 
 void M_DrawTextBox(int x, int y, int width, int lines)
@@ -661,11 +661,11 @@ void M_Setup_Draw(void)
 	M_DrawTextBox(64, 152 - 8, 14, 1);
 	M_Print(72, 152, "Accept Changes");
 
-	//p = Draw_CachePic ("gfx/bigbox.lmp");
+	p = Draw_CachePic ("gfx/bigbox.lmp");
 	M_DrawTextBox(160, 64, 8, 8);
 	p = Draw_CachePic("gfx/menuplyr.lmp");
 	M_BuildTranslationTable(setup_top * 16, setup_bottom * 16);
-	M_DrawTransPicTranslate(176, 76, p);
+	M_DrawTransPicTranslate(176, 76, p, setup_top, setup_bottom);
 
 	M_DrawCharacter(56, setup_cursor_table[setup_cursor], 12 + ((int) (realtime * 4) & 1));
 
@@ -854,39 +854,39 @@ void M_AdjustSliders (int dir)
 	case OPT_SCALE:	// console and menu scale
 		l = ((vid.width + 31) / 32) / 10.0;
 		f = scr_conscale.value + dir * 0.1f;
-		f = CLAMP(1, f, l);
+		f = CLAMP(1.0f, f, l);
 		Cvar_SetValue ("scr_conscale", f);
 		Cvar_SetValue ("scr_menuscale", f);
 		Cvar_SetValue ("scr_sbarscale", f);
 		break;
 	case OPT_SCRSIZE:	// screen size
 		f = scr_viewsize.value + dir * 10;
-		f = CLAMP(30, f, 120);
+		f = CLAMP(30.0f, f, 120.0f);
 		Cvar_SetValue ("viewsize", f);
 		break;
 	case OPT_GAMMA:	// gamma
 		f = vid_gamma.value - dir * 0.05;
-		f = CLAMP(0.5, f, 1);
+		f = CLAMP(0.5f, f, 1.0f);
 		Cvar_SetValue ("gamma", f);
 		break;
 	case OPT_CONTRAST:	// contrast
 		f = vid_contrast.value + dir * 0.1;
-		f = CLAMP(1, f, 2);
+		f = CLAMP(1.0f, f, 2.0f);
 		Cvar_SetValue ("contrast", f);
 		break;
 	case OPT_MOUSESPEED:	// mouse speed
 		f = sensitivity.value + dir * 0.5;
-		f = CLAMP(1, f, 11);
+		f = CLAMP(1.0f, f, 11.0f);
 		Cvar_SetValue ("sensitivity", f);
 		break;
 	case OPT_SBALPHA:	// statusbar alpha
 		f = scr_sbaralpha.value + dir * 0.05;
-		f = CLAMP(0, f, 1);
+		f = CLAMP(0.0f, f, 1.0f);
 		Cvar_SetValueQuick(&scr_sbaralpha, f);
 		break;
 	case OPT_MUSICVOL:	// music volume
 		f = bgmvolume.value + dir * 0.1;
-		f = CLAMP(0, f, 1);
+		f = CLAMP(0.0f, f, 1.0f);
 		Cvar_SetValue ("bgmvolume", f);
 		break;
 	case OPT_MUSICEXT:	// enable external music vs cdaudio
@@ -894,7 +894,7 @@ void M_AdjustSliders (int dir)
 		break;
 	case OPT_SNDVOL:	// sfx volume
 		f = sfxvolume.value + dir * 0.1;
-		f = CLAMP(0, f, 1);
+		f = CLAMP(0.0f, f, 1.0f);
 		Cvar_SetValue ("volume", f);
 		break;
 	case OPT_ALWAYRUN:	// always run

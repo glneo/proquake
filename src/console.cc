@@ -162,7 +162,7 @@ static void PasteToConsole (void)
 		return;
 
 //	if ((cbd = PL_GetClipboardData()) == NULL)
-		return;
+	return;
 
 	p = cbd;
 	while (*p)
@@ -290,7 +290,7 @@ void Key_Console (int key)
 					break;
 			}
 			con_backscroll = con_current - (i % con_totallines) - 2;
-			con_backscroll = CLAMP(0, con_backscroll, con_totallines-(vid.height>>3)-1);
+			con_backscroll = CLAMP((unsigned int)0, con_backscroll, con_totallines-(vid.height>>3)-1);
 		}
 		else	key_linepos = 1;
 		return;
@@ -571,7 +571,6 @@ void Con_CheckResize(void)
 {
 	int i, j, width, oldwidth, oldtotallines, numlines, numchars;
 	char *tbuf; //johnfitz -- tbuf no longer a static array
-	int mark; //johnfitz
 
 	width = (vid.conwidth >> 3) - 2; //johnfitz -- use vid.conwidth instead of vid.width
 
@@ -592,8 +591,7 @@ void Con_CheckResize(void)
 	if (con_linewidth < numchars)
 		numchars = con_linewidth;
 
-	mark = Hunk_LowMark(); //johnfitz
-	tbuf = (char *) Hunk_Alloc(con_buffersize); //johnfitz
+	tbuf = (char *)Q_malloc(con_buffersize); //johnfitz
 
 	memcpy(tbuf, con_text, con_buffersize); //johnfitz -- con_buffersize replaces CON_TEXTSIZE
 	memset(con_text, ' ', con_buffersize); //johnfitz -- con_buffersize replaces CON_TEXTSIZE
@@ -606,7 +604,7 @@ void Con_CheckResize(void)
 		}
 	}
 
-	Hunk_FreeToLowMark(mark); //johnfitz
+	free(tbuf);
 
 	Con_ClearNotify();
 
@@ -1250,7 +1248,7 @@ void Con_TabComplete(void)
 void Con_DrawNotify(void)
 {
 	int v = vid.conheight;
-	int maxlines = CLAMP(0, _con_notifylines.value, NUM_CON_TIMES);
+	int maxlines = CLAMP(0, (int)_con_notifylines.value, NUM_CON_TIMES);
 	for (int i = con_current - maxlines + 1; i <= con_current; i++)
 	{
 		if (i < 0)

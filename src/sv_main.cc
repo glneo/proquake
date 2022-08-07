@@ -341,62 +341,6 @@ void SV_ClearDatagram(void)
 	SZ_Clear(&sv.datagram);
 }
 
-/*
- =============================================================================
-
- The PVS must include a small area around the client to allow head bobbing
- or other small motion on the client side.  Otherwise, a bob might cause an
- entity that should be visible to not show up, especially when the bob
- crosses a waterline.
-
- =============================================================================
- */
-
-int fatbytes;
-byte fatpvs[MAX_MAP_LEAFS / 8];
-static void SV_AddToFatPVS(vec3_t org, mnode_t *node, model_t *worldmodel)
-{
-	int i;
-	byte *pvs;
-	mplane_t *plane;
-	float d;
-
-	while (1) {
-		// if this is a leaf, accumulate the pvs bits
-		if (node->contents < 0) {
-			if (node->contents != CONTENTS_SOLID) {
-				pvs = Mod_LeafPVS((mleaf_t *) node, worldmodel->brushmodel);
-				for (i = 0; i < fatbytes; i++)
-					fatpvs[i] |= pvs[i];
-			}
-			return;
-		}
-
-		plane = node->plane;
-		d = DotProduct (org, plane->normal) - plane->dist;
-		if (d > 8)
-			node = node->children[0];
-		else if (d < -8)
-			node = node->children[1];
-		else {	// go down both
-			SV_AddToFatPVS(org, node->children[0], worldmodel);
-			node = node->children[1];
-		}
-	}
-}
-
-/*
- * Calculates a PVS that is the inclusive or of all leafs within 8 pixels of the
- * given point.
- */
-byte *SV_FatPVS(vec3_t org, model_t *worldmodel)
-{
-	fatbytes = (worldmodel->brushmodel->numleafs + 31) >> 3;
-	memset(fatpvs, 0, fatbytes);
-	SV_AddToFatPVS(org, worldmodel->brushmodel->nodes, worldmodel);
-	return fatpvs;
-}
-
 static void SV_WriteEntitiesToClient(edict_t *clent, sizebuf_t *msg, bool nomap)
 {
 	int e, i, bits;
@@ -407,7 +351,7 @@ static void SV_WriteEntitiesToClient(edict_t *clent, sizebuf_t *msg, bool nomap)
 
 // find the client's PVS
 	VectorAdd(clent->v.origin, clent->v.view_ofs, org);
-	pvs = SV_FatPVS(org, sv.worldmodel);
+	pvs = Mod_FatPVS(org, sv.worldmodel->brushmodel);
 
 // send over all entities (excpet the client) that touch the pvs
 	ent = NEXT_EDICT(sv.edicts);
@@ -484,14 +428,15 @@ static void SV_WriteEntitiesToClient(edict_t *clent, sizebuf_t *msg, bool nomap)
 			bits |= U_MOREBITS;
 
 		// write the message
-		MSG_WriteByte(msg, bits | U_SIGNAL);
-
+		MSG_WriteByte(msg, (bits | U_SIGNAL) & 0xff);
 		if (bits & U_MOREBITS)
 			MSG_WriteByte(msg, bits >> 8);
+
 		if (bits & U_LONGENTITY)
 			MSG_WriteShort(msg, e);
 		else
 			MSG_WriteByte(msg, e);
+
 		if (bits & U_MODEL)
 			MSG_WriteByte(msg, ent->v.modelindex);
 		if (bits & U_FRAME)

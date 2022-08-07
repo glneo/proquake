@@ -1,5 +1,5 @@
 /*
- * Alias Model loading and rendering
+ * Alias model rendering
  *
  * Copyright (C) 1996-1997 Id Software, Inc.
  *
@@ -14,70 +14,72 @@
  * General Public License for more details.
  */
 
+#include <string>
+#include <cstddef>
+
 #include "quakedef.h"
 #include "glquake.h"
 #include "model.h"
 
-float shadelight, ambientlight;
+#include "alias.fs.h"
+#include "alias.vs.h"
 
-// precalculated dot products for quantized angles
-#define SHADEDOT_QUANT 16
-const float r_avertexnormal_dots[SHADEDOT_QUANT][256] = {
-	#include "anorm_dots.h"
-};
+// shader program
+static GLuint alias_program;
 
-static void GL_DrawAliasFrame(alias_model_t *aliasmodel, size_t frame, size_t pose, float light, float alpha)
+// uniforms used in vertex shader
+static GLuint alias_shadevectorLoc;
+static GLuint alias_lightColorLoc;
+
+// uniforms used in fragment shader
+static GLuint alias_texLoc;
+static GLuint alias_fullbrightTexLoc;
+static GLuint alias_useFullbrightTexLoc;
+static GLuint alias_projectionLoc;
+static GLuint alias_modelViewLoc;
+
+// attribs
+static GLuint alias_vertexAttrIndex;
+static GLuint alias_normalAttrIndex;
+static GLuint alias_texCoordsAttrIndex;
+
+void GL_UploadAliasVBOs(alias_model_t *aliasmodel)
 {
-	if (alpha < 1.0f)
-		glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+	glGenBuffers(1, &aliasmodel->texvertsVBO);
+	glBindBuffer(GL_ARRAY_BUFFER, aliasmodel->texvertsVBO);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(aliasmodel->texverts[0]) * aliasmodel->numverts, &aliasmodel->texverts[0], GL_STATIC_DRAW);
 
-	mpose_t *ppose = &aliasmodel->frames[frame].poses[pose];
-	glVertexPointer(3, GL_FLOAT, sizeof(ppose->posevirts[0]), &ppose->posevirts[0].v);
-//	glNormalPointer(GL_FLOAT, sizeof(ppose->posevirts[0]), &ppose->posevirts[0].normal);
-
-	glTexCoordPointer(2, GL_FLOAT, sizeof(aliasmodel->frontstverts[0]), &aliasmodel->frontstverts->s);
-	glDrawElements(GL_TRIANGLES, aliasmodel->backstart * 3, GL_UNSIGNED_SHORT, aliasmodel->triangles);
-	glTexCoordPointer(2, GL_FLOAT, sizeof(aliasmodel->backstverts[0]), &aliasmodel->backstverts->s);
-	glDrawElements(GL_TRIANGLES, (aliasmodel->numtris - aliasmodel->backstart) * 3, GL_UNSIGNED_SHORT, (aliasmodel->triangles + aliasmodel->backstart));
-
-	glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
-
-	if (alpha < 1.0f)
-		glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
-}
-
-extern vec3_t lightspot;
-
-static void GL_DrawAliasShadow(entity_t *ent, alias_model_t *aliasmodel, size_t frame, size_t pose)
-{
-	vec3_t shadevector;
-	float an = ent->angles[1] / 180 * M_PI;
-	shadevector[0] = cos(-an);
-	shadevector[1] = sin(-an);
-	shadevector[2] = 1;
-	VectorNormalize(shadevector);
-
-	float lheight = ent->origin[2] - lightspot[2];
-	float height = -lheight + 1.0;
-
-	mpose_t *ppose = &aliasmodel->frames[frame].poses[pose];
-
-	vec3_t shadowverts[aliasmodel->numverts];
-	for (size_t i = 0; i < aliasmodel->numverts; i++)
+	for (size_t i = 0; i < aliasmodel->numframes; i++)
 	{
-		shadowverts[i][0] = ppose->posevirts[i].v[0] - (shadevector[0] * lheight);
-		shadowverts[i][1] = ppose->posevirts[i].v[1] - (shadevector[1] * lheight);
-		shadowverts[i][2] = height;
+		maliasframedesc_t *frame = &aliasmodel->frames[i];
+
+		for (size_t j = 0; j < frame->numposes; j++)
+		{
+			mpose_t *pose = &frame->poses[j];
+
+			glGenBuffers(1, &pose->posevertsVBO);
+			glBindBuffer(GL_ARRAY_BUFFER, pose->posevertsVBO);
+			glBufferData(GL_ARRAY_BUFFER, sizeof(pose->poseverts[0]) * aliasmodel->numverts, &pose->poseverts[0], GL_STATIC_DRAW);
+		}
 	}
 
-	glDisable(GL_TEXTURE_2D);
-	glColor4f(0.0f, 0.0f, 0.0f, r_shadows.value);
+	glGenBuffers(1, &aliasmodel->trianglesVBO);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, aliasmodel->trianglesVBO);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(aliasmodel->triangles[0]) * aliasmodel->numtris, &aliasmodel->triangles[0], GL_STATIC_DRAW);
+}
 
-	glVertexPointer(3, GL_FLOAT, sizeof(*shadowverts), shadowverts);
-	glDrawElements(GL_TRIANGLES, aliasmodel->numtris * 3, GL_UNSIGNED_SHORT, aliasmodel->triangles);
+static void GL_DrawAliasFrame(alias_model_t *aliasmodel, size_t frame, size_t pose, vec3_t shadevector, float light, float alpha)
+{
+	mpose_t *ppose = &aliasmodel->frames[frame].poses[pose];
+	glBindBuffer(GL_ARRAY_BUFFER, ppose->posevertsVBO);
+	glVertexAttribPointer(alias_vertexAttrIndex, 3, GL_FLOAT, GL_FALSE, sizeof(ppose->poseverts[0]), BUFFER_OFFSET(offsetof(mtrivertx_t, v)));
+	glVertexAttribPointer(alias_normalAttrIndex, 3, GL_FLOAT, GL_FALSE, sizeof(ppose->poseverts[0]), BUFFER_OFFSET(offsetof(mtrivertx_t, normal)));
 
-	glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
-	glEnable(GL_TEXTURE_2D);
+	glBindBuffer(GL_ARRAY_BUFFER, aliasmodel->texvertsVBO);
+	glVertexAttribPointer(alias_texCoordsAttrIndex, 2, GL_FLOAT, GL_FALSE, sizeof(aliasmodel->texverts[0]), BUFFER_OFFSET(offsetof(mstvert_t, s)));
+
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, aliasmodel->trianglesVBO);
+	glDrawElements(GL_TRIANGLES, aliasmodel->numtris * 3, GL_UNSIGNED_SHORT, BUFFER_OFFSET(0));
 }
 
 static size_t R_GetAliasPose(alias_model_t *aliasmodel, size_t frame)
@@ -103,7 +105,7 @@ static size_t R_GetAliasPose(alias_model_t *aliasmodel, size_t frame)
 	return pframe->current_pose;
 }
 
-void R_DrawAliasModel(entity_t *ent)
+void GL_DrawAliasModel(entity_t *ent)
 {
 	bool isPlayer = ent > cl_entities &&
 			ent <= (cl_entities + cl.maxclients);
@@ -111,47 +113,37 @@ void R_DrawAliasModel(entity_t *ent)
 	gltexture_t *tx;
 	gltexture_t *fb;
 
-	if (R_CullForEntity(ent))
-		return;
-
 	// get lighting information
-	ambientlight = shadelight = R_LightPoint(ent->origin);
+	float ambientlight = R_LightPoint(ent->origin);
 
-	for (int lnum = 0; lnum < MAX_DLIGHTS; lnum++)
-	{
-		if (cl_dlights[lnum].die >= cl.time)
-		{
-			vec3_t dist;
-			VectorSubtract(ent->origin, cl_dlights[lnum].origin, dist);
-			float add = cl_dlights[lnum].radius - VectorLength(dist);
+//	if (shadelight)
+//		Con_Printf("Have a close DLIGHT\n");
 
-			if (add > 0)
-			{
-				ambientlight += add;
-				shadelight += add;
-			}
-		}
-	}
-
-	// clamp lighting so it doesn't overbright as much
+//	 clamp lighting so it doesn't overbright as much
 	if (ambientlight > 128)
 		ambientlight = 128;
-	if (ambientlight + shadelight > 192)
-		shadelight = 192 - ambientlight;
 
 	// never allow players to go totally black
 	if (isPlayer && ambientlight < 8)
-		ambientlight = shadelight = 8;
+		ambientlight = 8;
 
 	// always give the gun some light
 	if (isViewent && ambientlight < 24)
-		ambientlight = shadelight = 24;
+		ambientlight = 24;
 
 	// no fullbright colors, so make torches full light
-	if (ent->model->flags & MOD_FBRIGHT)
-		ambientlight = shadelight = 255;
+//	if (ent->model->flags & MOD_FBRIGHT)
+//		ambientlight = shadelight = 255;
 
-	shadelight = shadelight / 200.0;
+//	shadelight /= 128.0;
+	ambientlight /= 128.0;
+
+	float rad = ent->angles[1] / 180 * M_PI;
+	vec3_t shadevector;
+	shadevector[0] = cos(-rad);
+	shadevector[1] = sin(-rad);
+	shadevector[2] = 1;
+	VectorNormalize(shadevector);
 
 	// locate the proper data
 	alias_model_t *aliasmodel = ent->model->aliasmodel;
@@ -159,21 +151,13 @@ void R_DrawAliasModel(entity_t *ent)
 	// add the polys to our running total
 	c_alias_polys += aliasmodel->numtris;
 
-	// draw all the triangles
-
-	GLfloat old_matrix[16];
-	glGetFloatv(GL_MODELVIEW_MATRIX, old_matrix);
-
-	GLfloat matrix[16];
-	glGetFloatv(GL_MODELVIEW_MATRIX, matrix);
-	Q_Matrix modelViewMatrix;
-	modelViewMatrix.set(matrix);
+	// Push
+	GLfloat mv_matrix[16];
+	memcpy(mv_matrix, modelViewMatrix.get(), sizeof(mv_matrix));
 
 	ent->angles[0] = -ent->angles[0];	// stupid quake bug
 	GL_RotateForEntity(ent, modelViewMatrix);
 	ent->angles[0] = -ent->angles[0];	// stupid quake bug
-
-	glLoadMatrixf(modelViewMatrix.get());
 
 	int anim = (int) (cl.time * 10) & 3;
 	if ((ent->skinnum < 0) ||
@@ -189,18 +173,6 @@ void R_DrawAliasModel(entity_t *ent)
 		fb = aliasmodel->gl_fbtexturenum[ent->skinnum][anim];
 	}
 
-	GL_Bind(tx);
-
-	// hack the depth range to prevent view model from poking into walls
-	if (isViewent)
-	{
-	#ifdef OPENGLES
-			glDepthRangef(0, 0.3f);
-	#else
-			glDepthRange(0, 0.3);
-	#endif
-	}
-
 	size_t frame = ent->frame;
 	if (frame >= aliasmodel->numframes || frame < 0)
 	{
@@ -209,44 +181,38 @@ void R_DrawAliasModel(entity_t *ent)
 	}
 	size_t pose = R_GetAliasPose(aliasmodel, frame);
 
-	if (gl_smoothmodels.value)
-		glShadeModel(GL_SMOOTH);
-	if (gl_affinemodels.value)
-		glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_FASTEST);
-
 	float alpha = 1.0f;
 	if (isViewent && (cl.items & IT_INVISIBILITY))
 		alpha = r_ringalpha.value;
 
-//	int quantizedangle = ((int)(ent->angles[1] * (SHADEDOT_QUANT / 360.0))) & (SHADEDOT_QUANT - 1);
-//	const float *shadedots = r_avertexnormal_dots[quantizedangle];
-//	float light = shadedots[aliasmodel->poseverts[pose]->normalindex] * shadelight;
-	float light = 0.0f;
-	glColor4f(light, light, light, alpha);
+// setup
+	glUseProgram(alias_program);
 
-	GL_DrawAliasFrame(aliasmodel, frame, pose, light, alpha);
-
+	GL_BindToUnit(GL_TEXTURE0, tx);
 	if (fb)
+		GL_BindToUnit(GL_TEXTURE1, fb);
+
+// set uniforms
+	glUniformMatrix4fv(alias_projectionLoc, 1, GL_FALSE, projectionMatrix.get());
+	glUniformMatrix4fv(alias_modelViewLoc, 1, GL_FALSE, modelViewMatrix.get());
+
+	glUniform3f(alias_shadevectorLoc, shadevector[0], shadevector[1], shadevector[2]);
+	glUniform4f(alias_lightColorLoc, ambientlight, ambientlight, ambientlight, alpha);
+	glUniform1i(alias_texLoc, 0);
+	glUniform1i(alias_fullbrightTexLoc, 1);
+	glUniform1i(alias_useFullbrightTexLoc, fb ? GL_TRUE : GL_FALSE);
+
+	// hack the depth range to prevent view model from poking into walls
+	if (isViewent)
 	{
-		GL_Bind(fb);
-		glBlendFunc (GL_ONE, GL_ONE);
-		glDepthMask(GL_FALSE);
-
-		GL_DrawAliasFrame(aliasmodel, frame, pose, light, alpha);
-
-		glDepthMask(GL_TRUE);
-		glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+#ifdef OPENGLES
+		glDepthRangef(0, 0.3f);
+#else
+		glDepthRange(0, 0.3);
+#endif
 	}
 
-	if (gl_affinemodels.value)
-		glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
-	if (gl_smoothmodels.value)
-		glShadeModel(GL_FLAT);
-
-	if (r_shadows.value && !(ent->model->flags & MOD_NOSHADOW))
-		GL_DrawAliasShadow(ent, aliasmodel, frame, pose);
-
-	glLoadMatrixf(old_matrix);
+	GL_DrawAliasFrame(aliasmodel, frame, pose, shadevector, ambientlight, alpha);
 
 	if (isViewent)
 	{
@@ -256,4 +222,31 @@ void R_DrawAliasModel(entity_t *ent)
 		glDepthRange(0, 1.0);
 #endif
 	}
+
+	// Pop
+	modelViewMatrix.set(mv_matrix);
+}
+
+void GL_CreateAliasShaders(void)
+{
+	// generate program
+	alias_program = LoadShader((const char *)alias_vs, alias_vs_len,
+	                           (const char *)alias_fs, alias_fs_len);
+
+	alias_texCoordsAttrIndex = GL_GetAttribLocation(alias_program, "TexCoords");
+	alias_vertexAttrIndex = GL_GetAttribLocation(alias_program, "Vertex");
+	alias_normalAttrIndex = GL_GetAttribLocation(alias_program, "Normal");
+
+	glEnableVertexAttribArray(alias_texCoordsAttrIndex);
+	glEnableVertexAttribArray(alias_vertexAttrIndex);
+	glEnableVertexAttribArray(alias_normalAttrIndex);
+
+	// get uniform locations
+	alias_shadevectorLoc = GL_GetUniformLocation(alias_program, "ShadeVector");
+	alias_lightColorLoc = GL_GetUniformLocation(alias_program, "LightColor");
+	alias_texLoc = GL_GetUniformLocation(alias_program, "Tex");
+	alias_fullbrightTexLoc = GL_GetUniformLocation(alias_program, "FullbrightTex");
+	alias_useFullbrightTexLoc = GL_GetUniformLocation(alias_program, "UseFullbrightTex");
+	alias_projectionLoc = GL_GetUniformLocation(alias_program, "Projection");
+	alias_modelViewLoc = GL_GetUniformLocation(alias_program, "ModelView");
 }

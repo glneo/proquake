@@ -36,9 +36,19 @@ unsigned int d_8to24table_fbright[256];
 unsigned int d_8to24table_fbright_fence[256];
 
 // current texture in each texture unit cache
-static GLuint currenttexture[2] = { GL_UNUSED_TEXTURE, GL_UNUSED_TEXTURE };
+static GLuint currenttexture[3] = { GL_UNUSED_TEXTURE, GL_UNUSED_TEXTURE, GL_UNUSED_TEXTURE };
 static GLenum currenttarget = GL_TEXTURE0;
 bool mtexenabled = false;
+
+void GL_SelectTextureUnit(GLenum target)
+{
+        if (target == currenttarget)
+                return;
+
+        glActiveTexture(target);
+
+        currenttarget = target;
+}
 
 void GL_Bind(gltexture_t *texture)
 {
@@ -49,43 +59,19 @@ void GL_Bind(gltexture_t *texture)
 	{
 		currenttexture[currenttarget - GL_TEXTURE0] = texture->texnum;
 		glBindTexture(GL_TEXTURE_2D, texture->texnum);
-		texture->visframe = r_framecount;
 	}
 }
 
-static void GL_SelectTextureUnit(GLenum target)
+void GL_BindToUnit(GLenum target, gltexture_t *texture)
 {
-	if (target == currenttarget)
-		return;
+	if (!texture)
+		texture = nulltexture;
 
-	glActiveTexture(target);
-
-	currenttarget = target;
-}
-
-/* selects texture unit 1 */
-void GL_EnableMultitexture(void)
-{
-	if (!mtexenabled)
+	if (texture->texnum != currenttexture[target - GL_TEXTURE0])
 	{
-		GL_SelectTextureUnit(GL_TEXTURE1);
-		glClientActiveTexture(GL_TEXTURE1);
-		glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-		glEnable(GL_TEXTURE_2D);
-		mtexenabled = true;
-	}
-}
-
-/* selects texture unit 0 */
-void GL_DisableMultitexture(void)
-{
-	if (mtexenabled)
-	{
-		glDisable(GL_TEXTURE_2D);
-		glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-		glClientActiveTexture(GL_TEXTURE0);
-		GL_SelectTextureUnit(GL_TEXTURE0);
-		mtexenabled = false;
+		GL_SelectTextureUnit(target);
+		currenttexture[currenttarget - GL_TEXTURE0] = texture->texnum;
+		glBindTexture(GL_TEXTURE_2D, texture->texnum);
 	}
 }
 
@@ -145,9 +131,6 @@ static void TexMgr_SetFilterModes(gltexture_t *glt)
 {
 	GL_Bind(glt);
 
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-
 	if (glt->flags & TEX_NEAREST)
 	{
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
@@ -166,8 +149,8 @@ static void TexMgr_SetFilterModes(gltexture_t *glt)
 	}
 	else
 	{
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, glmodes[glmode_idx].magfilter);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, glmodes[glmode_idx].magfilter);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	}
 }
 
@@ -186,7 +169,6 @@ static void TexMgr_TextureMode_f(cvar_t *var)
 				glmode_idx = i;
 				for (glt = active_gltextures; glt; glt = glt->next)
 					TexMgr_SetFilterModes(glt);
-				//FIXME: warpimages need to be redrawn with new filter mode
 			}
 			return;
 		}
@@ -349,28 +331,6 @@ static void TexMgr_Imagedump_f (void)
 }
 #endif
 
-/* report texture memory usage for this frame */
-float TexMgr_FrameUsage(void)
-{
-	float mb;
-	float texels = 0;
-	gltexture_t *glt;
-
-	for (glt = active_gltextures; glt; glt = glt->next)
-	{
-		if (glt->visframe == r_framecount)
-		{
-			if (glt->flags & TEX_MIPMAP)
-				texels += glt->width * glt->height * 4.0f / 3.0f;
-			else
-				texels += (glt->width * glt->height);
-		}
-	}
-
-	mb = texels * (Cvar_VariableValue("vid_bpp") / 8.0f) / 0x100000;
-	return mb;
-}
-
 gltexture_t *TexMgr_FindTexture(const char *name)
 {
 	gltexture_t *glt;
@@ -387,29 +347,11 @@ gltexture_t *TexMgr_FindTexture(const char *name)
 	return NULL;
 }
 
-gltexture_t *TexMgr_NewTexture(void)
-{
-	if (numgltextures == MAX_GLTEXTURES)
-		Sys_Error("numgltextures == MAX_GLTEXTURES\n");
-
-	gltexture_t *glt = (gltexture_t *)Q_malloc(sizeof(*glt));
-	glt->next = active_gltextures;
-	active_gltextures = glt;
-
-	glGenTextures(1, &glt->texnum);
-
-	numgltextures++;
-
-	return glt;
-}
-
 // workaround for preventing TexMgr_FreeTexture during TexMgr_ReloadImages
 static bool in_reload_images;
 
 void TexMgr_FreeTexture(gltexture_t *kill)
 {
-	gltexture_t *glt;
-
 	if (in_reload_images)
 		return;
 
@@ -423,17 +365,19 @@ void TexMgr_FreeTexture(gltexture_t *kill)
 	{
 		active_gltextures = kill->next;
 		GL_DeleteTexture(kill);
+		free(kill->source_data);
 		free(kill);
 		numgltextures--;
 		return;
 	}
 
-	for (glt = active_gltextures; glt; glt = glt->next)
+	for (gltexture_t *glt = active_gltextures; glt; glt = glt->next)
 	{
 		if (glt->next == kill)
 		{
 			glt->next = kill->next;
 			GL_DeleteTexture(kill);
+			free(kill->source_data);
 			free(kill);
 			numgltextures--;
 			return;
@@ -443,70 +387,8 @@ void TexMgr_FreeTexture(gltexture_t *kill)
 	Con_Printf("TexMgr_FreeTexture: not found\n");
 }
 
-/* compares each bit in "flags" to the one in glt->flags only if that bit is active in "mask" */
-void TexMgr_FreeTextures(unsigned int flags, unsigned int mask)
-{
-	gltexture_t *glt, *next;
-
-	for (glt = active_gltextures; glt; glt = next)
-	{
-		next = glt->next;
-		if ((glt->flags & mask) == (flags & mask))
-			TexMgr_FreeTexture(glt);
-	}
-}
-
-void TexMgr_DeleteTextureObjects(void)
-{
-	gltexture_t *glt;
-
-	for (glt = active_gltextures; glt; glt = glt->next)
-	{
-		GL_DeleteTexture(glt);
-	}
-}
-
-void TexMgr_LoadPalette(void)
-{
-	byte *src, *dst;
-
-	byte *pal = COM_LoadMallocFile("gfx/palette.lmp");
-	if (!pal)
-		Sys_Error("Couldn't load gfx/palette.lmp");
-
-	//standard palette
-	dst = (byte *) d_8to24table;
-	src = pal;
-	for (int i = 0; i < 256; i++)
-	{
-		*dst++ = *src++;
-		*dst++ = *src++;
-		*dst++ = *src++;
-		*dst++ = 255;
-	}
-
-	// fullbright palette, 0-223 are transparent (for blending)
-	memcpy(d_8to24table_fbright, d_8to24table, 256 * 4);
-	for (int i = 0; i < 224; i++)
-		d_8to24table_fbright[i] = 0;
-
-	d_8to24table[255] = 0; // 255 is transparent
-
-	// fullbright palette, for fence textures
-	memcpy(d_8to24table_fbright_fence, d_8to24table_fbright, 256 * 4);
-	d_8to24table_fbright_fence[255] = 0; // 255 is transparent
-
-	free(pal);
-}
-
-void TexMgr_NewGame(void)
-{
-	TexMgr_FreeTextures(0, TEX_PERSIST); //deletes all textures where TEX_PERSIST is unset
-	TexMgr_LoadPalette();
-}
-
 /* return smallest power of two greater than or equal to s */
-int TexMgr_Pad(int s)
+static int TexMgr_Pad(int s)
 {
 	int i;
 	for (i = 1; i < s; i <<= 1)
@@ -989,10 +871,31 @@ static void TexMgr_LoadLightmap(gltexture_t *glt, byte *data)
 {
 	// upload it
 	GL_Bind(glt);
+#ifdef OPENGLES
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, glt->width, glt->height, 0, GL_LUMINANCE, GL_UNSIGNED_BYTE, data);
+#else
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, glt->width, glt->height, 0, GL_RED, GL_UNSIGNED_BYTE, data);
+#endif
+//	free(data);
 
 	// set filter modes
 	TexMgr_SetFilterModes(glt);
+}
+
+static gltexture_t *TexMgr_NewTexture(void)
+{
+	if (numgltextures == MAX_GLTEXTURES)
+		Sys_Error("numgltextures == MAX_GLTEXTURES\n");
+
+	gltexture_t *glt = (gltexture_t *)Q_malloc(sizeof(*glt));
+	glt->next = active_gltextures;
+	active_gltextures = glt;
+
+	glGenTextures(1, &glt->texnum);
+
+	numgltextures++;
+
+	return glt;
 }
 
 /* the one entry point for loading all textures */
@@ -1021,6 +924,8 @@ gltexture_t *TexMgr_LoadImage(const char *name, int width, int height, enum srcf
 	{
 		if (glt->source_crc == crc)
 			return glt;
+
+		free(glt->source_data);
 	}
 	else
 	{
@@ -1044,6 +949,7 @@ gltexture_t *TexMgr_LoadImage(const char *name, int width, int height, enum srcf
 	// SRC_RGBA is 4 bytes per pixel, all others are 1
 	size_t bpp = (format == SRC_RGBA ? 4 : 1);
 	size_t data_size = width * height * bpp;
+	// Keep a copy of data in case of context reload
 	glt->source_data = (byte *)Q_malloc(data_size);
 	memcpy(glt->source_data, data, data_size);
 
@@ -1166,6 +1072,39 @@ void TexMgr_ReloadImage(gltexture_t *glt, int shirt, int pants)
 	}
 }
 
+static void TexMgr_LoadPalette(void)
+{
+	byte *src, *dst;
+
+	byte *pal = COM_LoadMallocFile("gfx/palette.lmp");
+	if (!pal)
+		Sys_Error("Couldn't load gfx/palette.lmp");
+
+	//standard palette
+	dst = (byte *) d_8to24table;
+	src = pal;
+	for (int i = 0; i < 256; i++)
+	{
+		*dst++ = *src++;
+		*dst++ = *src++;
+		*dst++ = *src++;
+		*dst++ = 255;
+	}
+
+	// fullbright palette, 0-223 are transparent (for blending)
+	memcpy(d_8to24table_fbright, d_8to24table, 256 * 4);
+	for (int i = 0; i < 224; i++)
+		d_8to24table_fbright[i] = 0;
+
+	d_8to24table[255] = 0; // 255 is transparent
+
+	// fullbright palette, for fence textures
+	memcpy(d_8to24table_fbright_fence, d_8to24table_fbright, 256 * 4);
+	d_8to24table_fbright_fence[255] = 0; // 255 is transparent
+
+	free(pal);
+}
+
 /* must be called before any texture loading */
 void TexMgr_Init(void)
 {
@@ -1202,8 +1141,8 @@ void TexMgr_Init(void)
 	glGetIntegerv(GL_MAX_TEXTURE_SIZE, &gl_hardware_maxsize);
 
 	// load notexture images
-	notexture = TexMgr_LoadImage("notexture", 2, 2, SRC_INDEXED, notexture_data, TEX_NEAREST | TEX_PERSIST | TEX_NOPICMIP);
-	nulltexture = TexMgr_LoadImage("nulltexture", 2, 2, SRC_INDEXED, nulltexture_data, TEX_NEAREST | TEX_PERSIST | TEX_NOPICMIP);
+	notexture = TexMgr_LoadImage("notexture", 2, 2, SRC_INDEXED, notexture_data, TEX_NEAREST | TEX_NOPICMIP);
+	nulltexture = TexMgr_LoadImage("nulltexture", 2, 2, SRC_INDEXED, nulltexture_data, TEX_NEAREST | TEX_NOPICMIP);
 
 	//have to assign these here becuase Mod_Init is called before TexMgr_Init
 	r_notexture_mip->gltexture = r_notexture_mip2->gltexture = notexture;
@@ -1214,14 +1153,6 @@ void TexMgr_ReloadImages(void)
 {
 	gltexture_t *glt;
 
-// ericw -- tricky bug: if the hunk is almost full, an allocation in TexMgr_ReloadImage
-// triggers cache items to be freed, which calls back into TexMgr to free the
-// texture. If this frees 'glt' in the loop below, the active_gltextures
-// list gets corrupted.
-// A test case is jam3_tronyn.bsp with -heapsize 65536, and do several mode
-// switches/fullscreen toggles
-// 2015-09-04 -- Cache_Flush workaround was causing issues (http://sourceforge.net/p/quakespasm/bugs/10/)
-// switching to a boolean flag.
 	in_reload_images = true;
 
 	for (glt = active_gltextures; glt; glt = glt->next)
