@@ -147,6 +147,6 @@ endif()
 find_package(SDL2 REQUIRED)
 target_include_directories(proquake PUBLIC ${SDL2_INCLUDE_DIR})
 target_link_libraries(proquake m ${SDL2_LIBRARY})
-target_compile_options(proquake PRIVATE -g;-std=c++11;-ffast-math;-Wall;-fno-omit-frame-pointer)
-# -Wconversion;-Werror;
+target_compile_options(proquake PRIVATE -g;-O0;-std=c++11;-ffast-math;-Wall;-fno-omit-frame-pointer)
+# -Wconversion;-Werror;-fsanitize=address;
 install(TARGETS proquake RUNTIME DESTINATION bin)

@@ -12,7 +12,14 @@
  * General Public License for more details.
  */
 
+#ifndef __CRC_H
+#define __CRC_H
+
+#include "common.h"
+
 void CRC_Init(unsigned short *crcvalue);
 void CRC_ProcessByte(unsigned short *crcvalue, byte data);
 unsigned short CRC_Value(unsigned short crcvalue);
-unsigned short CRC_Block (byte *data, int size);
+unsigned short CRC_Block(const byte *data, int size);
+
+#endif /* __CVAR_H */

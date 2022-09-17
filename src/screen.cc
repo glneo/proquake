@@ -984,11 +984,6 @@ void SCR_Init(void)
 	Cmd_AddCommand("sizeup", SCR_SizeUp_f);
 	Cmd_AddCommand("sizedown", SCR_SizeDown_f);
 
-	GL_Init();
-	TexMgr_Init();
-	R_Init();
-	Draw_Init();
-
 	// load game pics
 	scr_net = Draw_PicFromWad("net");
 	scr_turtle = Draw_PicFromWad("turtle");

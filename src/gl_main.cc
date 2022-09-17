@@ -78,10 +78,9 @@ void GL_Setup(void)
 	projectionMatrix.identity();
 	projectionMatrix.frustum(xmin, xmax, ymin, ymax, zmin, zmax);
 
-// REMOVE
+// FOR DEBUG
 //	projectionMatrix.translate(0.0f, -200.0f, -1000.0f);
 //	projectionMatrix.rotateX(45.0f);
-
 
 	// set up modelview matrix
 	modelViewMatrix.identity();
@@ -228,6 +227,7 @@ static void GL_CheckExtensions(void)
 
 void GL_BeginRendering(void)
 {
+	R_Clear();
 }
 
 void GL_EndRendering(void)
@@ -246,10 +246,12 @@ static void GL_SetupState(void)
 #endif
 
 	// set clear color to gray
-	glClearColor(0.15, 0.15, 0.15, 0);
+//	glClearColor(0.15, 0.15, 0.15, 0);
 
-	glEnable(GL_BLEND);
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+//	glDisable(GL_DITHER);
+
+//	glEnable(GL_BLEND);
+//	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 	glEnable(GL_CULL_FACE);
 	glCullFace(GL_FRONT);
@@ -258,10 +260,6 @@ static void GL_SetupState(void)
 	glDepthFunc(GL_LEQUAL);
 
 //	glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
-
-#ifndef OPENGLES
-	glEnable(GL_PROGRAM_POINT_SIZE);
-#endif
 
 	GL_CreateAliasShaders();
 	GL_CreateBrushShaders();

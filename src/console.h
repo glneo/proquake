@@ -12,12 +12,11 @@
  * General Public License for more details.
  */
 
-extern int con_totallines;
-extern unsigned int con_backscroll;
-extern	bool con_forcedup;	// because no entities to refresh
+#ifndef __CONSOLE_H
+#define __CONSOLE_H
+
+extern bool con_forcedup; // because no entities to refresh
 extern bool con_initialized;
-extern byte *con_chars;
-extern	int	con_notifylines;		// scan lines to clear for notify lines
 
 void Key_Console (int key);
 void Char_Console (int key);
@@ -43,3 +42,5 @@ void Con_TabComplete(void);
 void Con_Quakebar(int len);
 
 void History_Shutdown(void);
+
+#endif /* __CONSOLE_H */

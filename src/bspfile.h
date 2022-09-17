@@ -74,7 +74,7 @@ enum lump_types {
 };
 
 typedef struct {
-	int32_t fileofs, filelen;
+	uint32_t fileofs, filelen;
 } dlump_t;
 
 typedef struct {
@@ -92,7 +92,7 @@ typedef struct miptex_s {
 	char name[16];
 	uint32_t width, height;
 	uint32_t offsets[MIPLEVELS]; // four mip maps stored
-} miptex_t;
+} dmiptex_t;
 
 typedef struct {
 	float point[3];

@@ -26,6 +26,8 @@ extern GLuint brush_program;
 // uniforms used in vertex shader
 extern GLuint brush_ProjectionUniform;
 extern GLuint brush_ModelViewUniform;
+extern GLuint brush_TimeUniform;
+extern GLuint brush_SpeedScaleUniform;
 
 // uniforms used in fragment shader
 extern GLuint brush_TexUniform;
@@ -155,31 +157,42 @@ void GL_DrawSpriteModel(entity_t *ent)
 	VectorMA(point, frame->right, v_right, point);
 	verts[9] = point[0]; verts[10] = point[1]; verts[11] = point[2];
 
-	GL_BindToUnit(GL_TEXTURE0, frame->gltexture);
-// setup
+	// setup
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	glUseProgram(brush_program);
+	GL_BindToUnit(GL_TEXTURE0, frame->gltexture);
 
-// set uniforms
+	// set vertex uniforms
 	glUniformMatrix4fv(brush_ProjectionUniform, 1, GL_FALSE, projectionMatrix.get());
 	glUniformMatrix4fv(brush_ModelViewUniform, 1, GL_FALSE, modelViewMatrix.get());
+	glUniform1f(brush_TimeUniform, 0.0f);
+	glUniform1f(brush_SpeedScaleUniform, 0.0f);
+
+	// set fragment uniforms
 	glUniform1i(brush_TexUniform, 0);
 	glUniform1i(brush_UseLMTexUniform, GL_FALSE);
-	glUniform1i(brush_UseOverbrightUniform, GL_FALSE);
+	glUniform1i(brush_UseOverbrightUniform, 1.0f);
 	glUniform1f(brush_AlphaUniform, 1.0f);
 
-// set attributes
+	// set attributes
 	GLuint tempVBOs[2];
 	glGenBuffers(2, tempVBOs);
 	glBindBuffer(GL_ARRAY_BUFFER, tempVBOs[0]);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * 3 * 4, &verts[0], GL_STREAM_DRAW);
+	glEnableVertexAttribArray(brush_VertexAttrib);
 	glVertexAttribPointer(brush_VertexAttrib, 3, GL_FLOAT, GL_FALSE, 0, 0);
 	glBindBuffer(GL_ARRAY_BUFFER, tempVBOs[1]);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * 2 * 4, &texts[0], GL_STREAM_DRAW);
+	glEnableVertexAttribArray(brush_TexCoordsAttrib);
 	glVertexAttribPointer(brush_TexCoordsAttrib, 2, GL_FLOAT, GL_FALSE, 0, 0);
 
-// draw
+	// draw
 	glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 
-// cleanup
+	// cleanup
+	glDisableVertexAttribArray(brush_TexCoordsAttrib);
+	glDisableVertexAttribArray(brush_VertexAttrib);
 	glDeleteBuffers(2, tempVBOs);
+	glDisable(GL_BLEND);
 }

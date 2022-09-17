@@ -82,14 +82,18 @@ void GL_DrawParticles(void)
 	// set attributes
 	glBindBuffer(GL_ARRAY_BUFFER, particlesVBO);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(particleData_t) * particleCount, &particleData[0], GL_STREAM_DRAW);
+	glEnableVertexAttribArray(particleVertexAttrIndex);
 	glVertexAttribPointer(particleVertexAttrIndex, 3, GL_FLOAT, GL_FALSE, sizeof(particleData_t), BUFFER_OFFSET(offsetof(particleData_t, vert)));
+	glEnableVertexAttribArray(particleColorAttrIndex);
 	glVertexAttribPointer(particleColorAttrIndex, 3, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(particleData_t), BUFFER_OFFSET(offsetof(particleData_t, color)));
 
-//	Con_Printf("Drawing %d particles\n", particleCount);
 	// draw
+//	Con_Printf("Drawing %d particles\n", particleCount);
 	glDrawArrays(GL_POINTS, 0, particleCount);
 
 	// cleanup
+	glDisableVertexAttribArray(particleColorAttrIndex);
+	glDisableVertexAttribArray(particleVertexAttrIndex);
 	glDisable(GL_BLEND);
 }
 
@@ -102,9 +106,6 @@ static void GL_CreateParticleShaders(void)
 	// get attribute locations
 	particleVertexAttrIndex = GL_GetAttribLocation(particle_program, "Vert");
 	particleColorAttrIndex = GL_GetAttribLocation(particle_program, "Color");
-
-	glEnableVertexAttribArray(particleVertexAttrIndex);
-	glEnableVertexAttribArray(particleColorAttrIndex);
 
 	// get uniform locations
 	particleProjectionLoc = GL_GetUniformLocation(particle_program, "Projection");

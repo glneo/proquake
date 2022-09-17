@@ -130,13 +130,14 @@ static int menu_numcachepics;
 
 qpic_t *Draw_PicFromWad(const char *name)
 {
-	dqpic_t *p = (dqpic_t *) W_GetLumpName(name);
-	qpic_t *gl = (qpic_t *) Q_malloc(sizeof(*gl));
+	dqpic_t *p = (dqpic_t *)W_GetLumpName(name);
+	qpic_t *gl = (qpic_t *)Q_malloc(sizeof(qpic_t));
 
 	// load little ones into the scrap
 	if (p->width < 64 && p->height < 64)
 	{
-		int x, y;
+		int x = 0;
+		int y = 0;
 		int texnum = Scrap_AllocBlock(p->width, p->height, &x, &y);
 		int k = 0;
 		for (int i = 0; i < p->height; i++)
@@ -155,9 +156,9 @@ qpic_t *Draw_PicFromWad(const char *name)
 
 		gl->gltexture = TexMgr_LoadImage(texturename, p->width, p->height, SRC_INDEXED, p->data, TEX_ALPHA | TEX_PAD | TEX_NOPICMIP);
 		gl->sl = 0;
-		gl->sh = (float) p->width / (float) TexMgr_PadConditional(p->width);
+		gl->sh = 1.0f;
 		gl->tl = 0;
-		gl->th = (float) p->height / (float) TexMgr_PadConditional(p->height);
+		gl->th = 1.0f;
 	}
 	gl->width = p->width;
 	gl->height = p->height;
@@ -288,15 +289,19 @@ void Draw_Pic(int x, int y, qpic_t *pic, float alpha)
 	// set attributes
 	glBindBuffer(GL_ARRAY_BUFFER, draw_vertex_VBO);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * 2 * 4, &verts[0], GL_STREAM_DRAW);
+	glEnableVertexAttribArray(draw_vertexAttrIndex);
 	glVertexAttribPointer(draw_vertexAttrIndex, 2, GL_FLOAT, GL_FALSE, 0, 0);
 	glBindBuffer(GL_ARRAY_BUFFER, draw_texCoords_VBO);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * 2 * 4, &texts[0], GL_STREAM_DRAW);
+	glEnableVertexAttribArray(draw_texCoordsAttrIndex);
 	glVertexAttribPointer(draw_texCoordsAttrIndex, 2, GL_FLOAT, GL_FALSE, 0, 0);
 
 	// draw
 	glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 
 	// cleanup
+	glDisableVertexAttribArray(draw_texCoordsAttrIndex);
+	glDisableVertexAttribArray(draw_vertexAttrIndex);
 	glUniform4f(draw_colorLoc, 1.0f, 1.0f, 1.0f, 1.0f);
 }
 
@@ -313,15 +318,14 @@ void Draw_TransPic(int x, int y, qpic_t *pic, float alpha)
 
 void Draw_TransPicTranslate(int x, int y, qpic_t *pic, float alpha, int top, int bottom)
 {
-	static int oldtop = -2;
-	static int oldbottom = -2;
+	static int oldtop = -1;
+	static int oldbottom = -1;
 
 	if (top != oldtop || bottom != oldbottom)
 	{
-		gltexture_t *glt = pic->gltexture;
 		oldtop = top;
 		oldbottom = bottom;
-		TexMgr_ReloadImage (glt, top, bottom);
+		TexMgr_ReloadImage (pic->gltexture, top, bottom);
 	}
 	Draw_Pic(x, y, pic, alpha);
 }
@@ -354,15 +358,19 @@ void Draw_PicTile(int x, int y, int w, int h, qpic_t *pic, float alpha)
 	// set attributes
 	glBindBuffer(GL_ARRAY_BUFFER, draw_vertex_VBO);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * 2 * 4, &verts[0], GL_STREAM_DRAW);
+	glEnableVertexAttribArray(draw_vertexAttrIndex);
 	glVertexAttribPointer(draw_vertexAttrIndex, 2, GL_FLOAT, GL_FALSE, 0, 0);
 	glBindBuffer(GL_ARRAY_BUFFER, draw_texCoords_VBO);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * 2 * 4, &texts[0], GL_STREAM_DRAW);
+	glEnableVertexAttribArray(draw_texCoordsAttrIndex);
 	glVertexAttribPointer(draw_texCoordsAttrIndex, 2, GL_FLOAT, GL_FALSE, 0, 0);
 
 	// draw
 	glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 
 	// cleanup
+	glDisableVertexAttribArray(draw_texCoordsAttrIndex);
+	glDisableVertexAttribArray(draw_vertexAttrIndex);
 	glUniform4f(draw_colorLoc, 1.0f, 1.0f, 1.0f, 1.0f);
 }
 
@@ -390,15 +398,19 @@ static void Draw_Solid(int x, int y, int w, int h, float r, float g, float b, fl
 	// set attributes
 	glBindBuffer(GL_ARRAY_BUFFER, draw_vertex_VBO);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * 2 * 4, &verts[0], GL_STREAM_DRAW);
+	glEnableVertexAttribArray(draw_vertexAttrIndex);
 	glVertexAttribPointer(draw_vertexAttrIndex, 2, GL_FLOAT, GL_FALSE, 0, 0);
 	glBindBuffer(GL_ARRAY_BUFFER, draw_texCoords_VBO);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * 2 * 4, &texts[0], GL_STREAM_DRAW);
+	glEnableVertexAttribArray(draw_texCoordsAttrIndex);
 	glVertexAttribPointer(draw_texCoordsAttrIndex, 2, GL_FLOAT, GL_FALSE, 0, 0);
 
 	// draw
 	glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 
 	// cleanup
+	glDisableVertexAttribArray(draw_texCoordsAttrIndex);
+	glDisableVertexAttribArray(draw_vertexAttrIndex);
 	glUniform4f(draw_colorLoc, 1.0f, 1.0f, 1.0f, 1.0f);
 }
 
@@ -436,12 +448,18 @@ static void Draw_FlushState(void)
         // set attributes
         glBindBuffer(GL_ARRAY_BUFFER, draw_vertex_VBO);
         glBufferData(GL_ARRAY_BUFFER, sizeof(draw_vertex_t) * draw_buffer.size(), draw_buffer.data(), GL_STREAM_DRAW);
+        glEnableVertexAttribArray(draw_vertexAttrIndex);
         glVertexAttribPointer(draw_vertexAttrIndex, 2, GL_FLOAT, GL_FALSE, sizeof(draw_vertex_t), BUFFER_OFFSET(offsetof(draw_vertex_t, position)));
+        glEnableVertexAttribArray(draw_texCoordsAttrIndex);
         glVertexAttribPointer(draw_texCoordsAttrIndex, 2, GL_FLOAT, GL_FALSE, sizeof(draw_vertex_t), BUFFER_OFFSET(offsetof(draw_vertex_t, textureCord)));
 
         // draw
         glDrawArrays(GL_TRIANGLES, 0, draw_buffer.size());
         draw_buffer.clear();
+
+	// cleanup
+	glDisableVertexAttribArray(draw_texCoordsAttrIndex);
+	glDisableVertexAttribArray(draw_vertexAttrIndex);
 }
 
 void Draw_SetCanvas(canvastype newcanvas)
@@ -455,7 +473,6 @@ void Draw_SetCanvas(canvastype newcanvas)
 	Draw_FlushState();
 
 	projectionMatrix.identity();
-	modelViewMatrix.identity();
 
 	switch (newcanvas)
 	{
@@ -545,9 +562,9 @@ qpic_t *Draw_MakePic(const char *name, int width, int height, byte *data)
 	pic->width = width;
 	pic->height = height;
 	pic->sl = 0;
-	pic->sh = (float) width / (float) TexMgr_PadConditional(width);
+	pic->sh = 1.0f;
 	pic->tl = 0;
-	pic->th = (float) height / (float) TexMgr_PadConditional(height);
+	pic->th = 1.0f;
 
 	return pic;
 }
@@ -572,9 +589,6 @@ static void GL_CreateDrawShaders(void)
 	// get attribute locations
 	draw_vertexAttrIndex = GL_GetAttribLocation(draw_program, "Vertex");
 	draw_texCoordsAttrIndex = GL_GetAttribLocation(draw_program, "TexCoords");
-
-	glEnableVertexAttribArray(draw_vertexAttrIndex);
-	glEnableVertexAttribArray(draw_texCoordsAttrIndex);
 
 	// get uniform locations
 	draw_texLoc = GL_GetUniformLocation(draw_program, "Tex");

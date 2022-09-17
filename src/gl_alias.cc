@@ -38,7 +38,7 @@ static GLuint alias_useFullbrightTexLoc;
 static GLuint alias_projectionLoc;
 static GLuint alias_modelViewLoc;
 
-// attribs
+// attributes
 static GLuint alias_vertexAttrIndex;
 static GLuint alias_normalAttrIndex;
 static GLuint alias_texCoordsAttrIndex;
@@ -72,14 +72,21 @@ static void GL_DrawAliasFrame(alias_model_t *aliasmodel, size_t frame, size_t po
 {
 	mpose_t *ppose = &aliasmodel->frames[frame].poses[pose];
 	glBindBuffer(GL_ARRAY_BUFFER, ppose->posevertsVBO);
+	glEnableVertexAttribArray(alias_vertexAttrIndex);
 	glVertexAttribPointer(alias_vertexAttrIndex, 3, GL_FLOAT, GL_FALSE, sizeof(ppose->poseverts[0]), BUFFER_OFFSET(offsetof(mtrivertx_t, v)));
+	glEnableVertexAttribArray(alias_normalAttrIndex);
 	glVertexAttribPointer(alias_normalAttrIndex, 3, GL_FLOAT, GL_FALSE, sizeof(ppose->poseverts[0]), BUFFER_OFFSET(offsetof(mtrivertx_t, normal)));
 
 	glBindBuffer(GL_ARRAY_BUFFER, aliasmodel->texvertsVBO);
+	glEnableVertexAttribArray(alias_texCoordsAttrIndex);
 	glVertexAttribPointer(alias_texCoordsAttrIndex, 2, GL_FLOAT, GL_FALSE, sizeof(aliasmodel->texverts[0]), BUFFER_OFFSET(offsetof(mstvert_t, s)));
 
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, aliasmodel->trianglesVBO);
 	glDrawElements(GL_TRIANGLES, aliasmodel->numtris * 3, GL_UNSIGNED_SHORT, BUFFER_OFFSET(0));
+
+	glDisableVertexAttribArray(alias_texCoordsAttrIndex);
+	glDisableVertexAttribArray(alias_normalAttrIndex);
+	glDisableVertexAttribArray(alias_vertexAttrIndex);
 }
 
 static size_t R_GetAliasPose(alias_model_t *aliasmodel, size_t frame)
@@ -186,8 +193,13 @@ void GL_DrawAliasModel(entity_t *ent)
 		alpha = r_ringalpha.value;
 
 // setup
-	glUseProgram(alias_program);
 
+	glUseProgram(alias_program);
+	if (alpha < 1.0f)
+	{
+		glEnable(GL_BLEND);
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	}
 	GL_BindToUnit(GL_TEXTURE0, tx);
 	if (fb)
 		GL_BindToUnit(GL_TEXTURE1, fb);
@@ -214,6 +226,7 @@ void GL_DrawAliasModel(entity_t *ent)
 
 	GL_DrawAliasFrame(aliasmodel, frame, pose, shadevector, ambientlight, alpha);
 
+	// cleanup
 	if (isViewent)
 	{
 #ifdef OPENGLES
@@ -222,6 +235,8 @@ void GL_DrawAliasModel(entity_t *ent)
 		glDepthRange(0, 1.0);
 #endif
 	}
+	if (alpha < 1.0f)
+		glDisable(GL_BLEND);
 
 	// Pop
 	modelViewMatrix.set(mv_matrix);
@@ -233,20 +248,18 @@ void GL_CreateAliasShaders(void)
 	alias_program = LoadShader((const char *)alias_vs, alias_vs_len,
 	                           (const char *)alias_fs, alias_fs_len);
 
-	alias_texCoordsAttrIndex = GL_GetAttribLocation(alias_program, "TexCoords");
-	alias_vertexAttrIndex = GL_GetAttribLocation(alias_program, "Vertex");
-	alias_normalAttrIndex = GL_GetAttribLocation(alias_program, "Normal");
-
-	glEnableVertexAttribArray(alias_texCoordsAttrIndex);
-	glEnableVertexAttribArray(alias_vertexAttrIndex);
-	glEnableVertexAttribArray(alias_normalAttrIndex);
-
 	// get uniform locations
 	alias_shadevectorLoc = GL_GetUniformLocation(alias_program, "ShadeVector");
 	alias_lightColorLoc = GL_GetUniformLocation(alias_program, "LightColor");
+
 	alias_texLoc = GL_GetUniformLocation(alias_program, "Tex");
 	alias_fullbrightTexLoc = GL_GetUniformLocation(alias_program, "FullbrightTex");
 	alias_useFullbrightTexLoc = GL_GetUniformLocation(alias_program, "UseFullbrightTex");
 	alias_projectionLoc = GL_GetUniformLocation(alias_program, "Projection");
 	alias_modelViewLoc = GL_GetUniformLocation(alias_program, "ModelView");
+
+	// get uniform locations
+	alias_texCoordsAttrIndex = GL_GetAttribLocation(alias_program, "TexCoords");
+	alias_vertexAttrIndex = GL_GetAttribLocation(alias_program, "Vertex");
+	alias_normalAttrIndex = GL_GetAttribLocation(alias_program, "Normal");
 }

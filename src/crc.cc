@@ -73,7 +73,7 @@ unsigned short CRC_Value(unsigned short crcvalue)
 	return crcvalue ^ CRC_XOR_VALUE;
 }
 
-unsigned short CRC_Block (byte *data, int size)
+unsigned short CRC_Block(const byte *data, int size)
 {
 	unsigned short crc = CRC_INIT_VALUE;
 

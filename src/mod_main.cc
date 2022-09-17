@@ -17,6 +17,7 @@
 // models are the only shared resource between a client and server running
 // on the same machine.
 #include "quakedef.h"
+#include "gl_texmgr.h"
 
 #include "modelgen.h"
 #include "spritegen.h"
@@ -31,9 +32,6 @@ static int mod_novis_capacity;
 #define	MAX_MOD_KNOWN 2048
 static model_t mod_known[MAX_MOD_KNOWN];
 static int mod_numknown;
-
-texture_t *r_notexture_mip;
-texture_t *r_notexture_mip2;
 
 mleaf_t *Mod_PointInLeaf(vec3_t p, brush_model_t *model)
 {
@@ -51,7 +49,7 @@ mleaf_t *Mod_PointInLeaf(vec3_t p, brush_model_t *model)
 			return (mleaf_t *) node;
 		plane = node->plane;
 		d = DotProduct (p,plane->normal) - plane->dist;
-		node = (d > 0) ? node->children[0] : node->children[1];
+		node = (d > 0) ? node->left_node : node->right_node;
 	}
 
 	return NULL;	// never reached
@@ -153,12 +151,12 @@ static void Mod_AddToFatPVS(vec3_t org, mnode_t *node, brush_model_t *brushmodel
 		plane = node->plane;
 		d = DotProduct (org, plane->normal) - plane->dist;
 		if (d > 8)
-			node = node->children[0];
+			node = node->left_node;
 		else if (d < -8)
-			node = node->children[1];
+			node = node->right_node;
 		else {	// go down both
-			Mod_AddToFatPVS(org, node->children[0], brushmodel);
-			node = node->children[1];
+			Mod_AddToFatPVS(org, node->left_node, brushmodel);
+			node = node->right_node;
 		}
 	}
 }
@@ -281,12 +279,4 @@ static void Mod_Print(void)
 void Mod_Init(void)
 {
 	Cmd_AddCommand("mcache", Mod_Print);
-
-	r_notexture_mip = (texture_t *) Hunk_AllocName (sizeof(texture_t), "r_notexture_mip");
-	strcpy (r_notexture_mip->name, "notexture");
-	r_notexture_mip->height = r_notexture_mip->width = 32;
-
-	r_notexture_mip2 = (texture_t *) Hunk_AllocName (sizeof(texture_t), "r_notexture_mip2");
-	strcpy (r_notexture_mip2->name, "notexture2");
-	r_notexture_mip2->height = r_notexture_mip2->width = 32;
 }

@@ -801,6 +801,10 @@ void Host_Init(quakeparms_t *parms)
 	if (cls.state != ca_dedicated)
 	{
 		VID_Init();
+		GL_Init();
+		TexMgr_Init();
+		R_Init();
+		Draw_Init();
 		SCR_Init();
 		IN_Init();
 		S_Init();

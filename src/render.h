@@ -32,12 +32,8 @@ typedef struct
 } refdef_t;
 
 // refresh
-
 extern refdef_t r_refdef;
 extern vec3_t vpn, vright, vup;
-
-extern struct texture_s *r_notexture_mip;
-extern struct texture_s *r_notexture_mip2;
 
 void R_RenderView(void); // must set r_refdef first
 void R_NewMap(void);

@@ -15,6 +15,8 @@
 #include "quakedef.h"
 #include "net_loop.h"
 
+#define PARANOID
+
 bool localconnectpending = false;
 qsocket_t *loop_client = NULL;
 qsocket_t *loop_server = NULL;
@@ -112,91 +114,107 @@ static int IntAlign(int value)
 
 int Loop_GetMessage(qsocket_t *sock)
 {
-	int ret;
-	int length;
-
 	if (sock->receiveMessageLength == 0)
 		return 0;
 
-	ret = sock->receiveMessage[0];
-	length = sock->receiveMessage[1] + (sock->receiveMessage[2] << 8);
+#ifdef PARANOID
+	// need to at least have the 4-byte message header
+	if (sock->receiveMessageLength < 4)
+		Sys_Error("short receiveMessageLength");
+#endif
+
+	int type = (int)sock->receiveMessage[0];
+
+	size_t length = (size_t)((sock->receiveMessage[1] << 0) |
+			         (sock->receiveMessage[2] << 8));
+
+#ifdef PARANOID
+	if (length + 4 > (size_t)sock->receiveMessageLength)
+		Sys_Error("long message");
+#endif
+
 	// alignment byte skipped here
 	SZ_Clear(&net_message);
 	SZ_Write(&net_message, &sock->receiveMessage[4], length);
 
-	length = IntAlign(length + 4);
-	sock->receiveMessageLength -= length;
+	size_t full_length = IntAlign(length + 4);
 
-	if (sock->receiveMessageLength)
-		memcpy(sock->receiveMessage, &sock->receiveMessage[length], sock->receiveMessageLength);
+#ifdef PARANOID
+	if (full_length > (size_t)sock->receiveMessageLength)
+		Sys_Error("alignment long message");
+#endif
 
-	if (sock->driverdata && ret == 1)
-		((qsocket_t *) sock->driverdata)->canSend = true;
+	sock->receiveMessageLength -= full_length;
+	memcpy(sock->receiveMessage, &sock->receiveMessage[full_length], sock->receiveMessageLength);
 
-	return ret;
+	qsocket_t *other_side = (qsocket_t *)sock->driverdata;
+	if (other_side && type == 1)
+		other_side->canSend = true;
+
+	return type;
 }
 
 int Loop_SendMessage(qsocket_t *sock, sizebuf_t *data)
 {
-	byte *buffer;
-	int *bufferLength;
-
-	if (!sock->driverdata)
+	qsocket_t *other_side = (qsocket_t *)sock->driverdata;
+	if (!other_side)
 		return -1;
 
-	bufferLength = &((qsocket_t *) sock->driverdata)->receiveMessageLength;
-
-	if ((*bufferLength + data->cursize + 4) > NET_MAXMESSAGE)
+	int current_size = other_side->receiveMessageLength;
+	if ((current_size + 4 + data->cursize + 4) > NET_MAXMESSAGE)
 		Sys_Error("overflow\n");
 
-	buffer = ((qsocket_t *) sock->driverdata)->receiveMessage + *bufferLength;
+	// directly write into other side message buffer
+	byte *buffer = other_side->receiveMessage + current_size;
 
 	// message type
 	*buffer++ = 1;
 
 	// length
-	*buffer++ = data->cursize & 0xff;
-	*buffer++ = data->cursize >> 8;
+	*buffer++ = (byte)((data->cursize >> 0) & 0xff);
+	*buffer++ = (byte)((data->cursize >> 8) & 0xff);
 
 	// align
 	buffer++;
 
 	// message
 	memcpy(buffer, data->data, data->cursize);
-	*bufferLength = IntAlign(*bufferLength + data->cursize + 4);
+
+	other_side->receiveMessageLength += IntAlign(data->cursize + 4);
 
 	sock->canSend = false;
+
 	return 1;
 }
 
 int Loop_SendUnreliableMessage(qsocket_t *sock, sizebuf_t *data)
 {
-	byte *buffer;
-	int *bufferLength;
-
-	if (!sock->driverdata)
+	qsocket_t *other_side = (qsocket_t *)sock->driverdata;
+	if (!other_side)
 		return -1;
 
-	bufferLength = &((qsocket_t *) sock->driverdata)->receiveMessageLength;
-
-	if ((*bufferLength + data->cursize + sizeof(byte) + sizeof(short)) > NET_MAXMESSAGE)
+	int current_size = other_side->receiveMessageLength;
+	if ((current_size + 4 + data->cursize + 4) > NET_MAXMESSAGE)
 		return 0;
 
-	buffer = ((qsocket_t *) sock->driverdata)->receiveMessage + *bufferLength;
+	// directly write into other side message buffer
+	byte *buffer = other_side->receiveMessage + current_size;
 
 	// message type
-	*buffer++ = 2;
+	*buffer++ = 1;
 
 	// length
-	*buffer++ = data->cursize & 0xff;
-	*buffer++ = data->cursize >> 8;
+	*buffer++ = (byte)((data->cursize >> 0) & 0xff);
+	*buffer++ = (byte)((data->cursize >> 8) & 0xff);
 
 	// align
 	buffer++;
 
 	// message
 	memcpy(buffer, data->data, data->cursize);
-	*bufferLength = IntAlign(*bufferLength + data->cursize + 4);
+
+	other_side->receiveMessageLength += IntAlign(data->cursize + 4);
+
 	return 1;
 }
 
@@ -214,8 +232,10 @@ bool Loop_CanSendUnreliableMessage(qsocket_t *sock)
 
 void Loop_Close(qsocket_t *sock)
 {
-	if (sock->driverdata)
-		((qsocket_t *) sock->driverdata)->driverdata = NULL;
+	qsocket_t *other_side = (qsocket_t *)sock->driverdata;
+	if (other_side)
+		other_side->driverdata = NULL;
+
 	sock->receiveMessageLength = 0;
 	sock->sendMessageLength = 0;
 	sock->canSend = true;

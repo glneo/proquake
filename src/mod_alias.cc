@@ -310,9 +310,10 @@ void Mod_LoadAliasModel(model_t *mod, void *buffer)
 		aliasmodel->texverts[i + aliasmodel->numverts].s = (s + 0.5f) / aliasmodel->skinwidth;
 		aliasmodel->texverts[i + aliasmodel->numverts].t = (t + 0.5f) / aliasmodel->skinheight;
 	}
+	pinstverts = &pinstverts[aliasmodel->numverts];
 
 	// load triangle lists
-	dtriangle_t *pintriangles = (dtriangle_t *)&pinstverts[aliasmodel->numverts];
+	dtriangle_t *pintriangles = (dtriangle_t *)pinstverts;
 	aliasmodel->triangles = (mtriangle_t *)Q_malloc(sizeof(*aliasmodel->triangles) * aliasmodel->numtris);
 	for (size_t i = 0; i < aliasmodel->numtris; i++)
 	{

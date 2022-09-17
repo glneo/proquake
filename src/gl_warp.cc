@@ -20,21 +20,7 @@
 #include "quakedef.h"
 #include "glquake.h"
 
-typedef struct vertex_s {
-	vec3_t vert;
-	vertex_s(vec3_t in_vert)
-	{
-		vert[0] = in_vert[0];
-		vert[1] = in_vert[1];
-		vert[2] = in_vert[2];
-	}
-	float& operator[](int index)
-	{
-	    return vert[index];
-	}
-} vertex_t;
-
-static bool FindSubdevidePlane(std::vector<vertex_t> verts, size_t *axis, float *location)
+static bool FindSubdevidePlane(std::vector<pos_cord> verts, size_t *axis, float *location)
 {
 	constexpr float subdivide = 64;
 
@@ -43,12 +29,19 @@ static bool FindSubdevidePlane(std::vector<vertex_t> verts, size_t *axis, float 
 		// Find bounds for this plane
 		float min = FLT_MAX;
 		float max = -FLT_MAX;
-		for (vertex_t &vert : verts)
+		for (pos_cord &vert : verts)
 		{
-			if (vert[j] < min)
-				min = vert[j];
-			if (vert[j] > max)
-				max = vert[j];
+			float value;
+			if (j == 0)
+				value = vert.x;
+			if (j == 1)
+				value = vert.y;
+			if (j == 2)
+				value = vert.z;
+			if (value < min)
+				min = value;
+			if (value > max)
+				max = value;
 		}
 
 		// Find middle plane
@@ -78,17 +71,17 @@ static bool FindSubdevidePlane(std::vector<vertex_t> verts, size_t *axis, float 
 void GL_SubdivideSurface(brush_model_t *brushmodel, msurface_t *fa)
 {
 	// convert verts to vector
-	std::vector<vertex_t> vertsx;
-	for (size_t i = 0; i < fa->numedges; i++)
+	std::vector<pos_cord> vertsx;
+	for (size_t i = 0; i < fa->numverts; i++)
 		vertsx.push_back(fa->verts[i]);
 
-	std::stack<std::vector<vertex_t>> poly_stack;
+	std::stack<std::vector<pos_cord>> poly_stack;
 	// Start stack with top level polygon
 	poly_stack.push(vertsx);
 
 	while (!poly_stack.empty())
 	{
-		std::vector<vertex_t> verts = poly_stack.top();
+		std::vector<pos_cord> verts = poly_stack.top();
 		poly_stack.pop();
 
 		size_t numverts = verts.size();
@@ -104,21 +97,22 @@ void GL_SubdivideSurface(brush_model_t *brushmodel, msurface_t *fa)
 		{
 			// Add our new verts
 			size_t new_total = fa->numverts + numverts;
-			fa->verts = (vec3_t   *)Q_realloc(fa->verts, sizeof(*fa->verts) * new_total);
-			fa->tex   = (tex_cord *)Q_realloc(fa->tex,   sizeof(*fa->tex)   * new_total);
+			fa->verts.resize(new_total);
+			fa->tex.resize(new_total);
 			for (size_t i = 0; i < numverts; i++)
 			{
 				size_t warpindex = fa->numverts + i;
-				VectorCopy(verts[i], fa->verts[warpindex]);
-				fa->tex[warpindex].s = DotProduct(verts[i], fa->texinfo->vecs[0]);
-				fa->tex[warpindex].t = DotProduct(verts[i], fa->texinfo->vecs[1]);
+				fa->verts[warpindex] = verts[i];
+				vec3_t temp = {verts[i].x, verts[i].y, verts[i].z};
+				fa->tex[warpindex].s = DotProduct(temp, fa->texinfo->vecs[0].vecs);
+				fa->tex[warpindex].t = DotProduct(temp, fa->texinfo->vecs[1].vecs);
 			}
 
 			for (size_t i = 2; i < numverts; i++)
 			{
-				fa->indices.push_back(fa->numverts);
-				fa->indices.push_back(fa->numverts + i - 1);
-				fa->indices.push_back(fa->numverts + i);
+				fa->indices->push_back(fa->numverts);
+				fa->indices->push_back(fa->numverts + i - 1);
+				fa->indices->push_back(fa->numverts + i);
 			}
 
 			fa->numverts = new_total;
@@ -129,14 +123,23 @@ void GL_SubdivideSurface(brush_model_t *brushmodel, msurface_t *fa)
 		// cut it
 		std::vector<float> dist(numverts + 1);
 		for (size_t j = 0; j < numverts; j++)
-			dist[j] = verts[j][plane] - location;
+		{
+			float vert;
+			if (plane == 0)
+				vert = verts[j].x;
+			if (plane == 1)
+				vert = verts[j].y;
+			if (plane == 2)
+				vert = verts[j].z;
+			dist[j] = vert - location;
+		}
 
 		// wrap cases
 		dist[numverts] = dist[0];
 		verts.push_back(verts[0]);
 
-		std::vector<vertex_t> front;
-		std::vector<vertex_t> back;
+		std::vector<pos_cord> front;
+		std::vector<pos_cord> back;
 		for (size_t j = 0; j < numverts; j++)
 		{
 			if (dist[j] >= 0)
@@ -148,16 +151,9 @@ void GL_SubdivideSurface(brush_model_t *brushmodel, msurface_t *fa)
 			if ((dist[j] > 0) != (dist[j + 1] > 0))
 			{
 				// clip point
-				vec3_t temp_front;
-				vec3_t temp_back;
 				float frac = dist[j] / (dist[j] - dist[j + 1]);
-				for (size_t k = 0; k < 3; k++)
-				{
-					temp_front[k] = verts[j][k] + frac * (verts[j + 1][k] - verts[j][k]);
-					temp_back[k]  = verts[j][k] + frac * (verts[j + 1][k] - verts[j][k]);
-				}
-				front.push_back(temp_front);
-				back.push_back(temp_back);
+				front.push_back(verts[j] + frac * (verts[j + 1] - verts[j]));
+				front.push_back(verts[j] + frac * (verts[j + 1] - verts[j]));
 			}
 		}
 

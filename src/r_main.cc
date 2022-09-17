@@ -52,6 +52,8 @@ static int r_visframecount; // bumped when going to a new PVS
 
 int r_framecount;
 
+mtexture_t *r_notexture_mip;
+
 /*
 ================
 R_ClearTextureChains -- ericw
@@ -74,8 +76,12 @@ void R_ClearTextureChains (brush_model_t *mod, texchain_t chain)
 }
 
 /* Returns the proper texture for a given time and base texture */
-static texture_t *R_TextureAnimation(int frame, texture_t *base)
+static mtexture_t *R_TextureAnimation(int frame, mtexture_t *base)
 {
+	// For no texture use the missing texture chain
+	if (!base)
+		return r_notexture_mip;
+
 	if (frame)
 		if (base->alternate_anims)
 			base = base->alternate_anims;
@@ -101,7 +107,7 @@ static texture_t *R_TextureAnimation(int frame, texture_t *base)
 /* adds the given surface to its texture chain */
 void R_ChainSurface(msurface_t *surf, texchain_t chain)
 {
-	texture_t *texture = R_TextureAnimation(0, surf->texinfo->texture);
+	mtexture_t *texture = R_TextureAnimation(0, surf->texinfo->texture);
 
 	surf->texturechain = texture->texturechains[chain];
 	texture->texturechains[chain] = surf;
@@ -158,6 +164,7 @@ void R_MarkSurfaces(void)
 
 	// set all chains to null
 	R_ClearTextureChains(worldmodel, chain_world);
+	R_ClearLightmapPolys(worldmodel);
 
 	// iterate through leaves, marking surfaces
 	for (size_t i = 0; i < worldmodel->numleafs; i++)
@@ -193,11 +200,11 @@ void R_MarkSurfaces(void)
 				continue;
 
 			R_ChainSurface(surf, chain_world);
-			R_RenderDynamicLightmaps(surf);
+			R_RenderLightmaps(surf);
 		}
 	}
 
-	R_UploadLightmaps();
+	R_UploadLightmaps(worldmodel);
 }
 
 /* Returns true if the box is completely outside the frustum */
@@ -360,15 +367,10 @@ static void R_SetupFrame(void)
 			r_refdef.fov_y = atan(tan(DEG2RAD(r_refdef.fov_y) / 2) * (1.03 - sin(cl.time * 1.5) * 0.03)) * 2 / M_PI_DIV_180;
 		}
 	}
-
-	c_brush_polys = 0;
-	c_alias_polys = 0;
 }
 
 void R_NewMap(void)
 {
-	R_ClearLightStyle();
-
 	// clear out efrags in case the level hasn't been reloaded
 	// FIXME: is this one short?
 	for (size_t i = 0; i < cl.worldmodel->brushmodel->numleafs; i++)
@@ -376,13 +378,14 @@ void R_NewMap(void)
 
 	GL_BuildLightmaps();
 
-	R_ClearTextureChains(cl.worldmodel->brushmodel, chain_world);
+//	R_ClearTextureChains(cl.worldmodel->brushmodel, chain_world);
 }
 
 /* r_refdef must be set before the first call */
 void R_RenderView(void)
 {
-	double time1, time2;
+	double time1 = 0.0;
+	double time2 = 0.0;
 
 	if (r_norefresh.value)
 		return;
@@ -398,16 +401,13 @@ void R_RenderView(void)
 		c_alias_polys = 0;
 	}
 
-	R_Clear();
-
 	// render normal view
 	R_PushDlights(cl.worldmodel->brushmodel->nodes, cl.worldmodel->brushmodel->surfaces);
 	R_AnimateLight();
 	R_SetupFrame();
 	R_SetFrustum();
-	R_ClearLightmapPolys();
-	R_MarkSurfaces();
 	GL_Setup();
+	R_MarkSurfaces();
 	GL_DrawSurfaces(cl.worldmodel->brushmodel, chain_world);
 	R_DrawEntitiesOnList();
 	GL_DrawParticles();
@@ -443,4 +443,10 @@ void R_Init(void)
 	Cvar_RegisterVariable(&r_interpolate_animation);
 	Cvar_RegisterVariable(&r_interpolate_transform);
 	Cvar_RegisterVariable(&r_interpolate_weapon);
+
+	r_notexture_mip = (mtexture_t *)Q_calloc(1, sizeof(mtexture_t));
+	strcpy (r_notexture_mip->name, "notexture");
+	r_notexture_mip->width = 32;
+	r_notexture_mip->height = 32;
+	r_notexture_mip->gltexture = notexture;
 }

@@ -28,13 +28,7 @@
 
 #include "gl_texmgr.h"
 
-#define BACKFACE_EPSILON 0.01
-
 #define BUFFER_OFFSET(i) ((void*)(i))
-
-extern int d_lightstylevalue[256]; // 8.8 fraction of base light value
-
-extern int skytexturenum; // index in cl.loadmodel, not gl texture object
 
 extern float gl_max_anisotropy;
 extern bool gl_texture_NPOT;
@@ -44,13 +38,6 @@ extern int c_brush_polys, c_alias_polys;
 
 extern Q_Matrix modelViewMatrix;
 extern Q_Matrix projectionMatrix;
-
-// view origin
-extern vec3_t vup;
-extern vec3_t vpn;
-extern vec3_t vright;
-
-extern mleaf_t *r_viewleaf, *r_oldviewleaf;
 
 // rendering cvar stuffs
 extern cvar_t r_drawviewmodel;
@@ -85,8 +72,6 @@ extern cvar_t r_ringalpha;
 extern cvar_t vid_vsync;
 extern cvar_t vid_gamma;
 extern cvar_t vid_contrast;
-
-extern qpic_t *draw_disc;
 
 typedef enum {
 	CANVAS_NONE,
@@ -125,15 +110,16 @@ qpic_t *Draw_MakePic(const char *name, int width, int height, byte *data);
 void Draw_Init(void);
 
 // gl_light.c
-void R_ClearLightmapPolys(void);
-void R_UploadLightmaps(void);
+void R_ClearLightmapPolys(brush_model_t *brushmodel);
+void R_UploadLightmaps(brush_model_t *brushmodel);
 void R_ClearLightStyle(void);
-void R_RenderDynamicLightmaps(msurface_t *fa);
+void R_RenderLightmaps(msurface_t *fa);
 void R_AnimateLight(void);
 void R_RenderDlights(void);
 void R_MarkLights(dlight_t *light, int bit, mnode_t *node);
 void R_PushDlights(mnode_t *nodes, msurface_t *surfaces);
 int R_LightPoint (vec3_t p);
+void GL_CreateSurfaceLists(brush_model_t *brushmodel);
 void GL_BuildLightmaps(void);
 
 // gl_main.c
@@ -160,7 +146,7 @@ GLuint LoadShader(const char *vertex_shader, int vertex_shader_len,
 // gl_sprite.c
 void GL_DrawSpriteModel(entity_t *ent);
 
-// gl_surface.c
+// gl_brush.c
 void GL_DrawSurfaces(brush_model_t *brushmodel, texchain_t chain);
 void GL_DrawBrushModel(entity_t *ent);
 void GL_CreateBrushShaders(void);

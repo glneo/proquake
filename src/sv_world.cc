@@ -281,10 +281,10 @@ static void SV_FindTouchedLeafs(edict_t *ent, mnode_t *node)
 
 	// recurse down the contacted sides
 	if (sides & 1)
-		SV_FindTouchedLeafs(ent, node->children[0]);
+		SV_FindTouchedLeafs(ent, node->left_node);
 
 	if (sides & 2)
-		SV_FindTouchedLeafs(ent, node->children[1]);
+		SV_FindTouchedLeafs(ent, node->right_node);
 }
 
 /*

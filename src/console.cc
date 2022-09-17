@@ -44,7 +44,7 @@ char *con_text = NULL;
 cvar_t con_notifytime = { "con_notifytime", "3", CVAR_NONE }; //seconds
 cvar_t con_logcenterprint = { "con_logcenterprint", "1", CVAR_NONE };
 cvar_t _con_notifylines = { "con_notifylines", "4" };
-int con_notifylines;		// scan lines to clear for
+int con_notifylines;		// scan lines to clear for notify lines
 
 #define	CON_LASTCENTERSTRING_SIZE 1024
 char con_lastcenterstring[CON_LASTCENTERSTRING_SIZE];
@@ -949,7 +949,7 @@ void AddToTabList(const char *name, const char *type)
 		*i_bash = 0;
 	}
 
-	t = (tab_t *) Hunk_Alloc(sizeof(tab_t));
+	t = (tab_t *) Hunk_AllocName(sizeof(tab_t), "tablist");
 	t->name = name;
 	t->type = type;
 

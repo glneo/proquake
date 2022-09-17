@@ -39,5 +39,3 @@ void Draw_Init(void) { return; }
 void R_DrawAliasModel(entity_t *ent) { return; }
 void R_DrawBrushModel(entity_t *ent) { return; }
 void R_DrawSpriteModel(entity_t *ent) { return; }
-
-gltexture_t *TexMgr_LoadImage(const char *name, int width, int height, enum srcformat format, byte *data, unsigned flags) { return NULL; }

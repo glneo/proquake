@@ -63,9 +63,33 @@ typedef unsigned int GLuint;
  ==============================================================================
  */
 
+#define LMBLOCK_WIDTH	256 // FIXME: make dynamic
+#define LMBLOCK_HEIGHT	256
+
+typedef struct glRect_s
+{
+	size_t x, y, w, h;
+} glRect_t;
+
+typedef struct lightmap_s
+{
+	gltexture_t *texture;
+	std::vector<unsigned short> *indices;
+
+	bool modified;
+	glRect_t rectchange;
+
+	// Height of current allocations at each width point
+	size_t allocated[LMBLOCK_WIDTH];
+
+	// the lightmap texture data needs to be kept in
+	// main memory so texsubimage can update properly
+	byte data[LMBLOCK_HEIGHT][LMBLOCK_WIDTH];
+} lightmap_t;
+
 typedef struct {
-	int32_t fileofs;
-	int32_t filelen;
+	uint32_t fileofs;
+	uint32_t filelen;
 } mlump_t;
 
 typedef struct {
@@ -74,7 +98,7 @@ typedef struct {
 	int32_t headnode[MAX_MAP_HULLS];
 	int32_t visleafs; // not including the solid leaf 0
 	int32_t firstface, numfaces;
-} mmodel_t;
+} msubmodel_t;
 
 typedef struct {
 	vec3_t position;
@@ -99,11 +123,13 @@ typedef enum {
 } texchain_t;
 
 typedef struct gltexture_s gltexture_t;
-typedef struct texture_s
+typedef struct mtexture_s
 {
 	char name[16];
-	bool isskytexture;
 	unsigned width, height;
+
+	bool isskytexture;
+
 	gltexture_t *gltexture;
 	struct msurface_s *texturechains[2];    // for gl_texsort drawing
 
@@ -112,10 +138,10 @@ typedef struct texture_s
 
 	int anim_total;                         // total tenths in sequence ( 0 = no)
 	int anim_min, anim_max;                 // time for this frame min <=time< max
-	struct texture_s *anim_next;            // in the animation sequence
-	struct texture_s *alternate_anims;      // bmodels in frame 1 use these
-	unsigned offsets[MIPLEVELS];            // four mip maps stored
-} texture_t;
+	struct mtexture_s *anim_next;            // in the animation sequence
+	struct mtexture_s *alternate_anims;      // bmodels in frame 1 use these
+//	unsigned offsets[MIPLEVELS];            // four mip maps stored
+} mtexture_t;
 
 #define	SURF_PLANEBACK          BIT(2)
 #define	SURF_DRAWSKY            BIT(3)
@@ -127,14 +153,55 @@ typedef struct texture_s
 
 typedef struct {
 	unsigned short v[2];
-	unsigned int cachededgeoffset;
 } medge_t;
 
 typedef struct {
-	float vecs[2][4];
-	texture_t *texture;
+	vec3_t vecs;
+	float offset;
+} mtexvec_t;
+
+typedef struct {
+	mtexvec_t vecs[2]; // [s/t]
+	mtexture_t *texture;
 	int flags;
 } mtexinfo_t;
+
+typedef struct pos_cord_s {
+	float x, y, z;
+	pos_cord_s operator+(const pos_cord_s& rhs)
+	{
+		pos_cord_s temp;
+		temp.x = x + rhs.x;
+		temp.y = y + rhs.y;
+		temp.z = z + rhs.z;
+		return temp;
+	}
+	pos_cord_s operator-(const pos_cord_s& rhs)
+	{
+		pos_cord_s temp;
+		temp.x = x - rhs.x;
+		temp.y = y - rhs.y;
+		temp.z = z - rhs.z;
+		return temp;
+	}
+	pos_cord_s operator*(const float& rhs)
+	{
+		pos_cord_s temp;
+		temp.x = x * rhs;
+		temp.y = y * rhs;
+		temp.z = z * rhs;
+		return temp;
+	}
+} pos_cord;
+
+inline pos_cord_s operator*(float k, const pos_cord_s& rhs)
+{
+	pos_cord_s temp;
+	temp.x = rhs.x * k;
+	temp.y = rhs.y * k;
+	temp.z = rhs.z * k;
+	return temp;
+}
 
 typedef struct {
 	float s, t;
@@ -155,14 +222,14 @@ typedef struct msurface_s {
 	float mins[3];
 	float maxs[3];
 
-	int light_s, light_t; // gl lightmap coordinates
+	size_t light_s, light_t; // gl lightmap coordinates
 
 	size_t numverts;
-	vec3_t *verts;
-	tex_cord *tex;
+	std::vector<pos_cord> verts;
+	std::vector<tex_cord> tex;
 	tex_cord *light_tex;
 
-	std::vector<unsigned short> indices;
+	std::vector<unsigned short> *indices;
 	GLuint indicesVBO;
 
 	struct msurface_s *texturechain;
@@ -171,16 +238,12 @@ typedef struct msurface_s {
 	mtexinfo_t *texinfo;
 
 	// lighting info
-	int dlightframe;
 	uint32_t dlightbits;
-
-	int lightmapnum;
+	lightmap_t *lightmap;
 	byte styles[MAXLIGHTMAPS];
 	int cached_light[MAXLIGHTMAPS]; // values currently used in lightmap
 	bool cached_dlight; // true if dynamic light in cache
 	byte *samples; // [numstyles*surfsize]
-
-	int draw_this_frame;
 } msurface_t;
 
 typedef struct mnode_s {
@@ -188,14 +251,13 @@ typedef struct mnode_s {
 	int contents; // 0, to differentiate from leafs
 	int visframe; // node needs to be traversed if current
 
-	float mins[3];
-	float maxs[3]; // for bounding box culling
-
-	struct mnode_s *parent;
+	vec3_t bboxmin; // for bounding box culling
+	vec3_t bboxmax;
 
 	// node specific
 	mplane_t *plane;
-	struct mnode_s *children[2];
+	struct mnode_s *left_node;
+	struct mnode_s *right_node;
 
 	unsigned int firstsurface;
 	unsigned int numsurfaces;
@@ -209,14 +271,13 @@ typedef struct mleaf_s {
 	vec3_t bboxmin; // for bounding box culling
 	vec3_t bboxmax;
 
-	struct mnode_s *parent;
-
 	// leaf specific
 	byte *compressed_vis;
 	efrag_t *efrags;
 
-	msurface_t **firstmarksurface;
 	size_t nummarksurfaces;
+	msurface_t **firstmarksurface;
+
 	int key; // BSP sequence number for leaf's contents
 	byte ambient_sound_level[NUM_AMBIENTS];
 } mleaf_t;
@@ -238,56 +299,58 @@ typedef struct {
 
 typedef struct
 {
-	int bspversion;
-	bool isworldmodel;
-
 	char *entities;
 
-	int numplanes;
+	size_t numplanes;
 	mplane_t *planes;
 
 	size_t numtextures;
-	texture_t **textures;
+	mtexture_t **textures;
 
-	int numvertexes;
+	size_t numvertexes;
 	mvertex_t *vertexes;
 
+	size_t numvisdata;
 	byte *visdata;
 
-	int numnodes;
-	mnode_t *nodes;
-
-	int numtexinfo;
+	size_t numtexinfo;
 	mtexinfo_t *texinfo;
 
-	int numsurfaces;
+	byte *lightdata;
+
+	size_t numsurfedges;
+	int *surfedges;
+
+	size_t numedges;
+	medge_t *edges;
+
+	size_t numsurfaces;
 	msurface_t *surfaces;
+
+	size_t nummarksurfaces;
+	msurface_t **marksurfaces;
+
+	size_t numleafs; // number of visible leafs, not counting 0
+	mleaf_t *leafs;
+
+	size_t numnodes;
+	mnode_t *nodes;
+
+	size_t numclipnodes;
+	mclipnode_t *clipnodes;
+
+	size_t numsubmodels;
+	msubmodel_t *submodels;
+
+	hull_t hulls[MAX_MAP_HULLS];
 
 	GLuint vertsVBO;
 	GLuint texVBO;
 	GLuint light_texVBO;
 
-	byte *lightdata;
-
-	int numclipnodes;
-	mclipnode_t *clipnodes;
-
-	size_t numleafs; // number of visible leafs, not counting 0
-	mleaf_t *leafs;
-
-	int nummarksurfaces;
-	msurface_t **marksurfaces;
-
-	int numedges;
-	medge_t *edges;
-
-	int numsurfedges;
-	int *surfedges;
-
-	int numsubmodels;
-	mmodel_t *submodels;
-
-	hull_t hulls[MAX_MAP_HULLS];
+	size_t lightmap_count;
+	lightmap_t (*lightmaps)[10];
+	size_t last_lightmap_allocated;
 
 	int firstmodelsurface;
 	int nummodelsurfaces;
@@ -453,7 +516,7 @@ typedef struct model_s
 	int numframes;
 	synctype_t synctype;
 
-	int flags;
+	uint32_t flags;
 
 	// volume occupied by the model graphics
 	vec3_t mins, maxs;

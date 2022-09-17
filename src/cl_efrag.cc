@@ -115,10 +115,10 @@ static void R_SplitEntityOnNode(mnode_t *node)
 
 	// recurse down the contacted sides
 	if (sides & 1)
-		R_SplitEntityOnNode(node->children[0]);
+		R_SplitEntityOnNode(node->left_node);
 
 	if (sides & 2)
-		R_SplitEntityOnNode(node->children[1]);
+		R_SplitEntityOnNode(node->right_node);
 }
 
 void R_AddEfrags(entity_t *ent)
