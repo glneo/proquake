@@ -805,17 +805,34 @@ static void TexMgr_LoadLightmap(gltexture_t *glt, const byte *data, unsigned int
 {
 	// upload it
 	GL_Bind(glt);
+
 #ifdef OPENGLES
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, glt->width, glt->height, 0, GL_LUMINANCE, GL_UNSIGNED_BYTE, data);
+	GLenum format = GL_LUMINANCE;
 #else
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, width, height, 0, GL_RED, GL_UNSIGNED_BYTE, data);
+	GLenum format = GL_RED;
 #endif
+
+	glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
 
 	glt->width = width;
 	glt->height = height;
 
 	// set filter modes
 	TexMgr_SetFilterModes(glt);
+}
+
+void TexMgr_UpdateLightmap(gltexture_t *glt, unsigned int x, unsigned int y, unsigned int width, unsigned int height, const byte *data)
+{
+	// upload it
+	GL_Bind(glt);
+
+#ifdef OPENGLES
+	GLenum format = GL_LUMINANCE;
+#else
+	GLenum format = GL_RED;
+#endif
+
+	glTexSubImage2D(GL_TEXTURE_2D, 0, x, y, width, height, format, GL_UNSIGNED_BYTE, data);
 }
 
 /* handles 8bit source data, then passes it to LoadImage32 */

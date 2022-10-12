@@ -64,6 +64,7 @@ void TexMgr_Init(void);
 
 // IMAGE LOADING
 gltexture_t *TexMgr_LoadImage(const char *name, int width, int height, enum srcformat format, const byte *data, unsigned flags);
+void TexMgr_UpdateLightmap(gltexture_t *glt, unsigned int x, unsigned int y, unsigned int width, unsigned int height, const byte *data);
 void TexMgr_ReloadImage(gltexture_t *glt, int shirt, int pants);
 void TexMgr_ReloadImages(void);
 

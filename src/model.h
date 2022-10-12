@@ -194,15 +194,6 @@ typedef struct pos_cord_s {
 	}
 } pos_cord;
 
-inline pos_cord_s operator*(float k, const pos_cord_s& rhs)
-{
-	pos_cord_s temp;
-	temp.x = rhs.x * k;
-	temp.y = rhs.y * k;
-	temp.z = rhs.z * k;
-	return temp;
-}
-
 typedef struct {
 	float s, t;
 } tex_cord;

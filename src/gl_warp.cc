@@ -152,8 +152,8 @@ void GL_SubdivideSurface(brush_model_t *brushmodel, msurface_t *fa)
 			{
 				// clip point
 				float frac = dist[j] / (dist[j] - dist[j + 1]);
-				front.push_back(verts[j] + frac * (verts[j + 1] - verts[j]));
-				front.push_back(verts[j] + frac * (verts[j + 1] - verts[j]));
+				front.push_back(verts[j] + ((verts[j + 1] - verts[j]) * frac));
+				back.push_back(verts[j] + ((verts[j + 1] - verts[j]) * frac));
 			}
 		}
 

@@ -47,33 +47,25 @@ void R_UploadLightmaps(brush_model_t *brushmodel)
 		glRect_t *theRect = &lightmap->rectchange;
 		byte *data = (byte *)lightmap->data;
 
-#ifdef OPENGLES
-		GLenum format = GL_LUMINANCE;
-#else
-		GLenum format = GL_RED;
-#endif
-
 		// Not previously uploaded
+		static char name[16];
+		snprintf(name, 16, "lightmap%03zu", i);
+
 		if (!lightmap->texture)
 		{
-			static char name[16];
-			snprintf(name, 16, "lightmap%03zu", i);
 			lightmap->texture = TexMgr_LoadImage(name, LMBLOCK_WIDTH, LMBLOCK_HEIGHT,
 			                                     SRC_LIGHTMAP, data, TEX_LINEAR | TEX_NOPICMIP);
 		}
 		else
 		{
-			static char name[16];
-			snprintf(name, 16, "lightmap%03zu", i);
-			lightmap->texture = TexMgr_LoadImage(name, LMBLOCK_WIDTH, LMBLOCK_HEIGHT,
-						             SRC_LIGHTMAP, data, TEX_OVERWRITE | TEX_LINEAR | TEX_NOPICMIP);
-
-//			GL_BindToUnit(GL_TEXTURE0, lightmap->texture);
-//			glTexSubImage2D(GL_TEXTURE_2D, 0,
-//					theRect->x             , theRect->y             ,
-//					theRect->w - theRect->x, theRect->h - theRect->y,
-//					format, GL_UNSIGNED_BYTE,
-//					data);
+			TexMgr_UpdateLightmap(lightmap->texture,
+					      0            , 0             ,
+					      LMBLOCK_WIDTH, LMBLOCK_HEIGHT,
+					      data);
+//			TexMgr_UpdateLightmap(lightmap->texture,
+//			                      theRect->x             , theRect->y             ,
+//					      theRect->w - theRect->x, theRect->h - theRect->y,
+//					      data);
 		}
 
 		theRect->x = LMBLOCK_WIDTH;
