@@ -22,11 +22,7 @@
 #include <sys/param.h>
 #include <sys/ioctl.h>
 #include <errno.h>
-
-extern "C" {
-extern int gethostname (char *, int);
-extern int close (int);
-}
+#include <unistd.h>
 
 extern cvar_t hostname;
 

@@ -23,6 +23,7 @@
 #include <cmath>
 #include <cstdio>
 #include <cstdint>
+#include <cstddef>
 #include <vector>
 
 #define BIT(x) (1 << (x))
