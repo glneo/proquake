@@ -12,14 +12,17 @@
  * General Public License for more details.
  */
 
+#include <sstream>
+#include <string>
+#include <unordered_set>
+
 #include "quakedef.h"
 #include "glquake.h"
 
-static const char *gl_vendor;
-static const char *gl_renderer;
-static const char *gl_version;
-static const char *gl_extensions;
-static char *gl_extensions_nice;
+static std::string gl_vendor;
+static std::string gl_renderer;
+static std::string gl_version;
+static std::unordered_set<std::string> gl_extensions;
 
 bool gl_swap_control = false;
 bool gl_anisotropy_able = false;
@@ -97,73 +100,40 @@ void R_TranslatePlayerSkin(int playernum)
 {
 }
 
-// TODO: Use list
-static char *GL_MakeNiceExtensionsList(const char *in)
+static void GL_GetInfo(void)
 {
-	char *copy, *token, *out;
-	int i, count;
+	gl_vendor = reinterpret_cast<const char*>(glGetString(GL_VENDOR));
+	gl_renderer = reinterpret_cast<const char*>(glGetString(GL_RENDERER));
+	gl_version = reinterpret_cast<const char*>(glGetString(GL_VERSION));
 
-	if (!in)
-		return (char *)Q_strdup("(none)");
+#ifdef OPENGLES
+	std::stringstream ss(reinterpret_cast<const char*>(glGetString(GL_EXTENSIONS)));
+	std::string gl_extension;
 
-	//each space will be replaced by 4 chars, so count the spaces before we malloc
-	for (i = 0, count = 1; i < (int) strlen(in); i++)
-	{
-		if (in[i] == ' ')
-			count++;
-	}
-
-	out = (char *)Q_malloc(strlen(in) + count * 3 + 1); //usually about 1-2k
-	out[0] = 0;
-
-	copy = (char *)Q_strdup(in);
-	for (token = strtok(copy, " "); token; token = strtok(NULL, " "))
-	{
-		strcat(out, "\n   ");
-		strcat(out, token);
-	}
-
-	free(copy);
-	return out;
+	while (std::getline(ss, gl_extension, ' '))
+		gl_extensions.insert(gl_extension);
+#else
+	GLint n;
+	glGetIntegerv(GL_NUM_EXTENSIONS, &n);
+	for (GLint i = 0; i < n; i++)
+		gl_extensions.insert(reinterpret_cast<const char*>(glGetStringi(GL_EXTENSIONS, i)));
+#endif
 }
 
 static void GL_Info_f(void)
 {
-	Con_SafePrintf("GL_VENDOR: %s\n", gl_vendor);
-	Con_SafePrintf("GL_RENDERER: %s\n", gl_renderer);
-	Con_SafePrintf("GL_VERSION: %s\n", gl_version);
-	Con_Printf("GL_EXTENSIONS: %s\n", gl_extensions_nice);
-}
-
-static bool GL_ParseExtensionList(const char *list, const char *name)
-{
-	const char *start;
-	const char *where, *terminator;
-
-	if (!list || !name || !*name)
-		return false;
-	if (strchr(name, ' ') != NULL)
-		return false;	// extension names must not have spaces
-
-	start = list;
-	while (1)
-	{
-		where = strstr(start, name);
-		if (!where)
-			break;
-		terminator = where + strlen(name);
-		if (where == start || where[-1] == ' ')
-			if (*terminator == ' ' || *terminator == '\0')
-				return true;
-		start = terminator;
-	}
-	return false;
+	Con_SafePrintf("GL_VENDOR: %s\n", gl_vendor.c_str());
+	Con_SafePrintf("GL_RENDERER: %s\n", gl_renderer.c_str());
+	Con_SafePrintf("GL_VERSION: %s\n", gl_version.c_str());
+	Con_SafePrintf("GL_EXTENSIONS:%s\n", gl_extensions.empty() ? " (none)" : "");
+	for (auto gl_extension : gl_extensions)
+		Con_SafePrintf("    %s\n", gl_extension.c_str());
 }
 
 static void GL_CheckExtensions(void)
 {
 	// anisotropic filtering
-	if (!GL_ParseExtensionList(gl_extensions, "GL_EXT_texture_filter_anisotropic"))
+	if (!gl_extensions.count("GL_EXT_texture_filter_anisotropic"))
 	{
 		gl_max_anisotropy = 1;
 		Con_Warning("texture_filter_anisotropic not supported\n");
@@ -207,13 +177,14 @@ static void GL_CheckExtensions(void)
 	if (COM_CheckParm("-notexturenpot"))
 	{
 		Con_Warning("texture_non_power_of_two disabled at command line\n");
+		gl_texture_NPOT = false;
 	}
-	else if (GL_ParseExtensionList(gl_extensions, "GL_ARB_texture_non_power_of_two"))
+	else if (gl_extensions.count("GL_ARB_texture_non_power_of_two"))
 	{
 		Con_Printf("FOUND: ARB_texture_non_power_of_two\n");
 		gl_texture_NPOT = true;
 	}
-	else if (GL_ParseExtensionList(gl_extensions, "GL_OES_texture_npot"))
+	else if (gl_extensions.count("GL_OES_texture_npot"))
 	{
 		Con_Printf("FOUND: GL_OES_texture_npot\n");
 		gl_texture_NPOT = true;
@@ -280,21 +251,8 @@ void GL_Init(void)
 	Cvar_RegisterVariable(&gl_fadescreen_alpha);
 	Cvar_RegisterVariable(&gl_clear);
 
-	gl_vendor = (const char *) glGetString(GL_VENDOR);
-	gl_renderer = (const char *) glGetString(GL_RENDERER);
-	gl_version = (const char *) glGetString(GL_VERSION);
-	gl_extensions = (const char *) glGetString(GL_EXTENSIONS);
-
-	Con_SafePrintf("GL_VENDOR: %s\n", gl_vendor);
-	Con_SafePrintf("GL_RENDERER: %s\n", gl_renderer);
-	Con_SafePrintf("GL_VERSION: %s\n", gl_version);
-
-	if (gl_extensions_nice != NULL)
-		free(gl_extensions_nice);
-	gl_extensions_nice = GL_MakeNiceExtensionsList(gl_extensions);
-
-	Con_Printf("GL_EXTENSIONS: %s\n", gl_extensions_nice);
-
+	GL_GetInfo();
+	GL_Info_f();
 	GL_CheckExtensions();
 
 	GL_SetupState();
