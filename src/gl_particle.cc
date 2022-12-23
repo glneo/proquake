@@ -71,7 +71,7 @@ void GL_DrawParticles(void)
 	}
 
 	// setup
-	glDisable(GL_BLEND);
+	glEnable(GL_BLEND);
 	glUseProgram(particle_program);
 
 	// set uniforms

@@ -133,9 +133,6 @@ typedef struct mtexture_s
 	gltexture_t *gltexture;
 	struct msurface_s *texturechains[2];    // for gl_texsort drawing
 
-	gltexture_t *fullbright;
-	struct msurface_s *fullbrightchains[2];    // for gl_texsort drawing
-
 	int anim_total;                         // total tenths in sequence ( 0 = no)
 	int anim_min, anim_max;                 // time for this frame min <=time< max
 	struct mtexture_s *anim_next;            // in the animation sequence
@@ -224,7 +221,6 @@ typedef struct msurface_s {
 	GLuint indicesVBO;
 
 	struct msurface_s *texturechain;
-	struct msurface_s *fullbrightchain;
 
 	mtexinfo_t *texinfo;
 

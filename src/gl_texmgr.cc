@@ -1109,7 +1109,7 @@ static void TexMgr_LoadPalette(void)
 	// fullbright palette, 0-223 are transparent (for blending)
 	memcpy(d_8to24table_fbright, d_8to24table, 256 * 4);
 	for (int i = 0; i < 224; i++)
-		d_8to24table_fbright[i] = 0;
+		d_8to24table_fbright[i] &= 0x00ffffff;
 
 	d_8to24table[255] = 0; // 255 is transparent
 

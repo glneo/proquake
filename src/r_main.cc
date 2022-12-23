@@ -67,12 +67,9 @@ void R_ClearTextureChains (brush_model_t *mod, texchain_t chain)
 	size_t i;
 
 	// set all chains to null
-	for (i=0 ; i<mod->numtextures ; i++)
+	for (i = 0 ; i < mod->numtextures; i++)
 		if (mod->textures[i])
-		{
 			mod->textures[i]->texturechains[chain] = NULL;
-			mod->textures[i]->fullbrightchains[chain] = NULL;
-		}
 }
 
 /* Returns the proper texture for a given time and base texture */
@@ -111,12 +108,6 @@ void R_ChainSurface(msurface_t *surf, texchain_t chain)
 
 	surf->texturechain = texture->texturechains[chain];
 	texture->texturechains[chain] = surf;
-
-	if (texture->fullbright)
-	{
-		surf->fullbrightchain = texture->fullbrightchains[chain];
-		texture->fullbrightchains[chain] = surf;
-	}
 }
 
 /*

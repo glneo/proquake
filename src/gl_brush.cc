@@ -38,6 +38,7 @@ GLuint brush_VieworgUniform;
 
 // uniforms used in fragment shader
 GLuint brush_TexUniform;
+GLuint brush_LMTexUniform;
 GLuint brush_UseLMTexUniform;
 GLuint brush_UseOverbrightUniform;
 GLuint brush_AlphaUniform;
@@ -144,7 +145,8 @@ void GL_DrawSurfaces(brush_model_t *brushmodel, texchain_t chain)
 
 	// set fragment uniforms
 	glUniform1i(brush_TexUniform, 0);
-	glUniform1i(brush_UseLMTexUniform, GL_FALSE);
+	glUniform1i(brush_LMTexUniform, 1);
+	glUniform1i(brush_UseLMTexUniform, GL_TRUE);
 	glUniform1i(brush_UseOverbrightUniform, !!gl_overbright.value);
 	glUniform1f(brush_AlphaUniform, 1.0f);
 
@@ -176,72 +178,37 @@ void GL_DrawSurfaces(brush_model_t *brushmodel, texchain_t chain)
 
 		std::vector<unsigned short> indices;
 
+		GL_BindToUnit(GL_TEXTURE1, s->lightmap->texture);
+		gltexture_t *current_texture = s->lightmap->texture;
+
 		for (; s; s = s->texturechain)
 		{
 			c_brush_polys++;
 			indices.insert(std::end(indices), std::begin(*s->indices), std::end(*s->indices));
+
+			if (s->texturechain && s->texturechain->lightmap->texture == current_texture)
+				continue;
+
+			GL_BindToUnit(GL_TEXTURE1, s->lightmap->texture);
+
+			// draw
+			GL_BindToUnit(GL_TEXTURE0, t->gltexture);
+			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, brush_elements_VBO);
+			glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices[0]) * indices.size(), indices.data(), GL_STREAM_DRAW);
+			glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_SHORT, 0);
+
+			indices.clear();
 		}
 
-		// draw
-		GL_BindToUnit(GL_TEXTURE0, t->gltexture);
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, brush_elements_VBO);
-		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices[0]) * indices.size(), indices.data(), GL_STREAM_DRAW);
-		glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_SHORT, 0);
+
 
 		t->texturechains[chain] = NULL;
 	}
 
-	// Lightmap pass
 	glEnable(GL_BLEND);
-	glBlendFunc(GL_DST_COLOR, GL_SRC_COLOR); // COMBINE_RGB MODULATE
-//	glBlendFunc(GL_ONE, GL_ZERO);
-	glUniform1i(brush_UseLMTexUniform, GL_TRUE);
-	for (size_t i = 0; i < brushmodel->lightmap_count; i++)
-	{
-		lightmap_t *lightmap = &((*brushmodel->lightmaps)[i]);
-		if (lightmap->indices->empty())
-			continue;
-		GL_BindToUnit(GL_TEXTURE0, lightmap->texture);
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, brush_elements_VBO);
-		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned short) * lightmap->indices->size(), lightmap->indices->data(), GL_STREAM_DRAW);
-		glDrawElements(GL_TRIANGLES, lightmap->indices->size(), GL_UNSIGNED_SHORT, 0);
-	}
-	glUniform1i(brush_UseLMTexUniform, GL_FALSE);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-	// Full Bright pass
-	for (size_t i = 0; i < brushmodel->numtextures; i++)
-	{
-		mtexture_t *t = brushmodel->textures[i];
-		if (!t)
-			continue; // No texture
-
-		msurface_t *s = t->fullbrightchains[chain];
-		if (!s)
-			continue; // No surfaces
-
-		if (t->isskytexture)
-			continue; // Handled specially
-
-		if (s->flags & SURF_DRAWTURB)
-			continue; // Water surfaces can be transparent draw last
-
-		std::vector<unsigned short> indices;
-
-		for (; s; s = s->fullbrightchain)
-		{
-//			c_brush_polys++;
-			indices.insert(std::end(indices), std::begin(*s->indices), std::end(*s->indices));
-		}
-
-		// draw
-		GL_BindToUnit(GL_TEXTURE0, t->fullbright);
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, brush_elements_VBO);
-		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices[0]) * indices.size(), indices.data(), GL_STREAM_DRAW);
-		glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_SHORT, 0);
-
-		t->fullbrightchains[chain] = NULL;
-	}
+	glUniform1i(brush_UseLMTexUniform, GL_FALSE);
 
 	GL_DrawWaterSurfaces(brushmodel, chain);
 
@@ -329,6 +296,7 @@ void GL_CreateBrushShaders(void)
 	brush_VieworgUniform = GL_GetUniformLocation(brush_program, "Vieworg");
 
 	brush_TexUniform = GL_GetUniformLocation(brush_program, "Tex");
+	brush_LMTexUniform = GL_GetUniformLocation(brush_program, "LMTex");
 	brush_UseLMTexUniform = GL_GetUniformLocation(brush_program, "UseLMTex");
 	brush_UseOverbrightUniform = GL_GetUniformLocation(brush_program, "UseOverbright");
 	brush_AlphaUniform = GL_GetUniformLocation(brush_program, "Alpha");

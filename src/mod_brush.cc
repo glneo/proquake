@@ -195,19 +195,8 @@ void Mod_LoadTextures(brush_model_t *brushmodel, mlump_t *l, byte *mod_base, cha
 				//external textures -- first look in "textures/mapname/" then look in "textures/"
 
 //				offset = (src_offset_t)(tex_data) - (src_offset_t)mod_base;
-				if (Mod_CheckFullbrights (tex_data, tex_size))
-				{
-					tx->gltexture = TexMgr_LoadImage (texturename, tx->width, tx->height,
-						SRC_INDEXED, tex_data, TEX_MIPMAP | extraflags);
-					tx->fullbright = TexMgr_LoadImage (texturename, tx->width, tx->height,
-						SRC_INDEXED, tex_data, TEX_MIPMAP | TEX_FULLBRIGHT | extraflags);
-				}
-				else
-				{
-					tx->gltexture = TexMgr_LoadImage (texturename, tx->width, tx->height,
-						SRC_INDEXED, tex_data, TEX_MIPMAP | extraflags);
-					tx->fullbright = NULL;
-				}
+				tx->gltexture = TexMgr_LoadImage (texturename, tx->width, tx->height,
+					SRC_INDEXED, tex_data, TEX_MIPMAP | TEX_FULLBRIGHT | extraflags);
 			}
 		}
 	}

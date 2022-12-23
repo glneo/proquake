@@ -186,7 +186,7 @@ static void R_BuildLightMap(msurface_t *surf)
 		for (int s = 0; s < smax; s++)
 		{
 			unsigned int l = *base_pointer++;
-			byte light = (byte)((l >> 8) & 0xff);
+			byte light = (byte)(min((l >> 8), 255));
 			lightmap->data[t + surf->light_t][s + surf->light_s] = light;
 		}
 	}
