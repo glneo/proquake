@@ -643,7 +643,7 @@ void Sbar_Draw(void)
 			SRC_DrawTileClear(w, vid.height - sb_lines, vid.width - w, sb_lines);
 		else
 		{
-			SRC_DrawTileClear(0, vid.height - sb_lines, (vid.width - w) / 2.0f, sb_lines);
+			SRC_DrawTileClear(0                         , vid.height - sb_lines, (vid.width - w) / 2.0f, sb_lines);
 			SRC_DrawTileClear((vid.width - w) / 2.0f + w, vid.height - sb_lines, (vid.width - w) / 2.0f, sb_lines);
 		}
 	}

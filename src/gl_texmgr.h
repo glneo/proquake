@@ -59,6 +59,7 @@ void GL_Bind(gltexture_t *texture);
 void GL_BindToUnit(GLenum target, gltexture_t *texture);
 
 // TEXTURE MANAGER
+bool Image_WriteTGA(const char *name, byte *data, int width, int height, int bpp, bool upsidedown);
 void TexMgr_FreeTexture(gltexture_t *kill);
 void TexMgr_Init(void);
 

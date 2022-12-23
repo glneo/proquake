@@ -66,7 +66,7 @@ void GL_Setup(void)
 {
 	// set up viewpoint
 	int x = vid.x + r_refdef.vrect.x;
-	int y = vid.y + r_refdef.vrect.y + sb_lines;
+	int y = vid.y + r_refdef.vrect.y;
 	int w = r_refdef.vrect.width;
 	int h = r_refdef.vrect.height;
 	glViewport(x, y, w, h);

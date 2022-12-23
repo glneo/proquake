@@ -179,7 +179,7 @@ void VID_Init(unsigned char *palette)
 
 	Con_SafePrintf ("Video mode %dx%d initialized.\n", width, height);
 
-	vid.recalc_refdef = 1; // force a surface cache flush
+	vid.recalc_refdef = true; // force a surface cache flush
 
 	return;
 }

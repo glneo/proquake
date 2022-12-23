@@ -308,9 +308,9 @@ static void SCR_CalcRefdef(void)
 	size = min(scr_viewsize.value, 100.0f) / 100.0f;
 
 	r_refdef.vrect.width = max((unsigned int)(vid.width * size), 96u); //no smaller than 96, for icons
-	r_refdef.vrect.height = min((unsigned int)(vid.height * size), (vid.height - sb_lines)); //make room for sbar
+	r_refdef.vrect.height = (unsigned int)((vid.height - sb_lines) * size); //make room for sbar
 	r_refdef.vrect.x = (vid.width - r_refdef.vrect.width) / 2;
-	r_refdef.vrect.y = ((vid.height - sb_lines) / 2) - (r_refdef.vrect.height / 2);
+	r_refdef.vrect.y = ((vid.height - r_refdef.vrect.height) / 2) + (sb_lines / 2);
 
 //	Con_Printf("x: %d, y: %d, width: %d, height: %d\n", r_refdef.vrect.x, r_refdef.vrect.y, r_refdef.vrect.width, r_refdef.vrect.height);
 
@@ -439,15 +439,18 @@ void SCR_DrawCrosshair(void)
 {
 	Draw_SetCanvas(CANVAS_CROSSHAIR);
 
-	if (crosshair.value >= 2 && (crosshair.value <= NUMCROSSHAIRS + 1))
-		Draw_Pic(0, 0, scr_crosshairs[(int) crosshair.value - 2], scr_crosshairalpha.value);
-	else if (crosshair.value)
+	int offset;
+	if (scr_crosshaircentered.value) // Centered crosshair
+		offset = -4;
+	else // Standard off-center Quake crosshair
+		offset = 0;
+
+	if (crosshair.value == 1)
 	{
-		if (scr_crosshaircentered.value) // Centered crosshair
-			Draw_Character(-4, -4, '+', scr_crosshairalpha.value);
-		else // Standard off-center Quake crosshair
-			Draw_Character(0, 0, '+', scr_crosshairalpha.value);
+		Draw_Character(offset, offset, '+', scr_crosshairalpha.value);
 	}
+	else if (crosshair.value >= 2 && (crosshair.value <= NUMCROSSHAIRS + 1))
+		Draw_Pic(offset, offset, scr_crosshairs[(int) crosshair.value - 2], scr_crosshairalpha.value);
 }
 
 /*
@@ -619,14 +622,14 @@ static void SCR_DrawConsole(void)
 static void SCR_ScreenShot_f(void)
 {
 	byte *buffer;
-	char tganame[16];  //johnfitz -- was [80]
+	char tganame[19];  //johnfitz -- was [80]
 	char checkname[MAX_OSPATH];
 	int i;
 
 // find a file name to save it to
 	for (i = 0; i < 10000; i++)
 	{
-		snprintf(tganame, sizeof(tganame), "spasm%04i.tga", i);	// "fitz%04i.tga"
+		snprintf(tganame, sizeof(tganame), "screenshot%04i.tga", i);
 		snprintf(checkname, sizeof(checkname), "%s/%s", com_gamedir, tganame);
 		if (!Sys_FileExists(checkname))
 			break;	// file doesn't exist
@@ -638,19 +641,19 @@ static void SCR_ScreenShot_f(void)
 	}
 
 //get data
-	if (!(buffer = (byte *) malloc(vid.width * vid.height * 3)))
+	if (!(buffer = (byte *) malloc(vid.width * vid.height * 4)))
 	{
 		Con_Printf("SCR_ScreenShot_f: Couldn't allocate memory\n");
 		return;
 	}
 
 	glPixelStorei(GL_PACK_ALIGNMENT, 1);/* for widths that aren't a multiple of 4 */
-	glReadPixels(vid.x, vid.y, vid.width, vid.height, GL_RGB, GL_UNSIGNED_BYTE, buffer);
+	glReadPixels(vid.x, vid.y, vid.width, vid.height, GL_RGBA, GL_UNSIGNED_BYTE, buffer);
 
 // now write the file
-//	if (Image_WriteTGA(tganame, buffer, vid.width, vid.height, 24, false))
-//		Con_Printf("Wrote %s\n", tganame);
-//	else
+	if (Image_WriteTGA(tganame, buffer, vid.width, vid.height, 32, false))
+		Con_Printf("Wrote %s\n", tganame);
+	else
 		Con_Printf("SCR_ScreenShot_f: Couldn't create a TGA file\n");
 
 	free(buffer);
@@ -796,22 +799,34 @@ void SRC_DrawTileClear(int x, int y, int w, int h)
 
 void SCR_TileClear(void)
 {
+	Draw_SetCanvas(CANVAS_DEFAULT);
+
+	unsigned int r_left = r_refdef.vrect.x;
+	unsigned int r_right = r_left + r_refdef.vrect.width;
+	unsigned int r_top = ((vid.height - r_refdef.vrect.height) / 2) - (sb_lines / 2);
+	unsigned int r_bottom = r_top + r_refdef.vrect.height;
+
+	unsigned int r_sbar = vid.height - sb_lines;
+
 	// left
-	if (r_refdef.vrect.x > 0)
-		SRC_DrawTileClear(0, 0, r_refdef.vrect.x, vid.height - sb_lines);
+	if (r_left > 0)
+		SRC_DrawTileClear(0     , 0,
+		                  r_left, r_sbar);
 
 	// right
-	if ((r_refdef.vrect.x + r_refdef.vrect.width) < vid.width)
-		SRC_DrawTileClear(r_refdef.vrect.x + r_refdef.vrect.width, 0, vid.width - (r_refdef.vrect.x + r_refdef.vrect.width), vid.height - sb_lines);
+	if (r_right < vid.width)
+		SRC_DrawTileClear(r_right            , 0,
+		                  vid.width - r_right, r_sbar);
 
 	// top
-	if (r_refdef.vrect.y > 0)
-		SRC_DrawTileClear(r_refdef.vrect.x, 0, r_refdef.vrect.width, r_refdef.vrect.y);
+	if (r_top > 0)
+		SRC_DrawTileClear(r_left          , 0,
+		                  r_right - r_left, r_top);
 
 	// bottom
-	if ((r_refdef.vrect.y + r_refdef.vrect.height) < (vid.height - sb_lines))
-		SRC_DrawTileClear(r_refdef.vrect.x, r_refdef.vrect.y + r_refdef.vrect.height, r_refdef.vrect.width,
-				(vid.height - sb_lines) - (r_refdef.vrect.y + r_refdef.vrect.height));
+	if (r_bottom < r_sbar)
+		SRC_DrawTileClear(r_left          , r_bottom,
+		                  r_right - r_left, r_sbar - r_bottom);
 }
 
 void SCR_ConsoleBackground()

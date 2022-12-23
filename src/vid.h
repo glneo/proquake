@@ -37,9 +37,6 @@ typedef struct {
 	char modedesc[17];
 } vmode_t;
 
-// a pixel can be one, two, or four bytes
-typedef byte pixel_t;
-
 typedef struct {
 	unsigned x;
 	unsigned y;

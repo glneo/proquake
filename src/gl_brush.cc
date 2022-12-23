@@ -178,29 +178,33 @@ void GL_DrawSurfaces(brush_model_t *brushmodel, texchain_t chain)
 
 		std::vector<unsigned short> indices;
 
-		GL_BindToUnit(GL_TEXTURE1, s->lightmap->texture);
 		gltexture_t *current_texture = s->lightmap->texture;
+		GL_BindToUnit(GL_TEXTURE1, current_texture);
 
 		for (; s; s = s->texturechain)
 		{
 			c_brush_polys++;
 			indices.insert(std::end(indices), std::begin(*s->indices), std::end(*s->indices));
 
-			if (s->texturechain && s->texturechain->lightmap->texture == current_texture)
-				continue;
+			// Flush current state if we are last surface or lightmap changes
+			if (!s->texturechain || s->texturechain->lightmap->texture != current_texture)
+			{
+				// draw
+				GL_BindToUnit(GL_TEXTURE0, t->gltexture);
+				glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, brush_elements_VBO);
+				glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices[0]) * indices.size(), indices.data(), GL_STREAM_DRAW);
+				glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_SHORT, 0);
 
-			GL_BindToUnit(GL_TEXTURE1, s->lightmap->texture);
+				// More surfaces left so re-setup
+				if (s->texturechain)
+				{
+					current_texture = s->texturechain->lightmap->texture;
+					GL_BindToUnit(GL_TEXTURE1, current_texture);
 
-			// draw
-			GL_BindToUnit(GL_TEXTURE0, t->gltexture);
-			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, brush_elements_VBO);
-			glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices[0]) * indices.size(), indices.data(), GL_STREAM_DRAW);
-			glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_SHORT, 0);
-
-			indices.clear();
+					indices.clear();
+				}
+			}
 		}
-
-
 
 		t->texturechains[chain] = NULL;
 	}

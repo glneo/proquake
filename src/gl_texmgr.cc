@@ -261,7 +261,6 @@ static void TexMgr_Imagelist_f(void)
 	Con_Printf("%i textures %i pixels %1.1f megabytes\n", count, (int) texels, mb);
 }
 
-#ifndef OPENGLES
 typedef struct targaheader_s {
 	unsigned char 	id_length, colormap_type, image_type;
 	unsigned short	colormap_index, colormap_length;
@@ -273,7 +272,7 @@ typedef struct targaheader_s {
 #define TARGAHEADERSIZE 18 //size on disk
 
 /* writes RGB or RGBA data to a TGA file */
-static bool Image_WriteTGA (const char *name, byte *data, int width, int height, int bpp, bool upsidedown)
+bool Image_WriteTGA (const char *name, byte *data, int width, int height, int bpp, bool upsidedown)
 {
 	int size, temp, bytes;
 	byte header[TARGAHEADERSIZE];
@@ -309,6 +308,7 @@ static bool Image_WriteTGA (const char *name, byte *data, int width, int height,
 	return true;
 }
 
+#ifndef OPENGLES
 /* dump all current textures to TGA files */
 static void TexMgr_Imagedump_f (void)
 {

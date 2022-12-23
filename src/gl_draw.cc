@@ -465,7 +465,7 @@ static void Draw_FlushState(void)
 void Draw_SetCanvas(canvastype newcanvas)
 {
 	float s;
-	int lines;
+	int lines, x, y, w, h;
 
 	if (newcanvas == currentcanvas)
 		return;
@@ -507,8 +507,12 @@ void Draw_SetCanvas(canvastype newcanvas)
 		break;
 	case CANVAS_CROSSHAIR: //0,0 is center of viewport
 		s = CLAMP(1.0f, scr_crosshairscale.value, 10.0f);
-		projectionMatrix.ortho(r_refdef.vrect.width / -2 / s, r_refdef.vrect.width / 2 / s, r_refdef.vrect.height / 2 / s, r_refdef.vrect.height / -2 / s, -1.0f, 1.0f);
-		glViewport(r_refdef.vrect.x, vid.height - r_refdef.vrect.y - r_refdef.vrect.height, r_refdef.vrect.width & ~1, r_refdef.vrect.height & ~1);
+		x = vid.x + r_refdef.vrect.x;
+		y = vid.y + r_refdef.vrect.y;
+		w = r_refdef.vrect.width;
+		h = r_refdef.vrect.height;
+		projectionMatrix.ortho(-(w/(2*s)), (w/(2*s)), (h/(2*s)), -(h/(2*s)), -1.0f, 1.0f);
+		glViewport(x, y, w, h);
 		break;
 	case CANVAS_BOTTOMLEFT: //used by devstats
 		s = (float) vid.width / vid.conwidth; //use console scale
