@@ -43,6 +43,8 @@ GLuint draw_texCoords_VBO;
 
 qpic_t crosshairpic;
 
+float current_alpha = -1.0f;
+
 canvastype currentcanvas = CANVAS_NONE; //johnfitz -- for GL_SetCanvas
 
 typedef struct draw_vertex_s {
@@ -212,6 +214,32 @@ static bool IsValid(int y, int num)
 	return true;
 }
 
+static void Draw_FlushState(void)
+{
+	if (draw_buffer.empty())
+		return;
+
+	// setup
+	GL_BindToUnit(GL_TEXTURE0, char_texture);
+	glUniform4f(draw_colorLoc, 1.0f, 1.0f, 1.0f, current_alpha);
+
+        // set attributes
+        glBindBuffer(GL_ARRAY_BUFFER, draw_vertex_VBO);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(draw_vertex_t) * draw_buffer.size(), draw_buffer.data(), GL_STREAM_DRAW);
+        glEnableVertexAttribArray(draw_vertexAttrIndex);
+        glVertexAttribPointer(draw_vertexAttrIndex, 2, GL_FLOAT, GL_FALSE, sizeof(draw_vertex_t), BUFFER_OFFSET(offsetof(draw_vertex_t, position)));
+        glEnableVertexAttribArray(draw_texCoordsAttrIndex);
+        glVertexAttribPointer(draw_texCoordsAttrIndex, 2, GL_FLOAT, GL_FALSE, sizeof(draw_vertex_t), BUFFER_OFFSET(offsetof(draw_vertex_t, textureCord)));
+
+        // draw
+        glDrawArrays(GL_TRIANGLES, 0, draw_buffer.size());
+        draw_buffer.clear();
+
+	// cleanup
+	glDisableVertexAttribArray(draw_texCoordsAttrIndex);
+	glDisableVertexAttribArray(draw_vertexAttrIndex);
+}
+
 static void Character(int x, int y, int num, float alpha)
 {
 	num &= 255;
@@ -224,6 +252,11 @@ static void Character(int x, int y, int num, float alpha)
 	float offset = size;
 
 	alpha = CLAMP(0.0f, alpha, 1.0f);
+	if (alpha != current_alpha)
+	{
+		Draw_FlushState();
+		current_alpha = alpha;
+	}
 
 	//                      position                          texture
 	draw_buffer.push_back( {{(GLfloat)x,     (GLfloat)y,},    {fcol,          frow,}         });
@@ -244,14 +277,14 @@ void Draw_Character(int x, int y, int num, float alpha)
 	if (!IsValid(y, num))
 		return;
 
-	GL_BindToUnit(GL_TEXTURE0, char_texture);
+//	GL_BindToUnit(GL_TEXTURE0, char_texture);
 
 	Character(x, y, num, alpha);
 }
 
 void Draw_String(int x, int y, const char *str, float alpha)
 {
-	GL_BindToUnit(GL_TEXTURE0, char_texture);
+//	GL_BindToUnit(GL_TEXTURE0, char_texture);
 
 	while (*str)
 	{
@@ -435,31 +468,6 @@ void Draw_PolyBlend(void)
 	Draw_SetCanvas(CANVAS_DEFAULT);
 
 	Draw_Solid(0, 0, vid.width, vid.height, v_blend[0], v_blend[1], v_blend[2], v_blend[3]);
-}
-
-static void Draw_FlushState(void)
-{
-	if (draw_buffer.empty())
-		return;
-
-	// setup
-        GL_Bind(char_texture);
-
-        // set attributes
-        glBindBuffer(GL_ARRAY_BUFFER, draw_vertex_VBO);
-        glBufferData(GL_ARRAY_BUFFER, sizeof(draw_vertex_t) * draw_buffer.size(), draw_buffer.data(), GL_STREAM_DRAW);
-        glEnableVertexAttribArray(draw_vertexAttrIndex);
-        glVertexAttribPointer(draw_vertexAttrIndex, 2, GL_FLOAT, GL_FALSE, sizeof(draw_vertex_t), BUFFER_OFFSET(offsetof(draw_vertex_t, position)));
-        glEnableVertexAttribArray(draw_texCoordsAttrIndex);
-        glVertexAttribPointer(draw_texCoordsAttrIndex, 2, GL_FLOAT, GL_FALSE, sizeof(draw_vertex_t), BUFFER_OFFSET(offsetof(draw_vertex_t, textureCord)));
-
-        // draw
-        glDrawArrays(GL_TRIANGLES, 0, draw_buffer.size());
-        draw_buffer.clear();
-
-	// cleanup
-	glDisableVertexAttribArray(draw_texCoordsAttrIndex);
-	glDisableVertexAttribArray(draw_vertexAttrIndex);
 }
 
 void Draw_SetCanvas(canvastype newcanvas)

@@ -322,6 +322,7 @@ static void Mod_LoadVisibility(brush_model_t *brushmodel, mlump_t *l, byte *mod_
 	byte *in = (byte *)(mod_base + l->fileofs);
 	if (!l->filelen)
 	{
+		brushmodel->numvisdata = 0;
 		brushmodel->visdata = NULL;
 		return;
 	}
@@ -598,10 +599,10 @@ static void Mod_LoadLeafs(brush_model_t *brushmodel, mlump_t *l, byte *mod_base,
 		leaf->contents = LittleLong(in->contents);
 
 		int visofs = LittleLong(in->visofs);
-		if (visofs == -1 || (size_t)visofs > brushmodel->numvisdata)
+		if (visofs < 0 || (size_t)visofs >= brushmodel->numvisdata)
 			leaf->compressed_vis = NULL;
 		else
-			leaf->compressed_vis = &brushmodel->visdata[visofs];
+			leaf->compressed_vis = &brushmodel->visdata[(size_t)visofs];
 		leaf->efrags = NULL;
 
 		leaf->nummarksurfaces = LittleShort(in->nummarksurfaces);

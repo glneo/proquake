@@ -260,9 +260,9 @@ void GL_DrawBrushModel(entity_t *ent)
 	GL_RotateForEntity(ent, modelViewMatrix);
 
 	// draw all the surfaces
-	for (int i = brushmodel->firstmodelsurface; i < brushmodel->nummodelsurfaces; i++)
+	for (int i = 0; i < brushmodel->nummodelsurfaces; i++)
 	{
-		msurface_t *psurf = &brushmodel->surfaces[i];
+		msurface_t *psurf = &brushmodel->surfaces[brushmodel->firstmodelsurface + i];
 
 		// find which side of the node we are on
 		mplane_t *pplane = psurf->plane;
