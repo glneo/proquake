@@ -20,7 +20,7 @@
 #include <arpa/inet.h>
 #include <netdb.h>
 #include <sys/param.h>
-#include <sys/ioctl.h>
+#include <fcntl.h>
 #include <errno.h>
 #include <unistd.h>
 
@@ -123,12 +123,12 @@ int UDP_OpenSocket (int port)
 {
 	int newsocket;
 	struct sockaddr_in address;
-	bool _true = true;
 
 	if ((newsocket = socket (PF_INET, SOCK_DGRAM, IPPROTO_UDP)) == -1)
 		return -1;
 
-	if (ioctl (newsocket, FIONBIO, (char *)&_true) == -1)
+	int flags = fcntl(newsocket, F_GETFL, 0);
+	if (fcntl(newsocket, F_SETFL, flags | O_NONBLOCK) == -1)
 		goto ErrorReturn;
 	memset(&address, 0, sizeof(struct sockaddr_in)); // JPG 1.05 - fix by JDC
 	address.sin_family = AF_INET;
@@ -215,6 +215,7 @@ int UDP_MakeSocketBroadcastCapable (int socket)
 	int				i = 1;
 
 	// make this socket broadcast capable
+
 	if (setsockopt(socket, SOL_SOCKET, SO_BROADCAST, (char *)&i, sizeof(i)) < 0)
 		return -1;
 	net_broadcastsocket = socket;
