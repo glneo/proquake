@@ -12,8 +12,14 @@
  * General Public License for more details.
  */
 
+#ifdef __EMSCRIPTEN__
+#include <emscripten/emscripten.h>
+#include <emscripten/html5.h>
+#endif
+
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdarg.h>
 #include <sys/stat.h>
 #include <errno.h>
 
@@ -178,6 +184,22 @@ char *Sys_ConsoleInput(void)
 	return NULL;
 }
 
+#ifdef __EMSCRIPTEN__
+
+// Our "main loop" function. This callback receives the current time as
+// reported by the browser, and the user data we provide in the call to
+// emscripten_request_animation_frame_loop().
+void renderFrame() {
+	static double oldtime = Sys_DoubleTime() - 0.1;
+
+	double newtime = Sys_DoubleTime ();
+	double mytime = newtime - oldtime;
+	Host_Frame(mytime);
+	oldtime = newtime;
+}
+
+#endif
+
 int main(int argc, char **argv)
 {
 	COM_InitArgv(argc, argv);
@@ -222,6 +244,10 @@ int main(int argc, char **argv)
 	}
 	else
 	{
+#ifdef __EMSCRIPTEN__
+		// Receives a function to call and some user data to provide it.
+		emscripten_set_main_loop(renderFrame, 0, 1);
+#else
 		while (true)
 		{
 			double newtime = Sys_DoubleTime ();
@@ -229,5 +255,6 @@ int main(int argc, char **argv)
 			Host_Frame(time);
 			oldtime = newtime;
 		}
+#endif
 	}
 }

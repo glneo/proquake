@@ -99,8 +99,6 @@ else()
 	)
 endif()
 
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake")
-
 find_program(XXD xxd)
 set(PROQUAKE_SHADER_SOURCES
 	src/alias.fs
@@ -131,6 +129,8 @@ add_executable(proquake ${PROQUAKE_SOURCES} ${PROQUAKE_HEADERS} ${PROQUAKE_SHADE
 
 target_include_directories(proquake PUBLIC ${CMAKE_CURRENT_BINARY_DIR})
 
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake")
+
 if(GRAPHICS_LIBRARY STREQUAL "OpenGL")
 	find_package(OpenGL REQUIRED)
 	target_include_directories(proquake PUBLIC ${OPENGL_INCLUDE_DIRS})
@@ -146,8 +146,15 @@ endif()
 
 find_package(SDL2 REQUIRED)
 target_include_directories(proquake PUBLIC ${SDL2_INCLUDE_DIRS})
-target_link_libraries(proquake m ${SDL2_LIBRARIES})
+
+if (${CMAKE_SYSTEM_NAME} MATCHES "Emscripten")
+	set_target_properties(proquake PROPERTIES LINK_FLAGS "-s USE_SDL=2 -s ALLOW_MEMORY_GROWTH=1 -s LEGACY_GL_EMULATION=0 -s ASSERTIONS=1 -s GL_ASSERTIONS=1 --preload-file id1")
+	set(CMAKE_EXECUTABLE_SUFFIX ".html")
+else ()
+	target_link_libraries(proquake m ${SDL2_LIBRARIES})
+endif ()
 
 target_compile_options(proquake PRIVATE -g;-O0;-std=c++11;-ffast-math;-Wall;-fno-omit-frame-pointer)
 # -Wconversion;-Werror;-fsanitize=address;
+
 install(TARGETS proquake RUNTIME DESTINATION bin)
