@@ -864,7 +864,7 @@ void Mod_LoadBrushModel(model_t *mod, void *buffer)
 
 
 
-	Con_Printf("Creating lists for: %s\n", mod_name);
+//	Con_Printf("Creating lists for: %s\n", mod_name);
 	GL_CreateSurfaceLists(brushmodel);
 
 
@@ -873,7 +873,7 @@ void Mod_LoadBrushModel(model_t *mod, void *buffer)
 	{
 		char name[10];
 		snprintf(name, sizeof(name), "*%zu", i);
-		Con_Printf("Creating submodel: %s\n", name);
+//		Con_Printf("Creating submodel: %s\n", name);
 		model_t *loadmodel = Mod_FindName(name);
 
 		// duplicate the basic information
