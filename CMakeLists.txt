@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.6)
+cmake_minimum_required(VERSION 3.8)
 project(ProQuake)
 
 set(PROQUAKE_SOURCES
@@ -145,8 +145,9 @@ elseif(NOT DISABLE_VIDEO)
 endif()
 
 find_package(SDL2 REQUIRED)
-target_include_directories(proquake PUBLIC ${SDL2_INCLUDE_DIR})
-target_link_libraries(proquake m ${SDL2_LIBRARY})
+target_include_directories(proquake PUBLIC ${SDL2_INCLUDE_DIRS})
+target_link_libraries(proquake m ${SDL2_LIBRARIES})
+
 target_compile_options(proquake PRIVATE -g;-O0;-std=c++11;-ffast-math;-Wall;-fno-omit-frame-pointer)
 # -Wconversion;-Werror;-fsanitize=address;
 install(TARGETS proquake RUNTIME DESTINATION bin)
